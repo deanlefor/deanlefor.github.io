@@ -1,0 +1,26 @@
+body {
+  background-color: black;
+  color: green;
+  font-family: "Courier New", Courier, monospace;
+  margin: 0;
+  padding: 1rem;
+}
+
+#terminal {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+input {
+  width: 100%;
+  background: black;
+  color: green;
+  border: none;
+  font-size: 1rem;
+  font-family: inherit;
+  outline: none;
+}
+
+#output {
+  white-space: pre-wrap;
+}
