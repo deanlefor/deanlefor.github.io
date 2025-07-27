@@ -118,10 +118,10 @@ function handleCommand(command) {
     return;
   }
 
-  // HELP: list core commands plus new COLOR and SPEED
+  // HELP: list core commands plus new COLOR and SPEED usage
   if (command === "help") {
     enqueueLine(
-      "Available commands: HELP, DIR, DATE, TIME, COLOR, SPEED, CLEAR, CLS"
+      "Available commands: HELP, DIR, DATE, TIME, COLOR [green, blue, amber], SPEED [1-150], CLEAR, CLS"
     );
     return;
   }
@@ -145,7 +145,6 @@ function handleCommand(command) {
     const theme = command.split(" ")[1];
     const validThemes = ["green", "blue", "amber"];
     if (validThemes.includes(theme)) {
-      // remove all theme-* classes, then add the selected one
       validThemes.forEach(t => document.body.classList.remove(`theme-${t}`));
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
@@ -155,15 +154,15 @@ function handleCommand(command) {
     return;
   }
 
-  // SPEED: adjust typing speed
+  // SPEED: adjust typing speed (1–150 ms)
   if (command.startsWith("speed ")) {
     const parts = command.split(" ");
     const val = parseInt(parts[1], 10);
-    if (!isNaN(val) && val > 0) {
+    if (!isNaN(val) && val >= 1 && val <= 150) {
       typingSpeed = val;
       enqueueLine(`Typing speed set to ${val} ms/char.`);
     } else {
-      enqueueLine("Invalid speed. Usage: SPEED <milliseconds>");
+      enqueueLine("Invalid speed. Usage: SPEED <1-150>");
     }
     return;
   }
