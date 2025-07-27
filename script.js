@@ -14,12 +14,12 @@ const promptLine   = document.getElementById("prompt-line");
 // —————————————————————————————————————————————————————————————
 // 2. State & Config
 // —————————————————————————————————————————————————————————————
-let cwdKey       = "";       // "" means C:\Dean root
-let currentInput = "";
-let typingSpeed  = 10;       // ms per character
-const defaultSpeed = 10;
-const lineQueue   = [];
-let isPrinting    = false;
+let cwdKey        = "";       // "" means C:\Dean root
+let currentInput  = "";
+let typingSpeed   = 30;       // ms per character
+const defaultSpeed = 30;
+const lineQueue    = [];
+let isPrinting     = false;
 
 // —————————————————————————————————————————————————————————————
 // 3. Prompt Helpers
@@ -73,7 +73,9 @@ function echoLine(text) {
   else output.innerText += "\n" + text;
 }
 
+// **Guard against undefined lines** so you never see “undefined”
 function enqueueLine(text) {
+  if (typeof text === "undefined") return;
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
@@ -92,11 +94,11 @@ function processQueue() {
   const timer = setInterval(() => {
     if (idx === 0) {
       output.innerText = prev === ""
-        ? text[0]
-        : prev + "\n" + text[0];
+        ? text.charAt(0)
+        : prev + "\n" + text.charAt(0);
       idx++;
     } else if (idx < text.length) {
-      output.innerText += text[idx++];
+      output.innerText += text.charAt(idx++);
     } else {
       clearInterval(timer);
       processQueue();
@@ -125,7 +127,7 @@ document.addEventListener("keydown", e => {
 });
 
 // —————————————————————————————————————————————————————————————
-// 7. Command Handler (with proper CD/Dir support)
+// 7. Command Handler (with CD/Dir support)
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
   const entry = window.fs[cwdKey];  // current directory
@@ -167,7 +169,7 @@ function handleCommand(command) {
   // DIR
   if (command === "dir") {
     enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
-    enqueueLine("");
+    enqueueLine("");   // intentional blank line
     entry.folders.forEach(f =>
       enqueueLine("  " + f + "    <DIR>")
     );
@@ -186,9 +188,12 @@ function handleCommand(command) {
       cwdKey = target;
     } else {
       enqueueLine("Directory not found.");
+      // keep cursor visible to retry
+      updatePrompt();
+      inputWrapper.style.display = "inline-flex";
       return;
     }
-    // show updated prompt immediately
+    // on successful change, update prompt & show cursor
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
     return;
@@ -238,7 +243,7 @@ function handleCommand(command) {
   if (command.endsWith(".txt")) {
     const fn = command.toUpperCase();
     const content = entry.files[fn];
-    if (content !== undefined) {
+    if (typeof content !== "undefined") {
       content.split("\n").forEach(line => enqueueLine(line));
     } else {
       enqueueLine("File not found.");
