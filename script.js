@@ -1,15 +1,13 @@
 const output = document.getElementById("output");
 const typedText = document.getElementById("typed-text");
+const inputWrapper = document.getElementById("input-wrapper");
 
-// Configuration
-const typingSpeed = 30;            // ms per character
 let currentInput = "";
-
-// A queue of lines waiting to be typed
+const typingSpeed = 30;     // ms per character
 const lineQueue = [];
 let isPrinting = false;
 
-// Echo a line immediately (used for the prompt)
+// Echo a line immediately (used for prompt+command)
 function echoLine(text) {
   if (output.innerText === "") {
     output.innerText = text;
@@ -18,16 +16,18 @@ function echoLine(text) {
   }
 }
 
-// Enqueue a line for animated typing
+// Queue a line for animated typing
 function enqueueLine(text) {
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
 
-// Process the queue, one line at a time
+// Process the queue, one character at a time
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
+    // All done printing—show the prompt again
+    inputWrapper.style.display = "inline-flex";
     return;
   }
   isPrinting = true;
@@ -37,7 +37,7 @@ function processQueue() {
 
   const timer = setInterval(() => {
     if (i === 0) {
-      // First character: add newline if needed
+      // First char: add newline if needed
       if (prev === "") output.innerText = text.charAt(0);
       else output.innerText = prev + "\n" + text.charAt(0);
       i++;
@@ -46,44 +46,45 @@ function processQueue() {
       output.innerText += text.charAt(i);
       i++;
     } else {
-      // Finished this line
       clearInterval(timer);
-      processQueue();  // Move to next
+      processQueue();  // Next line
     }
   }, typingSpeed);
 }
 
-// Handle keypresses
+// Listen for keystrokes
 document.addEventListener("keydown", e => {
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
-    // Echo the prompt+command immediately
+    // Hide the prompt while text prints
+    inputWrapper.style.display = "none";
     echoLine("C:\\dean> " + currentInput);
     handleCommand(currentInput.trim().toLowerCase());
     currentInput = "";
+    typedText.innerText = "";
   } else if (e.key.length === 1) {
-    // Regular character
     currentInput += e.key;
   }
-  // Update the on-screen input line
   typedText.innerText = currentInput;
 });
 
-// Print blank line or queued lines
+// Core command handler
 function handleCommand(command) {
   // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
+    inputWrapper.style.display = "inline-flex";
     return;
   }
 
-  // DIR listing
+  // DIR
   if (command === "dir") {
-    const files = ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"];
     enqueueLine(" Directory of C:\\");
     enqueueLine("");
-    files.forEach(f => enqueueLine("  " + f));
+    ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
+      enqueueLine("  " + f)
+    );
     return;
   }
 
@@ -95,13 +96,17 @@ function handleCommand(command) {
 
   // ABOUT.TXT
   if (command === "about.txt") {
-    enqueueLine("Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.");
+    enqueueLine(
+      "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust."
+    );
     return;
   }
 
   // RESUME.TXT or CV.TXT
   if (command === "resume.txt" || command === "cv.txt") {
-    enqueueLine("Resume coming soon... or visit deanlefor.com/resume.pdf");
+    enqueueLine(
+      "Resume coming soon... or visit deanlefor.com/resume.pdf"
+    );
     return;
   }
 
