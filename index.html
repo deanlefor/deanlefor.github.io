@@ -3,19 +3,24 @@
 <head>
   <meta charset="UTF-8" />
   <title>Dean Lefor Terminal</title>
-  <!-- Retro DOS-style font from Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <div id="terminal">
+  <!-- Splash screen -->
+  <div id="splash">
+    <pre id="splash-output"></pre>
+  </div>
+
+  <!-- Main terminal, hidden until splash finishes -->
+  <div id="terminal" style="display: none;">
     <pre id="output"></pre>
     <div id="input-wrapper">
-      <!-- Updated prompt -->
       <span id="prompt-line">C:\dean&gt;</span>
       <span id="typed-text"></span><span id="fake-cursor"></span>
     </div>
   </div>
+
   <script src="script.js"></script>
 </body>
 </html>

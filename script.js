@@ -1,63 +1,90 @@
+const splash = document.getElementById("splash");
+const splashOutput = document.getElementById("splash-output");
+const terminal = document.getElementById("terminal");
 const output = document.getElementById("output");
 const typedText = document.getElementById("typed-text");
 const inputWrapper = document.getElementById("input-wrapper");
 
 let currentInput = "";
-const typingSpeed = 30;     // ms per character
+const typingSpeed = 30;
 const lineQueue = [];
 let isPrinting = false;
 
-// Echo a line immediately (used for prompt+command)
-function echoLine(text) {
-  if (output.innerText === "") {
-    output.innerText = text;
-  } else {
-    output.innerText += "\n" + text;
-  }
+// 1) Boot splash sequence
+function runBootSplash() {
+  const lines = [
+    "IBM PC BIOS",
+    "Version 1.10",
+    "Copyright (c) 1982 IBM Corporation",
+    "",
+    "64K System RAM",
+    "384K Extended RAM OK",
+    "",
+    "Press any key to boot"
+  ];
+  let i = 0;
+  const timer = setInterval(() => {
+    splashOutput.innerText += lines[i++] + "\n";
+    if (i === lines.length) {
+      clearInterval(timer);
+      document.addEventListener("keydown", continueBoot);
+    }
+  }, 500);
 }
 
-// Queue a line for animated typing
+// 2) Hide splash & show terminal
+function continueBoot(e) {
+  document.removeEventListener("keydown", continueBoot);
+  splash.style.display = "none";
+  terminal.style.display = "block";
+  currentInput = "";
+  typedText.innerText = "";
+  document.body.focus();
+}
+
+// 3) Echo prompt immediately
+function echoLine(text) {
+  if (output.innerText === "") output.innerText = text;
+  else output.innerText += "\n" + text;
+}
+
+// 4) Queue lines for typing animation
 function enqueueLine(text) {
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
 
-// Process the queue, one character at a time
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
-    // All done printing—show the prompt again
     inputWrapper.style.display = "inline-flex";
     return;
   }
   isPrinting = true;
   const text = lineQueue.shift();
   const prev = output.innerText;
-  let i = 0;
-
+  let idx = 0;
   const timer = setInterval(() => {
-    if (i === 0) {
-      // First char: add newline if needed
-      if (prev === "") output.innerText = text.charAt(0);
-      else output.innerText = prev + "\n" + text.charAt(0);
-      i++;
-    } else if (i < text.length) {
-      // Append next char
-      output.innerText += text.charAt(i);
-      i++;
+    if (idx === 0) {
+      output.innerText = prev === "" ? text[0] : prev + "\n" + text[0];
+      idx++;
+    } else if (idx < text.length) {
+      output.innerText += text[idx++];
     } else {
       clearInterval(timer);
-      processQueue();  // Next line
+      processQueue();
     }
   }, typingSpeed);
 }
 
-// Listen for keystrokes
+// 5) Keyboard handler (for both splash and terminal)
 document.addEventListener("keydown", e => {
+  // While splash is visible, only continueBoot() runs
+  if (splash.style.display !== "none") return;
+
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
-    // Hide the prompt while text prints
     inputWrapper.style.display = "none";
     echoLine("C:\\dean> " + currentInput);
     handleCommand(currentInput.trim().toLowerCase());
@@ -69,16 +96,13 @@ document.addEventListener("keydown", e => {
   typedText.innerText = currentInput;
 });
 
-// Core command handler
+// 6) Command logic (unchanged)
 function handleCommand(command) {
-  // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
     inputWrapper.style.display = "inline-flex";
     return;
   }
-
-  // DIR
   if (command === "dir") {
     enqueueLine(" Directory of C:\\");
     enqueueLine("");
@@ -87,29 +111,24 @@ function handleCommand(command) {
     );
     return;
   }
-
-  // HELP
   if (command === "help") {
     enqueueLine("Available commands: HELP, DIR, CLEAR, CLS");
     return;
   }
-
-  // ABOUT.TXT
   if (command === "about.txt") {
     enqueueLine(
       "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust."
     );
     return;
   }
-
-  // RESUME.TXT or CV.TXT
   if (command === "resume.txt" || command === "cv.txt") {
     enqueueLine(
       "Resume coming soon... or visit deanlefor.com/resume.pdf"
     );
     return;
   }
-
-  // Fallback
   enqueueLine("Unknown command. Type HELP to begin.");
 }
+
+// Start the splash on load
+window.onload = runBootSplash;
