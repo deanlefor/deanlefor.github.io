@@ -32,7 +32,8 @@ body {
 
 #output {
   white-space: pre-wrap;
-  margin-bottom: 0;   /* no extra gap before the prompt*/
+  margin-bottom: 0;   /* consistent gap removed */
+  font-family: inherit; /* ensure output uses VT323 */
 }
 
 /* ================================
@@ -44,6 +45,11 @@ body {
   align-items: flex-start;
   font-size: 1rem;
   line-height: 1.2;
+}
+
+#prompt-line,
+#typed-text {
+  font-family: inherit; /* match the retro font exactly */
 }
 
 #prompt-line {
