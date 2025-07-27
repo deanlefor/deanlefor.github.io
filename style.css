@@ -12,7 +12,7 @@
 ================================ */
 
 body {
-  background-color: black;
+  background-color: red;
   color: green;
   font-family: "Courier New", Courier, monospace;
   margin: 0;
@@ -38,10 +38,11 @@ body {
 ================================ */
 
 #input-wrapper {
-  display: flex;
-  align-items: center;
+  display: inline-flex;
+  align-items: flex-start;
   font-family: inherit;
   font-size: 1rem;
+  line-height: 1;
 }
 
 #prompt-line {
@@ -53,12 +54,12 @@ body {
 }
 
 #fake-cursor {
-  width: 8px;
+  width: 0.6ch;
   height: 1em;
   background-color: green;
   display: inline-block;
-  margin-left: 1px;
   animation: blink 1s steps(1) infinite;
+  margin-left: 2px;
 }
 
 @keyframes blink {
