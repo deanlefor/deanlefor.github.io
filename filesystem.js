@@ -20,8 +20,10 @@ window.fs = {
         "This website emulates an IBM PC running DOS.\n" +
         "Built with pure HTML, CSS, and JavaScript.",
       "ME.TXT":
-        "Dean Lefor is a public servant and scholar exploring AI,\n" +
-        "oversight, and public trust.",
+        "Dean Lefor is a public sector leader and Ph.D. student exploring the intersection of technology, oversight,\n" +
+        "and public trust. He brings nearly two decades of federal experience to his work, with a focus on ethical governance,\n" +
+        "operational management, and the future of AI in public administration. Dean also enjoys creative pursuits, from\n" +
+        "photography to digital projects that make complex ideas more accessible.",
       "EDUCATION.TXT":
         "(Starting Fall 2025) Ph.D. in Public Administration and Public Affairs, Virginia Tech (2030?)\n" +
         "Master of Public Administration, University of North Dakota (2008)\n" +
