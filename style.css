@@ -30,37 +30,34 @@ body {
 
 #output {
   white-space: pre-wrap;
+  margin-bottom: 1rem;
 }
 
 /* ================================
-   Input and Cursor Styling
+   Simulated Input Line and Cursor
 ================================ */
 
 #input-wrapper {
-  position: relative;
   display: flex;
   align-items: center;
-}
-
-input {
-  flex-grow: 1;
-  width: 100%;
-  background: black;
-  color: green;
-  border: none;
-  font-size: 1rem;
   font-family: inherit;
-  outline: none;
-  caret-color: transparent;
-  position: relative;
-  z-index: 1;
+  font-size: 1rem;
 }
 
-#cursor {
+#prompt-line {
+  margin-right: 0.5ch;
+}
+
+#typed-text {
+  white-space: pre;
+}
+
+#fake-cursor {
   width: 8px;
   height: 1em;
   background-color: green;
-  margin-left: -8px;
+  display: inline-block;
+  margin-left: 1px;
   animation: blink 1s steps(1) infinite;
 }
 
