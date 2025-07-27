@@ -26,7 +26,13 @@ document.addEventListener("keydown", function (e) {
 
 // Print a new line of output
 function printLine(text) {
-  output.innerText += "\n" + text;
+  if (output.innerText === "") {
+    // first line, don't add a new line
+    output.innerText = text;
+  } else {
+    // subsequent lines, prefix with a new line
+    output.innerText += "\n" + text;
+  }
 }
 
 // Command handler
