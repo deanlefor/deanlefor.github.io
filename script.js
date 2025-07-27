@@ -2,7 +2,7 @@ const output = document.getElementById("output");
 const input = document.getElementById("input");
 
 const commands = {
-  help: "Available commands: HELP, ABOUT, RESUME, CLEAR",
+  help: "Available commands: HELP, ABOUT, RESUME, CV, CLEAR",
   about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
   resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
   cv: "Resume coming soon... or visit deanlefor.com/resume.pdf"
