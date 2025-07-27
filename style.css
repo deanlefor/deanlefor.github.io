@@ -17,7 +17,8 @@ body {
   font-family: 'VT323', monospace;
   margin: 0;
   padding: 1rem;
-  line-height: 1.2;
+  font-size: 1.2rem;    /* ↑ increased font size */
+  line-height: 1.3;     /* ↑ slightly more line‐height */
   position: relative;
 }
 
@@ -26,10 +27,7 @@ body {
 ================================= */
 #splash {
   position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  top: 0; left: 0; right: 0; bottom: 0;
   background: black;
   padding: 1rem;
   z-index: 10;
@@ -37,9 +35,9 @@ body {
 
 #splash-output {
   white-space: pre-wrap;
-  font-size: 1rem;       /* match terminal text size */
-  font-family: inherit;  /* use VT323 from <body> */
-  margin: 0;             /* no extra margins */
+  font-size: inherit;    /* match body font-size */
+  font-family: inherit;  /* match VT323 */
+  margin: 0;             /* remove extra margins */
   text-align: left;      /* left-justify splash text */
 }
 
@@ -48,7 +46,8 @@ body {
 ================================= */
 #terminal {
   max-width: 800px;
-  margin: 0 auto;
+  margin: 0;             /* left-justify the terminal */
+  /* body’s padding handles left inset */
 }
 
 /* ================================
@@ -56,8 +55,8 @@ body {
 ================================= */
 #output {
   white-space: pre-wrap;
-  margin-bottom: 0;      /* consistent gap before prompt */
-  font-family: inherit;  /* ensure output uses VT323 */
+  margin-bottom: 0;      /* no extra gap before prompt */
+  font-family: inherit;  /* ensure VT323 */
 }
 
 /* ================================
@@ -66,13 +65,13 @@ body {
 #input-wrapper {
   display: inline-flex;
   align-items: flex-start;
-  font-size: 1rem;
-  line-height: 1.2;
+  font-size: inherit;    /* match body font-size */
+  line-height: inherit;  /* match body line-height */
 }
 
 #prompt-line,
 #typed-text {
-  font-family: inherit;  /* match the retro font exactly */
+  font-family: inherit;  /* same retro font */
 }
 
 #prompt-line {
@@ -85,7 +84,7 @@ body {
 
 #fake-cursor {
   display: inline-block;
-  width: 8px;
+  width: 0.6ch;          /* scales with font */
   height: 1em;
   background-color: green;
   margin-left: 2px;
@@ -96,7 +95,5 @@ body {
    Animations
 ================================= */
 @keyframes blink {
-  50% {
-    opacity: 0;
-  }
+  50% { opacity: 0; }
 }
