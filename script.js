@@ -16,8 +16,8 @@ const promptLine   = document.getElementById("prompt-line");
 // —————————————————————————————————————————————————————————————
 let cwdKey        = "";       // "" means C:\Dean root
 let currentInput  = "";
-let typingSpeed   = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed   = 20;       // ms per character
+const defaultSpeed = 20;
 const lineQueue    = [];
 let isPrinting     = false;
 
@@ -54,7 +54,6 @@ function runBootSplash() {
     }
   }, 500);
 }
-
 function continueBoot(e) {
   document.removeEventListener("keydown", continueBoot);
   splash.style.display   = "none";
@@ -72,13 +71,11 @@ function echoLine(text) {
   if (!output.innerText) output.innerText = text;
   else output.innerText += "\n" + text;
 }
-
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
-
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
@@ -110,7 +107,6 @@ function processQueue() {
 // —————————————————————————————————————————————————————————————
 document.addEventListener("keydown", e => {
   if (splash.style.display !== "none") return;
-
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
@@ -126,12 +122,12 @@ document.addEventListener("keydown", e => {
 });
 
 // —————————————————————————————————————————————————————————————
-// 7. Command Handler (with CD/Dir support)
+// 7. Command Handler (with image support)
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
   const entry = window.fs[cwdKey];
 
-  // CLEAR / CLS — now restores the prompt immediately
+  // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
     updatePrompt();
@@ -141,9 +137,7 @@ function handleCommand(command) {
 
   // RESET
   if (command === "reset") {
-    ["green","blue","amber"].forEach(t =>
-      document.body.classList.remove(`theme-${t}`)
-    );
+    ["green","blue","amber"].forEach(t=>document.body.classList.remove(`theme-${t}`));
     document.body.classList.add("theme-green");
     typingSpeed = defaultSpeed;
     enqueueLine("Theme reset to GREEN.");
@@ -164,29 +158,28 @@ function handleCommand(command) {
     enqueueLine("  RESET");
     enqueueLine("  CLEAR");
     enqueueLine("  CLS");
+    enqueueLine("  <filename>.TXT");
+    enqueueLine("  <imagename>.JPG");
     return;
   }
 
   // DIR
   if (command === "dir") {
     enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
-    entry.folders.forEach(f =>
-      enqueueLine("  " + f + "    <DIR>")
-    );
-    Object.keys(entry.files).forEach(fn =>
-      enqueueLine("  " + fn)
-    );
+    entry.folders.forEach(f=>enqueueLine("  "+f+"    <DIR>"));
+    Object.keys(entry.files).forEach(fn=>enqueueLine("  "+fn));
+    if (entry.images) {
+      Object.keys(entry.images).forEach(img=>enqueueLine("  "+img));
+    }
     return;
   }
 
-  // CD navigation
+  // CD
   if (command.startsWith("cd ")) {
     const target = command.slice(3).toUpperCase();
-    if (target === "..") {
-      cwdKey = "";
-    } else if (entry.folders.includes(target)) {
-      cwdKey = target;
-    } else {
+    if (target === "..") cwdKey = "";
+    else if (entry.folders.includes(target)) cwdKey = target;
+    else {
       enqueueLine("Directory not found.");
       updatePrompt();
       inputWrapper.style.display = "inline-flex";
@@ -214,35 +207,44 @@ function handleCommand(command) {
     const theme = command.split(" ")[1];
     const valid = ["green","blue","amber"];
     if (valid.includes(theme)) {
-      valid.forEach(t =>
-        document.body.classList.remove(`theme-${t}`)
-      );
+      valid.forEach(t=>document.body.classList.remove(`theme-${t}`));
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
-    } else {
-      enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
-    }
+    } else enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
     return;
   }
 
   // SPEED
   if (command.startsWith("speed ")) {
-    const val = parseInt(command.split(" ")[1], 10);
-    if (!isNaN(val) && val >= 1 && val <= 150) {
+    const val = parseInt(command.split(" ")[1],10);
+    if (!isNaN(val)&&val>=1&&val<=150) {
       typingSpeed = val;
       enqueueLine(`Typing speed set to ${val} ms/char.`);
-    } else {
-      enqueueLine("Invalid speed. Usage: SPEED <1-150>");
-    }
+    } else enqueueLine("Invalid speed. Usage: SPEED <1-150>");
     return;
   }
 
-  // File display
+  // IMAGE: display and immediately restore prompt
+  if (command.endsWith(".jpg")) {
+    const fn = command.toUpperCase();
+    const imgPath = entry.images && entry.images[fn];
+    if (imgPath) {
+      output.innerHTML += `<img src="${imgPath}" alt="${fn}" style="max-width:100%;margin:1rem 0;">`;
+    } else {
+      enqueueLine("File not found.");
+    }
+    // restore prompt
+    updatePrompt();
+    inputWrapper.style.display = "inline-flex";
+    return;
+  }
+
+  // TEXT files
   if (command.endsWith(".txt")) {
     const fn = command.toUpperCase();
     const content = entry.files[fn];
     if (typeof content !== "undefined") {
-      content.split("\n").forEach(line => enqueueLine(line));
+      content.split("\n").forEach(line=>enqueueLine(line));
     } else {
       enqueueLine("File not found.");
     }

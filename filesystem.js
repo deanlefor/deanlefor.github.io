@@ -26,6 +26,11 @@ window.fs = {
         "PhD in Public Policy, University X\n" +
         "M.A. in Y, University Z\n" +
         "B.S. in W, College Q"
+    },
+    images: {
+      "DEAN1.JPG": "ABOUT/dean1.jpg",
+      "DEAN2.JPG": "ABOUT/dean2.jpg",
+      "DEAN3.JPG": "ABOUT/dean3.jpg"
     }
   },
   "WORK_HISTORY": {
