@@ -12,11 +12,12 @@
 ================================ */
 
 body {
-  background-color: red;
+  background-color: black;
   color: green;
   font-family: "Courier New", Courier, monospace;
   margin: 0;
   padding: 1rem;
+  line-height: 1.2;
 }
 
 #terminal {
@@ -42,7 +43,7 @@ body {
   align-items: flex-start;
   font-family: inherit;
   font-size: 1rem;
-  line-height: 1;
+  line-height: 1.2;
 }
 
 #prompt-line {
@@ -54,10 +55,10 @@ body {
 }
 
 #fake-cursor {
-  width: 0.6ch;
+  display: inline-block;
+  width: 10px;
   height: 1em;
   background-color: green;
-  display: inline-block;
   animation: blink 1s steps(1) infinite;
   margin-left: 2px;
 }
