@@ -16,8 +16,8 @@ const promptLine   = document.getElementById("prompt-line");
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";       // "" means C:\Dean root
 let currentInput = "";
-let typingSpeed  = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed  = 10;       // ms per character
+const defaultSpeed = 10;
 const lineQueue   = [];
 let isPrinting    = false;
 
@@ -25,7 +25,6 @@ let isPrinting    = false;
 // 3. Prompt Helpers
 // —————————————————————————————————————————————————————————————
 function getPrompt() {
-  // e.g. "C:\Dean" or "C:\Dean\ABOUT"
   return `C:\\Dean${cwdKey ? '\\' + cwdKey : ''}>`;
 }
 function updatePrompt() {
@@ -58,10 +57,10 @@ function runBootSplash() {
 
 function continueBoot(e) {
   document.removeEventListener("keydown", continueBoot);
-  splash.style.display = "none";
+  splash.style.display   = "none";
   terminal.style.display = "block";
-  currentInput = "";
-  typedText.innerText = "";
+  currentInput           = "";
+  typedText.innerText    = "";
   updatePrompt();
   document.body.focus();
 }
@@ -70,7 +69,7 @@ function continueBoot(e) {
 // 5. Echo & Typing Animation
 // —————————————————————————————————————————————————————————————
 function echoLine(text) {
-  if (output.innerText === "") output.innerText = text;
+  if (!output.innerText) output.innerText = text;
   else output.innerText += "\n" + text;
 }
 
@@ -92,12 +91,12 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      output.innerText = prev === "" 
-        ? text.charAt(0) 
-        : prev + "\n" + text.charAt(0);
+      output.innerText = prev === ""
+        ? text[0]
+        : prev + "\n" + text[0];
       idx++;
     } else if (idx < text.length) {
-      output.innerText += text.charAt(idx++);
+      output.innerText += text[idx++];
     } else {
       clearInterval(timer);
       processQueue();
@@ -109,7 +108,6 @@ function processQueue() {
 // 6. Keyboard Handler
 // —————————————————————————————————————————————————————————————
 document.addEventListener("keydown", e => {
-  // If splash is showing, ignore here
   if (splash.style.display !== "none") return;
 
   if (e.key === "Backspace") {
@@ -127,10 +125,10 @@ document.addEventListener("keydown", e => {
 });
 
 // —————————————————————————————————————————————————————————————
-// 7. Command Handler (with CD/Dir support)
+// 7. Command Handler (with proper CD/Dir support)
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
-  const entry = window.fs[cwdKey];  // current folder data
+  const entry = window.fs[cwdKey];  // current directory
 
   // CLEAR / CLS
   if (command === "clear" || command === "cls") {
@@ -140,7 +138,7 @@ function handleCommand(command) {
 
   // RESET
   if (command === "reset") {
-    ["green","blue","amber"].forEach(t => 
+    ["green","blue","amber"].forEach(t=>
       document.body.classList.remove(`theme-${t}`)
     );
     document.body.classList.add("theme-green");
@@ -170,8 +168,12 @@ function handleCommand(command) {
   if (command === "dir") {
     enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
     enqueueLine("");
-    entry.folders.forEach(f => enqueueLine("  " + f + "    <DIR>"));
-    Object.keys(entry.files).forEach(fn => enqueueLine("  " + fn));
+    entry.folders.forEach(f =>
+      enqueueLine("  " + f + "    <DIR>")
+    );
+    Object.keys(entry.files).forEach(fn =>
+      enqueueLine("  " + fn)
+    );
     return;
   }
 
@@ -184,7 +186,11 @@ function handleCommand(command) {
       cwdKey = target;
     } else {
       enqueueLine("Directory not found.");
+      return;
     }
+    // show updated prompt immediately
+    updatePrompt();
+    inputWrapper.style.display = "inline-flex";
     return;
   }
 
@@ -205,7 +211,9 @@ function handleCommand(command) {
     const theme = command.split(" ")[1];
     const valid = ["green","blue","amber"];
     if (valid.includes(theme)) {
-      valid.forEach(t => document.body.classList.remove(`theme-${t}`));
+      valid.forEach(t=>
+        document.body.classList.remove(`theme-${t}`)
+      );
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
     } else {
@@ -243,6 +251,6 @@ function handleCommand(command) {
 }
 
 // —————————————————————————————————————————————————————————————
-// 8. Start it all
+// 8. Launch
 // —————————————————————————————————————————————————————————————
 window.onload = runBootSplash;
