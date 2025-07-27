@@ -1,31 +1,45 @@
 const output = document.getElementById("output");
-const input = document.getElementById("input");
+const typedText = document.getElementById("typed-text");
 
-const commands = {
-  help: "Available commands: HELP, ABOUT, RESUME, CV, CLEAR",
-  about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
-  resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
-  cv: "Resume coming soon... or visit deanlefor.com/resume.pdf"
-};
+let currentInput = "";
+
+document.addEventListener("keydown", function (e) {
+  if (e.key === "Backspace") {
+    currentInput = currentInput.slice(0, -1);
+  } else if (e.key.length === 1) {
+    currentInput += e.key;
+  } else if (e.key === "Enter") {
+    printLine("> " + currentInput);
+    handleCommand(currentInput.trim().toLowerCase());
+    currentInput = "";
+  }
+
+  typedText.innerText = currentInput;
+});
 
 function printLine(text) {
   output.innerText += "\n" + text;
 }
 
-input.addEventListener("keydown", function (e) {
-  if (e.key === "Enter") {
-    const command = input.value.trim().toLowerCase();
-    printLine("> " + input.value);
+function handleCommand(command) {
+  const commands = {
+    help: "Available commands: HELP, ABOUT, RESUME, CV, CLEAR",
+    about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
+    resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
+    cv: "Resume coming soon... or visit deanlefor.com/resume.pdf",
+    clear: "__CLEAR__",
+    cls: "__CLEAR__"
+  };
 
-    if (command === "clear") {
-      output.innerText = "";
-    } else if (commands[command]) {
-      printLine(commands[command]);
-    } else {
-      printLine("Unknown command. Type HELP to begin.");
-    }
-
-    input.value = "";
+  if (commands[command] === "__CLEAR__") {
+    output.innerText = "";
+    return;
   }
-});
 
+  const response = commands[command];
+  if (response) {
+    printLine(response);
+  } else {
+    printLine("Unknown command. Type HELP to begin.");
+  }
+}
