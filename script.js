@@ -7,7 +7,7 @@ const typedText = document.getElementById("typed-text");
 const inputWrapper = document.getElementById("input-wrapper");
 
 let currentInput = "";
-const typingSpeed = 30;       // ms per character for typing animation
+let typingSpeed = 30;       // ms per character for typing animation (now mutable)
 const lineQueue = [];
 let isPrinting = false;
 
@@ -86,23 +86,16 @@ document.addEventListener("keydown", e => {
   if (splash.style.display !== "none") return;
 
   if (e.key === "Backspace") {
-    // Remove last character
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
-    // Hide prompt while we print the response
     inputWrapper.style.display = "none";
-    // Echo prompt + command
     echoLine("C:\\dean> " + currentInput);
-    // Process it
     handleCommand(currentInput.trim().toLowerCase());
-    // Reset for next input
     currentInput = "";
     typedText.innerText = "";
   } else if (e.key.length === 1) {
-    // Add regular characters
     currentInput += e.key;
   }
-  // Update the visible typed text
   typedText.innerText = currentInput;
 });
 
@@ -125,10 +118,10 @@ function handleCommand(command) {
     return;
   }
 
-  // HELP: list core commands
+  // HELP: list core commands plus new COLOR and SPEED
   if (command === "help") {
     enqueueLine(
-      "Available commands: HELP, DIR, DATE, TIME, CLEAR, CLS"
+      "Available commands: HELP, DIR, DATE, TIME, COLOR, SPEED, CLEAR, CLS"
     );
     return;
   }
@@ -144,6 +137,34 @@ function handleCommand(command) {
   if (command === "time") {
     const now = new Date();
     enqueueLine("Current time: " + now.toLocaleTimeString());
+    return;
+  }
+
+  // COLOR: switch theme
+  if (command.startsWith("color ")) {
+    const theme = command.split(" ")[1];
+    const validThemes = ["green", "blue", "amber"];
+    if (validThemes.includes(theme)) {
+      // remove all theme-* classes, then add the selected one
+      validThemes.forEach(t => document.body.classList.remove(`theme-${t}`));
+      document.body.classList.add(`theme-${theme}`);
+      enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
+    } else {
+      enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
+    }
+    return;
+  }
+
+  // SPEED: adjust typing speed
+  if (command.startsWith("speed ")) {
+    const parts = command.split(" ");
+    const val = parseInt(parts[1], 10);
+    if (!isNaN(val) && val > 0) {
+      typingSpeed = val;
+      enqueueLine(`Typing speed set to ${val} ms/char.`);
+    } else {
+      enqueueLine("Invalid speed. Usage: SPEED <milliseconds>");
+    }
     return;
   }
 
