@@ -16,8 +16,8 @@ const promptLine   = document.getElementById("prompt-line");
 // —————————————————————————————————————————————————————————————
 let cwdKey        = "";       // "" means C:\Dean root
 let currentInput  = "";
-let typingSpeed   = 20;       // ms per character
-const defaultSpeed = 20;
+let typingSpeed   = 30;       // ms per character
+const defaultSpeed = 30;
 const lineQueue    = [];
 let isPrinting     = false;
 
@@ -73,7 +73,6 @@ function echoLine(text) {
   else output.innerText += "\n" + text;
 }
 
-// Guard against undefined lines so you never see “undefined”
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
@@ -130,11 +129,13 @@ document.addEventListener("keydown", e => {
 // 7. Command Handler (with CD/Dir support)
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
-  const entry = window.fs[cwdKey];  // current directory
+  const entry = window.fs[cwdKey];
 
-  // CLEAR / CLS
+  // CLEAR / CLS — now restores the prompt immediately
   if (command === "clear" || command === "cls") {
     output.innerText = "";
+    updatePrompt();
+    inputWrapper.style.display = "inline-flex";
     return;
   }
 
@@ -191,7 +192,6 @@ function handleCommand(command) {
       inputWrapper.style.display = "inline-flex";
       return;
     }
-    // on successful change, update prompt & show cursor
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
     return;
@@ -237,7 +237,7 @@ function handleCommand(command) {
     return;
   }
 
-  // File display (e.g. ABOUT.TXT)
+  // File display
   if (command.endsWith(".txt")) {
     const fn = command.toUpperCase();
     const content = entry.files[fn];
