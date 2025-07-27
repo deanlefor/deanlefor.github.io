@@ -24,3 +24,29 @@ input {
 #output {
   white-space: pre-wrap;
 }
+
+
+/* Blinking block cursor effect */
+input {
+  caret-color: transparent; /* Hide default cursor */
+  position: relative;
+  z-index: 1;
+}
+
+input::after {
+  content: "";
+  display: inline-block;
+  width: 8px;
+  height: 1em;
+  background-color: green;
+  animation: blink 1s steps(1) infinite;
+  position: absolute;
+  left: calc(0.5ch + 0.1rem); /* slight offset for realism */
+  top: 0;
+  z-index: 2;
+}
+
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
