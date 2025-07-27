@@ -13,8 +13,8 @@ const promptLine   = document.getElementById("prompt-line");
 // 2. State & Config
 let cwdKey        = "";       // "" => C:\Dean
 let currentInput  = "";
-let typingSpeed   = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed   = 10;       // ms per character
+const defaultSpeed = 10;
 const lineQueue    = [];
 let isPrinting     = false;
 
