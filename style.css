@@ -32,7 +32,7 @@ body {
 
 #output {
   white-space: pre-wrap;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0;   /* no extra gap before the prompt*/
 }
 
 /* ================================
