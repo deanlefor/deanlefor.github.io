@@ -3,72 +3,71 @@
  deanlefor.com - Terminal Styles
  Author: Dean Lefor
  Created: July 2025
- Description: Retro DOS-style terminal UI
 =================================
 */
 
-/* ================================
-   Base Layout and Typography
-================================ */
-
+/* Base */
 body {
-  background-color: black;
+  background: black;
   color: green;
-  /* Retro monospace font */
   font-family: 'VT323', monospace;
-  margin: 0;
-  padding: 1rem;
+  margin: 0; padding: 1rem;
   line-height: 1.2;
+  position: relative;
 }
 
+/* Splash */
+#splash {
+  position: absolute;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: black;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 10;
+}
+
+#splash-output {
+  white-space: pre-wrap;
+  font-size: 1rem;
+}
+
+/* Terminal */
 #terminal {
   max-width: 800px;
   margin: 0 auto;
 }
 
-/* ================================
-   Output Area (Command Results)
-================================ */
-
+/* Output area */
 #output {
   white-space: pre-wrap;
-  margin-bottom: 0;   /* consistent gap removed */
-  font-family: inherit; /* ensure output uses VT323 */
+  margin-bottom: 0; 
+  font-family: inherit;
 }
 
-/* ================================
-   Simulated Input Line and Cursor
-================================ */
-
+/* Input line & cursor */
 #input-wrapper {
   display: inline-flex;
   align-items: flex-start;
   font-size: 1rem;
-  line-height: 1.2;
 }
 
 #prompt-line,
 #typed-text {
-  font-family: inherit; /* match the retro font exactly */
+  font-family: inherit;
 }
 
-#prompt-line {
-  margin-right: 0.5ch;
-}
+#prompt-line { margin-right: 0.5ch; }
 
-#typed-text {
-  white-space: pre;
-}
+#typed-text { white-space: pre; }
 
 #fake-cursor {
   display: inline-block;
-  width: 8px;
-  height: 1em;
-  background-color: green;
+  width: 8px; height: 1em;
+  background: green;
   margin-left: 2px;
   animation: blink 1s steps(1) infinite;
 }
 
-@keyframes blink {
-  50% { opacity: 0; }
-}
+@keyframes blink { 50% { opacity: 0; } }
