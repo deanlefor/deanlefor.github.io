@@ -7,7 +7,7 @@ const typedText = document.getElementById("typed-text");
 const inputWrapper = document.getElementById("input-wrapper");
 
 let currentInput = "";
-let typingSpeed = 30;       // ms per character for typing animation (now mutable)
+let typingSpeed = 20;       // ms per character for typing animation (now mutable)
 const lineQueue = [];
 let isPrinting = false;
 
@@ -127,8 +127,7 @@ function handleCommand(command) {
     enqueueLine("  TIME");
     enqueueLine("  COLOR [green, blue, amber]");
     enqueueLine("  SPEED [1-150]");
-    enqueueLine("  CLEAR");
-    enqueueLine("  CLS");
+    enqueueLine("  CLEAR or CLS");
     return;
   }
 
