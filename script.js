@@ -1,77 +1,110 @@
 const output = document.getElementById("output");
 const typedText = document.getElementById("typed-text");
 
+// Configuration
+const typingSpeed = 30;            // ms per character
 let currentInput = "";
 
-// Core commands (for help only)
-const commands = {
-  help: "Available commands: HELP, DIR, CLEAR, CLS"
-};
+// A queue of lines waiting to be typed
+const lineQueue = [];
+let isPrinting = false;
 
-// Listen for keyboard input
-document.addEventListener("keydown", function (e) {
-  if (e.key === "Backspace") {
-    currentInput = currentInput.slice(0, -1);
-  } else if (e.key === "Enter") {
-    // Echo with prompt
-    printLine("C:\\dean> " + currentInput);
-    handleCommand(currentInput.trim().toLowerCase());
-    currentInput = "";
-  } else if (e.key.length === 1) {
-    currentInput += e.key;
-  }
-
-  typedText.innerText = currentInput;
-});
-
-// Print a new line of output
-function printLine(text) {
+// Echo a line immediately (used for the prompt)
+function echoLine(text) {
   if (output.innerText === "") {
-    // first line, don't add a new line
     output.innerText = text;
   } else {
-    // subsequent lines, prefix with a new line
     output.innerText += "\n" + text;
   }
 }
 
-// Command handler
+// Enqueue a line for animated typing
+function enqueueLine(text) {
+  lineQueue.push(text);
+  if (!isPrinting) processQueue();
+}
+
+// Process the queue, one line at a time
+function processQueue() {
+  if (lineQueue.length === 0) {
+    isPrinting = false;
+    return;
+  }
+  isPrinting = true;
+  const text = lineQueue.shift();
+  const prev = output.innerText;
+  let i = 0;
+
+  const timer = setInterval(() => {
+    if (i === 0) {
+      // First character: add newline if needed
+      if (prev === "") output.innerText = text.charAt(0);
+      else output.innerText = prev + "\n" + text.charAt(0);
+      i++;
+    } else if (i < text.length) {
+      // Append next char
+      output.innerText += text.charAt(i);
+      i++;
+    } else {
+      // Finished this line
+      clearInterval(timer);
+      processQueue();  // Move to next
+    }
+  }, typingSpeed);
+}
+
+// Handle keypresses
+document.addEventListener("keydown", e => {
+  if (e.key === "Backspace") {
+    currentInput = currentInput.slice(0, -1);
+  } else if (e.key === "Enter") {
+    // Echo the prompt+command immediately
+    echoLine("C:\\dean> " + currentInput);
+    handleCommand(currentInput.trim().toLowerCase());
+    currentInput = "";
+  } else if (e.key.length === 1) {
+    // Regular character
+    currentInput += e.key;
+  }
+  // Update the on-screen input line
+  typedText.innerText = currentInput;
+});
+
+// Print blank line or queued lines
 function handleCommand(command) {
-  // CLEAR or CLS
+  // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
     return;
   }
 
-  // DIR: list only .TXT files
+  // DIR listing
   if (command === "dir") {
-    const files = [
-      "ABOUT.TXT",
-      "RESUME.TXT",
-      "CV.TXT"
-    ];
-    printLine(" Directory of C:\\");
-    printLine("");
-    files.forEach(name => printLine("  " + name));
-    return;
-  }
-
-  // File commands with .TXT extension
-  if (command === "about.txt") {
-    printLine("Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.");
-    return;
-  }
-  if (command === "resume.txt" || command === "cv.txt") {
-    printLine("Resume coming soon... or visit deanlefor.com/resume.pdf");
+    const files = ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"];
+    enqueueLine(" Directory of C:\\");
+    enqueueLine("");
+    files.forEach(f => enqueueLine("  " + f));
     return;
   }
 
   // HELP
   if (command === "help") {
-    printLine(commands.help);
+    enqueueLine("Available commands: HELP, DIR, CLEAR, CLS");
     return;
   }
 
-  // Unknown command
-  printLine("Unknown command. Type HELP to begin.");
+  // ABOUT.TXT
+  if (command === "about.txt") {
+    enqueueLine("Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.");
+    return;
+  }
+
+  // RESUME.TXT or CV.TXT
+  if (command === "resume.txt" || command === "cv.txt") {
+    enqueueLine("Resume coming soon... or visit deanlefor.com/resume.pdf");
+    return;
+  }
+
+  // Fallback
+  enqueueLine("Unknown command. Type HELP to begin.");
 }
