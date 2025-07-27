@@ -7,10 +7,6 @@
 =================================
 */
 
-/* ================================
-   Base Layout and Typography
-================================ */
-
 body {
   background-color: black;
   color: green;
@@ -25,23 +21,14 @@ body {
   margin: 0 auto;
 }
 
-/* ================================
-   Output Area (Command Results)
-================================ */
-
 #output {
   white-space: pre-wrap;
   margin-bottom: 1rem;
 }
 
-/* ================================
-   Simulated Input Line and Cursor
-================================ */
-
 #input-wrapper {
   display: inline-flex;
   align-items: flex-start;
-  font-family: inherit;
   font-size: 1rem;
   line-height: 1.2;
 }
@@ -56,13 +43,15 @@ body {
 
 #fake-cursor {
   display: inline-block;
-  width: 10px;
+  width: 8px;
   height: 1em;
   background-color: green;
-  animation: blink 1s steps(1) infinite;
   margin-left: 2px;
+  animation: blink 1s steps(1) infinite;
 }
 
 @keyframes blink {
-  50% { opacity: 0; }
+  50% {
+    opacity: 0;
+  }
 }
