@@ -109,14 +109,15 @@ function handleCommand(command) {
   }
 
   // DIR: list only .TXT files
-  if (command === "dir") {
-    enqueueLine(" Directory of C:\\");
-    enqueueLine("");
-    ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
-      enqueueLine("  " + f)
-    );
-    return;
-  }
+if (command === "dir") {
+  enqueueLine(" Directory of C:\\");
+  // If you want a blank line, use a real empty string:
+  // enqueueLine("");
+  ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
+    enqueueLine("  " + f)
+  );
+  return;
+}
 
   // HELP: each command on its own line
   if (command === "help") {
