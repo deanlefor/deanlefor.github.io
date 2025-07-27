@@ -3,12 +3,17 @@ const typedText = document.getElementById("typed-text");
 
 let currentInput = "";
 
+// Core commands (for help only)
+const commands = {
+  help: "Available commands: HELP, DIR, CLEAR, CLS"
+};
+
 // Listen for keyboard input
 document.addEventListener("keydown", function (e) {
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
-    // Echo the command with the new prompt
+    // Echo with prompt
     printLine("C:\\dean> " + currentInput);
     handleCommand(currentInput.trim().toLowerCase());
     currentInput = "";
@@ -24,29 +29,20 @@ function printLine(text) {
   output.innerText += "\n" + text;
 }
 
-// Handle commands
+// Command handler
 function handleCommand(command) {
-  const commands = {
-    help: "Available commands: HELP, ABOUT, RESUME, CV, DIR, CLEAR, CLS",
-    about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
-    resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
-    cv: "Resume coming soon... or visit deanlefor.com/resume.pdf"
-  };
-
-  // CLEAR / CLS
+  // CLEAR or CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
     return;
   }
 
-  // DIR
+  // DIR: list only .TXT files
   if (command === "dir") {
     const files = [
       "ABOUT.TXT",
-      "RESUME.PDF",
-      "PROJECTS.BIN",
-      "SECRET.BAT",
-      "CONTACT.EXE"
+      "RESUME.TXT",
+      "CV.TXT"
     ];
     printLine(" Directory of C:\\");
     printLine("");
@@ -54,11 +50,22 @@ function handleCommand(command) {
     return;
   }
 
-  // Built-in responses
-  const response = commands[command];
-  if (response) {
-    printLine(response);
-  } else {
-    printLine("Unknown command. Type HELP to begin.");
+  // File commands with .TXT extension
+  if (command === "about.txt") {
+    printLine("Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.");
+    return;
   }
+  if (command === "resume.txt" || command === "cv.txt") {
+    printLine("Resume coming soon... or visit deanlefor.com/resume.pdf");
+    return;
+  }
+
+  // HELP
+  if (command === "help") {
+    printLine(commands.help);
+    return;
+  }
+
+  // Unknown command
+  printLine("Unknown command. Type HELP to begin.");
 }
