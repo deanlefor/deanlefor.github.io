@@ -7,10 +7,15 @@
 =================================
 */
 
+/* ================================
+   Base Layout and Typography
+================================ */
+
 body {
   background-color: black;
   color: green;
-  font-family: "Courier New", Courier, monospace;
+  /* Retro monospace font */
+  font-family: 'VT323', monospace;
   margin: 0;
   padding: 1rem;
   line-height: 1.2;
@@ -21,10 +26,18 @@ body {
   margin: 0 auto;
 }
 
+/* ================================
+   Output Area (Command Results)
+================================ */
+
 #output {
   white-space: pre-wrap;
   margin-bottom: 1rem;
 }
+
+/* ================================
+   Simulated Input Line and Cursor
+================================ */
 
 #input-wrapper {
   display: inline-flex;
@@ -51,7 +64,5 @@ body {
 }
 
 @keyframes blink {
-  50% {
-    opacity: 0;
-  }
+  50% { opacity: 0; }
 }
