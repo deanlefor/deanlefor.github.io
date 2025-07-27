@@ -3,26 +3,26 @@
 // —————————————————————————————————————————————————————————————
 // 1. Grab DOM elements
 // —————————————————————————————————————————————————————————————
-const splash           = document.getElementById("splash");
-const splashOutput     = document.getElementById("splash-output");
-const terminal         = document.getElementById("terminal");
-const output           = document.getElementById("output");
-const typedText        = document.getElementById("typed-text");
-const inputWrapper     = document.getElementById("input-wrapper");
-const promptLine       = document.getElementById("prompt-line");
+const splash       = document.getElementById("splash");
+const splashOutput = document.getElementById("splash-output");
+const terminal     = document.getElementById("terminal");
+const output       = document.getElementById("output");
+const typedText    = document.getElementById("typed-text");
+const inputWrapper = document.getElementById("input-wrapper");
+const promptLine   = document.getElementById("prompt-line");
 
 // —————————————————————————————————————————————————————————————
 // 2. State & Config
 // —————————————————————————————————————————————————————————————
-let cwdKey       = "";        // "" means root (C:\Dean)
+let cwdKey       = "";       // "" means C:\Dean root
 let currentInput = "";
-let typingSpeed  = 30;        // ms per character
+let typingSpeed  = 30;       // ms per character
 const defaultSpeed = 30;
 const lineQueue   = [];
 let isPrinting    = false;
 
 // —————————————————————————————————————————————————————————————
-// 3. Helper: Build & Update the Prompt
+// 3. Prompt Helpers
 // —————————————————————————————————————————————————————————————
 function getPrompt() {
   // e.g. "C:\Dean" or "C:\Dean\ABOUT"
@@ -33,7 +33,7 @@ function updatePrompt() {
 }
 
 // —————————————————————————————————————————————————————————————
-// 4. Boot Splash Sequence
+// 4. Boot Splash
 // —————————————————————————————————————————————————————————————
 function runBootSplash() {
   const lines = [
@@ -62,7 +62,7 @@ function continueBoot(e) {
   terminal.style.display = "block";
   currentInput = "";
   typedText.innerText = "";
-  updatePrompt();            // show initial prompt
+  updatePrompt();
   document.body.focus();
 }
 
@@ -70,7 +70,6 @@ function continueBoot(e) {
 // 5. Echo & Typing Animation
 // —————————————————————————————————————————————————————————————
 function echoLine(text) {
-  // prints text immediately (for prompt echo)
   if (output.innerText === "") output.innerText = text;
   else output.innerText += "\n" + text;
 }
@@ -107,17 +106,16 @@ function processQueue() {
 }
 
 // —————————————————————————————————————————————————————————————
-// 6. Keyboard Input Handler
+// 6. Keyboard Handler
 // —————————————————————————————————————————————————————————————
 document.addEventListener("keydown", e => {
-  // If splash still up, ignore (continueBoot handles it)
+  // If splash is showing, ignore here
   if (splash.style.display !== "none") return;
 
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
     inputWrapper.style.display = "none";
-    // Echo command with dynamic prompt
     echoLine(getPrompt() + " " + currentInput);
     handleCommand(currentInput.trim().toLowerCase());
     currentInput = "";
@@ -129,10 +127,10 @@ document.addEventListener("keydown", e => {
 });
 
 // —————————————————————————————————————————————————————————————
-// 7. Command Handler (including CD navigation)
+// 7. Command Handler (with CD/Dir support)
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
-  const entry = window.fs[cwdKey];  // current directory
+  const entry = window.fs[cwdKey];  // current folder data
 
   // CLEAR / CLS
   if (command === "clear" || command === "cls") {
@@ -142,12 +140,10 @@ function handleCommand(command) {
 
   // RESET
   if (command === "reset") {
-    // reset theme
     ["green","blue","amber"].forEach(t => 
       document.body.classList.remove(`theme-${t}`)
     );
     document.body.classList.add("theme-green");
-    // reset speed
     typingSpeed = defaultSpeed;
     enqueueLine("Theme reset to GREEN.");
     enqueueLine(`Typing speed reset to ${defaultSpeed} ms/char.`);
@@ -172,11 +168,9 @@ function handleCommand(command) {
 
   // DIR
   if (command === "dir") {
-    enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`); // no trailing '>'
+    enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
     enqueueLine("");
-    // list folders first
     entry.folders.forEach(f => enqueueLine("  " + f + "    <DIR>"));
-    // then files
     Object.keys(entry.files).forEach(fn => enqueueLine("  " + fn));
     return;
   }
@@ -185,7 +179,6 @@ function handleCommand(command) {
   if (command.startsWith("cd ")) {
     const target = command.slice(3).toUpperCase();
     if (target === "..") {
-      // go up to root
       cwdKey = "";
     } else if (entry.folders.includes(target)) {
       cwdKey = target;
@@ -233,12 +226,11 @@ function handleCommand(command) {
     return;
   }
 
-  // File display: <FILENAME>.TXT
+  // File display (e.g. ABOUT.TXT)
   if (command.endsWith(".txt")) {
     const fn = command.toUpperCase();
     const content = entry.files[fn];
     if (content !== undefined) {
-      // print each line
       content.split("\n").forEach(line => enqueueLine(line));
     } else {
       enqueueLine("File not found.");
@@ -251,6 +243,6 @@ function handleCommand(command) {
 }
 
 // —————————————————————————————————————————————————————————————
-// 8. Start boot splash on load
+// 8. Start it all
 // —————————————————————————————————————————————————————————————
 window.onload = runBootSplash;
