@@ -3,6 +3,14 @@ const typedText = document.getElementById("typed-text");
 
 let currentInput = "";
 
+// Available commands
+const commands = {
+  help: "Available commands: HELP, ABOUT, RESUME, CV, DIR, CLEAR, CLS",
+  about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
+  resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
+  cv: "Resume coming soon... or visit deanlefor.com/resume.pdf"
+};
+
 // Listen for keyboard input
 document.addEventListener("keydown", function (e) {
   if (e.key === "Backspace") {
@@ -14,7 +22,6 @@ document.addEventListener("keydown", function (e) {
   } else if (e.key.length === 1) {
     currentInput += e.key;
   }
-
   typedText.innerText = currentInput;
 });
 
@@ -25,20 +32,28 @@ function printLine(text) {
 
 // Handle commands
 function handleCommand(command) {
-  const commands = {
-    help: "Available commands: HELP, ABOUT, RESUME, CV, CLEAR, CLS",
-    about: "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust.",
-    resume: "Resume coming soon... or visit deanlefor.com/resume.pdf",
-    cv: "Resume coming soon... or visit deanlefor.com/resume.pdf",
-    clear: "__CLEAR__",
-    cls: "__CLEAR__"
-  };
-
-  if (commands[command] === "__CLEAR__") {
+  // Clear screen
+  if (command === "clear" || command === "cls") {
     output.innerText = "";
     return;
   }
 
+  // Directory listing
+  if (command === "dir") {
+    const files = [
+      "ABOUT.TXT",
+      "RESUME.PDF",
+      "PROJECTS.BIN",
+      "SECRET.BAT",
+      "CONTACT.EXE"
+    ];
+    printLine(" Directory of C:\\");
+    printLine("");
+    files.forEach(name => printLine("  " + name));
+    return;
+  }
+
+  // Built-in responses
   const response = commands[command];
   if (response) {
     printLine(response);
@@ -46,14 +61,3 @@ function handleCommand(command) {
     printLine("Unknown command. Type HELP to begin.");
   }
 }
-
-// Ensure the window/body is focused for keyboard events
-window.onload = function() {
-  window.focus();
-  document.body.tabIndex = 1;
-  document.body.focus();
-};
-document.body.addEventListener("click", function() {
-  document.body.focus();
-});
-
