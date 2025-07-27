@@ -16,8 +16,8 @@ const promptLine   = document.getElementById("prompt-line");
 // —————————————————————————————————————————————————————————————
 let cwdKey        = "";       // "" means C:\Dean root
 let currentInput  = "";
-let typingSpeed   = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed   = 20;       // ms per character
+const defaultSpeed = 20;
 const lineQueue    = [];
 let isPrinting     = false;
 
