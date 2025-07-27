@@ -1,18 +1,40 @@
-// Grab DOM elements
-const splash = document.getElementById("splash");
-const splashOutput = document.getElementById("splash-output");
-const terminal = document.getElementById("terminal");
-const output = document.getElementById("output");
-const typedText = document.getElementById("typed-text");
-const inputWrapper = document.getElementById("input-wrapper");
+// script.js
 
+// —————————————————————————————————————————————————————————————
+// 1. Grab DOM elements
+// —————————————————————————————————————————————————————————————
+const splash           = document.getElementById("splash");
+const splashOutput     = document.getElementById("splash-output");
+const terminal         = document.getElementById("terminal");
+const output           = document.getElementById("output");
+const typedText        = document.getElementById("typed-text");
+const inputWrapper     = document.getElementById("input-wrapper");
+const promptLine       = document.getElementById("prompt-line");
+
+// —————————————————————————————————————————————————————————————
+// 2. State & Config
+// —————————————————————————————————————————————————————————————
+let cwdKey       = "";        // "" means root (C:\Dean)
 let currentInput = "";
-let typingSpeed = 30;       // ms per character
+let typingSpeed  = 30;        // ms per character
 const defaultSpeed = 30;
-const lineQueue = [];
-let isPrinting = false;
+const lineQueue   = [];
+let isPrinting    = false;
 
-// 1) Boot splash sequence
+// —————————————————————————————————————————————————————————————
+// 3. Helper: Build & Update the Prompt
+// —————————————————————————————————————————————————————————————
+function getPrompt() {
+  // e.g. "C:\Dean" or "C:\Dean\ABOUT"
+  return `C:\\Dean${cwdKey ? '\\' + cwdKey : ''}>`;
+}
+function updatePrompt() {
+  promptLine.innerText = getPrompt();
+}
+
+// —————————————————————————————————————————————————————————————
+// 4. Boot Splash Sequence
+// —————————————————————————————————————————————————————————————
 function runBootSplash() {
   const lines = [
     "IBM PC BIOS",
@@ -34,23 +56,25 @@ function runBootSplash() {
   }, 500);
 }
 
-// 2) Hide splash & show terminal
 function continueBoot(e) {
   document.removeEventListener("keydown", continueBoot);
   splash.style.display = "none";
   terminal.style.display = "block";
   currentInput = "";
   typedText.innerText = "";
+  updatePrompt();            // show initial prompt
   document.body.focus();
 }
 
-// 3) Echo prompt+command immediately
+// —————————————————————————————————————————————————————————————
+// 5. Echo & Typing Animation
+// —————————————————————————————————————————————————————————————
 function echoLine(text) {
+  // prints text immediately (for prompt echo)
   if (output.innerText === "") output.innerText = text;
   else output.innerText += "\n" + text;
 }
 
-// 4) Queue lines for animated typing
 function enqueueLine(text) {
   lineQueue.push(text);
   if (!isPrinting) processQueue();
@@ -59,6 +83,7 @@ function enqueueLine(text) {
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
+    updatePrompt();
     inputWrapper.style.display = "inline-flex";
     return;
   }
@@ -68,10 +93,12 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      output.innerText = prev === "" ? text[0] : prev + "\n" + text[0];
+      output.innerText = prev === "" 
+        ? text.charAt(0) 
+        : prev + "\n" + text.charAt(0);
       idx++;
     } else if (idx < text.length) {
-      output.innerText += text[idx++];
+      output.innerText += text.charAt(idx++);
     } else {
       clearInterval(timer);
       processQueue();
@@ -79,15 +106,19 @@ function processQueue() {
   }, typingSpeed);
 }
 
-// 5) Handle keystrokes
+// —————————————————————————————————————————————————————————————
+// 6. Keyboard Input Handler
+// —————————————————————————————————————————————————————————————
 document.addEventListener("keydown", e => {
+  // If splash still up, ignore (continueBoot handles it)
   if (splash.style.display !== "none") return;
 
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
   } else if (e.key === "Enter") {
     inputWrapper.style.display = "none";
-    echoLine("C:\\dean> " + currentInput);
+    // Echo command with dynamic prompt
+    echoLine(getPrompt() + " " + currentInput);
     handleCommand(currentInput.trim().toLowerCase());
     currentInput = "";
     typedText.innerText = "";
@@ -97,19 +128,22 @@ document.addEventListener("keydown", e => {
   typedText.innerText = currentInput;
 });
 
-// 6) Command handler
+// —————————————————————————————————————————————————————————————
+// 7. Command Handler (including CD navigation)
+// —————————————————————————————————————————————————————————————
 function handleCommand(command) {
+  const entry = window.fs[cwdKey];  // current directory
+
   // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
-    inputWrapper.style.display = "inline-flex";
     return;
   }
 
-  // RESET: theme back to green, speed back to default
+  // RESET
   if (command === "reset") {
     // reset theme
-    ["green", "blue", "amber"].forEach(t => 
+    ["green","blue","amber"].forEach(t => 
       document.body.classList.remove(`theme-${t}`)
     );
     document.body.classList.add("theme-green");
@@ -120,20 +154,12 @@ function handleCommand(command) {
     return;
   }
 
-  // DIR
-  if (command === "dir") {
-    enqueueLine(" Directory of C:\\");
-    ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
-      enqueueLine("  " + f)
-    );
-    return;
-  }
-
   // HELP
   if (command === "help") {
     enqueueLine("Available commands:");
     enqueueLine("  HELP");
     enqueueLine("  DIR");
+    enqueueLine("  CD <folder> / CD ..");
     enqueueLine("  DATE");
     enqueueLine("  TIME");
     enqueueLine("  COLOR [green, blue, amber]");
@@ -144,28 +170,49 @@ function handleCommand(command) {
     return;
   }
 
+  // DIR
+  if (command === "dir") {
+    enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`); // no trailing '>'
+    enqueueLine("");
+    // list folders first
+    entry.folders.forEach(f => enqueueLine("  " + f + "    <DIR>"));
+    // then files
+    Object.keys(entry.files).forEach(fn => enqueueLine("  " + fn));
+    return;
+  }
+
+  // CD navigation
+  if (command.startsWith("cd ")) {
+    const target = command.slice(3).toUpperCase();
+    if (target === "..") {
+      // go up to root
+      cwdKey = "";
+    } else if (entry.folders.includes(target)) {
+      cwdKey = target;
+    } else {
+      enqueueLine("Directory not found.");
+    }
+    return;
+  }
+
   // DATE
   if (command === "date") {
-    const today = new Date();
-    enqueueLine("Current date: " + today.toLocaleDateString());
+    enqueueLine("Current date: " + new Date().toLocaleDateString());
     return;
   }
 
   // TIME
   if (command === "time") {
-    const now = new Date();
-    enqueueLine("Current time: " + now.toLocaleTimeString());
+    enqueueLine("Current time: " + new Date().toLocaleTimeString());
     return;
   }
 
   // COLOR
   if (command.startsWith("color ")) {
     const theme = command.split(" ")[1];
-    const validThemes = ["green", "blue", "amber"];
-    if (validThemes.includes(theme)) {
-      validThemes.forEach(t => 
-        document.body.classList.remove(`theme-${t}`)
-      );
+    const valid = ["green","blue","amber"];
+    if (valid.includes(theme)) {
+      valid.forEach(t => document.body.classList.remove(`theme-${t}`));
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
     } else {
@@ -186,19 +233,16 @@ function handleCommand(command) {
     return;
   }
 
-  // ABOUT.TXT
-  if (command === "about.txt") {
-    enqueueLine(
-      "Dean Lefor is a public servant and scholar exploring AI, oversight, and public trust."
-    );
-    return;
-  }
-
-  // RESUME.TXT / CV.TXT
-  if (command === "resume.txt" || command === "cv.txt") {
-    enqueueLine(
-      "Resume coming soon... or visit deanlefor.com/resume.pdf"
-    );
+  // File display: <FILENAME>.TXT
+  if (command.endsWith(".txt")) {
+    const fn = command.toUpperCase();
+    const content = entry.files[fn];
+    if (content !== undefined) {
+      // print each line
+      content.split("\n").forEach(line => enqueueLine(line));
+    } else {
+      enqueueLine("File not found.");
+    }
     return;
   }
 
@@ -206,5 +250,7 @@ function handleCommand(command) {
   enqueueLine("Unknown command. Type HELP to begin.");
 }
 
-// Start the boot splash on page load
+// —————————————————————————————————————————————————————————————
+// 8. Start boot splash on load
+// —————————————————————————————————————————————————————————————
 window.onload = runBootSplash;
