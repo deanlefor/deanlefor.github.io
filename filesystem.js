@@ -23,9 +23,10 @@ window.fs = {
         "Dean Lefor is a public servant and scholar exploring AI,\n" +
         "oversight, and public trust.",
       "EDUCATION.TXT":
-        "PhD in Public Policy, University X\n" +
-        "M.A. in Y, University Z\n" +
-        "B.S. in W, College Q"
+        "(Starting Fall 2025) Ph.D. in Public Administration and Public Affairs, Virginia Tech (2030?)\n" +
+        "Master of Public Administration, University of North Dakota (2008)\n" +
+        "Bachelor of Science, Business Administration (Finance Emphasis), North Dakota State University (2006)\n" +
+        "Bachelor of Science, Psychology, North Dakota State University (2006)"
     },
     images: {
       "DEAN1.JPG": "ABOUT/dean1.jpg",
