@@ -73,7 +73,7 @@ function echoLine(text) {
   else output.innerText += "\n" + text;
 }
 
-// **Guard against undefined lines** so you never see “undefined”
+// Guard against undefined lines so you never see “undefined”
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
@@ -140,7 +140,7 @@ function handleCommand(command) {
 
   // RESET
   if (command === "reset") {
-    ["green","blue","amber"].forEach(t=>
+    ["green","blue","amber"].forEach(t =>
       document.body.classList.remove(`theme-${t}`)
     );
     document.body.classList.add("theme-green");
@@ -169,7 +169,6 @@ function handleCommand(command) {
   // DIR
   if (command === "dir") {
     enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
-    enqueueLine("");   // intentional blank line
     entry.folders.forEach(f =>
       enqueueLine("  " + f + "    <DIR>")
     );
@@ -188,7 +187,6 @@ function handleCommand(command) {
       cwdKey = target;
     } else {
       enqueueLine("Directory not found.");
-      // keep cursor visible to retry
       updatePrompt();
       inputWrapper.style.display = "inline-flex";
       return;
@@ -216,7 +214,7 @@ function handleCommand(command) {
     const theme = command.split(" ")[1];
     const valid = ["green","blue","amber"];
     if (valid.includes(theme)) {
-      valid.forEach(t=>
+      valid.forEach(t =>
         document.body.classList.remove(`theme-${t}`)
       );
       document.body.classList.add(`theme-${theme}`);
