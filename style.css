@@ -33,10 +33,17 @@ body {
 }
 
 /* ================================
-   Input Field Styling
+   Input and Cursor Styling
 ================================ */
 
+#input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
 input {
+  flex-grow: 1;
   width: 100%;
   background: black;
   color: green;
@@ -44,26 +51,17 @@ input {
   font-size: 1rem;
   font-family: inherit;
   outline: none;
-  caret-color: transparent; /* Hide default cursor */
+  caret-color: transparent;
   position: relative;
   z-index: 1;
 }
 
-/* ================================
-   Blinking Block Cursor
-================================ */
-
-input::after {
-  content: "";
-  display: inline-block;
+#cursor {
   width: 8px;
   height: 1em;
   background-color: green;
+  margin-left: -8px;
   animation: blink 1s steps(1) infinite;
-  position: absolute;
-  left: calc(0.5ch + 0.1rem);
-  top: 0;
-  z-index: 2;
 }
 
 @keyframes blink {
