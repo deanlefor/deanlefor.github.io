@@ -46,3 +46,14 @@ function handleCommand(command) {
     printLine("Unknown command. Type HELP to begin.");
   }
 }
+
+// Ensure the window/body is focused for keyboard events
+window.onload = function() {
+  window.focus();
+  document.body.tabIndex = 1;
+  document.body.focus();
+};
+document.body.addEventListener("click", function() {
+  document.body.focus();
+});
+
