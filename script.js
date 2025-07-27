@@ -7,7 +7,8 @@ const typedText = document.getElementById("typed-text");
 const inputWrapper = document.getElementById("input-wrapper");
 
 let currentInput = "";
-let typingSpeed = 20;       // ms per character for typing animation (now mutable)
+let typingSpeed = 30;       // ms per character
+const defaultSpeed = 30;
 const lineQueue = [];
 let isPrinting = false;
 
@@ -33,7 +34,7 @@ function runBootSplash() {
   }, 500);
 }
 
-// 2) Hide splash & show terminal when a key is pressed
+// 2) Hide splash & show terminal
 function continueBoot(e) {
   document.removeEventListener("keydown", continueBoot);
   splash.style.display = "none";
@@ -43,7 +44,7 @@ function continueBoot(e) {
   document.body.focus();
 }
 
-// 3) Immediately echo prompt+command
+// 3) Echo prompt+command immediately
 function echoLine(text) {
   if (output.innerText === "") output.innerText = text;
   else output.innerText += "\n" + text;
@@ -58,7 +59,7 @@ function enqueueLine(text) {
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
-    inputWrapper.style.display = "inline-flex";  // show prompt again
+    inputWrapper.style.display = "inline-flex";
     return;
   }
   isPrinting = true;
@@ -67,11 +68,9 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      // First character: add newline if needed
       output.innerText = prev === "" ? text[0] : prev + "\n" + text[0];
       idx++;
     } else if (idx < text.length) {
-      // Append next character
       output.innerText += text[idx++];
     } else {
       clearInterval(timer);
@@ -80,9 +79,8 @@ function processQueue() {
   }, typingSpeed);
 }
 
-// 5) Handle keystrokes (for both splash and terminal)
+// 5) Handle keystrokes
 document.addEventListener("keydown", e => {
-  // During splash, only continueBoot matters
   if (splash.style.display !== "none") return;
 
   if (e.key === "Backspace") {
@@ -108,18 +106,30 @@ function handleCommand(command) {
     return;
   }
 
-  // DIR: list only .TXT files
-if (command === "dir") {
-  enqueueLine(" Directory of C:\\");
-  // If you want a blank line, use a real empty string:
-  // enqueueLine("");
-  ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
-    enqueueLine("  " + f)
-  );
-  return;
-}
+  // RESET: theme back to green, speed back to default
+  if (command === "reset") {
+    // reset theme
+    ["green", "blue", "amber"].forEach(t => 
+      document.body.classList.remove(`theme-${t}`)
+    );
+    document.body.classList.add("theme-green");
+    // reset speed
+    typingSpeed = defaultSpeed;
+    enqueueLine("Theme reset to GREEN.");
+    enqueueLine(`Typing speed reset to ${defaultSpeed} ms/char.`);
+    return;
+  }
 
-  // HELP: each command on its own line
+  // DIR
+  if (command === "dir") {
+    enqueueLine(" Directory of C:\\");
+    ["ABOUT.TXT", "RESUME.TXT", "CV.TXT"].forEach(f =>
+      enqueueLine("  " + f)
+    );
+    return;
+  }
+
+  // HELP
   if (command === "help") {
     enqueueLine("Available commands:");
     enqueueLine("  HELP");
@@ -128,30 +138,34 @@ if (command === "dir") {
     enqueueLine("  TIME");
     enqueueLine("  COLOR [green, blue, amber]");
     enqueueLine("  SPEED [1-150]");
-    enqueueLine("  CLEAR or CLS");
+    enqueueLine("  RESET");
+    enqueueLine("  CLEAR");
+    enqueueLine("  CLS");
     return;
   }
 
-  // DATE: show local date
+  // DATE
   if (command === "date") {
     const today = new Date();
     enqueueLine("Current date: " + today.toLocaleDateString());
     return;
   }
 
-  // TIME: show local time
+  // TIME
   if (command === "time") {
     const now = new Date();
     enqueueLine("Current time: " + now.toLocaleTimeString());
     return;
   }
 
-  // COLOR: switch theme
+  // COLOR
   if (command.startsWith("color ")) {
     const theme = command.split(" ")[1];
     const validThemes = ["green", "blue", "amber"];
     if (validThemes.includes(theme)) {
-      validThemes.forEach(t => document.body.classList.remove(`theme-${t}`));
+      validThemes.forEach(t => 
+        document.body.classList.remove(`theme-${t}`)
+      );
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
     } else {
@@ -160,10 +174,9 @@ if (command === "dir") {
     return;
   }
 
-  // SPEED: adjust typing speed (1–150 ms)
+  // SPEED
   if (command.startsWith("speed ")) {
-    const parts = command.split(" ");
-    const val = parseInt(parts[1], 10);
+    const val = parseInt(command.split(" ")[1], 10);
     if (!isNaN(val) && val >= 1 && val <= 150) {
       typingSpeed = val;
       enqueueLine(`Typing speed set to ${val} ms/char.`);
@@ -181,7 +194,7 @@ if (command === "dir") {
     return;
   }
 
-  // RESUME.TXT or CV.TXT
+  // RESUME.TXT / CV.TXT
   if (command === "resume.txt" || command === "cv.txt") {
     enqueueLine(
       "Resume coming soon... or visit deanlefor.com/resume.pdf"
@@ -189,7 +202,7 @@ if (command === "dir") {
     return;
   }
 
-  // Unknown command
+  // Unknown
   enqueueLine("Unknown command. Type HELP to begin.");
 }
 
