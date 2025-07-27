@@ -118,11 +118,17 @@ function handleCommand(command) {
     return;
   }
 
-  // HELP: list core commands plus new COLOR and SPEED usage
+  // HELP: each command on its own line
   if (command === "help") {
-    enqueueLine(
-      "Available commands: HELP, DIR, DATE, TIME, COLOR [green, blue, amber], SPEED [1-150], CLEAR, CLS"
-    );
+    enqueueLine("Available commands:");
+    enqueueLine("  HELP");
+    enqueueLine("  DIR");
+    enqueueLine("  DATE");
+    enqueueLine("  TIME");
+    enqueueLine("  COLOR [green, blue, amber]");
+    enqueueLine("  SPEED [1-150]");
+    enqueueLine("  CLEAR");
+    enqueueLine("  CLS");
     return;
   }
 
