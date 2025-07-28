@@ -10,6 +10,7 @@ window.fs = {
         "Type HELP for a list of commands.",
       "SECRET.TXT": 
         "You’ve discovered the secret file! 🎉\n" +
+        "I mean, it's not really secret because it is listed with all the files... but...\n" +
         "More surprises await in the FUN folder."
     }
   },
@@ -38,10 +39,10 @@ window.fs = {
     folders: [],
     files: {
       "DAIGM.TXT":
-        "Deputy Assistant Inspector General for Management (DAIGM)\n" +
+        "Deputy Assistant Inspector General for Management (DAIGM) (2025-current)\n" +
         "– Led initiatives on … (details to come)",
-      "RMD-DIRECTOR.TXT":
-        "Director, Risk Management Division (RMD)\n" +
+      "RMD_DIRECTOR.TXT":
+        "Director, Resources Management Division (RMD) (2024-2025)\n" +
         "– Oversaw … (details to come)"
       // Add more roles as needed
     }
@@ -52,7 +53,7 @@ window.fs = {
       "GAMES.TXT":
         "Retro terminal games coming soon!\n" +
         "Try commands like SNAKE or PONG in future updates.",
-      "ASCII-ART.TXT":
+      "ASCII_ART.TXT":
         "  ,_,\n" +
         " (O,O)\n" +
         " (   )\n" +
