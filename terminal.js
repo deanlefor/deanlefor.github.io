@@ -1,22 +1,46 @@
 // terminal.js
-let cwdKey = "";
-let currentInput = "";
-let typingSpeed = 30;
-const defaultSpeed = 30;
-const lineQueue = [];
-let isPrinting = false;
 
+// —————————————————————————————————————————————————————————————
+// 1. State & Config
+// —————————————————————————————————————————————————————————————
+let cwdKey       = "";
+let currentInput = "";
+let typingSpeed  = 30;       // ms per character
+const defaultSpeed = 30;
+const lineQueue    = [];
+let isPrinting    = false;
+
+// —————————————————————————————————————————————————————————————
+// 2. Prompt Helpers
+// —————————————————————————————————————————————————————————————
 function getPrompt() {
   return `C:\\Dean${cwdKey ? '\\' + cwdKey : ''}>`;
 }
 
 function updatePrompt() {
   document.getElementById("prompt-line").innerText = getPrompt();
+  scrollToBottom();
 }
 
+// —————————————————————————————————————————————————————————————
+// 3. Scrolling Helper
+// —————————————————————————————————————————————————————————————
+function scrollToBottom() {
+  // Scroll the prompt into view
+  const wrapper = document.getElementById("input-wrapper");
+  if (wrapper) wrapper.scrollIntoView({ block: "end" });
+  else window.scrollTo(0, document.body.scrollHeight);
+}
+
+// —————————————————————————————————————————————————————————————
+// 4. Echo & Typing Animation
+// —————————————————————————————————————————————————————————————
 function echoLine(text) {
   const out = document.getElementById("output");
-  out.innerText = out.innerText ? out.innerText + "\n" + text : text;
+  out.innerText = out.innerText
+    ? out.innerText + "\n" + text
+    : text;
+  scrollToBottom();
 }
 
 function enqueueLine(text) {
@@ -31,8 +55,6 @@ function processQueue() {
     isPrinting = false;
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
-    const mi = document.getElementById("mobile-input");
-    if (mi) setTimeout(() => mi.focus(), 0);
     return;
   }
   isPrinting = true;
@@ -41,12 +63,15 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      out.innerText = prev ? prev + "\n" + text[0] : text[0];
+      out.innerText = prev
+        ? prev + "\n" + text[0]
+        : text[0];
       idx++;
     } else if (idx < text.length) {
       out.innerText += text[idx++];
     } else {
       clearInterval(timer);
+      scrollToBottom();
       processQueue();
     }
   }, typingSpeed);
