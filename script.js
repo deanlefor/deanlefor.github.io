@@ -154,7 +154,7 @@ if (command === "help") {
   enqueueLine("  DIR                            List folders & files");
   enqueueLine("  CD <folder>                    Enter a folder (e.g. CD ABOUT)");
   enqueueLine("  CD ..                          Go back to main folder");
-  enqueueLine("  <filename>.TXT                 View a text file");
+  enqueueLine("  <filename>.TXT                  View a text file");
   enqueueLine("  <imagename>.JPG                Display an image");
   enqueueLine("");
   enqueueLine("Other commands:");
