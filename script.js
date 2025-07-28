@@ -33,7 +33,7 @@ function updatePrompt() {
 }
 
 // —————————————————————————————————————————————————————————————
-// 4. Boot Splash (key, click, or touch)
+// 4. Boot Splash (tap or key)
 // —————————————————————————————————————————————————————————————
 function runBootSplash() {
   const lines = [
@@ -44,7 +44,7 @@ function runBootSplash() {
     "64K System RAM",
     "384K Extended RAM OK",
     "",
-    "Press any key or tap to boot"
+    "Press any key or TAP HERE to boot"
   ];
   let i = 0;
   const timer = setInterval(() => {
@@ -73,11 +73,19 @@ function continueBoot(e) {
   typedText.innerText = "";
   updatePrompt();
 
-  // focus mobile input to trigger soft-keyboard
+  // focus hidden input to trigger soft-keyboard
   if (mobileInput) {
     mobileInput.value = "";
     setTimeout(() => mobileInput.focus(), 0);
   }
+
+  // allow tapping anywhere in terminal to bring up keyboard
+  terminal.addEventListener("click", () => {
+    if (mobileInput) mobileInput.focus();
+  });
+  terminal.addEventListener("touchstart", () => {
+    if (mobileInput) mobileInput.focus();
+  });
 }
 
 // —————————————————————————————————————————————————————————————
@@ -87,11 +95,13 @@ function echoLine(text) {
   if (!output.innerText) output.innerText = text;
   else output.innerText += "\n" + text;
 }
+
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
+
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
@@ -106,8 +116,8 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      output.innerText = prev === "" 
-        ? text.charAt(0) 
+      output.innerText = prev === ""
+        ? text.charAt(0)
         : prev + "\n" + text.charAt(0);
       idx++;
     } else if (idx < text.length) {
@@ -154,7 +164,6 @@ if (mobileInput) {
       ev.target.value = "";
     }
   });
-
   mobileInput.addEventListener("keydown", ev => {
     if (ev.key === "Backspace") {
       ev.preventDefault();
@@ -283,7 +292,7 @@ function handleCommand(command) {
       typingSpeed = val;
       enqueueLine(`Typing speed set to ${val} ms/char.`);
     } else {
-      enqueueLine("Invalid speed. Usage: SPEED <1-150>");
+      enqueueLine("Invalid speed. Usage: SPEED <1-150>");   
     }
     return;
   }
