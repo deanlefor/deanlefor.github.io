@@ -145,23 +145,29 @@ function handleCommand(command) {
     return;
   }
 
-  // HELP
-  if (command === "help") {
-    enqueueLine("Available commands:");
-    enqueueLine("  HELP");
-    enqueueLine("  DIR");
-    enqueueLine("  CD <folder> / CD ..");
-    enqueueLine("  DATE");
-    enqueueLine("  TIME");
-    enqueueLine("  COLOR [green, blue, amber]");
-    enqueueLine("  SPEED [1-150]");
-    enqueueLine("  RESET");
-    enqueueLine("  CLEAR");
-    enqueueLine("  CLS");
-    enqueueLine("  <filename>.TXT");
-    enqueueLine("  <imagename>.JPG");
-    return;
-  }
+// HELP
+if (command === "help") {
+  enqueueLine("Welcome to Dean’s DOS terminal!");
+  enqueueLine("You are currently at the root directory: C:\\Dean");
+  enqueueLine("");
+  enqueueLine("Navigation:");
+  enqueueLine("  DIR                            List folders & files");
+  enqueueLine("  CD <folder>                    Enter a folder (e.g. CD ABOUT)");
+  enqueueLine("  CD ..                          Go back to main folder");
+  enqueueLine("  <filename>.TXT                 View a text file");
+  enqueueLine("  <imagename>.JPG                Display an image");
+  enqueueLine("");
+  enqueueLine("Other commands:");
+  enqueueLine("  DATE                           Show current date");
+  enqueueLine("  TIME                           Show current time");
+  enqueueLine("  COLOR [blue/green/amber]       Theme: green, blue, amber");
+  enqueueLine("  SPEED [1-150]                  Typing speed in ms/char");
+  enqueueLine("  RESET                          Restore defaults");
+  enqueueLine("  CLEAR   or   CLS               Clear the screen");
+  enqueueLine("");
+  enqueueLine("Type HELP at any time to see this again.");
+  return;
+}
 
   // DIR
   if (command === "dir") {
