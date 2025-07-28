@@ -2,9 +2,8 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <!-- MOBILE VIEWPORT -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MS-DOS Terminal</title>
+  <title>Dean Lefor Terminal</title>
   <link
     href="https://fonts.googleapis.com/css2?family=VT323&display=swap"
     rel="stylesheet"
@@ -12,13 +11,8 @@
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <!-- Splash screen -->
-  <div id="splash">
-    <pre id="splash-output"></pre>
-  </div>
-
-  <!-- Main terminal, hidden until splash finishes -->
-  <div id="terminal" style="display: none;">
+  <div id="splash"><pre id="splash-output"></pre></div>
+  <div id="terminal" style="display:none;">
     <pre id="output"></pre>
     <div id="input-wrapper">
       <span id="prompt-line">C:\dean&gt;</span>
@@ -26,28 +20,15 @@
     </div>
   </div>
 
-  <!-- HIDDEN MOBILE INPUT (to reliably trigger soft-keyboard) -->
-  <input
-    type="text"
-    id="mobile-input"
-    autocomplete="off"
-    autocapitalize="none"
-    autocorrect="off"
-    spellcheck="false"
-    style="
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 40px;              /* enough height for iOS to show keyboard */
-      opacity: 0.01;             /* almost invisible but 'visible' */
-      border: none;
-      outline: none;
-      z-index: 1000;             /* above terminal so focus works */
-    "
-  />
+  <!-- Hidden mobile input -->
+  <input id="mobile-input" type="text" style="position:absolute;bottom:0;left:0;width:100%;height:40px;opacity:0.01;border:none;outline:none;z-index:1000" />
 
+  <!-- Modular scripts -->
   <script src="filesystem.js"></script>
-  <script src="script.js"></script>
+  <script src="boot.js"></script>
+  <script src="terminal.js"></script>
+  <script src="input.js"></script>
+  <script src="commands.js"></script>
+  <script src="runner.js"></script>
 </body>
 </html>
