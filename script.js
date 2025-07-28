@@ -36,7 +36,7 @@ function updatePrompt() {
 // —————————————————————————————————————————————————————————————
 function runBootSplash() {
   const lines = [
-    "IBM PC BIOS",
+    "IBM PC BIOS, v1",
     "Version 1.10",
     "Copyright (c) 1982 IBM Corporation",
     "",
