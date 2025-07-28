@@ -28,17 +28,16 @@ let isPrinting     = false;
 function getPrompt() {
   return `C:\\Dean${cwdKey ? '\\' + cwdKey : ''}>`;
 }
-
 function updatePrompt() {
   promptLine.innerText = getPrompt();
 }
 
 // —————————————————————————————————————————————————————————————
-// 4. Boot Splash (tap or key)
+// 4. Boot Splash (key, click, or touch)
 // —————————————————————————————————————————————————————————————
 function runBootSplash() {
   const lines = [
-    "IBM PC BIOS, mobile v3",
+    "IBM PC BIOS",
     "Version 1.10",
     "Copyright (c) 1982 IBM Corporation",
     "",
@@ -53,22 +52,31 @@ function runBootSplash() {
     if (i === lines.length) {
       clearInterval(timer);
       document.addEventListener("keydown", continueBoot);
-      splash.addEventListener("touchstart", continueBoot);
+      splash.addEventListener("pointerdown", continueBoot, { passive: false });
+      splash.addEventListener("touchstart", continueBoot, { passive: false });
+      splash.addEventListener("click", continueBoot);
     }
   }, 500);
 }
 
 function continueBoot(e) {
+  e.preventDefault();
   document.removeEventListener("keydown", continueBoot);
+  splash.removeEventListener("pointerdown", continueBoot);
   splash.removeEventListener("touchstart", continueBoot);
+  splash.removeEventListener("click", continueBoot);
+
   splash.style.display   = "none";
   terminal.style.display = "block";
+
   currentInput = "";
   typedText.innerText = "";
   updatePrompt();
+
+  // focus mobile input to trigger soft-keyboard
   if (mobileInput) {
     mobileInput.value = "";
-    mobileInput.focus();
+    setTimeout(() => mobileInput.focus(), 0);
   }
 }
 
@@ -79,19 +87,17 @@ function echoLine(text) {
   if (!output.innerText) output.innerText = text;
   else output.innerText += "\n" + text;
 }
-
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
-
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
+    if (mobileInput) setTimeout(() => mobileInput.focus(), 0);
     return;
   }
   isPrinting = true;
@@ -100,8 +106,8 @@ function processQueue() {
   let idx = 0;
   const timer = setInterval(() => {
     if (idx === 0) {
-      output.innerText = prev === ""
-        ? text.charAt(0)
+      output.innerText = prev === "" 
+        ? text.charAt(0) 
         : prev + "\n" + text.charAt(0);
       idx++;
     } else if (idx < text.length) {
@@ -148,6 +154,7 @@ if (mobileInput) {
       ev.target.value = "";
     }
   });
+
   mobileInput.addEventListener("keydown", ev => {
     if (ev.key === "Backspace") {
       ev.preventDefault();
@@ -169,14 +176,14 @@ if (mobileInput) {
 // 7. Command Handler
 // —————————————————————————————————————————————————————————————
 function handleCommand(command) {
-  const entry = window.fs[cwdKey]; // current directory
+  const entry = window.fs[cwdKey];
 
   // CLEAR / CLS
   if (command === "clear" || command === "cls") {
     output.innerText = "";
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
+    if (mobileInput) setTimeout(() => mobileInput.focus(), 0);
     return;
   }
 
@@ -234,12 +241,12 @@ function handleCommand(command) {
       enqueueLine("Directory not found.");
       updatePrompt();
       inputWrapper.style.display = "inline-flex";
-      if (mobileInput) mobileInput.focus();
+      if (mobileInput) setTimeout(() => mobileInput.focus(), 0);
       return;
     }
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
+    if (mobileInput) setTimeout(() => mobileInput.focus(), 0);
     return;
   }
 
@@ -292,7 +299,7 @@ function handleCommand(command) {
     }
     updatePrompt();
     inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
+    if (mobileInput) setTimeout(() => mobileInput.focus(), 0);
     return;
   }
 
