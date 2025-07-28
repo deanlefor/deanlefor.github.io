@@ -72,10 +72,14 @@ body {
    Terminal Container
 ================================= */
 #terminal {
+  /* if you want the div itself to scroll: */
   max-width: 800px;
-  margin: 0;             /* left-justify the terminal */
-  /* body’s padding handles left inset */
+  margin: 0 auto;
+  height: 100vh;         /* full viewport height */
+  overflow-y: auto;
+  padding: 1rem;
 }
+
 
 /* ================================
    Output Area (Command Results)
