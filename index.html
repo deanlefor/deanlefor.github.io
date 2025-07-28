@@ -26,7 +26,7 @@
     </div>
   </div>
 
-  <!-- HIDDEN MOBILE INPUT (brings up the on-screen keyboard) -->
+  <!-- HIDDEN MOBILE INPUT (to reliably trigger soft-keyboard) -->
   <input
     type="text"
     id="mobile-input"
@@ -39,10 +39,11 @@
       bottom: 0;
       left: 0;
       width: 100%;
-      height: 1px;
-      opacity: 0;
+      height: 40px;              /* enough height for iOS to show keyboard */
+      opacity: 0.01;             /* almost invisible but 'visible' */
       border: none;
       outline: none;
+      z-index: 1000;             /* above terminal so focus works */
     "
   />
 
