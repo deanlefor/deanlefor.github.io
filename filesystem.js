@@ -7,11 +7,7 @@ window.fs = {
     files: {
       "README.TXT": 
         "Welcome to Dean Lefor’s DOS-style terminal site!\n" +
-        "Type HELP for a list of commands.",
-      "SECRET.TXT": 
-        "You’ve discovered the secret file! 🎉\n" +
-        "I mean, it's not really secret because it is listed with all the files... but...\n" +
-        "More surprises await in the FUN folder."
+        "Type HELP for a list of commands."
     }
   },
   "ABOUT": {
@@ -61,7 +57,11 @@ window.fs = {
       "PROJECTS.TXT":
         "Side projects:\n" +
         "- Project A: …\n" +
-        "- Project B: …"
+        "- Project B: …",
+      "SECRET.TXT": 
+        "You’ve discovered the secret file! 🎉\n" +
+        "I mean, it's not really secret because it is listed with all the files... but...\n" +
+        "More surprises await in the FUN folder."
     }
   },
   "CONTACT": {
