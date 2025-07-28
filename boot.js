@@ -3,8 +3,8 @@ function runBootSplash() {
   const splash = document.getElementById("splash");
   const out    = document.getElementById("splash-output");
   const lines = [
-    "IBM PC BIOS","Version 1.10","Copyright (c) 1982 IBM Corporation",
-    "","64K System RAM","384K Extended RAM OK","","Press any key or TAP HERE to boot"
+    "IBM Personal Computer BIOS","Version 1.10","Copyright (c) 1982 IBM Corporation",
+    "","64K System RAM OK","384K Extended RAM OK","","Starting MS-DOS...","","","(c) Copyright Dean Lefor 2025","Press any key or TAP HERE to boot"
   ];
   let i = 0;
   const timer = setInterval(() => {
