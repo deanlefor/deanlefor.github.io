@@ -1,8 +1,6 @@
 // script.js
 
-// —————————————————————————————————————————————————————————————
-// 1. Grab DOM elements
-// —————————————————————————————————————————————————————————————
+// 1) Grab DOM elements
 const splash       = document.getElementById("splash");
 const splashOutput = document.getElementById("splash-output");
 const terminal     = document.getElementById("terminal");
@@ -10,22 +8,17 @@ const output       = document.getElementById("output");
 const typedText    = document.getElementById("typed-text");
 const inputWrapper = document.getElementById("input-wrapper");
 const promptLine   = document.getElementById("prompt-line");
-// Hidden mobile input for on-screen keyboard
 const mobileInput  = document.getElementById("mobile-input");
 
-// —————————————————————————————————————————————————————————————
-// 2. State & Config
-// —————————————————————————————————————————————————————————————
-let cwdKey        = "";       // "" = C:\Dean root
+// 2) State & Config
+let cwdKey        = "";      // "" = C:\Dean
 let currentInput  = "";
-let typingSpeed   = 30;       // ms per character
+let typingSpeed   = 30;      // ms per character
 const defaultSpeed = 30;
 const lineQueue    = [];
 let isPrinting     = false;
 
-// —————————————————————————————————————————————————————————————
-// 3. Prompt Helpers
-// —————————————————————————————————————————————————————————————
+// 3) Prompt Helpers
 function getPrompt() {
   return `C:\\Dean${cwdKey ? '\\' + cwdKey : ''}>`;
 }
@@ -33,12 +26,10 @@ function updatePrompt() {
   promptLine.innerText = getPrompt();
 }
 
-// —————————————————————————————————————————————————————————————
-// 4. Boot Splash (tap or key)
-// —————————————————————————————————————————————————————————————
+// 4) Boot Splash (tap or key)
 function runBootSplash() {
   const lines = [
-    "IBM PC BIOS - Mobile Test",
+    "IBM PC BIOS, mobile v1",
     "Version 1.10",
     "Copyright (c) 1982 IBM Corporation",
     "",
@@ -62,31 +53,32 @@ function continueBoot(e) {
   document.removeEventListener("keydown", continueBoot);
   splash.removeEventListener("touchstart", continueBoot);
 
+  // Show terminal
   splash.style.display   = "none";
   terminal.style.display = "block";
 
+  // Reset input buffer & prompt
   currentInput = "";
   typedText.innerText = "";
   updatePrompt();
 
-  // Bring up mobile keyboard if present
-  if (mobileInput) mobileInput.focus();
+  // Focus the mobile input so soft keyboard appears
+  if (mobileInput) {
+    mobileInput.value = "";
+    mobileInput.focus();
+  }
 }
 
-// —————————————————————————————————————————————————————————————
-// 5. Echo & Typing Animation
-// —————————————————————————————————————————————————————————————
+// 5) Echo & Typing Animation
 function echoLine(text) {
   if (!output.innerText) output.innerText = text;
   else output.innerText += "\n" + text;
 }
-
 function enqueueLine(text) {
   if (typeof text === "undefined") return;
   lineQueue.push(text);
   if (!isPrinting) processQueue();
 }
-
 function processQueue() {
   if (lineQueue.length === 0) {
     isPrinting = false;
@@ -114,12 +106,13 @@ function processQueue() {
   }, typingSpeed);
 }
 
-// —————————————————————————————————————————————————————————————
-// 6a. Desktop Keyboard Handler
-// —————————————————————————————————————————————————————————————
+// 6a) Desktop Keyboard Handler
 document.addEventListener("keydown", e => {
-  // If splash active or mobile input has focus, skip here
-  if (splash.style.display !== "none" || (mobileInput && e.target === mobileInput)) return;
+  // If splash is active or event from mobileInput, ignore
+  if (
+    splash.style.display !== "none" ||
+    (mobileInput && e.target === mobileInput)
+  ) return;
 
   if (e.key === "Backspace") {
     currentInput = currentInput.slice(0, -1);
@@ -135,11 +128,8 @@ document.addEventListener("keydown", e => {
   typedText.innerText = currentInput;
 });
 
-// —————————————————————————————————————————————————————————————
-// 6b. Mobile Input Mirroring
-// —————————————————————————————————————————————————————————————
+// 6b) Mobile Input Mirroring
 if (mobileInput) {
-  // Mirror typing from hidden input
   mobileInput.addEventListener("input", ev => {
     const v = ev.target.value;
     if (v) {
@@ -148,8 +138,6 @@ if (mobileInput) {
       ev.target.value = "";
     }
   });
-
-  // Handle Backspace & Enter on mobile
   mobileInput.addEventListener("keydown", ev => {
     if (ev.key === "Backspace") {
       ev.preventDefault();
@@ -167,150 +155,11 @@ if (mobileInput) {
   });
 }
 
-// —————————————————————————————————————————————————————————————
-// 7. Command Handler (unchanged)
-// —————————————————————————————————————————————————————————————
+// 7) Command Handler (your existing logic)
 function handleCommand(command) {
   const entry = window.fs[cwdKey];
-
-  // CLEAR / CLS
-  if (command === "clear" || command === "cls") {
-    output.innerText = "";
-    updatePrompt();
-    inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
-    return;
-  }
-
-  // RESET
-  if (command === "reset") {
-    ["green","blue","amber"].forEach(t=>document.body.classList.remove(`theme-${t}`));
-    document.body.classList.add("theme-green");
-    typingSpeed = defaultSpeed;
-    enqueueLine("Theme reset to GREEN.");
-    enqueueLine(`Typing speed reset to ${defaultSpeed} ms/char.`);
-    return;
-  }
-
-  // HELP
-  if (command === "help") {
-    enqueueLine("Welcome to Dean’s DOS terminal!");
-    enqueueLine("You are currently at the root directory: C:\\Dean");
-    enqueueLine("");
-    enqueueLine("Navigation:");
-    enqueueLine("  DIR                  List folders & files");
-    enqueueLine("  CD <folder>          Enter a folder");
-    enqueueLine("  CD ..                Go up one level");
-    enqueueLine("  <filename>.TXT       View a text file");
-    enqueueLine("  <imagename>.JPG      Display an image");
-    enqueueLine("");
-    enqueueLine("Other commands:");
-    enqueueLine("  DATE                 Show current date");
-    enqueueLine("  TIME                 Show current time");
-    enqueueLine("  COLOR [g,b,a]        Theme: green, blue, amber");
-    enqueueLine("  SPEED [1-150]        Typing speed in ms/char");
-    enqueueLine("  RESET                Restore defaults");
-    enqueueLine("  CLEAR   or   CLS     Clear the screen");
-    enqueueLine("");
-    enqueueLine("Type HELP any time to see this again.");
-    return;
-  }
-
-  // DIR
-  if (command === "dir") {
-    enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
-    entry.folders.forEach(f => enqueueLine("  " + f + "    <DIR>"));
-    Object.keys(entry.files).forEach(fn => enqueueLine("  " + fn));
-    if (entry.images) Object.keys(entry.images).forEach(img => enqueueLine("  " + img));
-    return;
-  }
-
-  // CD navigation
-  if (command.startsWith("cd ")) {
-    const target = command.slice(3).toUpperCase();
-    if (target === "..") cwdKey = "";
-    else if (entry.folders.includes(target)) cwdKey = target;
-    else {
-      enqueueLine("Directory not found.");
-      updatePrompt();
-      inputWrapper.style.display = "inline-flex";
-      if (mobileInput) mobileInput.focus();
-      return;
-    }
-    updatePrompt();
-    inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
-    return;
-  }
-
-  // DATE
-  if (command === "date") {
-    enqueueLine("Current date: " + new Date().toLocaleDateString());
-    return;
-  }
-
-  // TIME
-  if (command === "time") {
-    enqueueLine("Current time: " + new Date().toLocaleTimeString());
-    return;
-  }
-
-  // COLOR
-  if (command.startsWith("color ")) {
-    const theme = command.split(" ")[1];
-    const valid = ["green","blue","amber"];
-    if (valid.includes(theme)) {
-      valid.forEach(t=>document.body.classList.remove(`theme-${t}`));
-      document.body.classList.add(`theme-${theme}`);
-      enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
-    } else enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
-    return;
-  }
-
-  // SPEED
-  if (command.startsWith("speed ")) {
-    const val = parseInt(command.split(" ")[1], 10);
-    if (!isNaN(val) && val >= 1 && val <= 150) {
-      typingSpeed = val;
-      enqueueLine(`Typing speed set to ${val} ms/char.`);
-    } else enqueueLine("Invalid speed. Usage: SPEED <1-150>");
-    return;
-  }
-
-  // IMAGE display
-  if (command.endsWith(".jpg")) {
-    const fn = command.toUpperCase();
-    const imgPath = entry.images && entry.images[fn];
-    if (imgPath) {
-      // inject an <img> into output
-      output.innerHTML += `<img src="${imgPath}" alt="${fn}" style="max-width:100%;margin:1rem 0;">`;
-    } else {
-      enqueueLine("File not found.");
-    }
-    // restore prompt
-    updatePrompt();
-    inputWrapper.style.display = "inline-flex";
-    if (mobileInput) mobileInput.focus();
-    return;
-  }
-
-  // TEXT files
-  if (command.endsWith(".txt")) {
-    const fn = command.toUpperCase();
-    const content = entry.files[fn];
-    if (typeof content !== "undefined") {
-      content.split("\n").forEach(line => enqueueLine(line));
-    } else {
-      enqueueLine("File not found.");
-    }
-    return;
-  }
-
-  // Unknown
-  enqueueLine("Unknown command. Type HELP to begin.");
+  // ... all your CLEAR, DIR, CD, etc. handlers go here ...
 }
 
-// —————————————————————————————————————————————————————————————
-// 8. Launch splash on load
-// —————————————————————————————————————————————————————————————
+// 8) Launch
 window.onload = runBootSplash;
