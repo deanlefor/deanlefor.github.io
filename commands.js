@@ -1,9 +1,10 @@
 // commands.js
+
 function handleCommand(command) {
   const entry = window.fs[cwdKey];
 
   // CLEAR & CLS
-  if (["clear","cls"].includes(command)) {
+  if (["clear", "cls"].includes(command)) {
     document.getElementById("output").innerText = "";
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
@@ -48,21 +49,52 @@ function handleCommand(command) {
     return;
   }
 
-  // DIR
+  // DIR (with padded columns)
   if (command === "dir") {
-    enqueueLine(` Directory of ${getPrompt().slice(0,-1)}`);
-    entry.folders.forEach(f => enqueueLine("  " + f + "    <DIR>"));
-    Object.keys(entry.files).forEach(fn => enqueueLine("  " + fn));
-    if (entry.images) Object.keys(entry.images).forEach(img => enqueueLine("  " + img));
+    // 1. Gather all names
+    const folderNames = entry.folders.slice();
+    const fileNames   = Object.keys(entry.files);
+    const imageNames  = entry.images ? Object.keys(entry.images) : [];
+    const allNames    = folderNames.concat(fileNames, imageNames);
+
+    // 2. Compute max length
+    const maxLen = allNames.reduce(
+      (max, name) => Math.max(max, name.length),
+      0
+    );
+
+    // 3. Header
+    enqueueLine(` Directory of ${getPrompt().slice(0, -1)}`);
+
+    // 4. Folders
+    folderNames.forEach(name => {
+      const padded = name.padEnd(maxLen, " ");
+      enqueueLine(`  ${padded}  <DIR>`);
+    });
+
+    // 5. Text files
+    fileNames.forEach(name => {
+      const padded = name.padEnd(maxLen, " ");
+      enqueueLine(`  ${padded}`);
+    });
+
+    // 6. Images
+    imageNames.forEach(name => {
+      const padded = name.padEnd(maxLen, " ");
+      enqueueLine(`  ${padded}`);
+    });
+
     return;
   }
 
-  // CD
+  // CD navigation
   if (command.startsWith("cd ")) {
     const target = command.slice(3).toUpperCase();
-    if (target === "..") cwdKey = "";
-    else if (entry.folders.includes(target)) cwdKey = target;
-    else {
+    if (target === "..") {
+      cwdKey = "";
+    } else if (entry.folders.includes(target)) {
+      cwdKey = target;
+    } else {
       enqueueLine("Directory not found.");
       updatePrompt();
       document.getElementById("input-wrapper").style.display = "inline-flex";
@@ -77,46 +109,75 @@ function handleCommand(command) {
     return;
   }
 
-  // DATE & TIME & COLOR & SPEED
-  if (command === "date")         return enqueueLine("Current date: " + new Date().toLocaleDateString());
-  if (command === "time")         return enqueueLine("Current time: " + new Date().toLocaleTimeString());
-  if (command.startsWith("color ")) {
-    const t = command.split(" ")[1], valid=["green","blue","amber"];
-    if (valid.includes(t)) {
-      valid.forEach(x=>document.body.classList.remove(`theme-${x}`));
-      document.body.classList.add(`theme-${t}`);
-      return enqueueLine(`Theme set to ${t.toUpperCase()}.`);
-    }
-    return enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
-  }
-  if (command.startsWith("speed ")) {
-    const v = parseInt(command.split(" ")[1],10);
-    if (!isNaN(v)&&v>=1&&v<=150) {
-      typingSpeed=v;
-      return enqueueLine(`Typing speed set to ${v} ms/char.`);
-    }
-    return enqueueLine("Invalid speed. Usage: SPEED <1-150>");
-  }
-
-  // IMAGE
-  if (command.endsWith(".jpg")) {
-    const fn=command.toUpperCase(), img=entry.images&&entry.images[fn];
-    if (img) document.getElementById("output").innerHTML += `<img src="${img}" style="max-width:100%;margin:1rem 0;">`;
-    else enqueueLine("File not found.");
-    updatePrompt();
-    document.getElementById("input-wrapper").style.display="inline-flex";
-    const mi=document.getElementById("mobile-input");
-    if(mi) setTimeout(()=>mi.focus(),0);
+  // DATE
+  if (command === "date") {
+    enqueueLine("Current date: " + new Date().toLocaleDateString());
     return;
   }
 
-  // TEXT
-  if (command.endsWith(".txt")) {
-    const fn=command.toUpperCase(), c=entry.files[fn];
-    if (c!==undefined) return c.split("\n").forEach(l=>enqueueLine(l));
-    return enqueueLine("File not found.");
+  // TIME
+  if (command === "time") {
+    enqueueLine("Current time: " + new Date().toLocaleTimeString());
+    return;
   }
 
-  // Fallback
+  // COLOR
+  if (command.startsWith("color ")) {
+    const theme = command.split(" ")[1];
+    const valid = ["green","blue","amber"];
+    if (valid.includes(theme)) {
+      valid.forEach(t =>
+        document.body.classList.remove(`theme-${t}`)
+      );
+      document.body.classList.add(`theme-${theme}`);
+      enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
+    } else {
+      enqueueLine("Unknown theme. Available: GREEN, BLUE, AMBER");
+    }
+    return;
+  }
+
+  // SPEED
+  if (command.startsWith("speed ")) {
+    const val = parseInt(command.split(" ")[1], 10);
+    if (!isNaN(val) && val >= 1 && val <= 150) {
+      typingSpeed = val;
+      enqueueLine(`Typing speed set to ${val} ms/char.`);
+    } else {
+      enqueueLine("Invalid speed. Usage: SPEED <1-150>");
+    }
+    return;
+  }
+
+  // IMAGE display
+  if (command.endsWith(".jpg")) {
+    const fn      = command.toUpperCase();
+    const imgPath = entry.images && entry.images[fn];
+    if (imgPath) {
+      document.getElementById("output").innerHTML +=
+        `<img src="${imgPath}" alt="${fn}" style="max-width:100%;margin:1rem 0;">`;
+    } else {
+      enqueueLine("File not found.");
+    }
+    updatePrompt();
+    document.getElementById("input-wrapper").style.display = "inline-flex";
+    const mi = document.getElementById("mobile-input");
+    if (mi) setTimeout(() => mi.focus(), 0);
+    return;
+  }
+
+  // TEXT files
+  if (command.endsWith(".txt")) {
+    const fn      = command.toUpperCase();
+    const content = entry.files[fn];
+    if (typeof content !== "undefined") {
+      content.split("\n").forEach(line => enqueueLine(line));
+    } else {
+      enqueueLine("File not found.");
+    }
+    return;
+  }
+
+  // Unknown
   enqueueLine("Unknown command. Type HELP to begin.");
 }
