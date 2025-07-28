@@ -3,12 +3,12 @@
 // —————————————————————————————————————————————————————————————
 // 1. State & Config
 // —————————————————————————————————————————————————————————————
-let cwdKey       = "";
+let cwdKey       = "";       // "" means C:\Dean root
 let currentInput = "";
-let typingSpeed  = 30;       // ms per character
-const defaultSpeed = 30;
-const lineQueue    = [];
-let isPrinting    = false;
+let typingSpeed  = 20;       // ms per character
+const defaultSpeed = 20;
+const lineQueue   = [];
+let isPrinting   = false;
 
 // —————————————————————————————————————————————————————————————
 // 2. Prompt Helpers
@@ -26,10 +26,11 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Scroll the prompt into view
-  const wrapper = document.getElementById("input-wrapper");
-  if (wrapper) wrapper.scrollIntoView({ block: "end" });
-  else window.scrollTo(0, document.body.scrollHeight);
+  // scroll the terminal container if it has overflow
+  const term = document.getElementById("terminal");
+  if (term) term.scrollTop = term.scrollHeight;
+  // also scroll the window as a fallback
+  window.scrollTo(0, document.body.scrollHeight);
 }
 
 // —————————————————————————————————————————————————————————————
@@ -64,11 +65,11 @@ function processQueue() {
   const timer = setInterval(() => {
     if (idx === 0) {
       out.innerText = prev
-        ? prev + "\n" + text[0]
-        : text[0];
+        ? prev + "\n" + text.charAt(0)
+        : text.charAt(0);
       idx++;
     } else if (idx < text.length) {
-      out.innerText += text[idx++];
+      out.innerText += text.charAt(idx++);
     } else {
       clearInterval(timer);
       scrollToBottom();
