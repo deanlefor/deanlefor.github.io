@@ -34,7 +34,7 @@ function handleCommand(command) {
     enqueueLine("  DIR                  List folders & files");
     enqueueLine("  CD <folder>          Enter a folder");
     enqueueLine("  CD ..                Go up one level");
-    enqueueLine("  <filename>.TXT       View a text file");
+    enqueueLine("  <filename>.TXT        View a text file");
     enqueueLine("  <imagename>.JPG      Display an image");
     enqueueLine("");
     enqueueLine("Other commands:");
