@@ -15,22 +15,55 @@ function attachInputHandlers() {
       return;
     }
 
+    // If user is using arrow keys, we handle history
+    if (e.key === "ArrowUp") {
+        e.preventDefault(); // Prevent cursor from moving in some browsers
+        if (historyIndex > 0) {
+            historyIndex--;
+            currentInput = commandHistory[historyIndex];
+            document.getElementById("typed-text").innerText = currentInput;
+        }
+        return; // Stop further processing
+    }
+    
+    if (e.key === "ArrowDown") {
+        e.preventDefault();
+        if (historyIndex < commandHistory.length - 1) {
+            historyIndex++;
+            currentInput = commandHistory[historyIndex];
+            document.getElementById("typed-text").innerText = currentInput;
+        } else {
+            // If at the end of history or beyond, clear the input
+            historyIndex = commandHistory.length;
+            currentInput = "";
+            document.getElementById("typed-text").innerText = "";
+        }
+        return; // Stop further processing
+    }
+
+    // Any other key press resets the history navigation
+    historyIndex = commandHistory.length;
+
     if (e.key === "Backspace") {
       currentInput = currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
     } else if (e.key === "Enter") {
       document.getElementById("input-wrapper").style.display = "none";
-      echoLine(getPrompt() + " " + currentInput);
-      handleCommand(currentInput.trim().toLowerCase());
+      const command = currentInput.trim();
+      echoLine(getPrompt() + " " + command);
+
+      // Add to history only if it's a non-empty command
+      if (command) {
+        commandHistory.push(command);
+      }
+      historyIndex = commandHistory.length; // Reset history index
+
+      handleCommand(command.toLowerCase());
       currentInput = "";
       document.getElementById("typed-text").innerText = "";
     } else if (e.key.length === 1) {
       currentInput += e.key;
       document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
     }
   });
 
@@ -40,8 +73,6 @@ function attachInputHandlers() {
     if (ch) {
       currentInput += ch;
       document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
     }
     mobileInput.value = "";
   });
@@ -52,13 +83,18 @@ function attachInputHandlers() {
       ev.preventDefault();
       currentInput = currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
     } else if (ev.key === "Enter") {
       ev.preventDefault();
       document.getElementById("input-wrapper").style.display = "none";
-      echoLine(getPrompt() + " " + currentInput);
-      handleCommand(currentInput.trim().toLowerCase());
+      const command = currentInput.trim();
+      echoLine(getPrompt() + " " + command);
+      
+      if (command) {
+        commandHistory.push(command);
+      }
+      historyIndex = commandHistory.length;
+
+      handleCommand(command.toLowerCase());
       currentInput = "";
       document.getElementById("typed-text").innerText = "";
     }
