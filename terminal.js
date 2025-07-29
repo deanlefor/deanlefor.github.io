@@ -26,12 +26,12 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // FIX: Use scrollIntoView on the input wrapper to ensure it's
-  // always visible, which is more reliable than scrolling the
-  // whole window.
-  const inputWrapper = document.getElementById("input-wrapper");
-  if (inputWrapper) {
-    inputWrapper.scrollIntoView();
+  // FIX: Target the fake cursor and scroll it into the nearest
+  // block. This is the most reliable way to ensure the prompt
+  // is visible without causing the page to jump to the top.
+  const cursor = document.getElementById("fake-cursor");
+  if (cursor) {
+    cursor.scrollIntoView({ block: 'nearest', inline: 'nearest' });
   }
 }
 
@@ -59,6 +59,7 @@ function processQueue() {
     isPrinting = false;
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
+    scrollToBottom(); // Ensure it's scrolled after queue finishes
     return;
   }
   isPrinting = true;
@@ -77,9 +78,9 @@ function processQueue() {
       clearInterval(timer);
       scrollToBottom();
       processQueue();
-      return; // Exit after processing this line
+      return;
     }
-    // FIX: Also scroll during the typing animation to handle long lines
+    // Scroll during typing to handle long lines that wrap
     scrollToBottom();
   }, typingSpeed);
 }
