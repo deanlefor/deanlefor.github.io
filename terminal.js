@@ -73,10 +73,13 @@ function processQueue() {
   const prev = out.innerText;
   let idx = 0;
   const timer = setInterval(() => {
+    // FIX: Correctly handle empty strings to prevent 'undefined' output.
     if (idx === 0) {
+      // If the text is empty, just add a newline. Otherwise, add the first character.
+      const firstChar = text.length > 0 ? text[0] : "";
       out.innerText = prev
-        ? prev + "\n" + text[0]
-        : text[0];
+        ? prev + "\n" + firstChar
+        : firstChar;
       idx++;
     } else if (idx < text.length) {
       out.innerText += text[idx++];
