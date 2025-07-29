@@ -26,7 +26,13 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  window.scrollTo(0, document.body.scrollHeight);
+  // FIX: Use scrollIntoView on the input wrapper to ensure it's
+  // always visible, which is more reliable than scrolling the
+  // whole window.
+  const inputWrapper = document.getElementById("input-wrapper");
+  if (inputWrapper) {
+    inputWrapper.scrollIntoView();
+  }
 }
 
 
@@ -71,6 +77,9 @@ function processQueue() {
       clearInterval(timer);
       scrollToBottom();
       processQueue();
+      return; // Exit after processing this line
     }
+    // FIX: Also scroll during the typing animation to handle long lines
+    scrollToBottom();
   }, typingSpeed);
 }
