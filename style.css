@@ -51,34 +51,33 @@ body {
 
 /* ================================
    Terminal Container
-   (bottom-aligned initial content)
-=================================*/
-/* ================================
-   Terminal Container
-   (bottom-aligned initial content)
+   (Simplified for top-down flow)
 =================================*/
 #terminal {
   max-width: 800px;
-  margin: 0;                          /* left-justify terminal */
+  margin: 0; /* left-justify terminal */
   background-color: var(--bg);
-  height: calc(100vh - 2rem);         /* fixed viewport height */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;          /* align content bottom */
-  overflow: visible;                  /* allow page-level scrolling */
+  /*
+   * FIX: Removed fixed height and flexbox properties.
+   * The terminal now behaves like a normal document,
+   * growing downwards as content is added. This prevents
+   * the "jumping" layout issue.
+  */
 }
 
 
 /* ================================
    Output Area
-   (reserve space below for prompt)
 =================================*/
 #output {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 0;
-  /* Reserve space equal to input-wrapper height: approx 1em line-height + 0.5rem padding */
-  padding-bottom: calc(1em + 0.5rem);
+  /*
+   * FIX: Removed padding-bottom. It's no longer needed
+   * because the input wrapper is not sticky anymore.
+   * Spacing is now handled by the input wrapper's padding-top.
+  */
 }
 
 #output img {
@@ -87,17 +86,19 @@ body {
 }
 
 /* ================================
-   Input Line (always below output)
+   Input Line (now in normal document flow)
 =================================*/
 #input-wrapper {
-  position: sticky;
-  bottom: 0;
+  /*
+   * FIX: Removed 'position: sticky'. The input now sits
+   * naturally at the end of the output content, which is
+   * the standard behavior for a terminal. Your JS will
+   * scroll it into view.
+  */
   display: flex;
-  width: 100%;                       /* full width of terminal */
+  width: 100%; /* full width of terminal */
   align-items: flex-start;
-  background-color: var(--bg);
-  padding-top: 0.5rem;               /* spacing above prompt */
-  z-index: 1;
+  padding-top: 0.5rem; /* spacing above prompt */
 }
 
 #prompt-line {
