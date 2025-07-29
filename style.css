@@ -1,10 +1,10 @@
 /*
-==================================
+=================================
  deanlefor.com - Terminal Styles
  Author: Dean Lefor
  Created: July 2025
- Description: Retro DOS-style terminal UI with flexbox layout
-==================================
+ Description: Retro DOS-style terminal UI
+=================================
 */
 
 /* ================================
@@ -37,17 +37,13 @@ body.theme-amber {
 /* ================================
    Base Layout and Typography
 ================================= */
-html, body {
-  height: 100%;
-  overflow: hidden; /* Prevent the main body from scrolling */
-}
-
 body {
   background-color: var(--bg);
   color: var(--fg);
+  /* Retro monospace font */
   font-family: 'VT323', monospace;
   margin: 0;
-  padding: 0; /* Padding is now handled by inner elements */
+  padding: 1rem;
   font-size: 1.2rem;
   line-height: 1.3;
   position: relative;
@@ -66,35 +62,28 @@ body {
 
 #splash-output {
   white-space: pre-wrap;
-  font-size: inherit;
-  font-family: inherit;
-  margin: 0;
-  text-align: left;
+  font-size: inherit;    /* match body font-size */
+  font-family: inherit;  /* match VT323 */
+  margin: 0;             /* remove extra margins */
+  text-align: left;      /* left-justify splash text */
 }
 
 /* ================================
    Terminal Container
-   FIX: Changed to a flexbox column layout to pin the input to the bottom.
 ================================= */
 #terminal {
-  display: flex;
-  flex-direction: column;
-  height: 100vh; /* Make terminal fill the full screen height */
   max-width: 800px;
-  margin: 0 auto; /* Center the terminal horizontally */
+  margin: 0;             /* left-justify the terminal */
+  /* allow page itself to scroll */
 }
 
 /* ================================
    Output Area (Command Results)
-   FIX: This is now the main scrolling area.
 ================================= */
 #output {
-  flex: 1 1 auto; /* Allows the output to grow and fill available space */
-  overflow-y: auto; /* CRITICAL: Makes the output area scrollable */
   white-space: pre-wrap;
-  padding: 1rem; /* Add padding inside the scrollable area */
-  margin-bottom: 0;
-  font-family: inherit;
+  margin-bottom: 0;      /* no extra gap before prompt */
+  font-family: inherit;  /* ensure VT323 */
 }
 
 #output img {
@@ -104,20 +93,17 @@ body {
 
 /* ================================
    Simulated Input Line and Cursor
-   FIX: Input wrapper is now a flex item at the bottom.
 ================================= */
 #input-wrapper {
-  flex-shrink: 0; /* Prevents the input line from shrinking */
-  padding: 0 1rem 1rem 1rem; /* Spacing for the input line */
   display: inline-flex;
   align-items: flex-start;
-  font-size: inherit;
-  line-height: inherit;
+  font-size: inherit;    /* match body font-size */
+  line-height: inherit;  /* match body line-height */
 }
 
 #prompt-line,
 #typed-text {
-  font-family: inherit;
+  font-family: inherit;  /* same retro font */
 }
 
 #prompt-line {
@@ -130,7 +116,7 @@ body {
 
 #fake-cursor {
   display: inline-block;
-  width: 0.6ch;
+  width: 0.6ch;          /* scales with font */
   height: 1em;
   background-color: var(--fg);
   margin-left: 2px;
@@ -141,12 +127,11 @@ body {
    Hidden Mobile Input Overlay
 ================================= */
 #mobile-input {
-  /*
-    This rule is intentionally left sparse. The important positioning
-    is handled by the inline style in index.html, which places a
-    small invisible input at the bottom of the screen. This avoids
-    the browser scrolling to the top of the page on focus.
-  */
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   background-color: transparent !important;
   border: none !important;
   outline: none !important;
