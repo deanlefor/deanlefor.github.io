@@ -26,13 +26,13 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // FIX: Use scrollIntoView on the cursor element with 'nearest'.
-  // This is the most reliable method. It tells the browser to make
-  // sure the cursor is visible, but to only scroll if it's NOT
-  // already on screen. This prevents the "jumping" behavior.
-  const cursor = document.getElementById("fake-cursor");
-  if (cursor) {
-    cursor.scrollIntoView({ block: 'nearest' });
+  // FIX: This is the new, stable scrolling logic.
+  // It targets the #terminal element itself and sets its
+  // internal scroll position to the very bottom. This avoids
+  // fighting the browser and stops the jumping behavior.
+  const terminal = document.getElementById("terminal");
+  if (terminal) {
+    terminal.scrollTop = terminal.scrollHeight;
   }
 }
 
