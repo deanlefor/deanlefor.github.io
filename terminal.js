@@ -26,11 +26,9 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  const out = document.getElementById("output");
-  if (out) {
-    out.scrollTop = out.scrollHeight;
-  }
+  window.scrollTo(0, document.body.scrollHeight);
 }
+
 
 // —————————————————————————————————————————————————————————————
 // 4. Echo & Typing Animation
