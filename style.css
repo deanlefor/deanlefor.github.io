@@ -61,6 +61,7 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-end;         /* push prompt to bottom */
+  padding-bottom: 1.5em;             /* reserve space for prompt */
 }
 
 /* ================================
