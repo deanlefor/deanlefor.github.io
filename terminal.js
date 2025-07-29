@@ -5,8 +5,8 @@
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";       // "" means C:\Dean root
 let currentInput = "";
-let typingSpeed  = 20;       // ms per character
-const defaultSpeed = 20;
+let typingSpeed  = 30;       // ms per character
+const defaultSpeed = 30;
 const lineQueue   = [];
 let isPrinting   = false;
 
@@ -26,11 +26,13 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // scroll the terminal container if it has overflow
-  const term = document.getElementById("terminal");
-  if (term) term.scrollTop = term.scrollHeight;
-  // also scroll the window as a fallback
-  window.scrollTo(0, document.body.scrollHeight);
+  // Scroll the page so the input-wrapper is in view
+  const iw = document.getElementById("input-wrapper");
+  if (iw) {
+    iw.scrollIntoView({ block: "end" });
+  } else {
+    window.scrollTo(0, document.body.scrollHeight);
+  }
 }
 
 // —————————————————————————————————————————————————————————————
@@ -54,7 +56,7 @@ function processQueue() {
   const out = document.getElementById("output");
   if (lineQueue.length === 0) {
     isPrinting = false;
-    updatePrompt();
+    updatePrompt();  // will scroll once
     document.getElementById("input-wrapper").style.display = "inline-flex";
     return;
   }
@@ -63,16 +65,13 @@ function processQueue() {
   const prev = out.innerText;
   let idx = 0;
   const timer = setInterval(() => {
-    if (idx === 0) {
-      out.innerText = prev
-        ? prev + "\n" + text.charAt(0)
-        : text.charAt(0);
+    if (idx < text.length) {
+      if (idx === 0 && prev) out.innerText += "\n" + text.charAt(0);
+      else out.innerText += text.charAt(idx);
       idx++;
-    } else if (idx < text.length) {
-      out.innerText += text.charAt(idx++);
     } else {
       clearInterval(timer);
-      scrollToBottom();
+      scrollToBottom(); // scroll once after full line
       processQueue();
     }
   }, typingSpeed);
