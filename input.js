@@ -18,7 +18,7 @@ function attachInputHandlers() {
     if (e.key === "Backspace") {
       currentInput = currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = currentInput;
-      // FIX: Ensure prompt is visible after typing
+      // Ensure prompt is visible after typing
       scrollToBottom();
     } else if (e.key === "Enter") {
       document.getElementById("input-wrapper").style.display = "none";
@@ -29,7 +29,7 @@ function attachInputHandlers() {
     } else if (e.key.length === 1) {
       currentInput += e.key;
       document.getElementById("typed-text").innerText = currentInput;
-      // FIX: Ensure prompt is visible after typing
+      // Ensure prompt is visible after typing
       scrollToBottom();
     }
   });
@@ -40,7 +40,7 @@ function attachInputHandlers() {
     if (ch) {
       currentInput += ch;
       document.getElementById("typed-text").innerText = currentInput;
-      // FIX: Ensure prompt is visible after typing
+      // Ensure prompt is visible after typing
       scrollToBottom();
     }
     mobileInput.value = "";
@@ -52,7 +52,7 @@ function attachInputHandlers() {
       ev.preventDefault();
       currentInput = currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = currentInput;
-      // FIX: Ensure prompt is visible after typing
+      // Ensure prompt is visible after typing
       scrollToBottom();
     } else if (ev.key === "Enter") {
       ev.preventDefault();
