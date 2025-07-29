@@ -56,12 +56,11 @@ body {
 #terminal {
   max-width: 800px;
   margin: 0;                          /* left-justify terminal */
-  min-height: calc(100vh - 2rem);    /* full viewport minus body padding */
   background-color: var(--bg);
+  min-height: calc(100vh - 2rem);    /* full viewport minus body padding */
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;         /* push prompt to bottom */
-  padding-bottom: 1.5em;             /* reserve space for prompt */
+  justify-content: flex-end;         /* push prompt to bottom initially */
 }
 
 /* ================================
