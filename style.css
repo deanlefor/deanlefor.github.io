@@ -51,12 +51,16 @@ body {
 
 /* ================================
    Terminal Container
+   (initial content bottom-aligned)
 =================================*/
 #terminal {
   max-width: 800px;
-  margin: 0;                   /* left-justify terminal */
+  margin: 0;                    /* left-justify terminal */
   background-color: var(--bg);
-  padding-bottom: 1.5em;       /* reserve space for prompt */
+  min-height: calc(100vh - 2rem); /* ensure full viewport height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;      /* start content at bottom */
 }
 
 /* ================================
@@ -78,19 +82,15 @@ body {
 #input-wrapper {
   position: sticky;
   bottom: 0;
-  display: flex;               /* block-level for sticky to work */
-  width: 100%;                 /* full width of terminal */
+  display: flex;
+  width: 100%;
   align-items: flex-start;
   background-color: var(--bg);
   padding-top: 0.5rem;
   z-index: 1;
 }
-#prompt-line {
-  margin-right: 0.5ch;
-}
-#typed-text {
-  white-space: pre;
-}
+#prompt-line { margin-right: 0.5ch; }
+#typed-text { white-space: pre; }
 #fake-cursor {
   display: inline-block;
   width: 0.6ch;
