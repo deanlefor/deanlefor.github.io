@@ -26,11 +26,11 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Scroll the page so the newest output (or prompt) is in view
-  window.scrollTo({
-    top: document.body.scrollHeight,
-    behavior: "smooth"
-  });
+  // Give the browser one tick to render the new line…
+  setTimeout(() => {
+    // then snap the window straight down
+    window.scrollTo(0, document.body.scrollHeight);
+  }, 0);
 }
 
 // —————————————————————————————————————————————————————————————
