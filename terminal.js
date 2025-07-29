@@ -27,19 +27,13 @@ function updatePrompt() {
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
   /*
-    FIX: Removed the setTimeout wrapper.
-    Calling scrollIntoView directly is more reliable and less prone to
-    race conditions with browser rendering or keyboard animations.
-    The { block: "end" } option ensures the element aligns to the
-    bottom of the visible area.
+    FIX: With the new flexbox layout in style.css, the #output
+    element is now the main scrolling container, not the whole page.
+    This function now scrolls that specific element to its bottom.
   */
-  const promptEl = document.getElementById("input-wrapper");
-  if (promptEl) {
-    // scroll the prompt into view at the bottom of the viewport
-    promptEl.scrollIntoView({ behavior: "auto", block: "end" });
-  } else {
-    // fallback
-    window.scrollTo(0, document.body.scrollHeight);
+  const outputEl = document.getElementById("output");
+  if (outputEl) {
+    outputEl.scrollTop = outputEl.scrollHeight;
   }
 }
 
