@@ -51,25 +51,26 @@ body {
 
 /* ================================
    Terminal Container
-   (positioned relative for absolute prompt)
+   (bottom-aligned initial content)
 =================================*/
 #terminal {
   max-width: 800px;
-  margin: 0;                       /* left-justify terminal */
+  margin: 0;                          /* left-justify terminal */
+  min-height: calc(100vh - 2rem);    /* full viewport minus body padding */
   background-color: var(--bg);
-  min-height: calc(100vh - 2rem); /* cover viewport minus padding */
-  position: relative;             /* anchor for input-wrapper */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;         /* push prompt to bottom */
 }
 
 /* ================================
    Output Area
-   (reserve space for prompt)
+   (reserve space below for prompt)
 =================================*/
 #output {
   white-space: pre-wrap;
   font-family: inherit;
-  margin: 0;
-  margin-bottom: 2em;             /* space for the prompt height */
+  margin: 0 0 1.5em 0;               /* gap for prompt height */
 }
 #output img {
   max-width: 100%;
@@ -77,22 +78,20 @@ body {
 }
 
 /* ================================
-   Input Line (Absolute at bottom)
+   Input Line (always below output)
 =================================*/
 #input-wrapper {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  display: flex;
+  display: inline-flex;
   align-items: flex-start;
-  background-color: var(--bg);
-  padding-top: 0.5rem;
-  box-sizing: border-box;
-  z-index: 1;
+  font-family: inherit;
+  line-height: inherit;
 }
-#prompt-line { margin-right: 0.5ch; }
-#typed-text { white-space: pre; }
+#prompt-line {
+  margin-right: 0.5ch;
+}
+#typed-text {
+  white-space: pre;
+}
 #fake-cursor {
   display: inline-block;
   width: 0.6ch;
