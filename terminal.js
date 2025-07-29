@@ -92,3 +92,29 @@ function processQueue() {
     scrollToBottom();
   }, typingSpeed);
 }
+
+// —————————————————————————————————————————————————————————————
+// 5. Mobile Viewport & Keyboard Helper
+// —————————————————————————————————————————————————————————————
+function handleViewportChanges() {
+  const terminal = document.getElementById("terminal");
+  if (!terminal) return;
+
+  const setTerminalHeight = () => {
+    // Set the terminal's height to the window's inner height. This is more
+    // reliable on mobile devices, as it correctly accounts for the browser UI
+    // and the virtual keyboard.
+    terminal.style.height = `${window.innerHeight}px`;
+    // After resizing, always scroll to the bottom to ensure the
+    // input prompt remains visible.
+    scrollToBottom();
+  };
+
+  // Set the initial height as soon as the script loads.
+  setTerminalHeight();
+
+  // Add an event listener to update the height whenever the window is resized.
+  // This handles both desktop browser resizing and mobile device orientation changes,
+  // as well as the appearance/disappearance of the virtual keyboard.
+  window.addEventListener('resize', setTerminalHeight);
+}
