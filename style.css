@@ -68,8 +68,7 @@ body {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 0;
-  /* Reserve space equal to input-wrapper height: approx 1em line-height + 0.5rem padding */
-  padding-bottom: calc(1em + 0.5rem);
+  padding-bottom: 1.5em;             /* reserve space for prompt */
 }
 
 #output img {
