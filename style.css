@@ -21,12 +21,17 @@ body.theme-amber { --fg: #FFBF00; --bg: black; }
 /* ================================
    Base Layout and Typography
 =================================*/
-body {
+/* FIX: Prevent the main page from scrolling */
+html, body {
+  height: 100%;
+  overflow: hidden;
   background-color: var(--bg);
+}
+
+body {
   color: var(--fg);
   font-family: 'VT323', monospace;
   margin: 0;
-  /* FIX: Padding moved to #terminal to allow for full-height layout */
   padding: 0;
   font-size: 1.2rem;
   line-height: 1.3;
@@ -52,22 +57,18 @@ body {
 
 /* ================================
    Terminal Container
-   (bottom-aligned initial content)
+   (FIX: Now a self-contained scrolling view)
 =================================*/
 #terminal {
   max-width: 800px;
   margin: 0;
   background-color: var(--bg);
-  /*
-   * FIX: Use min-height and flexbox to keep content at the
-   * bottom initially, while allowing the container to grow
-   * naturally as new lines are added. This creates the
-   * classic terminal "scrolling up" effect.
-  */
-  min-height: 100vh;
+  /* FIX: Make the terminal a full-height, internally-scrolling container */
+  height: 100vh;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  justify-content: flex-end;
+  justify-content: flex-end; /* Aligns initial prompt to bottom */
   padding: 1rem;
   box-sizing: border-box;
 }
@@ -80,7 +81,6 @@ body {
   white-space: pre-wrap;
   font-family: inherit;
   margin: 0;
-  /* Padding-bottom is no longer needed */
 }
 
 #output img {
@@ -92,16 +92,11 @@ body {
    Input Line (always below output)
 =================================*/
 #input-wrapper {
-  /*
-   * FIX: Removed 'position: sticky'. The input now sits
-   * naturally at the end of the output content because the
-   * parent #terminal container is a flex column.
-  */
   display: flex;
-  width: 100%; /* full width of terminal */
+  width: 100%;
   align-items: flex-start;
   background-color: var(--bg);
-  padding-top: 0.5rem; /* spacing above prompt */
+  padding-top: 0.5rem;
 }
 
 #prompt-line {
