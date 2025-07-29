@@ -5,8 +5,8 @@
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";
 let currentInput = "";
-let typingSpeed  = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed  = 15;       // ms per character
+const defaultSpeed = 15;
 const lineQueue    = [];
 let isPrinting    = false;
 
