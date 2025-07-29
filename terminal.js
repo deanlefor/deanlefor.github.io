@@ -73,9 +73,7 @@ function processQueue() {
   const prev = out.innerText;
   let idx = 0;
   const timer = setInterval(() => {
-    // FIX: Correctly handle empty strings to prevent 'undefined' output.
     if (idx === 0) {
-      // If the text is empty, just add a newline. Otherwise, add the first character.
       const firstChar = text.length > 0 ? text[0] : "";
       out.innerText = prev
         ? prev + "\n" + firstChar
@@ -88,7 +86,6 @@ function processQueue() {
       processQueue(); // Process the next line
       return;
     }
-    // Scroll after every character is added.
     scrollToBottom();
   }, typingSpeed);
 }
@@ -100,21 +97,23 @@ function handleViewportChanges() {
   const terminal = document.getElementById("terminal");
   if (!terminal) return;
 
-  const setTerminalHeight = () => {
-    // Set the terminal's height to the window's inner height. This is more
-    // reliable on mobile devices, as it correctly accounts for the browser UI
-    // and the virtual keyboard.
-    terminal.style.height = `${window.innerHeight}px`;
-    // After resizing, always scroll to the bottom to ensure the
-    // input prompt remains visible.
-    scrollToBottom();
-  };
-
-  // Set the initial height as soon as the script loads.
-  setTerminalHeight();
-
-  // Add an event listener to update the height whenever the window is resized.
-  // This handles both desktop browser resizing and mobile device orientation changes,
-  // as well as the appearance/disappearance of the virtual keyboard.
-  window.addEventListener('resize', setTerminalHeight);
+  // FIX: Use the VisualViewport API for a reliable mobile experience.
+  // This modern API correctly handles the on-screen keyboard.
+  if (window.visualViewport) {
+    const setTerminalHeight = () => {
+      terminal.style.height = `${window.visualViewport.height}px`;
+      scrollToBottom();
+    };
+    // Set initial height and listen for changes.
+    setTerminalHeight();
+    window.visualViewport.addEventListener('resize', setTerminalHeight);
+  } else {
+    // Fallback for older browsers.
+    const setTerminalHeightFallback = () => {
+      terminal.style.height = `${window.innerHeight}px`;
+      scrollToBottom();
+    };
+    setTerminalHeightFallback();
+    window.addEventListener('resize', setTerminalHeightFallback);
+  }
 }
