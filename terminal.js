@@ -4,7 +4,7 @@
 // 1. State & Config
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";
-// FIX: Attach currentInput to the window object to ensure it's
+// Attach currentInput to the window object to ensure it's
 // globally accessible across all scripts.
 window.currentInput = "";
 let typingSpeed  = 15;       // ms per character
@@ -13,7 +13,7 @@ const lineQueue    = [];
 let isPrinting    = false;
 
 // --- Command History ---
-// FIX: Attach history to the window object to ensure it's globally
+// Attach history to the window object to ensure it's globally
 // accessible across all scripts.
 window.commandHistory = [];
 window.historyIndex = 0;
