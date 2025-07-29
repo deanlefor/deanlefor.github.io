@@ -53,7 +53,7 @@ function continueBoot(e) {
   );
 
   splash.style.display = "none";
-  document.getElementById("terminal").style.display = "block";
+  document.getElementById("terminal").style.display = "";
 
   currentInput = "";
   document.getElementById("typed-text").innerText = "";
