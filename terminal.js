@@ -11,8 +11,10 @@ const lineQueue    = [];
 let isPrinting    = false;
 
 // --- Command History ---
-const commandHistory = [];
-let historyIndex = 0;
+// FIX: Attach history to the window object to ensure it's globally
+// accessible across all scripts.
+window.commandHistory = [];
+window.historyIndex = 0;
 // --- End Command History ---
 
 // —————————————————————————————————————————————————————————————
