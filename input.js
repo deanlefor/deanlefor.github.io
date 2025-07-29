@@ -3,10 +3,17 @@
 function attachInputHandlers() {
   const mobileInput = document.getElementById("mobile-input");
 
-  // Desktop key handling
+  // Mobile: any tap focuses the hidden input
+  document.body.addEventListener("touchstart", () => {
+    mobileInput.focus();
+  });
+
+  // Desktop key handling (skip if splash is up or mobile input is focused)
   document.addEventListener("keydown", e => {
-    // Don’t handle keys while splash is visible
-    if (document.getElementById("splash").style.display !== "none") return;
+    const splash = document.getElementById("splash");
+    if (splash.style.display !== "none" || document.activeElement === mobileInput) {
+      return;
+    }
 
     if (e.key === "Backspace") {
       currentInput = currentInput.slice(0, -1);
@@ -23,9 +30,8 @@ function attachInputHandlers() {
     }
   });
 
-  // Mobile: use hidden input to capture keystrokes
+  // Mobile: capture characters via the hidden <input>
   mobileInput.addEventListener("input", ev => {
-    // Read one character at a time then clear
     const ch = ev.data;
     if (ch) {
       currentInput += ch;
@@ -34,8 +40,8 @@ function attachInputHandlers() {
     mobileInput.value = "";
   });
 
+  // Mobile: handle Backspace & Enter in the hidden <input>
   mobileInput.addEventListener("keydown", ev => {
-    // Backspace hack
     if (ev.key === "Backspace") {
       ev.preventDefault();
       currentInput = currentInput.slice(0, -1);
@@ -48,10 +54,5 @@ function attachInputHandlers() {
       currentInput = "";
       document.getElementById("typed-text").innerText = "";
     }
-  });
-
-  // Mobile: any tap focuses the hidden input
-  document.body.addEventListener("touchstart", () => {
-    mobileInput.focus();
   });
 }
