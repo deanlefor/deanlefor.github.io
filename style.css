@@ -11,28 +11,12 @@
    Color Variables & Themes
 =================================*/
 :root {
-  /* Default colors (green on black) */
   --fg: green;
   --bg: black;
 }
-
-/* Theme: Green on Black */
-body.theme-green {
-  --fg: green;
-  --bg: black;
-}
-
-/* Theme: White on Blue */
-body.theme-blue {
-  --fg: white;
-  --bg: blue;
-}
-
-/* Theme: Amber on Black */
-body.theme-amber {
-  --fg: #FFBF00;
-  --bg: black;
-}
+body.theme-green { --fg: green; --bg: black; }
+body.theme-blue  { --fg: white; --bg: blue;  }
+body.theme-amber { --fg: #FFBF00; --bg: black; }
 
 /* ================================
    Base Layout and Typography
@@ -40,13 +24,11 @@ body.theme-amber {
 body {
   background-color: var(--bg);
   color: var(--fg);
-  /* Retro monospace font */
   font-family: 'VT323', monospace;
   margin: 0;
   padding: 1rem;
   font-size: 1.2rem;
   line-height: 1.3;
-  position: relative;
 }
 
 /* ================================
@@ -54,80 +36,60 @@ body {
 =================================*/
 #splash {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   background-color: var(--bg);
   padding: 1rem;
   z-index: 10;
 }
-
 #splash-output {
   white-space: pre-wrap;
-  font-size: inherit;    /* match body font-size */
-  font-family: inherit;  /* match VT323 */
-  margin: 0;             /* remove extra margins */
-  text-align: left;      /* left-justify splash text */
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  text-align: left;
 }
 
 /* ================================
    Terminal Container
-   (flex layout, fixed height)
 =================================*/
 #terminal {
-  display: flex !important;
-  flex-direction: column;
   max-width: 800px;
-  margin: 0;                     /* left-justify the terminal */
-  height: calc(100vh - 2rem);    /* full viewport minus body padding */
+  margin: 0 auto;
   background-color: var(--bg);
+  padding-bottom: 1.5em; /* space for sticky prompt */
 }
 
 /* ================================
-   Output Area (Command Results)
-   (scrolls under the prompt)
+   Output Area
 =================================*/
 #output {
-  flex: 1 1 auto;                /* fill available space */
-  overflow-y: auto;              /* enable scrolling */
-  scroll-behavior: smooth;       /* smooth scroll when JS adjusts it */
   white-space: pre-wrap;
-  margin: 0;                     /* no extra gap before prompt */
-  font-family: inherit;          /* ensure VT323 */
+  font-family: inherit;
+  margin: 0;
 }
-
 #output img {
   max-width: 100%;
   margin: 1rem 0;
 }
 
 /* ================================
-   Simulated Input Line and Cursor
-   (always pinned at bottom)
+   Input Line (Sticky at bottom)
 =================================*/
 #input-wrapper {
-  flex: 0 0 auto;                /* natural height, no grow/shrink */
+  position: sticky;
+  bottom: 0;
   display: inline-flex;
   align-items: flex-start;
-  font-size: inherit;            /* match body font-size */
-  line-height: inherit;          /* match body line-height */
   background-color: var(--bg);
+  font-family: inherit;
+  padding-top: 0.5rem;
+  z-index: 1;
 }
-
-#prompt-line,
-#typed-text {
-  font-family: inherit;          /* same retro font */
-}
-
-#prompt-line {
-  margin-right: 0.5ch;
-}
-
-#typed-text {
-  white-space: pre;
-}
-
+#prompt-line { margin-right: 0.5ch; }
+#typed-text { white-space: pre; }
 #fake-cursor {
   display: inline-block;
-  width: 0.6ch;                  /* scales with font */
+  width: 0.6ch;
   height: 1em;
   background-color: var(--fg);
   margin-left: 2px;
@@ -139,23 +101,11 @@ body {
 =================================*/
 #mobile-input {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: transparent !important;
+  inset: 0;
+  background: transparent !important;
   border: none !important;
   outline: none !important;
   caret-color: transparent;
-}
-
-/* ================================
-   Background Consistency
-=================================*/
-#terminal,
-#output,
-#input-wrapper {
-  background-color: var(--bg);
 }
 
 /* ================================
