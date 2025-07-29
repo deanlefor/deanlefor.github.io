@@ -63,8 +63,8 @@ body {
   max-width: 800px;
   margin: 0;
   background-color: var(--bg);
-  /* FIX: Make the terminal a full-height, internally-scrolling container */
-  height: 100vh;
+  /* FIX: Height is now controlled by JavaScript to handle mobile keyboards.
+     The 'height' property is removed from here to prevent conflicts. */
   overflow-y: auto;
   display: flex;
   flex-direction: column;
