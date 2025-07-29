@@ -73,7 +73,7 @@ body {
    (flex layout, fixed height)
 =================================*/
 #terminal {
-  display: flex;
+  display: flex !important;
   flex-direction: column;
   max-width: 800px;
   margin: 0;                     /* left-justify the terminal */
