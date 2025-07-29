@@ -4,7 +4,9 @@
 // 1. State & Config
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";
-let currentInput = "";
+// FIX: Attach currentInput to the window object to ensure it's
+// globally accessible across all scripts.
+window.currentInput = "";
 let typingSpeed  = 15;       // ms per character
 const defaultSpeed = 15;
 const lineQueue    = [];
