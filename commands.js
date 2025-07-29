@@ -28,12 +28,11 @@ function handleCommand(command) {
   // HELP
   if (command === "help") {
     enqueueLine("Welcome to Dean’s DOS terminal!");
-    enqueueLine("You are currently at the root directory: C:\\Dean");
     enqueueLine("");
     enqueueLine("Navigation:");
     enqueueLine("  DIR                  List folders & files");
-    enqueueLine("  CD <folder>          Enter a folder");
-    enqueueLine("  CD ..                Go up one level");
+    enqueueLine("  CD <folder>          Enter a folder (example: cd ABOUT)");
+    enqueueLine("  CD ..                Go up one level (return to C:\\Dean>");
     enqueueLine("  <filename>.TXT        View a text file");
     enqueueLine("  <imagename>.JPG      Display an image");
     enqueueLine("");
