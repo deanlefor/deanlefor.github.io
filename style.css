@@ -57,11 +57,8 @@ body {
   max-width: 800px;
   margin: 0;                          /* left-justify terminal */
   background-color: var(--bg);
-  min-height: calc(100vh - 2rem);    /* full viewport minus body padding */
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;         /* push prompt to bottom initially */
 }
+
 
 /* ================================
    Output Area
@@ -70,8 +67,10 @@ body {
 #output {
   white-space: pre-wrap;
   font-family: inherit;
-  margin: 0 0 1.5em 0;               /* gap for prompt height */
+  margin: 0;
+  padding-bottom: 1.5em;             /* reserve space for prompt */
 }
+
 #output img {
   max-width: 100%;
   margin: 1rem 0;
@@ -81,11 +80,16 @@ body {
    Input Line (always below output)
 =================================*/
 #input-wrapper {
-  display: inline-flex;
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  width: 100%;                       /* full width of terminal */
   align-items: flex-start;
-  font-family: inherit;
-  line-height: inherit;
+  background-color: var(--bg);
+  padding-top: 0.5rem;               /* spacing above prompt */
+  z-index: 1;
 }
+
 #prompt-line {
   margin-right: 0.5ch;
 }
