@@ -26,10 +26,11 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Scroll the prompt into view
-  const wrapper = document.getElementById("input-wrapper");
-  if (wrapper) wrapper.scrollIntoView({ block: "end" });
-  else window.scrollTo(0, document.body.scrollHeight);
+  // Scroll the terminal container to its bottom
+  const term = document.getElementById("terminal");
+  if (term) {
+    term.scrollTop = term.scrollHeight;
+  }
 }
 
 // —————————————————————————————————————————————————————————————
