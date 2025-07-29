@@ -5,8 +5,8 @@
 // —————————————————————————————————————————————————————————————
 let cwdKey       = "";
 let currentInput = "";
-let typingSpeed  = 30;       // ms per character
-const defaultSpeed = 30;
+let typingSpeed  = 15;       // ms per character
+const defaultSpeed = 15;
 const lineQueue    = [];
 let isPrinting    = false;
 
@@ -26,10 +26,11 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Scroll the prompt into view
-  const wrapper = document.getElementById("input-wrapper");
-  if (wrapper) wrapper.scrollIntoView({ block: "end" });
-  else window.scrollTo(0, document.body.scrollHeight);
+  // Scroll the page so the newest output (or prompt) is in view
+  window.scrollTo({
+    top: document.body.scrollHeight,
+    behavior: "smooth"
+  });
 }
 
 // —————————————————————————————————————————————————————————————

@@ -74,7 +74,7 @@ body {
 #terminal {
   max-width: 800px;
   margin: 0;             /* left-justify the terminal */
-  /* body’s padding handles left inset */
+  /* allow page itself to scroll */
 }
 
 /* ================================
@@ -121,6 +121,30 @@ body {
   background-color: var(--fg);
   margin-left: 2px;
   animation: blink 1s steps(1) infinite;
+}
+
+/* ================================
+   Hidden Mobile Input Overlay
+================================= */
+#mobile-input {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: transparent !important;
+  border: none !important;
+  outline: none !important;
+  caret-color: transparent;
+}
+
+/* ================================
+   Background Consistency
+================================= */
+#terminal,
+#output,
+#input-wrapper {
+  background-color: var(--bg);
 }
 
 /* ================================
