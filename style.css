@@ -127,11 +127,13 @@ body {
    Hidden Mobile Input Overlay
 ================================= */
 #mobile-input {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  /*
+    FIX: Removed positioning and sizing properties (top, left, width, height).
+    This prevents a conflict with the inline styles in index.html.
+    The inline styles correctly position a small, transparent input at the
+    bottom of the screen, which doesn't cause the viewport to jump to the top
+    when focused.
+  */
   background-color: transparent !important;
   border: none !important;
   outline: none !important;
