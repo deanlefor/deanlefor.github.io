@@ -11,26 +11,69 @@ function attachInputHandlers() {
   // Desktop key handling (skip if splash is up or mobile input is focused)
   document.addEventListener("keydown", e => {
     const splash = document.getElementById("splash");
-    if (splash.style.display !== "none" || document.activeElement === mobileInput) {
+    if (splash.style.display !== "none") {
       return;
     }
 
-    if (e.key === "Backspace") {
-      currentInput = currentInput.slice(0, -1);
-      document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
-    } else if (e.key === "Enter") {
+    const key = e.key;
+
+    // --- FIX: Prioritize arrow keys to prevent focus conflicts ---
+
+    // Always handle history navigation first.
+    if (key === "ArrowUp") {
+      e.preventDefault();
+      if (window.commandHistory.length > 0 && window.historyIndex > 0) {
+        window.historyIndex--;
+        window.currentInput = window.commandHistory[window.historyIndex];
+        document.getElementById("typed-text").innerText = window.currentInput;
+      }
+      return; // Stop processing
+    }
+
+    if (key === "ArrowDown") {
+      e.preventDefault();
+      if (window.historyIndex < window.commandHistory.length) {
+        window.historyIndex++;
+        if (window.historyIndex === window.commandHistory.length) {
+          window.currentInput = "";
+        } else {
+          window.currentInput = window.commandHistory[window.historyIndex];
+        }
+        document.getElementById("typed-text").innerText = window.currentInput;
+      }
+      return; // Stop processing
+    }
+    
+    // If the mobile input is focused, let its own handlers take over.
+    if (document.activeElement === mobileInput) {
+        return;
+    }
+
+    // --- Handle other keys only if desktop is focused ---
+    
+    if (key === "Enter") {
       document.getElementById("input-wrapper").style.display = "none";
-      echoLine(getPrompt() + " " + currentInput);
-      handleCommand(currentInput.trim().toLowerCase());
-      currentInput = "";
+      const command = window.currentInput.trim();
+      echoLine(getPrompt() + " " + command);
+
+      if (command && command !== window.commandHistory.at(-1)) {
+        window.commandHistory.push(command);
+      }
+      window.historyIndex = window.commandHistory.length;
+      
+      handleCommand(command.toLowerCase());
+      window.currentInput = "";
       document.getElementById("typed-text").innerText = "";
-    } else if (e.key.length === 1) {
-      currentInput += e.key;
-      document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
+
+    } else if (key === "Backspace") {
+      window.historyIndex = window.commandHistory.length;
+      window.currentInput = window.currentInput.slice(0, -1);
+      document.getElementById("typed-text").innerText = window.currentInput;
+
+    } else if (key.length === 1) {
+      window.historyIndex = window.commandHistory.length;
+      window.currentInput += key;
+      document.getElementById("typed-text").innerText = window.currentInput;
     }
   });
 
@@ -38,10 +81,8 @@ function attachInputHandlers() {
   mobileInput.addEventListener("input", ev => {
     const ch = ev.data;
     if (ch) {
-      currentInput += ch;
-      document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
+      window.currentInput += ch;
+      document.getElementById("typed-text").innerText = window.currentInput;
     }
     mobileInput.value = "";
   });
@@ -50,16 +91,21 @@ function attachInputHandlers() {
   mobileInput.addEventListener("keydown", ev => {
     if (ev.key === "Backspace") {
       ev.preventDefault();
-      currentInput = currentInput.slice(0, -1);
-      document.getElementById("typed-text").innerText = currentInput;
-      // Ensure prompt is visible after typing
-      scrollToBottom();
+      window.currentInput = window.currentInput.slice(0, -1);
+      document.getElementById("typed-text").innerText = window.currentInput;
     } else if (ev.key === "Enter") {
       ev.preventDefault();
       document.getElementById("input-wrapper").style.display = "none";
-      echoLine(getPrompt() + " " + currentInput);
-      handleCommand(currentInput.trim().toLowerCase());
-      currentInput = "";
+      const command = window.currentInput.trim();
+      echoLine(getPrompt() + " " + command);
+      
+      if (command && command !== window.commandHistory.at(-1)) {
+        window.commandHistory.push(command);
+      }
+      window.historyIndex = window.commandHistory.length;
+
+      handleCommand(command.toLowerCase());
+      window.currentInput = "";
       document.getElementById("typed-text").innerText = "";
     }
   });
