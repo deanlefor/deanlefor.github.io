@@ -73,10 +73,8 @@ body {
 ================================= */
 #terminal {
   max-width: 800px;
-  margin: 0;                     /* left-justify the terminal */
-  height: calc(100vh - 2rem);    /* full viewport height minus body padding */
-  overflow-y: auto;              /* enable vertical scrolling */
-  scroll-behavior: smooth;       /* smooth scroll when JS adjusts it */
+  margin: 0;        /* left-justify and let content expand */
+  /* no height/overflow here—allow the page itself to scroll */
 }
 
 /* ================================
