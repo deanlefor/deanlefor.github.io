@@ -11,48 +11,54 @@ function attachInputHandlers() {
   // Desktop key handling (skip if splash is up or mobile input is focused)
   document.addEventListener("keydown", e => {
     const splash = document.getElementById("splash");
-    if (splash.style.display !== "none" || document.activeElement === mobileInput) {
+    if (splash.style.display !== "none") {
       return;
     }
 
     const key = e.key;
 
-    // --- FIX: Completely rewritten and simplified history logic ---
+    // --- FIX: Prioritize arrow keys to prevent focus conflicts ---
 
+    // Always handle history navigation first.
     if (key === "ArrowUp") {
       e.preventDefault();
-      if (window.commandHistory.length === 0) return; // No history, do nothing
-
-      // Decrement index, but not below 0
-      window.historyIndex = Math.max(0, window.historyIndex - 1);
-      window.currentInput = window.commandHistory[window.historyIndex];
-      document.getElementById("typed-text").innerText = window.currentInput;
-
-    } else if (key === "ArrowDown") {
-      e.preventDefault();
-      if (window.commandHistory.length === 0) return;
-
-      // If we are in the middle of history, move forward
-      if (window.historyIndex < window.commandHistory.length - 1) {
-        window.historyIndex++;
+      if (window.commandHistory.length > 0 && window.historyIndex > 0) {
+        window.historyIndex--;
         window.currentInput = window.commandHistory[window.historyIndex];
-      } else {
-        // Otherwise, go to a new blank line at the end of history
-        window.historyIndex = window.commandHistory.length;
-        window.currentInput = "";
+        document.getElementById("typed-text").innerText = window.currentInput;
       }
-      document.getElementById("typed-text").innerText = window.currentInput;
+      return; // Stop processing
+    }
 
-    } else if (key === "Enter") {
+    if (key === "ArrowDown") {
+      e.preventDefault();
+      if (window.historyIndex < window.commandHistory.length) {
+        window.historyIndex++;
+        if (window.historyIndex === window.commandHistory.length) {
+          window.currentInput = "";
+        } else {
+          window.currentInput = window.commandHistory[window.historyIndex];
+        }
+        document.getElementById("typed-text").innerText = window.currentInput;
+      }
+      return; // Stop processing
+    }
+    
+    // If the mobile input is focused, let its own handlers take over.
+    if (document.activeElement === mobileInput) {
+        return;
+    }
+
+    // --- Handle other keys only if desktop is focused ---
+    
+    if (key === "Enter") {
       document.getElementById("input-wrapper").style.display = "none";
       const command = window.currentInput.trim();
       echoLine(getPrompt() + " " + command);
 
-      // Add to history if it's a non-empty command and not a duplicate of the last one
       if (command && command !== window.commandHistory.at(-1)) {
         window.commandHistory.push(command);
       }
-      // Reset index to point to the new "blank" line after the last command
       window.historyIndex = window.commandHistory.length;
       
       handleCommand(command.toLowerCase());
@@ -60,13 +66,11 @@ function attachInputHandlers() {
       document.getElementById("typed-text").innerText = "";
 
     } else if (key === "Backspace") {
-      // Any other typing action resets our position in the history.
       window.historyIndex = window.commandHistory.length;
       window.currentInput = window.currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = window.currentInput;
 
-    } else if (key.length === 1) { // Catches all printable characters
-      // Any other typing action resets our position in the history.
+    } else if (key.length === 1) {
       window.historyIndex = window.commandHistory.length;
       window.currentInput += key;
       document.getElementById("typed-text").innerText = window.currentInput;
