@@ -26,10 +26,16 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Give the browser one tick to render the new line…
+  // wait one tick so the new line is in the DOM
   setTimeout(() => {
-    // then snap the window straight down
-    window.scrollTo(0, document.body.scrollHeight);
+    const promptEl = document.getElementById("input-wrapper");
+    if (promptEl) {
+      // scroll the prompt into view at the bottom of the viewport
+      promptEl.scrollIntoView({ behavior: "auto", block: "end" });
+    } else {
+      // fallback
+      window.scrollTo(0, document.body.scrollHeight);
+    }
   }, 0);
 }
 
