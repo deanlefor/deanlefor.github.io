@@ -26,15 +26,17 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  /*
-    FIX: With the new flexbox layout in style.css, the #output
-    element is now the main scrolling container, not the whole page.
-    This function now scrolls that specific element to its bottom.
-  */
-  const outputEl = document.getElementById("output");
-  if (outputEl) {
-    outputEl.scrollTop = outputEl.scrollHeight;
-  }
+  // wait one tick so the new line is in the DOM
+  setTimeout(() => {
+    const promptEl = document.getElementById("input-wrapper");
+    if (promptEl) {
+      // scroll the prompt into view at the bottom of the viewport
+      promptEl.scrollIntoView({ behavior: "auto", block: "end" });
+    } else {
+      // fallback
+      window.scrollTo(0, document.body.scrollHeight);
+    }
+  }, 0);
 }
 
 // —————————————————————————————————————————————————————————————
@@ -60,9 +62,6 @@ function processQueue() {
     isPrinting = false;
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
-    // After everything is printed, focus the mobile input if it exists
-    const mi = document.getElementById("mobile-input");
-    if (mi) mi.focus();
     return;
   }
   isPrinting = true;
