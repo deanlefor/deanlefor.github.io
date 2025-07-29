@@ -9,7 +9,7 @@
 
 /* ================================
    Color Variables & Themes
-================================= */
+=================================*/
 :root {
   /* Default colors (green on black) */
   --fg: green;
@@ -36,7 +36,7 @@ body.theme-amber {
 
 /* ================================
    Base Layout and Typography
-================================= */
+=================================*/
 body {
   background-color: var(--bg);
   color: var(--fg);
@@ -51,7 +51,7 @@ body {
 
 /* ================================
    Boot-up Splash (IBM PC DOS)
-================================= */
+=================================*/
 #splash {
   position: absolute;
   top: 0; left: 0; right: 0; bottom: 0;
@@ -70,20 +70,28 @@ body {
 
 /* ================================
    Terminal Container
-================================= */
+   (flex layout, fixed height)
+=================================*/
 #terminal {
+  display: flex;
+  flex-direction: column;
   max-width: 800px;
-  margin: 0;             /* left-justify the terminal */
-  /* allow page itself to scroll */
+  margin: 0;                     /* left-justify the terminal */
+  height: calc(100vh - 2rem);    /* full viewport minus body padding */
+  background-color: var(--bg);
 }
 
 /* ================================
    Output Area (Command Results)
-================================= */
+   (scrolls under the prompt)
+=================================*/
 #output {
+  flex: 1 1 auto;                /* fill available space */
+  overflow-y: auto;              /* enable scrolling */
+  scroll-behavior: smooth;       /* smooth scroll when JS adjusts it */
   white-space: pre-wrap;
-  margin-bottom: 0;      /* no extra gap before prompt */
-  font-family: inherit;  /* ensure VT323 */
+  margin: 0;                     /* no extra gap before prompt */
+  font-family: inherit;          /* ensure VT323 */
 }
 
 #output img {
@@ -93,17 +101,20 @@ body {
 
 /* ================================
    Simulated Input Line and Cursor
-================================= */
+   (always pinned at bottom)
+=================================*/
 #input-wrapper {
+  flex: 0 0 auto;                /* natural height, no grow/shrink */
   display: inline-flex;
   align-items: flex-start;
-  font-size: inherit;    /* match body font-size */
-  line-height: inherit;  /* match body line-height */
+  font-size: inherit;            /* match body font-size */
+  line-height: inherit;          /* match body line-height */
+  background-color: var(--bg);
 }
 
 #prompt-line,
 #typed-text {
-  font-family: inherit;  /* same retro font */
+  font-family: inherit;          /* same retro font */
 }
 
 #prompt-line {
@@ -116,7 +127,7 @@ body {
 
 #fake-cursor {
   display: inline-block;
-  width: 0.6ch;          /* scales with font */
+  width: 0.6ch;                  /* scales with font */
   height: 1em;
   background-color: var(--fg);
   margin-left: 2px;
@@ -125,7 +136,7 @@ body {
 
 /* ================================
    Hidden Mobile Input Overlay
-================================= */
+=================================*/
 #mobile-input {
   position: absolute;
   top: 0;
@@ -140,7 +151,7 @@ body {
 
 /* ================================
    Background Consistency
-================================= */
+=================================*/
 #terminal,
 #output,
 #input-wrapper {
@@ -149,7 +160,7 @@ body {
 
 /* ================================
    Animations
-================================= */
+=================================*/
 @keyframes blink {
   50% { opacity: 0; }
 }
