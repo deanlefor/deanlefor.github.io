@@ -3,12 +3,12 @@
 // —————————————————————————————————————————————————————————————
 // 1. State & Config
 // —————————————————————————————————————————————————————————————
-let cwdKey       = "";       // "" means C:\Dean root
+let cwdKey       = "";
 let currentInput = "";
 let typingSpeed  = 30;       // ms per character
 const defaultSpeed = 30;
-const lineQueue   = [];
-let isPrinting   = false;
+const lineQueue    = [];
+let isPrinting    = false;
 
 // —————————————————————————————————————————————————————————————
 // 2. Prompt Helpers
@@ -26,13 +26,10 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // Scroll the page so the input-wrapper is in view
-  const iw = document.getElementById("input-wrapper");
-  if (iw) {
-    iw.scrollIntoView({ block: "end" });
-  } else {
-    window.scrollTo(0, document.body.scrollHeight);
-  }
+  // Scroll the prompt into view
+  const wrapper = document.getElementById("input-wrapper");
+  if (wrapper) wrapper.scrollIntoView({ block: "end" });
+  else window.scrollTo(0, document.body.scrollHeight);
 }
 
 // —————————————————————————————————————————————————————————————
@@ -56,7 +53,7 @@ function processQueue() {
   const out = document.getElementById("output");
   if (lineQueue.length === 0) {
     isPrinting = false;
-    updatePrompt();  // will scroll once
+    updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
     return;
   }
@@ -65,13 +62,16 @@ function processQueue() {
   const prev = out.innerText;
   let idx = 0;
   const timer = setInterval(() => {
-    if (idx < text.length) {
-      if (idx === 0 && prev) out.innerText += "\n" + text.charAt(0);
-      else out.innerText += text.charAt(idx);
+    if (idx === 0) {
+      out.innerText = prev
+        ? prev + "\n" + text[0]
+        : text[0];
       idx++;
+    } else if (idx < text.length) {
+      out.innerText += text[idx++];
     } else {
       clearInterval(timer);
-      scrollToBottom(); // scroll once after full line
+      scrollToBottom();
       processQueue();
     }
   }, typingSpeed);
