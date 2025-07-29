@@ -10,6 +10,11 @@ const defaultSpeed = 15;
 const lineQueue    = [];
 let isPrinting    = false;
 
+// --- Command History ---
+const commandHistory = [];
+let historyIndex = 0;
+// --- End Command History ---
+
 // —————————————————————————————————————————————————————————————
 // 2. Prompt Helpers
 // —————————————————————————————————————————————————————————————
@@ -26,10 +31,6 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // FIX: This is the new, stable scrolling logic.
-  // It targets the #terminal element itself and sets its
-  // internal scroll position to the very bottom. This avoids
-  // fighting the browser and stops the jumping behavior.
   const terminal = document.getElementById("terminal");
   if (terminal) {
     terminal.scrollTop = terminal.scrollHeight;
