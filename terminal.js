@@ -26,12 +26,14 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // FIX: Use a timeout to ensure the DOM has finished rendering new
-  // content before we try to scroll. This prevents race conditions
-  // that cause the view to jump to the top or not scroll at all.
-  setTimeout(() => {
-    window.scrollTo(0, document.body.scrollHeight);
-  }, 0);
+  // FIX: Use scrollIntoView on the cursor element with 'nearest'.
+  // This is the most reliable method. It tells the browser to make
+  // sure the cursor is visible, but to only scroll if it's NOT
+  // already on screen. This prevents the "jumping" behavior.
+  const cursor = document.getElementById("fake-cursor");
+  if (cursor) {
+    cursor.scrollIntoView({ block: 'nearest' });
+  }
 }
 
 
@@ -78,8 +80,7 @@ function processQueue() {
       processQueue(); // Process the next line
       return;
     }
-    // FIX: Scroll after every character is added to create the
-    // smooth, line-by-line "scrolling up" effect.
+    // Scroll after every character is added.
     scrollToBottom();
   }, typingSpeed);
 }
