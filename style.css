@@ -1,92 +1,77 @@
-/*
-=================================
- deanlefor.com – Terminal Styles
- Author: Dean Lefor
- Created: July 2025
- Description: Retro DOS-style terminal UI
-=================================
-*/
-
-/* ================================
-   Color Variables & Themes
-================================= */
+/* Base Themes & Colors */
 :root {
-  /* Default theme: green on black */
   --fg: green;
   --bg: black;
 }
-
-/* Theme classes */
 body.theme-green { --fg: green; --bg: black; }
 body.theme-blue  { --fg: #00dfff; --bg: #002b36; }
 body.theme-amber { --fg: #ffb300; --bg: #2a1f0e; }
 
-/* ================================
-   Base Styles
-================================= */
+/* Global Reset */
 body {
-  background-color: var(--bg);
-  color:            var(--fg);
-  font-family:      'VT323', monospace;
-  margin:           0;
-  padding:          1rem;
+  margin: 0;
+  padding: 1rem;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'VT323', monospace;
+  font-size: 1rem;
+  line-height: 1.2;
 }
 
-/* ================================
-   Terminal Container
-================================= */
+/* Terminal Container */
 #terminal {
   max-width: 800px;
-  margin:    0 auto;
-  /* ✂️ Removed height:100vh and overflow-y so the page scrolls naturally */
+  margin: 0 auto;
+  /* no fixed height or overflow—let the page scroll */
+  padding: 1rem 0 0 0;
+  text-align: left;          /* left-justify text */
 }
 
-/* ================================
-   Output & Input
-================================= */
+/* Output area */
 #output {
-  white-space:     pre-wrap;
-  word-wrap:      break-word;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  font-family: inherit;
+  font-size: inherit;
 }
 
+/* Input wrapper */
 #input-wrapper {
-  display:        inline-flex;
-  align-items:    center;
-  margin-top:     0.5rem;
+  display: flex;
+  align-items: center;
+  margin-top: 0;             /* no extra blank line */
+  width: 100%;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-#prompt-line {
-  margin-right:   0.5ch;
-  font-weight:    bold;
-}
-
+/* Prompt and typed text */
+#prompt-line,
 #typed-text {
-  position:       relative;
+  font-family: inherit;
+  font-size: inherit;
 }
 
-/* ================================
-   Blinking Block Cursor
-================================= */
+/* Blinking block cursor */
 #fake-cursor {
-  display:         inline-block;
-  width:           0.6ch;   /* scales with font */
-  height:          1em;
+  display: inline-block;
+  width: 0.6ch;
+  height: 1em;
   background-color: var(--fg);
-  margin-left:     2px;
-  animation:       blink 1s steps(1) infinite;
+  margin-left: 2px;
+  animation: blink 1s steps(1) infinite;
 }
-
 @keyframes blink {
   50% { opacity: 0; }
 }
 
-/* ================================
-   Hide Default Caret in Hidden Inputs
-================================= */
-#mobile-input,
-#typed-text {
-  caret-color:    transparent;
-  outline:        none;
-  border:         none;
-  background:     transparent;
+/* Hide default caret in our hidden input */
+#mobile-input {
+  caret-color: transparent;
+  position: absolute;
+  bottom: 0; left: 0;
+  width: 100%; height: 40px;
+  opacity: 0.01;
+  border: none; outline: none;
+  z-index: 1000;
 }
