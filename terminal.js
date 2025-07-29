@@ -26,18 +26,16 @@ function updatePrompt() {
 // 3. Scrolling Helper
 // —————————————————————————————————————————————————————————————
 function scrollToBottom() {
-  // wait one tick so the new line is in the DOM
-  setTimeout(() => {
-    const promptEl = document.getElementById("input-wrapper");
-    if (promptEl) {
-      // scroll the prompt into view at the bottom of the viewport
-      promptEl.scrollIntoView({ behavior: "auto", block: "end" });
-    } else {
-      // fallback
-      window.scrollTo(0, document.body.scrollHeight);
-    }
-  }, 0);
+  // FIX: This is the new, stable scrolling logic.
+  // It targets the #terminal element itself and sets its
+  // internal scroll position to the very bottom. This avoids
+  // fighting the browser and stops the jumping behavior.
+  const terminal = document.getElementById("terminal");
+  if (terminal) {
+    terminal.scrollTop = terminal.scrollHeight;
+  }
 }
+
 
 // —————————————————————————————————————————————————————————————
 // 4. Echo & Typing Animation
@@ -62,6 +60,7 @@ function processQueue() {
     isPrinting = false;
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
+    scrollToBottom(); // Final scroll after queue is empty
     return;
   }
   isPrinting = true;
@@ -78,8 +77,10 @@ function processQueue() {
       out.innerText += text[idx++];
     } else {
       clearInterval(timer);
-      scrollToBottom();
-      processQueue();
+      processQueue(); // Process the next line
+      return;
     }
+    // Scroll after every character is added.
+    scrollToBottom();
   }, typingSpeed);
 }

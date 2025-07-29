@@ -9,81 +9,78 @@
 
 /* ================================
    Color Variables & Themes
-================================= */
+=================================*/
 :root {
-  /* Default colors (green on black) */
   --fg: green;
   --bg: black;
 }
-
-/* Theme: Green on Black */
-body.theme-green {
-  --fg: green;
-  --bg: black;
-}
-
-/* Theme: White on Blue */
-body.theme-blue {
-  --fg: white;
-  --bg: blue;
-}
-
-/* Theme: Amber on Black */
-body.theme-amber {
-  --fg: #FFBF00;
-  --bg: black;
-}
+body.theme-green { --fg: green; --bg: black; }
+body.theme-blue  { --fg: white; --bg: blue;  }
+body.theme-amber { --fg: #FFBF00; --bg: black; }
 
 /* ================================
    Base Layout and Typography
-================================= */
-body {
+=================================*/
+/* FIX: Prevent the main page from scrolling */
+html, body {
+  height: 100%;
+  overflow: hidden;
   background-color: var(--bg);
+}
+
+body {
   color: var(--fg);
-  /* Retro monospace font */
   font-family: 'VT323', monospace;
   margin: 0;
-  padding: 1rem;
+  padding: 0;
   font-size: 1.2rem;
   line-height: 1.3;
-  position: relative;
 }
 
 /* ================================
    Boot-up Splash (IBM PC DOS)
-================================= */
+=================================*/
 #splash {
   position: absolute;
-  top: 0; left: 0; right: 0; bottom: 0;
+  inset: 0;
   background-color: var(--bg);
   padding: 1rem;
   z-index: 10;
 }
-
 #splash-output {
   white-space: pre-wrap;
-  font-size: inherit;    /* match body font-size */
-  font-family: inherit;  /* match VT323 */
-  margin: 0;             /* remove extra margins */
-  text-align: left;      /* left-justify splash text */
+  font-family: inherit;
+  font-size: inherit;
+  margin: 0;
+  text-align: left;
 }
 
 /* ================================
    Terminal Container
-================================= */
+   (FIX: Now a self-contained scrolling view)
+=================================*/
 #terminal {
   max-width: 800px;
-  margin: 0;             /* left-justify the terminal */
-  /* allow page itself to scroll */
+  margin: 0;
+  background-color: var(--bg);
+  /* FIX: Make the terminal a full-height, internally-scrolling container */
+  height: 100vh;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end; /* Aligns initial prompt to bottom */
+  padding: 1rem;
+  box-sizing: border-box;
 }
 
+
 /* ================================
-   Output Area (Command Results)
-================================= */
+   Output Area
+=================================*/
 #output {
   white-space: pre-wrap;
-  margin-bottom: 0;      /* no extra gap before prompt */
-  font-family: inherit;  /* ensure VT323 */
+  font-family: inherit;
+  margin: 0;
 }
 
 #output img {
@@ -92,31 +89,25 @@ body {
 }
 
 /* ================================
-   Simulated Input Line and Cursor
-================================= */
+   Input Line (always below output)
+=================================*/
 #input-wrapper {
-  display: inline-flex;
+  display: flex;
+  width: 100%;
   align-items: flex-start;
-  font-size: inherit;    /* match body font-size */
-  line-height: inherit;  /* match body line-height */
-}
-
-#prompt-line,
-#typed-text {
-  font-family: inherit;  /* same retro font */
+  background-color: var(--bg);
+  padding-top: 0.5rem;
 }
 
 #prompt-line {
   margin-right: 0.5ch;
 }
-
 #typed-text {
   white-space: pre;
 }
-
 #fake-cursor {
   display: inline-block;
-  width: 0.6ch;          /* scales with font */
+  width: 0.6ch;
   height: 1em;
   background-color: var(--fg);
   margin-left: 2px;
@@ -125,31 +116,19 @@ body {
 
 /* ================================
    Hidden Mobile Input Overlay
-================================= */
+=================================*/
 #mobile-input {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: transparent !important;
+  inset: 0;
+  background: transparent !important;
   border: none !important;
   outline: none !important;
   caret-color: transparent;
 }
 
 /* ================================
-   Background Consistency
-================================= */
-#terminal,
-#output,
-#input-wrapper {
-  background-color: var(--bg);
-}
-
-/* ================================
    Animations
-================================= */
+=================================*/
 @keyframes blink {
   50% { opacity: 0; }
 }
