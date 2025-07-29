@@ -53,10 +53,19 @@ body {
    Terminal Container
    (bottom-aligned initial content)
 =================================*/
+/* ================================
+   Terminal Container
+   (bottom-aligned initial content)
+=================================*/
 #terminal {
   max-width: 800px;
   margin: 0;                          /* left-justify terminal */
   background-color: var(--bg);
+  height: calc(100vh - 2rem);         /* fixed viewport height */
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;          /* align content bottom */
+  overflow: visible;                  /* allow page-level scrolling */
 }
 
 
