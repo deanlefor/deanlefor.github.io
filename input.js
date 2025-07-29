@@ -15,50 +15,61 @@ function attachInputHandlers() {
       return;
     }
 
-    // --- FIX: Restructured logic to correctly handle history navigation ---
+    const key = e.key;
 
-    if (e.key === "ArrowUp") {
-        e.preventDefault();
-        if (window.historyIndex > 0) {
-            window.historyIndex--;
-            window.currentInput = window.commandHistory[window.historyIndex];
-            document.getElementById("typed-text").innerText = window.currentInput;
-        }
-    } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        if (window.historyIndex < window.commandHistory.length) {
-            window.historyIndex++;
-            if (window.historyIndex === window.commandHistory.length) {
-                window.currentInput = ""; // Clear input when at the end of history
-            } else {
-                window.currentInput = window.commandHistory[window.historyIndex];
-            }
-            document.getElementById("typed-text").innerText = window.currentInput;
-        }
-    } else if (e.key === "Enter") {
-        document.getElementById("input-wrapper").style.display = "none";
-        const command = window.currentInput.trim();
-        echoLine(getPrompt() + " " + command);
+    // --- FIX: Completely rewritten and simplified history logic ---
 
-        // Add to history only if it's a non-empty command and not a duplicate of the last one
-        if (command && command !== window.commandHistory[window.commandHistory.length - 1]) {
-          window.commandHistory.push(command);
-        }
-        window.historyIndex = window.commandHistory.length; // Reset history position
+    if (key === "ArrowUp") {
+      e.preventDefault();
+      if (window.commandHistory.length === 0) return; // No history, do nothing
 
-        handleCommand(command.toLowerCase());
+      // Decrement index, but not below 0
+      window.historyIndex = Math.max(0, window.historyIndex - 1);
+      window.currentInput = window.commandHistory[window.historyIndex];
+      document.getElementById("typed-text").innerText = window.currentInput;
+
+    } else if (key === "ArrowDown") {
+      e.preventDefault();
+      if (window.commandHistory.length === 0) return;
+
+      // If we are in the middle of history, move forward
+      if (window.historyIndex < window.commandHistory.length - 1) {
+        window.historyIndex++;
+        window.currentInput = window.commandHistory[window.historyIndex];
+      } else {
+        // Otherwise, go to a new blank line at the end of history
+        window.historyIndex = window.commandHistory.length;
         window.currentInput = "";
-        document.getElementById("typed-text").innerText = "";
-    } else if (e.key === "Backspace") {
-        // Any other typing breaks from history navigation
-        window.historyIndex = window.commandHistory.length;
-        window.currentInput = window.currentInput.slice(0, -1);
-        document.getElementById("typed-text").innerText = window.currentInput;
-    } else if (e.key.length === 1) {
-        // Any other typing breaks from history navigation
-        window.historyIndex = window.commandHistory.length;
-        window.currentInput += e.key;
-        document.getElementById("typed-text").innerText = window.currentInput;
+      }
+      document.getElementById("typed-text").innerText = window.currentInput;
+
+    } else if (key === "Enter") {
+      document.getElementById("input-wrapper").style.display = "none";
+      const command = window.currentInput.trim();
+      echoLine(getPrompt() + " " + command);
+
+      // Add to history if it's a non-empty command and not a duplicate of the last one
+      if (command && command !== window.commandHistory.at(-1)) {
+        window.commandHistory.push(command);
+      }
+      // Reset index to point to the new "blank" line after the last command
+      window.historyIndex = window.commandHistory.length;
+      
+      handleCommand(command.toLowerCase());
+      window.currentInput = "";
+      document.getElementById("typed-text").innerText = "";
+
+    } else if (key === "Backspace") {
+      // Any other typing action resets our position in the history.
+      window.historyIndex = window.commandHistory.length;
+      window.currentInput = window.currentInput.slice(0, -1);
+      document.getElementById("typed-text").innerText = window.currentInput;
+
+    } else if (key.length === 1) { // Catches all printable characters
+      // Any other typing action resets our position in the history.
+      window.historyIndex = window.commandHistory.length;
+      window.currentInput += key;
+      document.getElementById("typed-text").innerText = window.currentInput;
     }
   });
 
@@ -84,7 +95,7 @@ function attachInputHandlers() {
       const command = window.currentInput.trim();
       echoLine(getPrompt() + " " + command);
       
-      if (command && command !== window.commandHistory[window.commandHistory.length - 1]) {
+      if (command && command !== window.commandHistory.at(-1)) {
         window.commandHistory.push(command);
       }
       window.historyIndex = window.commandHistory.length;
