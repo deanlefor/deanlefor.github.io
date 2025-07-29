@@ -15,60 +15,50 @@ function attachInputHandlers() {
       return;
     }
 
-    // If user is using arrow keys, we handle history
+    // --- FIX: Restructured logic to correctly handle history navigation ---
+
     if (e.key === "ArrowUp") {
-        e.preventDefault(); // Prevent cursor from moving in some browsers
+        e.preventDefault();
         if (window.historyIndex > 0) {
             window.historyIndex--;
-            // FIX: Use the global currentInput variable
             window.currentInput = window.commandHistory[window.historyIndex];
             document.getElementById("typed-text").innerText = window.currentInput;
         }
-        return; // Stop further processing
-    }
-    
-    if (e.key === "ArrowDown") {
+    } else if (e.key === "ArrowDown") {
         e.preventDefault();
-        if (window.historyIndex < window.commandHistory.length - 1) {
+        if (window.historyIndex < window.commandHistory.length) {
             window.historyIndex++;
-            // FIX: Use the global currentInput variable
-            window.currentInput = window.commandHistory[window.historyIndex];
+            if (window.historyIndex === window.commandHistory.length) {
+                window.currentInput = ""; // Clear input when at the end of history
+            } else {
+                window.currentInput = window.commandHistory[window.historyIndex];
+            }
             document.getElementById("typed-text").innerText = window.currentInput;
-        } else {
-            // If at the end of history or beyond, clear the input
-            window.historyIndex = window.commandHistory.length;
-            window.currentInput = "";
-            document.getElementById("typed-text").innerText = "";
         }
-        return; // Stop further processing
-    }
-
-    // Any other key press resets the history navigation
-    window.historyIndex = window.commandHistory.length;
-
-    if (e.key === "Backspace") {
-      // FIX: Use the global currentInput variable
-      window.currentInput = window.currentInput.slice(0, -1);
-      document.getElementById("typed-text").innerText = window.currentInput;
     } else if (e.key === "Enter") {
-      document.getElementById("input-wrapper").style.display = "none";
-      // FIX: Use the global currentInput variable
-      const command = window.currentInput.trim();
-      echoLine(getPrompt() + " " + command);
+        document.getElementById("input-wrapper").style.display = "none";
+        const command = window.currentInput.trim();
+        echoLine(getPrompt() + " " + command);
 
-      // Add to history only if it's a non-empty command
-      if (command) {
-        window.commandHistory.push(command);
-      }
-      window.historyIndex = window.commandHistory.length; // Reset history index
+        // Add to history only if it's a non-empty command and not a duplicate of the last one
+        if (command && command !== window.commandHistory[window.commandHistory.length - 1]) {
+          window.commandHistory.push(command);
+        }
+        window.historyIndex = window.commandHistory.length; // Reset history position
 
-      handleCommand(command.toLowerCase());
-      window.currentInput = "";
-      document.getElementById("typed-text").innerText = "";
+        handleCommand(command.toLowerCase());
+        window.currentInput = "";
+        document.getElementById("typed-text").innerText = "";
+    } else if (e.key === "Backspace") {
+        // Any other typing breaks from history navigation
+        window.historyIndex = window.commandHistory.length;
+        window.currentInput = window.currentInput.slice(0, -1);
+        document.getElementById("typed-text").innerText = window.currentInput;
     } else if (e.key.length === 1) {
-      // FIX: Use the global currentInput variable
-      window.currentInput += e.key;
-      document.getElementById("typed-text").innerText = window.currentInput;
+        // Any other typing breaks from history navigation
+        window.historyIndex = window.commandHistory.length;
+        window.currentInput += e.key;
+        document.getElementById("typed-text").innerText = window.currentInput;
     }
   });
 
@@ -76,7 +66,6 @@ function attachInputHandlers() {
   mobileInput.addEventListener("input", ev => {
     const ch = ev.data;
     if (ch) {
-      // FIX: Use the global currentInput variable
       window.currentInput += ch;
       document.getElementById("typed-text").innerText = window.currentInput;
     }
@@ -87,17 +76,15 @@ function attachInputHandlers() {
   mobileInput.addEventListener("keydown", ev => {
     if (ev.key === "Backspace") {
       ev.preventDefault();
-      // FIX: Use the global currentInput variable
       window.currentInput = window.currentInput.slice(0, -1);
       document.getElementById("typed-text").innerText = window.currentInput;
     } else if (ev.key === "Enter") {
       ev.preventDefault();
       document.getElementById("input-wrapper").style.display = "none";
-      // FIX: Use the global currentInput variable
       const command = window.currentInput.trim();
       echoLine(getPrompt() + " " + command);
       
-      if (command) {
+      if (command && command !== window.commandHistory[window.commandHistory.length - 1]) {
         window.commandHistory.push(command);
       }
       window.historyIndex = window.commandHistory.length;
