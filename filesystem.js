@@ -18,7 +18,11 @@ window.fs = {
         "Facebook: Not a chance\n" +
         "Instagram: Deleted it\n" +
         "YouTube: Also nope\n" +
-        "Carrier pigeon: Strong maybe"
+        "Carrier pigeon: Strong maybe",
+      "bug_bounty.txt":
+        "This website is the modern equivalent of a chimpanzee pounding on a typewriter and accidentally producing Shakespeare. While I have a working knowledge of JavaScript, let’s just say I wouldn’t be shocked if something goes haywire now and then.\n\n" +
+        "If you stumble across any bugs, glitches, broken logic, or general weirdness, feel free to let me know at: its_broken@deanlefor.com\n\n" +
+        "(And yes, that’s a real email.)"
     }
   },
 
