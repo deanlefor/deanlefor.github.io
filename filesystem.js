@@ -117,8 +117,12 @@ window.fs = {
     files: {
       "CONTACT.TXT":
         "Email: webmaster@deanlefor.com\n" +
-        "LinkedIn: https://linkedin.com/\n" +
-        "Twitter: @xxxxxxxxxxx"
+        "LinkedIn: Coming Fall 2025\n" +
+        "Twitter: Not a chance\n" +
+        "Facebook: Nope\n" +
+        "Instagram: Deleted it\n" +
+        "YouTube: Also nope\n" +
+        "Carrier pigeon: Strong maybe"
     }
   }
 };
