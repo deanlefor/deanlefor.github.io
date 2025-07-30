@@ -6,11 +6,19 @@ window.fs = {
   // Root Directory (C:\Dean)
   // =================================================================
   "": {
-    folders: ["ABOUT", "WORK_HISTORY", "FUN", "CONTACT"],
+    folders: ["ABOUT", "WORK_HISTORY", "FUN"],
     files: {
       "README.TXT": 
         "Welcome to Dean Lefor’s DOS-style terminal site!\n" +
-        "Type HELP for a list of commands."
+        "Type HELP for a list of commands.",
+      "CONTACT.TXT":
+        "Email: webmaster@deanlefor.com\n" +
+        "LinkedIn: Coming Fall 2025\n" +
+        "Twitter: Nope\n" +
+        "Facebook: Not a chance\n" +
+        "Instagram: Deleted it\n" +
+        "YouTube: Also nope\n" +
+        "Carrier pigeon: Strong maybe"
     }
   },
 
@@ -106,23 +114,6 @@ window.fs = {
         "You’ve discovered the secret file! 🎉\n" +
         "I mean, it's not really secret because it is listed with all the files... but...\n" +
         "More surprises await in the FUN folder."
-    }
-  },
-
-  // =================================================================
-  // Contact Info Section
-  // =================================================================
-  "CONTACT": {
-    folders: [],
-    files: {
-      "CONTACT.TXT":
-        "Email: webmaster@deanlefor.com\n" +
-        "LinkedIn: Coming Fall 2025\n" +
-        "Twitter: Not a chance\n" +
-        "Facebook: Nope\n" +
-        "Instagram: Deleted it\n" +
-        "YouTube: Also nope\n" +
-        "Carrier pigeon: Strong maybe"
     }
   }
 };
