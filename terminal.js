@@ -12,6 +12,9 @@ const defaultSpeed = 15;
 const lineQueue    = [];
 let isPrinting    = false;
 
+// --- FIX: Add a global state to track if the system is shut down ---
+window.isShutdown = false;
+
 // --- Command History ---
 // Attach history to the window object to ensure it's globally
 // accessible across all scripts.
