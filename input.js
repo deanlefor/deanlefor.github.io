@@ -5,20 +5,26 @@ function attachInputHandlers() {
 
   // Mobile: any tap focuses the hidden input
   document.body.addEventListener("touchstart", () => {
+    // FIX: Don't focus if system is shut down
+    if (window.isShutdown) return;
     mobileInput.focus();
   });
 
-  // Desktop key handling (skip if splash is up or mobile input is focused)
+  // Desktop key handling
   document.addEventListener("keydown", e => {
+    // --- FIX: Ignore all input if the system is shut down ---
+    if (window.isShutdown) {
+      e.preventDefault();
+      return;
+    }
+
     const splash = document.getElementById("splash");
     if (splash.style.display !== "none") {
       return;
     }
 
     const key = e.key;
-
-    // --- FIX: Prioritize arrow keys to prevent focus conflicts ---
-
+    
     // Always handle history navigation first.
     if (key === "ArrowUp") {
       e.preventDefault();
@@ -27,7 +33,7 @@ function attachInputHandlers() {
         window.currentInput = window.commandHistory[window.historyIndex];
         document.getElementById("typed-text").innerText = window.currentInput;
       }
-      return; // Stop processing
+      return;
     }
 
     if (key === "ArrowDown") {
@@ -41,22 +47,21 @@ function attachInputHandlers() {
         }
         document.getElementById("typed-text").innerText = window.currentInput;
       }
-      return; // Stop processing
+      return;
     }
     
-    // If the mobile input is focused, let its own handlers take over.
     if (document.activeElement === mobileInput) {
         return;
     }
-
-    // --- Handle other keys only if desktop is focused ---
     
     if (key === "Enter") {
       document.getElementById("input-wrapper").style.display = "none";
       const command = window.currentInput.trim();
       echoLine(getPrompt() + " " + command);
 
-      if (command && command !== window.commandHistory.at(-1)) {
+      // FIX: Use a more compatible way to get the last element.
+      const lastCommand = window.commandHistory[window.commandHistory.length - 1];
+      if (command && command !== lastCommand) {
         window.commandHistory.push(command);
       }
       window.historyIndex = window.commandHistory.length;
@@ -79,6 +84,7 @@ function attachInputHandlers() {
 
   // Mobile: capture characters via the hidden <input>
   mobileInput.addEventListener("input", ev => {
+    if (window.isShutdown) return;
     const ch = ev.data;
     if (ch) {
       window.currentInput += ch;
@@ -89,6 +95,11 @@ function attachInputHandlers() {
 
   // Mobile: handle Backspace & Enter in the hidden <input>
   mobileInput.addEventListener("keydown", ev => {
+    if (window.isShutdown) {
+      ev.preventDefault();
+      return;
+    }
+
     if (ev.key === "Backspace") {
       ev.preventDefault();
       window.currentInput = window.currentInput.slice(0, -1);
@@ -99,7 +110,9 @@ function attachInputHandlers() {
       const command = window.currentInput.trim();
       echoLine(getPrompt() + " " + command);
       
-      if (command && command !== window.commandHistory.at(-1)) {
+      // FIX: Use a more compatible way to get the last element.
+      const lastCommand = window.commandHistory[window.commandHistory.length - 1];
+      if (command && command !== lastCommand) {
         window.commandHistory.push(command);
       }
       window.historyIndex = window.commandHistory.length;

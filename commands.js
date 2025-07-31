@@ -3,6 +3,13 @@
 function handleCommand(command) {
   const entry = window.fs[cwdKey];
 
+  // --- FIX: Add EXIT and QUIT commands ---
+  if (["exit", "quit"].includes(command)) {
+    runShutdownSequence();
+    return;
+  }
+  // --- End FIX ---
+
   // CLEAR & CLS
   if (["clear", "cls"].includes(command)) {
     document.getElementById("output").innerText = "";
@@ -43,6 +50,9 @@ function handleCommand(command) {
     enqueueLine("  SPEED [1-150]        Typing speed in ms/char");
     enqueueLine("  RESET                Restore defaults");
     enqueueLine("  CLEAR   or   CLS     Clear the screen");
+    // --- FIX: Add EXIT and QUIT to HELP ---
+    enqueueLine("  EXIT    or   QUIT    Shut down the terminal");
+    // --- End FIX ---
     enqueueLine("");
     enqueueLine("Type HELP at any time to see this again.");
     return;
