@@ -55,7 +55,7 @@ function continueBoot(e) {
   splash.style.display = "none";
   document.getElementById("terminal").style.removeProperty("display");
   
-  currentInput = "";
+  window.currentInput = "";
   document.getElementById("typed-text").innerText = "";
   updatePrompt();
 
@@ -68,4 +68,53 @@ function continueBoot(e) {
   );
 }
 
-// <-- NO window.addEventListener here!  runner.js will call runBootSplash()
+// --- FIX: Add shutdown sequence ---
+async function runShutdownSequence() {
+  // Hide the input prompt immediately
+  document.getElementById("input-wrapper").style.display = "none";
+  
+  // Clear the screen for a clean shutdown
+  await sleep(500);
+  const out = document.getElementById("output");
+  out.innerText = "";
+  scrollToBottom();
+
+  const shutdownLines = [
+    "Flushing file buffers…",
+    "Saving system state…",
+    "Powering down…"
+  ];
+
+  for (let line of shutdownLines) {
+    // Animate each line
+    const prevText = out.innerText;
+    const base = line.slice(0, -1);
+    
+    out.innerText += (prevText ? "\n" : "") + base;
+    
+    for (let i = 0; i < 3; i++) {
+      out.innerText += ".";
+      scrollToBottom();
+      await sleep(400);
+    }
+
+    out.innerText += " OK";
+    scrollToBottom();
+    await sleep(1000);
+  }
+
+  // Display the final message
+  await sleep(500);
+  out.innerText += "\n\nIt is now safe to close this browser window.";
+  scrollToBottom();
+
+  // Remove the blinking cursor animation to complete the effect
+  const cursor = document.getElementById("fake-cursor");
+  if (cursor) {
+    cursor.style.display = "none";
+  }
+
+  // Set the shutdown state to true to disable further input
+  window.isShutdown = true;
+}
+// --- End FIX ---
