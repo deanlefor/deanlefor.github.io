@@ -172,10 +172,7 @@ function load(){
       if(d.startYear)s.startYear=d.startYear;
     }
   }catch(e){}
-  if(Object.keys(s.assign).length===0){
-    const terms=genTerms(),t1=terms[0]?.id,t2=terms[1]?.id;
-    if(t1&&t2)s.assign={m1:t1,f1:t1,m2:t2,f2:t2};
-  }
+  if(Object.keys(s.assign).length===0) s.assign={};
   R();
 }
 
