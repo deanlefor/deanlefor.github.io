@@ -117,32 +117,23 @@ let s={
   tab:'dashboard',done:new Set(),mdone:new Set(),
   dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
   assign:{},picker:null,showSettings:false,
-  startSem:'fall',startYear:2025,names:{},renaming:null
+  startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set()
 };
 
 // Dynamic term generation
-function termOrd(type,year){return year*3+(type==='spring'?0:type==='summer'?1:2);}
-
 function genTerms(){
-  const now=new Date(),nowM=now.getMonth()+1,nowY=now.getFullYear();
-  const ct=nowM>=8?'fall':nowM>=6?'summer':'spring';
-  const cOrd=termOrd(ct,nowY);
-  function st(tp,y){const o=termOrd(tp,y);return o<cOrd?'done':o===cOrd?'current':'next';}
   const terms=[];
   let y=s.startYear,sg=s.startSem,sn=1;
   while(terms.length<14){
     if(sg==='fall'){
-      const r=sn<=7,ts=st('fall',y);
-      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9,done:ts==='done',current:ts==='current',note:r?null:'Typically dissertation phase'});
+      const r=sn<=7;
+      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9});
       sn++;sg='spring';y++;
     } else {
-      const r=sn<=7,ts=st('spring',y);
-      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9,done:ts==='done',current:ts==='current',note:r?null:'Typically dissertation phase'});
+      const r=sn<=7;
+      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9});
       sn++;
-      if(terms.length<14){
-        const su=st('summer',y);
-        terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer',limit:6,done:su==='done',current:su==='current',note:'Typically dissertation credits'});
-      }
+      if(terms.length<14) terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer',limit:6});
       sg='fall';
     }
   }
@@ -176,6 +167,7 @@ function load(){
       if(d.dmp!==undefined)s.dmp=d.dmp;
       if(d.assign)s.assign=d.assign;
       if(d.names)s.names=d.names;
+      if(d.termDone)s.termDone=new Set(d.termDone);
       if(d.startSem)s.startSem=d.startSem;
       if(d.startYear)s.startYear=d.startYear;
     }
@@ -187,7 +179,7 @@ function load(){
   R();
 }
 
-function sv(){try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,startSem:s.startSem,startYear:s.startYear}));}catch(e){}}
+function sv(){try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear}));}catch(e){}}
 
 // Render helpers
 function bar(v,m){const pct=Math.min(v/m*100,100),col=v>=m?GR:BL;return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;}
@@ -248,27 +240,28 @@ function rPlanner(){
     </div>
     ${xferCourses.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${xferCourses.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${dname(c).length>22?dname(c).slice(0,22)+'...':dname(c)}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
     <div style="margin-top:8px">${!isXP?`<button class="bsm" onclick="opk('_transfer')">+ add transferred course</button>`:`<button class="bsm" onclick="cpk()">cancel</button>`}</div>
-    ${isXP?`<div class="picker">${xferGrouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${xferGrouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${c.name}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
+    ${isXP?`<div class="picker">${xferGrouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${xferGrouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${dname(c)}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
   </div>
   ${terms.map(tm=>{
     const tc=tcourses(tm.id),used=tc.reduce((a,c)=>a+c.cr,0),over=used>tm.limit,isP=s.picker===tm.id;
+    const isDoneT=s.termDone.has(tm.id);
     const tmAvail=allCourses().filter(avail);
     const grouped=allBuckets().map(b=>({...b,av:tmAvail.filter(c=>c.bid===b.id)})).filter(b=>b.av.length>0);
-    return`<div class="card" style="${tm.done?'background:var(--bg2);border-color:'+GR+'44':''}${tm.current?';border-color:'+BL+'44':''}">
-      <div style="display:flex;justify-content:space-between;align-items:flex-start">
-        <div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:500;color:${tm.done?GR:tm.current?BL:'var(--tx1)'}">${tm.name}</span>
-          ${tm.label?`<span style="font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:4px;color:var(--tx2);font-weight:500">${tm.label}</span>`:''}
-          ${tm.done?`<span style="font-size:10px;color:${GR};font-weight:500">&#10003; done</span>`:''}
-          ${tm.current?`<span style="font-size:10px;color:${BL};font-weight:500">&#8592; current</span>`:''}
-          ${tm.type==='summer'?`<span style="font-size:10px;color:${AM};font-weight:500">summer</span>`:''}
-          ${tm.type==='diss'?`<span style="font-size:10px;color:var(--tx2);font-weight:500">diss. phase</span>`:''}
-        </div>${tm.note?`<div style="font-size:11px;color:var(--tx2);margin-top:1px">${tm.note}</div>`:''}</div>
+    return`<div class="card" style="${isDoneT?'background:var(--bg2);border-color:'+GR+'44':''}">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div style="display:flex;align-items:center;gap:8px">
+          <div class="circ ${isDoneT?'on':''}" onclick="toggleTermDone('${tm.id}')" style="width:18px;height:18px;border-width:1.5px;flex-shrink:0" aria-label="Mark term done">${isDoneT?`<svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`:''}</div>
+          <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span style="font-size:13px;font-weight:500;color:${isDoneT?GR:'var(--tx1)'}">${tm.name}</span>
+            ${tm.label?`<span style="font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:4px;color:var(--tx2);font-weight:500">${tm.label}</span>`:''}
+            ${tm.type==='summer'?`<span style="font-size:10px;color:${AM};font-weight:500">summer</span>`:''}
+          </div>
+        </div>
         <div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-size:13px;font-weight:500;color:${over?AM:used>0?BL:'var(--tx2)'}">${used}/${tm.limit} cr.</div>${over?`<div style="font-size:10px;color:${AM};font-weight:500;margin-top:2px">over limit</div>`:''}</div>
       </div>
       ${tc.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${dname(c).length>22?dname(c).slice(0,22)+'...':dname(c)}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
       <div style="margin-top:8px">${!isP?`<button class="bsm" onclick="opk('${tm.id}')">+ add course</button>`:`<button class="bsm" onclick="cpk()">cancel</button>`}</div>
-      ${isP?`<div class="picker">${grouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${grouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${c.name}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
+      ${isP?`<div class="picker">${grouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${grouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${dname(c)}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
     </div>`;
   }).join('')}`;
 }
@@ -329,6 +322,8 @@ function una(cid){delete s.assign[cid];sv();R();}
 function opk(tid){s.picker=tid;R();}
 function cpk(){s.picker=null;R();}
 function toggleSt(){s.showSettings=!s.showSettings;R();}
+
+function toggleTermDone(id){s.termDone.has(id)?s.termDone.delete(id):s.termDone.add(id);sv();R();}
 
 function setStart(sem,year){
   if(year<2022||year>2027)return;
