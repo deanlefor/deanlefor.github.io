@@ -7,77 +7,62 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.x/dist/tabler-icons.min.css">
   <style>
     :root {
-      --color-background-primary: #ffffff;
-      --color-background-secondary: #f4f4f2;
-      --color-background-tertiary: #ebebea;
-      --color-text-primary: #111110;
-      --color-text-secondary: #6b6b6a;
-      --color-text-tertiary: #9b9b9a;
-      --color-border-tertiary: rgba(0,0,0,0.10);
-      --color-border-secondary: rgba(0,0,0,0.22);
-      --border-radius-md: 8px;
-      --border-radius-lg: 12px;
-      --font-mono: 'Courier New', Courier, monospace;
+      --bg1:#1c1c1b;--bg2:#262625;--bg3:#303030;
+      --tx1:#f0efee;--tx2:#8c8c8a;--tx3:#5c5c5a;
+      --bd1:rgba(255,255,255,0.09);--bd2:rgba(255,255,255,0.18);
+      --rm:8px;--rl:12px;--mono:'Courier New',Courier,monospace;
     }
-    @media (prefers-color-scheme: dark) {
-      :root {
-        --color-background-primary: #1c1c1b;
-        --color-background-secondary: #262625;
-        --color-background-tertiary: #303030;
-        --color-text-primary: #f0efee;
-        --color-text-secondary: #8c8c8a;
-        --color-text-tertiary: #5c5c5a;
-        --color-border-tertiary: rgba(255,255,255,0.09);
-        --color-border-secondary: rgba(255,255,255,0.18);
-      }
-    }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--color-background-tertiary); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; min-height: 100vh; }
-    #app { max-width: 720px; margin: 0 auto; background: var(--color-background-primary); min-height: 100vh; }
-    .topbar { background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 10px 18px; display: flex; align-items: center; justify-content: space-between; }
-    .topbar a { font-size: 12px; color: var(--color-text-secondary); text-decoration: none; }
-    .topbar a:hover { color: var(--color-text-primary); }
-    .hdr { background: var(--color-background-secondary); border-bottom: 0.5px solid var(--color-border-tertiary); padding: 14px 18px 0; }
-    .tabs { display: flex; gap: 2px; margin-top: 10px; }
-    .tab { padding: 7px 14px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--color-text-secondary); border-radius: 6px 6px 0 0; }
-    .tab.on { background: var(--color-background-primary); color: var(--color-text-primary); border-top: 2px solid #378ADD; border-left: 0.5px solid var(--color-border-tertiary); border-right: 0.5px solid var(--color-border-tertiary); }
-    .body { padding: 14px 16px 60px; }
-    .card { background: var(--color-background-primary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 14px; margin-bottom: 8px; }
-    .csec { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-lg); padding: 12px 14px; margin-bottom: 8px; }
-    .track { background: var(--color-background-secondary); border-radius: 99px; height: 5px; overflow: hidden; margin-top: 4px; }
-    .fill { height: 100%; border-radius: 99px; transition: width .4s; }
-    .btn { background: var(--color-background-secondary); border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 5px 11px; font-size: 12px; font-weight: 500; cursor: pointer; color: var(--color-text-primary); }
-    .btn:hover { background: var(--color-background-tertiary); }
-    .bsm { background: transparent; border: 0.5px solid var(--color-border-secondary); border-radius: var(--border-radius-md); padding: 3px 9px; font-size: 11px; font-weight: 500; cursor: pointer; color: var(--color-text-secondary); }
-    .bsm:hover { background: var(--color-background-secondary); }
-    .chip { display: inline-flex; align-items: center; gap: 5px; background: var(--color-background-secondary); border: 0.5px solid var(--color-border-tertiary); border-radius: var(--border-radius-md); padding: 4px 8px; font-size: 12px; margin: 3px 3px 3px 0; }
-    .cx { background: none; border: none; cursor: pointer; color: var(--color-text-secondary); font-size: 13px; padding: 0 1px; line-height: 1; }
-    .cx:hover { color: var(--color-text-primary); }
-    .chk { width: 17px; height: 17px; border-radius: 4px; border: 1.5px solid var(--color-border-secondary); background: var(--color-background-primary); display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-    .chk.on { background: #639922; border-color: #639922; }
-    .circ { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid #378ADD; background: transparent; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
-    .circ.on { background: #639922; border-color: #639922; }
-    .pcourse { display: flex; align-items: center; gap: 8px; padding: 7px 6px; border-radius: var(--border-radius-md); cursor: pointer; }
-    .pcourse:hover { background: var(--color-background-secondary); }
-    .ahdr { display: flex; justify-content: space-between; align-items: center; cursor: pointer; user-select: none; padding-bottom: 6px; }
-    .crow { display: flex; gap: 10px; align-items: flex-start; padding: 8px 0; border-bottom: 0.5px solid var(--color-border-tertiary); cursor: pointer; }
-    .crow:last-child { border-bottom: none; }
-    .code { font-size: 10px; font-family: var(--font-mono); background: var(--color-background-secondary); padding: 1px 5px; border-radius: 3px; color: var(--color-text-secondary); font-weight: 500; }
-    .tag { font-size: 10px; padding: 1px 5px; border-radius: 3px; font-weight: 500; }
-    .g2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-    .picker { border-top: 0.5px solid var(--color-border-tertiary); margin-top: 10px; padding-top: 10px; }
-    @media (max-width: 480px) { .g2 { grid-template-columns: 1fr; } .tab { padding: 7px 10px; font-size: 12px; } }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{background:var(--bg3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:var(--tx1)}
+    #app{max-width:720px;margin:0 auto;background:var(--bg1);min-height:100vh}
+    .topbar{background:var(--bg2);border-bottom:0.5px solid var(--bd1);padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+    .topbar a{font-size:12px;color:var(--tx2);text-decoration:none}
+    .topbar a:hover{color:var(--tx1)}
+    .hdr{background:var(--bg2);border-bottom:0.5px solid var(--bd1);padding:14px 18px 0}
+    .tabs{display:flex;gap:2px;margin-top:10px}
+    .tab{padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--tx2);border-radius:6px 6px 0 0}
+    .tab.on{background:var(--bg1);color:var(--tx1);border-top:2px solid #378ADD;border-left:0.5px solid var(--bd1);border-right:0.5px solid var(--bd1)}
+    .body{padding:14px 16px 60px}
+    .card{background:var(--bg1);border:0.5px solid var(--bd1);border-radius:var(--rl);padding:12px 14px;margin-bottom:8px}
+    .csec{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--rl);padding:12px 14px;margin-bottom:8px}
+    .track{background:var(--bg2);border-radius:99px;height:5px;overflow:hidden;margin-top:4px}
+    .fill{height:100%;border-radius:99px;transition:width .4s}
+    .btn{background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--rm);padding:5px 11px;font-size:12px;font-weight:500;cursor:pointer;color:var(--tx1)}
+    .btn:hover{background:var(--bg3)}
+    .bsm{background:transparent;border:0.5px solid var(--bd2);border-radius:var(--rm);padding:3px 9px;font-size:11px;font-weight:500;cursor:pointer;color:var(--tx2)}
+    .bsm:hover{background:var(--bg2)}
+    .pill{padding:4px 10px;font-size:12px;font-weight:500;border:0.5px solid var(--bd2);border-radius:99px;cursor:pointer;background:transparent;color:var(--tx2)}
+    .pill.on{background:#378ADD;border-color:#378ADD;color:#fff}
+    .chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--rm);padding:4px 8px;font-size:12px;margin:3px 3px 3px 0}
+    .cx{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:13px;padding:0 1px;line-height:1}
+    .cx:hover{color:var(--tx1)}
+    .chk{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--bd2);background:var(--bg1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+    .chk.on{background:#639922;border-color:#639922}
+    .circ{width:22px;height:22px;border-radius:50%;border:1.5px solid #378ADD;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+    .circ.on{background:#639922;border-color:#639922}
+    .pcourse{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:var(--rm);cursor:pointer}
+    .pcourse:hover{background:var(--bg2)}
+    .ahdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;padding-bottom:6px}
+    .crow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--bd1);cursor:pointer}
+    .crow:last-child{border-bottom:none}
+    .code{font-size:10px;font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--tx2);font-weight:500}
+    .tag{font-size:10px;padding:1px 5px;border-radius:3px;font-weight:500}
+    .g2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .picker{border-top:0.5px solid var(--bd1);margin-top:10px;padding-top:10px}
+    .srow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px}
+    .srow:last-child{margin-bottom:0}
+    .slbl{font-size:12px;color:var(--tx2);min-width:120px;font-weight:500}
+    @media(max-width:480px){.g2{grid-template-columns:1fr}.tab{padding:7px 9px;font-size:12px}}
   </style>
 </head>
 <body>
-<div id="app">
-  <div style="padding:48px;text-align:center;color:var(--color-text-secondary);font-size:14px">Loading...</div>
-</div>
+<div id="app"></div>
 <script>
 const BL='#378ADD',GR='#639922',AM='#BA7517';
+const KEY='phd-tracker-v2';
 
-const BUCKETS=[
-  {id:'foundation',name:'Foundation courses',req:18,sub:'6 courses · 5 core fields',courses:[
+const STATIC_BUCKETS=[
+  {id:'foundation',name:'Foundation courses',req:18,sub:'6 courses across the 5 core fields',courses:[
     {id:'f1',code:'PAPA 6014',name:'PA theory and context',cr:3,tag:'Theory',tc:'#7C3AED'},
     {id:'f2',code:'PAPA 6114',name:'Complex public organizations',cr:3,tag:'Orgs',tc:'#1D4ED8'},
     {id:'f3',code:'PAPA 6214',name:'Public policy processes',cr:3,tag:'Policy',tc:'#0369A1'},
@@ -91,9 +76,9 @@ const BUCKETS=[
     {id:'m3',code:'TBD',name:'Advanced methods (advisor-approved)',cr:3,tag:'Flex',tc:AM,note:'Quantitative or qualitative techniques'},
   ]},
   {id:'conc',name:'Research concentration',req:9,sub:'Independent studies · AT courses · field work',courses:[
-    {id:'c1',code:'PAPA 5974 / AT',name:'Concentration study 1',cr:3,tag:'Flex',tc:AM},
-    {id:'c2',code:'PAPA 5974 / AT',name:'Concentration study 2',cr:3,tag:'Flex',tc:AM},
-    {id:'c3',code:'PAPA 5974 / AT',name:'Concentration study 3',cr:3,tag:'Flex',tc:AM},
+    {id:'c1',code:'PAPA 5974/AT',name:'Concentration study 1',cr:3,tag:'Flex',tc:AM},
+    {id:'c2',code:'PAPA 5974/AT',name:'Concentration study 2',cr:3,tag:'Flex',tc:AM},
+    {id:'c3',code:'PAPA 5974/AT',name:'Concentration study 3',cr:3,tag:'Flex',tc:AM},
   ]},
   {id:'lecture',name:'Concentration lecture',req:3,sub:'After 9 concentration hours · before prospectus',courses:[
     {id:'l1',code:'PAPA 7964',name:'Concentration lecture',cr:3,tag:'Req',tc:BL,note:'Deadline: Dec 1 (fall) / May 1 (spring). Audience of 6+.'},
@@ -101,8 +86,17 @@ const BUCKETS=[
   {id:'capstone',name:'Capstone seminar',req:3,sub:'Final semester of coursework',courses:[
     {id:'k1',code:'PAPA 6394',name:'Capstone seminar',cr:3,tag:'Req',tc:BL,note:'Preferably the last semester of coursework'},
   ]},
-  {id:'electives',name:'Electives',req:18,sub:'Covered by UND MPA transfer credits',courses:[
-    {id:'e1',code:'Transfer',name:'Prior graduate work (UND MPA)',cr:18,tag:'Xfer',tc:'#6B7280',note:'Fully covers the 18-credit electives requirement',locked:true},
+  {id:'dissertation',name:'Dissertation',req:30,sub:'PAPA 7994 · 10 × 3 credits · assign to semesters',courses:[
+    {id:'d1',code:'PAPA 7994',name:'Dissertation 1',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d2',code:'PAPA 7994',name:'Dissertation 2',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d3',code:'PAPA 7994',name:'Dissertation 3',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d4',code:'PAPA 7994',name:'Dissertation 4',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d5',code:'PAPA 7994',name:'Dissertation 5',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d6',code:'PAPA 7994',name:'Dissertation 6',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d7',code:'PAPA 7994',name:'Dissertation 7',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d8',code:'PAPA 7994',name:'Dissertation 8',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d9',code:'PAPA 7994',name:'Dissertation 9',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
+    {id:'d10',code:'PAPA 7994',name:'Dissertation 10',cr:3,tag:'Diss',tc:'#2563EB',renameable:true},
   ]},
 ];
 
@@ -111,7 +105,7 @@ const MILESTONES=[
   {id:'ms2',name:'CITI human subjects training',target:'Year 1',desc:'Complete VT IRB certification. Required for PhD; documented on Plan of Study.'},
   {id:'ms3',name:'Plan of study submitted',target:'Before 24 credits',desc:'File before completing 24 semester hours. Signed by committee, submitted to Graduate School.'},
   {id:'ms4',name:'Dissertation committee formed',target:'After qualifying exam',desc:'4 members minimum; at least 3 must be CPAP core faculty.'},
-  {id:'ms5',name:'Qualifying exam request filed',target:'1 month before exam',desc:'Submit "Request to Admit to Qualifying Exam" at least 1 month before the exam date.'},
+  {id:'ms5',name:'Qualifying exam request filed',target:'1 month before exam',desc:'Submit request form at least 1 month before the exam date.'},
   {id:'ms6',name:'Qualifying examination passed',target:'After all foundation courses done',desc:'3 of 5 fields. 8-hour window per field; max 10 pages per essay, double-spaced.'},
   {id:'ms7',name:'Concentration lecture delivered',target:'Before Dec 1 or May 1',desc:'Integrates 9 concentration hours. Audience of 6+ required. Must occur before prospectus defense.'},
   {id:'ms8',name:'Prospectus defense',target:'After all coursework',desc:'File "Request to Admit to Preliminary Exam." Full committee reviews and approves research design.'},
@@ -119,29 +113,60 @@ const MILESTONES=[
   {id:'ms10',name:'Dissertation defense',target:'Final requirement',desc:'File "Request to Admit to Final Exam." All committee members must be present.'},
 ];
 
-const TERMS=[
-  {id:'t1',name:'Fall 2025',label:'Sem 1',type:'sem',limit:6,done:true},
-  {id:'t2',name:'Spring 2026',label:'Sem 2',type:'sem',limit:6,current:true},
-  {id:'t3',name:'Summer 2026',type:'summer',limit:6,note:'Typically dissertation credits'},
-  {id:'t4',name:'Fall 2026',label:'Sem 3',type:'sem',limit:6},
-  {id:'t5',name:'Spring 2027',label:'Sem 4',type:'sem',limit:6},
-  {id:'t6',name:'Summer 2027',type:'summer',limit:6,note:'Typically dissertation credits'},
-  {id:'t7',name:'Fall 2027',label:'Sem 5',type:'sem',limit:6},
-  {id:'t8',name:'Spring 2028',label:'Sem 6',type:'sem',limit:6},
-  {id:'t9',name:'Summer 2028',type:'summer',limit:6,note:'Typically dissertation credits'},
-  {id:'t10',name:'Fall 2028',label:'Sem 7',type:'sem',limit:6},
-  {id:'t11',name:'Spring 2029',type:'diss',limit:9,note:'Typically dissertation phase'},
-  {id:'t12',name:'Summer 2029',type:'summer',limit:6,note:'Typically dissertation credits'},
-  {id:'t13',name:'Fall 2029',type:'diss',limit:9,note:'Typically dissertation phase'},
-  {id:'t14',name:'Spring 2030',type:'diss',limit:9,note:'Typically dissertation phase'},
-];
+let s={
+  tab:'dashboard',done:new Set(),mdone:new Set(),
+  dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
+  assign:{},picker:null,showSettings:false,
+  startSem:'fall',startYear:2025,names:{},renaming:null
+};
 
-const ALL=BUCKETS.flatMap(b=>b.courses.map(c=>({...c,bname:b.name,bid:b.id})));
-const DEF={m1:'t1',f1:'t1',m2:'t2',f2:'t2',e1:'_done'};
-const KEY='phd-tracker-v1';
+// Dynamic term generation
+function termOrd(type,year){return year*3+(type==='spring'?0:type==='summer'?1:2);}
 
-let s={tab:'dashboard',done:new Set(['e1']),mdone:new Set(),dmp:0,diss:0,open:new Set(['foundation','methods']),assign:{...DEF},picker:null};
+function genTerms(){
+  const now=new Date(),nowM=now.getMonth()+1,nowY=now.getFullYear();
+  const ct=nowM>=8?'fall':nowM>=6?'summer':'spring';
+  const cOrd=termOrd(ct,nowY);
+  function st(tp,y){const o=termOrd(tp,y);return o<cOrd?'done':o===cOrd?'current':'next';}
+  const terms=[];
+  let y=s.startYear,sg=s.startSem,sn=1;
+  while(terms.length<14){
+    if(sg==='fall'){
+      const r=sn<=7,ts=st('fall',y);
+      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9,done:ts==='done',current:ts==='current',note:r?null:'Typically dissertation phase'});
+      sn++;sg='spring';y++;
+    } else {
+      const r=sn<=7,ts=st('spring',y);
+      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9,done:ts==='done',current:ts==='current',note:r?null:'Typically dissertation phase'});
+      sn++;
+      if(terms.length<14){
+        const su=st('summer',y);
+        terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer',limit:6,done:su==='done',current:su==='current',note:'Typically dissertation credits'});
+      }
+      sg='fall';
+    }
+  }
+  return terms.slice(0,14);
+}
 
+// Dynamic electives bucket
+function getElecBucket(){
+  const courses=[];
+  for(let i=1;i<=6;i++) courses.push({id:`el${i}`,code:'Elective',name:`Elective ${i}`,cr:3,tag:'Sched',tc:'#6B7280',note:'Any CPAP, SPIA, or related graduate course',renameable:true});
+  return{id:'electives',name:'Electives',req:18,sub:'6 elective courses · schedule or transfer in',courses};
+}
+
+function allBuckets(){return[...STATIC_BUCKETS,getElecBucket()];}
+function allCourses(){return allBuckets().flatMap(b=>b.courses.map(c=>({...c,bid:b.id})));}
+function validTids(){return new Set(genTerms().map(t=>t.id));}
+function tcourses(tid){return allCourses().filter(c=>s.assign[c.id]===tid);}
+function isDone(id){return s.done.has(id)||s.assign[id]==='_transfer';}
+function dname(c){return s.names[c.id]||c.name;}
+function unas(){const vt=validTids();return allCourses().filter(c=>!c.locked&&(!s.assign[c.id]||(!vt.has(s.assign[c.id])&&s.assign[c.id]!=='_transfer')));}
+function bp(){return allBuckets().map(b=>({...b,earned:Math.min(b.req,b.courses.reduce((a,c)=>isDone(c.id)?a+c.cr:a,0))}));}
+function tot(){const p=bp();const diss=p.find(b=>b.id==='dissertation')?.earned||0;const cw=p.filter(b=>b.id!=='dissertation').reduce((a,b)=>a+b.earned,0);return{p,cw,diss,total:cw+diss};}
+
+// Storage
 function load(){
   try{
     const r=localStorage.getItem(KEY);
@@ -149,106 +174,179 @@ function load(){
       if(d.done)s.done=new Set(d.done);
       if(d.mdone)s.mdone=new Set(d.mdone);
       if(d.dmp!==undefined)s.dmp=d.dmp;
-      if(d.diss!==undefined)s.diss=d.diss;
       if(d.assign)s.assign=d.assign;
+      if(d.names)s.names=d.names;
+      if(d.startSem)s.startSem=d.startSem;
+      if(d.startYear)s.startYear=d.startYear;
     }
   }catch(e){}
+  if(Object.keys(s.assign).length===0){
+    const terms=genTerms(),t1=terms[0]?.id,t2=terms[1]?.id;
+    if(t1&&t2)s.assign={m1:t1,f1:t1,m2:t2,f2:t2};
+  }
   R();
 }
 
-function sv(){
-  try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,diss:s.diss,assign:s.assign}));}catch(e){}
-}
+function sv(){try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,startSem:s.startSem,startYear:s.startYear}));}catch(e){}}
 
-function tcourses(tid){return ALL.filter(c=>s.assign[c.id]===tid);}
-function unas(){return ALL.filter(c=>!c.locked&&(!s.assign[c.id]||s.assign[c.id]==='_done'));}
-function bp(){return BUCKETS.map(b=>({...b,earned:b.courses.reduce((a,c)=>s.done.has(c.id)?a+c.cr:a,0)}));}
-function tot(){const p=bp();const cw=p.reduce((a,b)=>a+b.earned,0);return{p,cw,total:cw+s.diss};}
-
-function bar(v,m){
-  const pct=Math.min(v/m*100,100),col=v>=m?GR:BL;
-  return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;
-}
+// Render helpers
+function bar(v,m){const pct=Math.min(v/m*100,100),col=v>=m?GR:BL;return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;}
 
 function ring(v,m){
   const sz=118,sw=10,r=(sz-sw)/2,c2=2*Math.PI*r,off=c2*(1-Math.min(v/m,1)),col=v>=m?GR:BL;
-  return`<svg width="${sz}" height="${sz}" style="transform:rotate(-90deg)"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--color-background-secondary)" stroke-width="${sw}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${c2}" stroke-dashoffset="${off}" stroke-linecap="round" style="transition:stroke-dashoffset .5s"/></svg>`;
+  return`<svg width="${sz}" height="${sz}" style="transform:rotate(-90deg)"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--bg2)" stroke-width="${sw}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${c2}" stroke-dashoffset="${off}" stroke-linecap="round" style="transition:stroke-dashoffset .5s"/></svg>`;
 }
 
 function ck(){return`<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg>`;}
 
+// Settings panel
+function rSettings(){
+  return`<div class="csec" style="margin-bottom:14px;border:1px solid ${BL}55">
+    <div style="font-size:13px;font-weight:500;margin-bottom:12px">Program settings</div>
+    <div class="srow">
+      <span class="slbl">Start semester</span>
+      <div style="display:flex;gap:4px">
+        ${['fall','spring'].map(o=>`<button class="pill ${s.startSem===o?'on':''}" onclick="setStart('${o}',${s.startYear})">${o[0].toUpperCase()+o.slice(1)}</button>`).join('')}
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <button class="btn" style="padding:4px 10px" onclick="setStart('${s.startSem}',${s.startYear-1})" ${s.startYear<=2022?'disabled':''}>&#8722;</button>
+        <span style="font-size:13px;font-weight:500;min-width:38px;text-align:center">${s.startYear}</span>
+        <button class="btn" style="padding:4px 10px" onclick="setStart('${s.startSem}',${s.startYear+1})" ${s.startYear>=2027?'disabled':''}>+</button>
+      </div>
+    </div>
+    <div style="font-size:11px;color:var(--tx3);margin-top:2px">Changing start semester preserves your existing course assignments where possible.</div>
+  </div>`;
+}
+
+// Tab: Dashboard
 function rDash(){
-  const{p,cw,total}=tot();
+  const{p,cw,diss,total}=tot();
   return`<div class="card" style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
-    <div style="position:relative;flex-shrink:0">${ring(total,90)}<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:24px;font-weight:500;color:${total>=90?GR:BL}">${total}</div><div style="font-size:11px;color:var(--color-text-secondary)">of 90</div></div></div>
+    <div style="position:relative;flex-shrink:0">${ring(total,90)}<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:24px;font-weight:500;color:${total>=90?GR:BL}">${total}</div><div style="font-size:11px;color:var(--tx2)">of 90</div></div></div>
     <div style="flex:1;min-width:170px"><div style="font-size:15px;font-weight:500;margin-bottom:10px">${Math.round(total/90*100)}% complete</div>
-    ${[{l:'Coursework',v:cw,m:60},{l:'Dissertation',v:s.diss,m:30}].map(x=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--color-text-secondary)">${x.l}</span><span style="font-size:12px;font-weight:500;color:${x.v>=x.m?GR:BL}">${x.v}/${x.m} cr.</span></div>${bar(x.v,x.m)}</div>`).join('')}
-    <div style="display:flex;align-items:center;gap:8px;margin-top:8px"><span style="font-size:12px;color:var(--color-text-secondary)">Dissertation cr.:</span><button class="btn" onclick="adj('diss',-3)">&#8722;3</button><span style="font-size:13px;font-weight:500;min-width:20px;text-align:center">${s.diss}</span><button class="btn" onclick="adj('diss',3)">+3</button></div></div>
+    ${[{l:'Coursework',v:cw,m:60},{l:'Dissertation',v:diss,m:30}].map(x=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--tx2)">${x.l}</span><span style="font-size:12px;font-weight:500;color:${x.v>=x.m?GR:BL}">${x.v}/${x.m} cr.</span></div>${bar(x.v,x.m)}</div>`).join('')}
+    </div>
   </div>
-  <div style="font-size:11px;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;font-weight:500;margin-top:4px">Credit buckets</div>
+  <div style="font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;margin-top:4px;font-weight:500">Credit buckets</div>
   <div class="g2">${p.map(b=>`<div class="csec" style="${b.earned>=b.req?'border-color:'+GR+'55':''}"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px"><span style="font-size:12px;font-weight:500;flex:1;padding-right:6px;line-height:1.35">${b.name}</span><span style="font-size:12px;font-weight:500;color:${b.earned>=b.req?GR:BL}">${b.earned}/${b.req}</span></div>${bar(b.earned,b.req)}${b.earned>=b.req?`<div style="font-size:10px;color:${GR};margin-top:3px;font-weight:500">&#10003; complete</div>`:''}</div>`).join('')}</div>`;
 }
 
+// Tab: Planner
 function rPlanner(){
-  const ua=unas();
-  return`<div class="csec" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Unscheduled courses</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:1px">Use "add" on any term card below</div></div><span style="font-size:22px;font-weight:500;color:${ua.length===0?GR:AM}">${ua.length}</span></div>${ua.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${ua.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px;color:var(--color-text-secondary)">${c.name.length>26?c.name.slice(0,26)+'...':c.name}</span></div>`).join('')}</div>`:`<div style="font-size:12px;color:${GR};margin-top:6px;font-weight:500">&#10003; All courses scheduled</div>`}</div>
-  ${TERMS.map(tm=>{
-    const tc=tcourses(tm.id);
-    const used=tc.reduce((a,c)=>a+c.cr,0);
-    const over=used>tm.limit;
-    const isP=s.picker===tm.id;
-    const avail=ALL.filter(c=>!c.locked&&(!s.assign[c.id]||s.assign[c.id]==='_done'));
-    const grouped=BUCKETS.map(b=>({...b,av:avail.filter(c=>c.bid===b.id)})).filter(b=>b.av.length>0);
-    return`<div class="card" style="${tm.done?'background:var(--color-background-secondary);border-color:'+GR+'44':''}${tm.current?';border-color:'+BL+'44':''}">
+  const ua=unas(),terms=genTerms(),vt=validTids();
+  const xferCourses=allCourses().filter(c=>s.assign[c.id]==='_transfer');
+  const xferCr=xferCourses.reduce((a,c)=>a+c.cr,0);
+  const isXP=s.picker==='_transfer';
+  const avail=c=>!c.locked&&(!s.assign[c.id]||(!vt.has(s.assign[c.id])&&s.assign[c.id]!=='_transfer'));
+  const xferAvail=allCourses().filter(avail);
+  const xferGrouped=allBuckets().map(b=>({...b,av:xferAvail.filter(c=>c.bid===b.id)})).filter(b=>b.av.length>0);
+  return`<div class="csec" style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;align-items:center"><div><div style="font-size:13px;font-weight:500">Unscheduled courses</div><div style="font-size:11px;color:var(--tx2);margin-top:1px">Click "add" on any section below</div></div><span style="font-size:22px;font-weight:500;color:${ua.length===0?GR:AM}">${ua.length}</span></div>${ua.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${ua.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px;color:var(--tx1)">${dname(c).length>28?dname(c).slice(0,28)+'...':dname(c)}</span></div>`).join('')}</div>`:`<div style="font-size:12px;color:${GR};margin-top:6px;font-weight:500">&#10003; All courses placed</div>`}</div>
+  <div class="card" style="border-color:${AM}55;margin-bottom:14px">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start">
+      <div><div style="font-size:13px;font-weight:500;color:var(--tx1)">Transfer in</div><div style="font-size:11px;color:var(--tx2);margin-top:1px">Prior graduate work that counts toward your electives requirement</div></div>
+      <span style="font-size:13px;font-weight:500;color:${xferCr>0?AM:'var(--tx2)'}">${xferCr} cr.</span>
+    </div>
+    ${xferCourses.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${xferCourses.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${dname(c).length>22?dname(c).slice(0,22)+'...':dname(c)}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
+    <div style="margin-top:8px">${!isXP?`<button class="bsm" onclick="opk('_transfer')">+ add transferred course</button>`:`<button class="bsm" onclick="cpk()">cancel</button>`}</div>
+    ${isXP?`<div class="picker">${xferGrouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${xferGrouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${c.name}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
+  </div>
+  ${terms.map(tm=>{
+    const tc=tcourses(tm.id),used=tc.reduce((a,c)=>a+c.cr,0),over=used>tm.limit,isP=s.picker===tm.id;
+    const tmAvail=allCourses().filter(avail);
+    const grouped=allBuckets().map(b=>({...b,av:tmAvail.filter(c=>c.bid===b.id)})).filter(b=>b.av.length>0);
+    return`<div class="card" style="${tm.done?'background:var(--bg2);border-color:'+GR+'44':''}${tm.current?';border-color:'+BL+'44':''}">
       <div style="display:flex;justify-content:space-between;align-items:flex-start">
         <div><div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-          <span style="font-size:13px;font-weight:500;color:${tm.done?GR:tm.current?BL:'var(--color-text-primary)'}">${tm.name}</span>
-          ${tm.label?`<span style="font-size:10px;background:var(--color-background-secondary);padding:1px 6px;border-radius:4px;color:var(--color-text-secondary);font-weight:500">${tm.label}</span>`:''}
+          <span style="font-size:13px;font-weight:500;color:${tm.done?GR:tm.current?BL:'var(--tx1)'}">${tm.name}</span>
+          ${tm.label?`<span style="font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:4px;color:var(--tx2);font-weight:500">${tm.label}</span>`:''}
           ${tm.done?`<span style="font-size:10px;color:${GR};font-weight:500">&#10003; done</span>`:''}
           ${tm.current?`<span style="font-size:10px;color:${BL};font-weight:500">&#8592; current</span>`:''}
           ${tm.type==='summer'?`<span style="font-size:10px;color:${AM};font-weight:500">summer</span>`:''}
-          ${tm.type==='diss'?`<span style="font-size:10px;color:var(--color-text-secondary);font-weight:500">diss. phase</span>`:''}
-        </div>${tm.note?`<div style="font-size:11px;color:var(--color-text-secondary);margin-top:1px">${tm.note}</div>`:''}</div>
-        <div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-size:13px;font-weight:500;color:${over?AM:used>0?BL:'var(--color-text-secondary)'}">${used}/${tm.limit} cr.</div>${over?`<div style="font-size:10px;color:${AM};font-weight:500;margin-top:2px">over limit</div>`:''}</div>
+          ${tm.type==='diss'?`<span style="font-size:10px;color:var(--tx2);font-weight:500">diss. phase</span>`:''}
+        </div>${tm.note?`<div style="font-size:11px;color:var(--tx2);margin-top:1px">${tm.note}</div>`:''}</div>
+        <div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-size:13px;font-weight:500;color:${over?AM:used>0?BL:'var(--tx2)'}">${used}/${tm.limit} cr.</div>${over?`<div style="font-size:10px;color:${AM};font-weight:500;margin-top:2px">over limit</div>`:''}</div>
       </div>
-      ${tc.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${c.name.length>22?c.name.slice(0,22)+'...':c.name}</span><span style="font-size:11px;color:var(--color-text-secondary)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
+      ${tc.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${dname(c).length>22?dname(c).slice(0,22)+'...':dname(c)}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
       <div style="margin-top:8px">${!isP?`<button class="bsm" onclick="opk('${tm.id}')">+ add course</button>`:`<button class="bsm" onclick="cpk()">cancel</button>`}</div>
-      ${isP?`<div class="picker">${grouped.length===0?`<div style="font-size:12px;color:var(--color-text-secondary);padding:4px 0">No unscheduled courses available.</div>`:''}${grouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${c.name}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
+      ${isP?`<div class="picker">${grouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${grouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${c.name}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
     </div>`;
   }).join('')}`;
 }
 
+// Tab: Courses
 function rCourses(){
   const{p,cw}=tot();
-  const tn=id=>TERMS.find(t=>t.id===id)?.name||null;
+  const terms=genTerms(),tn=id=>id==='_transfer'?'Transfer in':terms.find(t=>t.id===id)?.name||null;
   return`<div class="csec" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><span style="font-size:14px;font-weight:500">Coursework progress</span><span style="font-size:14px;font-weight:500;color:${cw>=60?GR:BL}">${cw} / 60 credits</span></div>
-  ${p.map(b=>{const io=s.open.has(b.id);return`<div class="card" style="${b.earned>=b.req?'border-color:'+GR+'44':''}"><div class="ahdr" onclick="tog('${b.id}')"><div><div style="font-size:13px;font-weight:500">${b.name}</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:1px">${b.sub}</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:500;color:${b.earned>=b.req?GR:BL}">${b.earned}/${b.req} cr.</span><span style="font-size:12px;color:var(--color-text-secondary)">${io?'&#9650;':'&#9660;'}</span></div></div>${io?`<div style="border-top:0.5px solid var(--color-border-tertiary);padding-top:4px">${b.courses.map(c=>{const t=tn(s.assign[c.id]);return`<div class="crow" onclick="${c.locked?'':'ctog(\''+c.id+'\')'}" style="${c.locked?'cursor:default':''}"><div class="chk ${s.done.has(c.id)?'on':''}">${s.done.has(c.id)?ck():''}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px"><span class="code">${c.code}</span><span class="tag" style="background:${c.tc}22;color:${c.tc}">${c.tag}</span>${t?`<span style="font-size:10px;background:var(--color-background-secondary);padding:1px 5px;border-radius:3px;color:var(--color-text-secondary);font-weight:500">${t}</span>`:''}<span style="font-size:11px;font-weight:500;color:${BL};margin-left:auto">${c.cr} cr.</span></div><div style="font-size:13px;color:var(--color-text-${s.done.has(c.id)?'tertiary':'primary'});${s.done.has(c.id)?'text-decoration:line-through':''}">${c.name}</div>${c.note?`<div style="font-size:11px;color:var(--color-text-tertiary);margin-top:1px;font-style:italic">${c.note}</div>`:''}</div></div>`;}).join('')}</div>`:''}
+  ${p.map(b=>{const io=s.open.has(b.id);return`<div class="card" style="${b.earned>=b.req?'border-color:'+GR+'44':''}"><div class="ahdr" onclick="tog('${b.id}')"><div><div style="font-size:13px;font-weight:500">${b.name}</div><div style="font-size:11px;color:var(--tx2);margin-top:1px">${b.sub}</div></div><div style="display:flex;align-items:center;gap:8px"><span style="font-size:12px;font-weight:500;color:${b.earned>=b.req?GR:BL}">${b.earned}/${b.req} cr.</span><span style="font-size:12px;color:var(--tx2)">${io?'&#9650;':'&#9660;'}</span></div></div>${io?`<div style="border-top:0.5px solid var(--bd1);padding-top:4px">${b.courses.map(c=>{
+    const t=tn(s.assign[c.id]);
+    const isRen=s.renaming===c.id;
+    if(isRen) return`<div class="crow" style="cursor:default" onclick="event.stopPropagation()"><div class="chk ${isDone(c.id)?'on':''}">${isDone(c.id)?ck():''}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px"><span class="code">${c.code}</span><span class="tag" style="background:${c.tc}22;color:${c.tc}">${c.tag}</span></div><input id="rename-inp" value="${(s.names[c.id]||c.name).replace(/"/g,'&quot;')}" placeholder="${c.name}" style="font-size:13px;background:var(--bg3);border:1px solid ${BL};border-radius:4px;padding:4px 8px;color:var(--tx1);width:100%" onkeydown="if(event.key==='Enter')saveRename();if(event.key==='Escape')cancelRename()" onclick="event.stopPropagation()"><div style="display:flex;gap:6px;margin-top:6px"><button class="bsm" onclick="event.stopPropagation();saveRename()">Save</button><button class="bsm" onclick="event.stopPropagation();cancelRename()">Cancel</button></div></div></div>`;
+    return`<div class="crow" onclick="${c.locked?'':'ctog(\''+c.id+'\')'}" style="${c.locked?'cursor:default':''}"><div class="chk ${isDone(c.id)?'on':''}">${isDone(c.id)?ck():''}</div><div style="flex:1;min-width:0"><div style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px"><span class="code">${c.code}</span><span class="tag" style="background:${c.tc}22;color:${c.tc}">${c.tag}</span>${t?`<span style="font-size:10px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--tx2);font-weight:500">${t}</span>`:''}<span style="font-size:11px;font-weight:500;color:${BL};margin-left:auto">${c.cr} cr.</span></div><div style="display:flex;align-items:center;gap:4px"><span style="font-size:13px;color:var(--tx${isDone(c.id)?'3':'1'});${isDone(c.id)?'text-decoration:line-through':''}">${dname(c)}</span>${c.renameable?`<button onclick="event.stopPropagation();startRename('${c.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:0 3px;font-size:13px;line-height:1;opacity:.7" aria-label="Rename course">&#9998;</button>`:''}</div>${c.note&&!s.names[c.id]?`<div style="font-size:11px;color:var(--tx3);margin-top:1px;font-style:italic">${c.note}</div>`:''}</div></div>`;
+  }).join('')}</div>`:''}
   </div>`;}).join('')}`;
 }
 
+// Tab: Milestones
 function rMile(){
-  return`<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:14px;font-weight:500">Doctoral mentoring program (DMP)</div><div style="font-size:11px;color:var(--color-text-secondary);margin-top:2px">15 sessions required · counts as 3 dissertation credits · min. 3/semester</div></div><span style="font-size:22px;font-weight:500;color:${s.dmp>=15?GR:BL};margin-left:14px">${s.dmp}/15</span></div>${bar(s.dmp,15)}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="adj('dmp',-1)">&#8722; session</button><button class="btn" onclick="adj('dmp',1)">+ session</button>${s.dmp>=15?`<span style="font-size:12px;color:${GR};font-weight:500;align-self:center">&#10003; complete</span>`:''}</div></div>
-  ${MILESTONES.map((m,i)=>`<div style="display:flex;gap:10px;margin-bottom:4px"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:28px"><div class="circ ${s.mdone.has(m.id)?'on':''}" onclick="mtog('${m.id}')" style="margin-top:10px" aria-label="Toggle milestone">${s.mdone.has(m.id)?ck():''}</div>${i<MILESTONES.length-1?`<div style="width:1.5px;flex:1;min-height:12px;background:var(--color-border-tertiary);margin:3px 0"></div>`:''}</div><div class="card" style="${s.mdone.has(m.id)?'opacity:.6;border-color:'+GR+'44':''}"><div style="font-size:13px;font-weight:500;${s.mdone.has(m.id)?'text-decoration:line-through':''}">${m.name}</div><div style="font-size:11px;color:${BL};font-weight:500;margin-top:2px">${m.target}</div><div style="font-size:12px;color:var(--color-text-secondary);margin-top:5px;line-height:1.55">${m.desc}</div></div></div>`).join('')}`;
+  return`<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:14px;font-weight:500">Doctoral mentoring program (DMP)</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">15 sessions required · counts as 3 dissertation credits · min. 3/semester</div></div><span style="font-size:22px;font-weight:500;color:${s.dmp>=15?GR:BL};margin-left:14px">${s.dmp}/15</span></div>${bar(s.dmp,15)}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="adj(-1)">&#8722; session</button><button class="btn" onclick="adj(1)">+ session</button>${s.dmp>=15?`<span style="font-size:12px;color:${GR};font-weight:500;align-self:center">&#10003; complete</span>`:''}</div></div>
+  ${MILESTONES.map((m,i)=>`<div style="display:flex;gap:10px;margin-bottom:4px"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:28px"><div class="circ ${s.mdone.has(m.id)?'on':''}" onclick="mtog('${m.id}')" style="margin-top:10px">${s.mdone.has(m.id)?ck():''}</div>${i<MILESTONES.length-1?`<div style="width:1.5px;flex:1;min-height:12px;background:var(--bd1);margin:3px 0"></div>`:''}</div><div class="card" style="${s.mdone.has(m.id)?'opacity:.6;border-color:'+GR+'44':''}"><div style="font-size:13px;font-weight:500;${s.mdone.has(m.id)?'text-decoration:line-through':''}">${m.name}</div><div style="font-size:11px;color:${BL};font-weight:500;margin-top:2px">${m.target}</div><div style="font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.55">${m.desc}</div></div></div>`).join('')}`;
 }
 
+// Main render
 function R(){
   const{total}=tot();
+  const sl=`${s.startSem[0].toUpperCase()+s.startSem.slice(1)} ${s.startYear}`;
   document.getElementById('app').innerHTML=`
-  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--color-text-primary)">PAPA PhD Tracker</span><a href="/">&#8592; deanlefor.com</a></div>
-  <div class="hdr"><div style="font-size:11px;color:var(--color-text-secondary);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Virginia Tech &#183; CPAP</div><div style="font-size:19px;font-weight:500">PAPA PhD tracker</div><div style="font-size:12px;color:var(--color-text-secondary);margin-top:3px"><span style="font-weight:500;color:${BL}">${total}</span>/90 cr. &#183; <span style="font-weight:500;color:${BL}">${s.mdone.size}</span>/${MILESTONES.length} milestones &#183; <span style="font-weight:500;color:${BL}">${s.dmp}</span>/15 DMP</div><div class="tabs">${['dashboard','planner','courses','milestones'].map(t=>`<button class="tab ${s.tab===t?'on':''}" onclick="ST('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div></div>
-  <div class="body">${s.tab==='dashboard'?rDash():s.tab==='planner'?rPlanner():s.tab==='courses'?rCourses():rMile()}
-  <div style="margin-top:14px;background:var(--color-background-secondary);border-radius:var(--border-radius-md);padding:10px 14px;font-size:11px;color:var(--color-text-secondary);line-height:1.6">Confirm all requirements and deadlines with your advisor and the VT Graduate School. Clarify whether transfer credits count toward the qualifying exam 30-credit cap.</div></div>`;
+  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--tx1)">PAPA PhD Tracker</span><a href="/">&#8592; deanlefor.com</a></div>
+  <div class="hdr">
+    <div style="font-size:11px;color:var(--tx2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Virginia Tech &#183; CPAP</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
+      <div style="font-size:19px;font-weight:500">PAPA PhD tracker</div>
+      <button onclick="toggleSt()" style="background:${s.showSettings?BL:'transparent'};border:0.5px solid ${s.showSettings?BL:'var(--bd2)'};border-radius:var(--rm);padding:5px 10px;cursor:pointer;font-size:11px;font-weight:500;color:${s.showSettings?'#fff':'var(--tx2)'};display:flex;align-items:center;gap:4px">
+        <i class="ti ti-settings" style="font-size:13px" aria-hidden="true"></i> ${sl}
+      </button>
+    </div>
+    <div style="font-size:12px;color:var(--tx2)"><span style="font-weight:500;color:${BL}">${total}</span>/90 cr. &#183; <span style="font-weight:500;color:${BL}">${s.mdone.size}</span>/${MILESTONES.length} milestones &#183; <span style="font-weight:500;color:${BL}">${s.dmp}</span>/15 DMP</div>
+    <div class="tabs">${['dashboard','planner','courses','milestones'].map(t=>`<button class="tab ${s.tab===t?'on':''}" onclick="ST('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
+  </div>
+  <div class="body">
+    ${s.showSettings?rSettings():''}
+    ${s.tab==='dashboard'?rDash():s.tab==='planner'?rPlanner():s.tab==='courses'?rCourses():rMile()}
+    <div style="margin-top:14px;background:var(--bg2);border-radius:var(--rm);padding:10px 14px;font-size:11px;color:var(--tx2);line-height:1.6">Confirm all requirements and deadlines with your advisor and the VT Graduate School. Clarify whether transfer credits count toward the qualifying exam 30-credit cap.</div>
+  </div>`;
+  if(s.renaming){requestAnimationFrame(()=>{const inp=document.getElementById('rename-inp');if(inp){inp.focus();inp.select();}});}
 }
 
+// Event handlers
 function ST(t){s.tab=t;s.picker=null;R();}
 function tog(id){s.open.has(id)?s.open.delete(id):s.open.add(id);R();}
 function ctog(id){s.done.has(id)?s.done.delete(id):s.done.add(id);sv();R();}
 function mtog(id){s.mdone.has(id)?s.mdone.delete(id):s.mdone.add(id);sv();R();}
-function adj(k,d){if(k==='diss')s.diss=Math.min(30,Math.max(0,s.diss+d));else s.dmp=Math.min(15,Math.max(0,s.dmp+d));sv();R();}
+function adj(d){s.dmp=Math.min(15,Math.max(0,s.dmp+d));sv();R();}
 function asgn(cid,tid){s.assign[cid]=tid;s.picker=null;sv();R();}
 function una(cid){delete s.assign[cid];sv();R();}
 function opk(tid){s.picker=tid;R();}
 function cpk(){s.picker=null;R();}
+function toggleSt(){s.showSettings=!s.showSettings;R();}
+
+function setStart(sem,year){
+  if(year<2022||year>2027)return;
+  s.startSem=sem;s.startYear=year;
+  sv();R();
+}
+
+function startRename(id){s.renaming=id;R();}
+function cancelRename(){s.renaming=null;R();}
+function saveRename(){
+  const inp=document.getElementById('rename-inp');
+  if(inp){
+    const v=inp.value.trim();
+    if(v)s.names[s.renaming]=v;
+    else delete s.names[s.renaming];
+  }
+  s.renaming=null;sv();R();
+}
 
 load();
 </script>
