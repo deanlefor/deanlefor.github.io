@@ -144,7 +144,7 @@ let s={
   dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
   assign:{},picker:null,showSettings:false,
   startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set(),
-  showImport:false,copyMsg:false,shareLinkCopied:false,darkMode:true,readOnly:false
+  shareLinkCopied:false,darkMode:true,readOnly:false
 };
 
 // Dynamic term generation
@@ -271,11 +271,7 @@ function rSettings(){
         <button class="btn" onclick="document.getElementById('file-inp').click()">&#8679; Load from file</button>
         <input type="file" id="file-inp" accept=".json" onchange="loadFromFile(this)" style="display:none">
       </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="exportData()">${s.copyMsg?'&#10003; Copied!':'Copy to clipboard'}</button>
-        <button class="btn" onclick="toggleImport()">${s.showImport?'Cancel':'Paste &amp; restore'}</button>
-      </div>
-      ${s.showImport?`<div style="margin-top:8px"><textarea id="import-inp" placeholder="Paste your backup text here..." style="width:100%;height:80px;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rm);padding:8px;color:var(--tx1);font-size:12px;resize:vertical;font-family:var(--mono)"></textarea><div style="display:flex;gap:8px;margin-top:6px"><button class="btn" onclick="importData()">Restore progress</button></div><div style="font-size:11px;color:var(--tx3);margin-top:4px">This will overwrite your current progress on this device.</div></div>`:''}
+
     </div>
     <div style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px">
       <div style="font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:6px">Disclaimer</div>
@@ -436,32 +432,8 @@ function loadFromFile(input){
   reader.readAsText(file);
 }
 
-function exportData(){
-  navigator.clipboard.writeText(stateData()).then(()=>{
-    s.copyMsg=true;R();
-    setTimeout(()=>{s.copyMsg=false;R();},2500);
-  }).catch(()=>prompt('Copy this backup text:',stateData()));
-}
 
 function setTheme(dark){s.darkMode=dark;applyTheme();sv();R();}
-function toggleImport(){s.showImport=!s.showImport;R();}
-
-function importData(){
-  const inp=document.getElementById('import-inp');
-  if(!inp)return;
-  try{
-    const d=JSON.parse(inp.value.trim());
-    if(d.done)s.done=new Set(d.done);
-    if(d.mdone)s.mdone=new Set(d.mdone);
-    if(d.dmp!==undefined)s.dmp=d.dmp;
-    if(d.assign)s.assign=d.assign;
-    if(d.names)s.names=d.names;
-    if(d.termDone)s.termDone=new Set(d.termDone);
-    if(d.startSem)s.startSem=d.startSem;
-    if(d.startYear)s.startYear=d.startYear;
-    s.showImport=false;sv();R();
-  }catch(e){alert('Could not read that backup — make sure you pasted the full export text.');}
-}
 
 function setStart(sem,year){
   if(year<2022||year>2027)return;
