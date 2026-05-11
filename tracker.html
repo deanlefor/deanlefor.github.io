@@ -127,13 +127,13 @@ function genTerms(){
   while(terms.length<14){
     if(sg==='fall'){
       const r=sn<=7;
-      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9});
+      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss'});
       sn++;sg='spring';y++;
     } else {
       const r=sn<=7;
-      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss',limit:r?6:9});
+      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss'});
       sn++;
-      if(terms.length<14) terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer',limit:6});
+      if(terms.length<14) terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer'});
       sg='fall';
     }
   }
@@ -214,6 +214,7 @@ function rDash(){
     <div style="position:relative;flex-shrink:0">${ring(total,90)}<div style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center"><div style="font-size:24px;font-weight:500;color:${total>=90?GR:BL}">${total}</div><div style="font-size:11px;color:var(--tx2)">of 90</div></div></div>
     <div style="flex:1;min-width:170px"><div style="font-size:15px;font-weight:500;margin-bottom:10px">${Math.round(total/90*100)}% complete</div>
     ${[{l:'Coursework',v:cw,m:60},{l:'Dissertation',v:diss,m:30}].map(x=>`<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--tx2)">${x.l}</span><span style="font-size:12px;font-weight:500;color:${x.v>=x.m?GR:BL}">${x.v}/${x.m} cr.</span></div>${bar(x.v,x.m)}</div>`).join('')}
+    <div style="margin-top:4px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--tx2)">DMP sessions</span><span style="font-size:12px;font-weight:500;color:${s.dmp>=15?GR:BL}">${s.dmp}/15</span></div>${bar(s.dmp,15)}<div style="display:flex;gap:8px;margin-top:6px;align-items:center"><button class="btn" onclick="adj(-1)">&#8722; session</button><button class="btn" onclick="adj(1)">+ session</button>${s.dmp>=15?`<span style="font-size:11px;color:${GR};font-weight:500">&#10003; complete</span>`:''}</div></div>
     </div>
   </div>
   <div style="font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;margin-top:4px;font-weight:500">Credit buckets</div>
@@ -240,7 +241,7 @@ function rPlanner(){
     ${isXP?`<div class="picker">${xferGrouped.length===0?`<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>`:''}${xferGrouped.map(g=>`<div style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px">${g.name}</div>${g.av.map(c=>`<div class="pcourse" onclick="asgn('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${dname(c)}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></div>`).join('')}`).join('')}</div>`:''}
   </div>
   ${terms.map(tm=>{
-    const tc=tcourses(tm.id),used=tc.reduce((a,c)=>a+c.cr,0),over=used>tm.limit,isP=s.picker===tm.id;
+    const tc=tcourses(tm.id),used=tc.reduce((a,c)=>a+c.cr,0),isP=s.picker===tm.id;
     const isDoneT=s.termDone.has(tm.id);
     const tmAvail=allCourses().filter(avail);
     const grouped=allBuckets().map(b=>({...b,av:tmAvail.filter(c=>c.bid===b.id)})).filter(b=>b.av.length>0);
@@ -254,7 +255,7 @@ function rPlanner(){
             ${tm.type==='summer'?`<span style="font-size:10px;color:${AM};font-weight:500">summer</span>`:''}
           </div>
         </div>
-        <div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-size:13px;font-weight:500;color:${over?AM:used>0?BL:'var(--tx2)'}">${used}/${tm.limit} cr.</div>${over?`<div style="font-size:10px;color:${AM};font-weight:500;margin-top:2px">over limit</div>`:''}</div>
+        <div style="text-align:right;flex-shrink:0;margin-left:10px"><div style="font-size:13px;font-weight:500;color:${used>0?BL:'var(--tx2)'}${used>0?'':''}">${used} cr.</div></div>
       </div>
       ${tc.length>0?`<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map(c=>`<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${dname(c).length>22?dname(c).slice(0,22)+'...':dname(c)}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button class="cx" onclick="una('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join('')}</div>`:''}
       <div style="margin-top:8px">${!isP?`<button class="bsm" onclick="opk('${tm.id}')">+ add course</button>`:`<button class="bsm" onclick="cpk()">cancel</button>`}</div>
@@ -279,8 +280,7 @@ function rCourses(){
 
 // Tab: Milestones
 function rMile(){
-  return`<div class="card" style="margin-bottom:14px"><div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px"><div><div style="font-size:14px;font-weight:500">Doctoral mentoring program (DMP)</div><div style="font-size:11px;color:var(--tx2);margin-top:2px">15 sessions required · counts as 3 dissertation credits · min. 3/semester</div></div><span style="font-size:22px;font-weight:500;color:${s.dmp>=15?GR:BL};margin-left:14px">${s.dmp}/15</span></div>${bar(s.dmp,15)}<div style="display:flex;gap:8px;margin-top:10px"><button class="btn" onclick="adj(-1)">&#8722; session</button><button class="btn" onclick="adj(1)">+ session</button>${s.dmp>=15?`<span style="font-size:12px;color:${GR};font-weight:500;align-self:center">&#10003; complete</span>`:''}</div></div>
-  ${MILESTONES.map((m,i)=>`<div style="display:flex;gap:10px;margin-bottom:4px"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:28px"><div class="circ ${s.mdone.has(m.id)?'on':''}" onclick="mtog('${m.id}')" style="margin-top:10px">${s.mdone.has(m.id)?ck():''}</div>${i<MILESTONES.length-1?`<div style="width:1.5px;flex:1;min-height:12px;background:var(--bd1);margin:3px 0"></div>`:''}</div><div class="card" style="${s.mdone.has(m.id)?'opacity:.6;border-color:'+GR+'44':''}"><div style="font-size:13px;font-weight:500;${s.mdone.has(m.id)?'text-decoration:line-through':''}">${m.name}</div><div style="font-size:11px;color:${BL};font-weight:500;margin-top:2px">${m.target}</div><div style="font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.55">${m.desc}</div></div></div>`).join('')}`;
+  return`${MILESTONES.map((m,i)=>`<div style="display:flex;gap:10px;margin-bottom:4px"><div style="display:flex;flex-direction:column;align-items:center;flex-shrink:0;width:28px"><div class="circ ${s.mdone.has(m.id)?'on':''}" onclick="mtog('${m.id}')" style="margin-top:10px">${s.mdone.has(m.id)?ck():''}</div>${i<MILESTONES.length-1?`<div style="width:1.5px;flex:1;min-height:12px;background:var(--bd1);margin:3px 0"></div>`:''}</div><div class="card" style="${s.mdone.has(m.id)?'opacity:.6;border-color:'+GR+'44':''}"><div style="font-size:13px;font-weight:500;${s.mdone.has(m.id)?'text-decoration:line-through':''}">${m.name}</div><div style="font-size:11px;color:${BL};font-weight:500;margin-top:2px">${m.target}</div><div style="font-size:12px;color:var(--tx2);margin-top:5px;line-height:1.55">${m.desc}</div></div></div>`).join('')}`;
 }
 
 // Main render
