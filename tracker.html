@@ -60,6 +60,7 @@
 <script>
 const BL='#378ADD',GR='#639922',AM='#BA7517';
 const KEY='phd-tracker-v2';
+const VERSION='v1.0';
 
 const DISCLAIMER=`This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School. This tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nNote: The constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nYour progress is saved in your browser\u2019s local storage, not a server. It will disappear if you clear your browser data or use private/incognito mode. Screenshot your plan occasionally.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. \uD83D\uDE42`;
 
@@ -360,7 +361,7 @@ function rMile(){
 function R(){
   const{total}=tot();
   document.getElementById('app').innerHTML=`
-  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--topbar-tx)">PAPA PhD Tracker</span><a href="/">&#8592; deanlefor.com</a></div>
+  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--topbar-tx)">PAPA PhD Tracker</span><span style="font-size:11px;color:var(--topbar-link);margin-left:6px">${VERSION}</span><a href="/">&#8592; deanlefor.com</a></div>
   <div class="hdr">
     <div style="font-size:11px;color:var(--tx2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Virginia Tech &#183; CPAP</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
