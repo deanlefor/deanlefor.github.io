@@ -15,13 +15,13 @@
     *{box-sizing:border-box;margin:0;padding:0}
     body{background:var(--bg3);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;min-height:100vh;color:var(--tx1)}
     #app{max-width:720px;margin:0 auto;background:var(--bg1);min-height:100vh}
-    .topbar{background:var(--bg2);border-bottom:0.5px solid var(--bd1);padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
-    .topbar a{font-size:12px;color:var(--tx2);text-decoration:none}
-    .topbar a:hover{color:var(--tx1)}
+    .topbar{background:var(--topbar-bg);border-bottom:0.5px solid var(--bd1);padding:10px 18px;display:flex;align-items:center;justify-content:space-between}
+    .topbar a{font-size:12px;color:var(--topbar-link);text-decoration:none}
+    .topbar a:hover{color:var(--topbar-tx)}
     .hdr{background:var(--bg2);border-bottom:0.5px solid var(--bd1);padding:14px 18px 0}
     .tabs{display:flex;gap:2px;margin-top:10px}
     .tab{padding:7px 13px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--tx2);border-radius:6px 6px 0 0}
-    .tab.on{background:var(--bg1);color:var(--tx1);border-top:2px solid #378ADD;border-left:0.5px solid var(--bd1);border-right:0.5px solid var(--bd1)}
+    .tab.on{background:var(--bg1);color:var(--tx1);border-top:2px solid var(--accent);border-left:0.5px solid var(--bd1);border-right:0.5px solid var(--bd1)}
     .body{padding:14px 16px 60px}
     .card{background:var(--bg1);border:0.5px solid var(--bd1);border-radius:var(--rl);padding:12px 14px;margin-bottom:8px}
     .csec{background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--rl);padding:12px 14px;margin-bottom:8px}
@@ -32,13 +32,13 @@
     .bsm{background:transparent;border:0.5px solid var(--bd2);border-radius:var(--rm);padding:3px 9px;font-size:11px;font-weight:500;cursor:pointer;color:var(--tx2)}
     .bsm:hover{background:var(--bg2)}
     .pill{padding:4px 10px;font-size:12px;font-weight:500;border:0.5px solid var(--bd2);border-radius:99px;cursor:pointer;background:transparent;color:var(--tx2)}
-    .pill.on{background:#378ADD;border-color:#378ADD;color:#fff}
+    .pill.on{background:var(--accent);border-color:var(--accent);color:#fff}
     .chip{display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:0.5px solid var(--bd1);border-radius:var(--rm);padding:4px 8px;font-size:12px;margin:3px 3px 3px 0}
     .cx{background:none;border:none;cursor:pointer;color:var(--tx2);font-size:13px;padding:0 1px;line-height:1}
     .cx:hover{color:var(--tx1)}
     .chk{width:17px;height:17px;border-radius:4px;border:1.5px solid var(--bd2);background:var(--bg1);display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
     .chk.on{background:#639922;border-color:#639922}
-    .circ{width:22px;height:22px;border-radius:50%;border:1.5px solid #378ADD;background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
+    .circ{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--accent);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0}
     .circ.on{background:#639922;border-color:#639922}
     .pcourse{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:var(--rm);cursor:pointer}
     .pcourse:hover{background:var(--bg2)}
@@ -60,6 +60,8 @@
 <script>
 const BL='#378ADD',GR='#639922',AM='#BA7517';
 const KEY='phd-tracker-v2';
+
+const DISCLAIMER=`This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School. This tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nNote: The constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nYour progress is saved in your browser\u2019s local storage, not a server. It will disappear if you clear your browser data or use private/incognito mode. Screenshot your plan occasionally.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. \uD83D\uDE42`;
 
 const STATIC_BUCKETS=[
   {id:'foundation',name:'Foundation courses',req:18,sub:'6 courses across the 5 core fields',courses:[
@@ -101,43 +103,66 @@ const STATIC_BUCKETS=[
 ];
 
 const MILESTONES=[
-  {id:'ms1',name:'Scholarly ethics quiz',target:'Year 1 (early)',desc:'Pass the CPAP ethics quiz. Review Roig guide, COPE guidelines, and ASPA Code of Ethics.'},
+  {id:'ms1',name:'Scholarly ethics quiz',target:'Year 1 (early)',desc:'Pass the CPAP ethics quiz. Review Roig guide, COPE guidelines, and ASPA Code of Ethics. Verified at Plan of Study submission.'},
   {id:'ms2',name:'CITI human subjects training',target:'Year 1',desc:'Complete VT IRB certification. Required for PhD; documented on Plan of Study.'},
   {id:'ms3',name:'Plan of study submitted',target:'Before 24 credits',desc:'File before completing 24 semester hours. Signed by committee, submitted to Graduate School.'},
-  {id:'ms4',name:'Dissertation committee formed',target:'After qualifying exam',desc:'4 members minimum; at least 3 must be CPAP core faculty.'},
-  {id:'ms5',name:'Qualifying exam request filed',target:'1 month before exam',desc:'Submit request form at least 1 month before the exam date.'},
-  {id:'ms6',name:'Qualifying examination passed',target:'After all foundation courses done',desc:'3 of 5 fields. 8-hour window per field; max 10 pages per essay, double-spaced.'},
-  {id:'ms7',name:'Concentration lecture delivered',target:'Before Dec 1 or May 1',desc:'Integrates 9 concentration hours. Audience of 6+ required. Must occur before prospectus defense.'},
-  {id:'ms8',name:'Prospectus defense',target:'After all coursework',desc:'File "Request to Admit to Preliminary Exam." Full committee reviews and approves research design.'},
-  {id:'ms9',name:'Draft distributed to committee',target:'6+ weeks before defense',desc:'Defense cannot be scheduled fewer than 6 weeks after approved draft is distributed.'},
-  {id:'ms10',name:'Dissertation defense',target:'Final requirement',desc:'File "Request to Admit to Final Exam." All committee members must be present.'},
+  {id:'ms4',name:'Constellation selected',target:'Before QE registration',desc:'Choose one of four constellations: I (Public Management: Management & Leadership + Complex Organizations), II (PA Foundations: Theory & Context + Normative Foundations), III (Public Policy: Policy Process + Policy Design + Policy Inquiry), or IV (Custom: any two courses from Constellations I–III). Must complete all constellation courses and at least 5 of 7 total foundation courses before the exam.'},
+  {id:'ms5',name:'QE request submitted',target:'By May 1 (June 1 in 2026 only)',desc:'Submit \"Request to Admit Candidate to Qualifying Examination\" to the CPAP office by May 1. Missing this deadline means waiting a full year — the exam is offered once annually in August only.'},
+  {id:'ms6',name:'Submitted papers ready',target:'By August 1',desc:'Prepare at least 2 papers from constellation courses (up to 4 total, including papers from other foundation courses). Papers are evaluated alongside the Foundations Essay and oral engagement.'},
+  {id:'ms7',name:'Foundations essay completed',target:'By August 1',desc:'Write a 2,000–2,500 word essay (double-spaced, excluding references) synthesizing and critically assessing scholarship from submitted papers. Must be completed independently — working with your advisor or any faculty member on this essay is not permitted.'},
+  {id:'ms8',name:'QE oral engagement',target:'August, before Fall semester',desc:'15-minute in-person presentation of the Foundations Essay followed by 30-minute Q&A with a 3-faculty committee from your selected constellation. Committee may also ask about broader constellation scholarship.'},
+  {id:'ms9',name:'Qualifying examination passed',target:'August result',desc:'Committee evaluates submitted papers, essay, and oral engagement as a whole. Outcome is Pass or Fail. A minor deficiency may result in an additional 30-minute Q&A within 2 weeks. A failed exam may be retaken the following January or August; the second attempt must occur within one calendar year.'},
+  {id:'ms10',name:'Dissertation committee formed',target:'After qualifying exam',desc:'4 members minimum; at least 3 must be CPAP core faculty. Chair must be core faculty. Graduate School approval required.'},
+  {id:'ms11',name:'Concentration lecture delivered',target:'Before Dec 1 (fall) or May 1 (spring)',desc:'Integrates 9 research concentration hours. Audience of at least 6 required. Must occur before prospectus defense. Cannot be scheduled during summer. Student is responsible for assembling the audience.'},
+  {id:'ms12',name:'Capstone seminar completed',target:'Preferably last semester of coursework',desc:'PAPA 6394. Focuses on developing and refining the dissertation prospectus proposal.'},
+  {id:'ms13',name:'Prospectus defense (preliminary exam)',target:'After all coursework',desc:'File \"Request to Admit to Preliminary Examination.\" Full committee reviews and approves research design including topic, significance, methodology, and timeline.'},
+  {id:'ms14',name:'Dissertation draft distributed',target:'At least 6 weeks before defense',desc:'Defense cannot be scheduled until at least 6 weeks after the chair-approved draft is distributed to all committee members.'},
+  {id:'ms15',name:'Dissertation defense (final exam)',target:'Final requirement',desc:'File \"Request to Admit to Final Exam.\" All committee members must be present. Be prepared to discuss theoretical, methodological, and practical implications of the dissertation.'},
 ];
 
+
+const THEMES={
+  dark:{
+    '--bg1':'#1c1c1b','--bg2':'#262625','--bg3':'#303030',
+    '--tx1':'#f0efee','--tx2':'#8c8c8a','--tx3':'#5c5c5a',
+    '--bd1':'rgba(255,255,255,0.09)','--bd2':'rgba(255,255,255,0.18)',
+    '--accent':'#378ADD','--topbar-bg':'#262625','--topbar-tx':'#f0efee','--topbar-link':'#8c8c8a'
+  },
+  light:{
+    '--bg1':'#ffffff','--bg2':'#f5f1f2','--bg3':'#ece6e8',
+    '--tx1':'#1a1414','--tx2':'#5c5254','--tx3':'#8c8587',
+    '--bd1':'rgba(134,31,65,0.12)','--bd2':'rgba(134,31,65,0.28)',
+    '--accent':'#E5751F','--topbar-bg':'#861F41','--topbar-tx':'#ffffff','--topbar-link':'rgba(255,255,255,0.75)'
+  }
+};
+function applyTheme(){
+  const t=THEMES[s.darkMode?'dark':'light'];
+  for(const[k,v] of Object.entries(t)) document.documentElement.style.setProperty(k,v);
+}
 let s={
   tab:'dashboard',done:new Set(),mdone:new Set(),
   dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
   assign:{},picker:null,showSettings:false,
-  startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set()
+  startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set(),
+  showImport:false,copyMsg:false,shareLinkCopied:false,darkMode:true,readOnly:false
 };
 
 // Dynamic term generation
 function genTerms(){
   const terms=[];
   let y=s.startYear,sg=s.startSem,sn=1;
-  while(terms.length<14){
+  while(terms.length<15){
     if(sg==='fall'){
-      const r=sn<=7;
-      terms.push({id:`f${y}`,name:`Fall ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss'});
+      terms.push({id:`f${y}`,name:`Fall ${y}`,label:`Sem ${sn}`,type:'sem'});
       sn++;sg='spring';y++;
     } else {
-      const r=sn<=7;
-      terms.push({id:`s${y}`,name:`Spring ${y}`,label:r?`Sem ${sn}`:null,type:r?'sem':'diss'});
+      terms.push({id:`s${y}`,name:`Spring ${y}`,label:`Sem ${sn}`,type:'sem'});
       sn++;
-      if(terms.length<14) terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer'});
+      if(terms.length<15) terms.push({id:`u${y}`,name:`Summer ${y}`,type:'summer'});
       sg='fall';
     }
   }
-  return terms.slice(0,14);
+  return terms.slice(0,15);
 }
 
 // Dynamic electives bucket
@@ -168,21 +193,40 @@ function load(){
       if(d.assign)s.assign=d.assign;
       if(d.names)s.names=d.names;
       if(d.termDone)s.termDone=new Set(d.termDone);
+      if(d.darkMode!==undefined)s.darkMode=d.darkMode;
       if(d.startSem)s.startSem=d.startSem;
       if(d.startYear)s.startYear=d.startYear;
     }
   }catch(e){}
   if(Object.keys(s.assign).length===0) s.assign={};
+  // Check for shared state in URL hash
+  try{
+    const hash=window.location.hash;
+    if(hash.startsWith('#view=')){
+      const d=JSON.parse(decodeURIComponent(atob(hash.slice(6))));
+      if(d.done)s.done=new Set(d.done);
+      if(d.mdone)s.mdone=new Set(d.mdone);
+      if(d.dmp!==undefined)s.dmp=d.dmp;
+      if(d.assign)s.assign=d.assign;
+      if(d.names)s.names=d.names;
+      if(d.termDone)s.termDone=new Set(d.termDone);
+      if(d.startSem)s.startSem=d.startSem;
+      if(d.startYear)s.startYear=d.startYear;
+      if(d.darkMode!==undefined)s.darkMode=d.darkMode;
+      s.readOnly=true;
+    }
+  }catch(e){}
+  applyTheme();
   R();
 }
 
-function sv(){try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear}));}catch(e){}}
+function sv(){if(s.readOnly)return;try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode}));}catch(e){}}
 
 // Render helpers
-function bar(v,m){const pct=Math.min(v/m*100,100),col=v>=m?GR:BL;return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;}
+function bar(v,m){const pct=Math.min(v/m*100,100),col=v>=m?GR:'var(--accent)';return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;}
 
 function ring(v,m){
-  const sz=118,sw=10,r=(sz-sw)/2,c2=2*Math.PI*r,off=c2*(1-Math.min(v/m,1)),col=v>=m?GR:BL;
+  const sz=118,sw=10,r=(sz-sw)/2,c2=2*Math.PI*r,off=c2*(1-Math.min(v/m,1)),col=v>=m?GR:'var(--accent)';
   return`<svg width="${sz}" height="${sz}" style="transform:rotate(-90deg)"><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="var(--bg2)" stroke-width="${sw}"/><circle cx="${sz/2}" cy="${sz/2}" r="${r}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-dasharray="${c2}" stroke-dashoffset="${off}" stroke-linecap="round" style="transition:stroke-dashoffset .5s"/></svg>`;
 }
 
@@ -203,7 +247,35 @@ function rSettings(){
         <button class="btn" style="padding:4px 10px" onclick="setStart('${s.startSem}',${s.startYear+1})" ${s.startYear>=2027?'disabled':''}>+</button>
       </div>
     </div>
+    <div class="srow" style="margin-top:8px">
+      <span class="slbl">Appearance</span>
+      <div style="display:flex;gap:4px">
+        <button class="pill ${!s.darkMode?'on':''}" onclick="setTheme(false)">Light</button>
+        <button class="pill ${s.darkMode?'on':''}" onclick="setTheme(true)">Dark</button>
+      </div>
+    </div>
     <div style="font-size:11px;color:var(--tx3);margin-top:2px">Changing start semester preserves your existing course assignments where possible.</div>
+    <div style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px">
+      <div style="font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:8px">Share &amp; export</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Share a read-only link with your advisor, or export a printable PDF report.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="copyShareLink()">${s.shareLinkCopied?'&#10003; Link copied!':'Copy share link'}</button>
+        <button class="btn" onclick="openPrintView()">Print / Save as PDF</button>
+      </div>
+    </div>
+    <div style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px">
+      <div style="font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:8px">Backup &amp; restore</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Export your progress as text to back it up or move it to another device.</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" onclick="exportData()">${s.copyMsg?'&#10003; Copied!':'Copy backup to clipboard'}</button>
+        <button class="btn" onclick="toggleImport()">${s.showImport?'Cancel':'Paste &amp; restore'}</button>
+      </div>
+      ${s.showImport?`<div style="margin-top:8px"><textarea id="import-inp" placeholder="Paste your backup text here..." style="width:100%;height:80px;background:var(--bg3);border:1px solid var(--bd2);border-radius:var(--rm);padding:8px;color:var(--tx1);font-size:12px;resize:vertical;font-family:var(--mono)"></textarea><div style="display:flex;gap:8px;margin-top:6px"><button class="btn" onclick="importData()">Restore progress</button></div><div style="font-size:11px;color:var(--tx3);margin-top:4px">This will overwrite your current progress on this device.</div></div>`:''}
+    </div>
+    <div style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px">
+      <div style="font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:6px">Disclaimer</div>
+      <div style="font-size:11px;color:var(--tx3);line-height:1.7">${DISCLAIMER.replace(/\n/g,'<br>')}</div>
+    </div>
   </div>`;
 }
 
@@ -286,25 +358,25 @@ function rMile(){
 // Main render
 function R(){
   const{total}=tot();
-  const sl=`${s.startSem[0].toUpperCase()+s.startSem.slice(1)} ${s.startYear}`;
   document.getElementById('app').innerHTML=`
-  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--tx1)">PAPA PhD Tracker</span><a href="/">&#8592; deanlefor.com</a></div>
+  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--topbar-tx)">PAPA PhD Tracker</span><a href="/">&#8592; deanlefor.com</a></div>
   <div class="hdr">
     <div style="font-size:11px;color:var(--tx2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Virginia Tech &#183; CPAP</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
       <div style="font-size:19px;font-weight:500">PAPA PhD tracker</div>
       <button onclick="toggleSt()" style="background:${s.showSettings?BL:'transparent'};border:0.5px solid ${s.showSettings?BL:'var(--bd2)'};border-radius:var(--rm);padding:5px 10px;cursor:pointer;font-size:11px;font-weight:500;color:${s.showSettings?'#fff':'var(--tx2)'};display:flex;align-items:center;gap:4px">
-        <i class="ti ti-settings" style="font-size:13px" aria-hidden="true"></i> ${sl}
+        <i class="ti ti-settings" style="font-size:13px" aria-hidden="true"></i> Settings
       </button>
     </div>
     <div style="font-size:12px;color:var(--tx2)"><span style="font-weight:500;color:${BL}">${total}</span>/90 cr. &#183; <span style="font-weight:500;color:${BL}">${s.mdone.size}</span>/${MILESTONES.length} milestones &#183; <span style="font-weight:500;color:${BL}">${s.dmp}</span>/15 DMP</div>
     <div class="tabs">${['dashboard','planner','courses','milestones'].map(t=>`<button class="tab ${s.tab===t?'on':''}" onclick="ST('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
   </div>
   <div class="body">
+    ${s.readOnly?`<div style="background:#E5751F;color:white;padding:8px 18px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" aria-hidden="true"></i> Shared view — read only</div>`:''}
     ${s.showSettings?rSettings():''}
     ${s.tab==='dashboard'?rDash():s.tab==='planner'?rPlanner():s.tab==='courses'?rCourses():rMile()}
-    <div style="margin-top:14px;background:var(--bg2);border-radius:var(--rm);padding:10px 14px;font-size:11px;color:var(--tx2);line-height:1.6">Confirm all requirements and deadlines with your advisor and the VT Graduate School. Clarify whether transfer credits count toward the qualifying exam 30-credit cap.</div>
   </div>`;
+  applyTheme();
   if(s.renaming){requestAnimationFrame(()=>{const inp=document.getElementById('rename-inp');if(inp){inp.focus();inp.select();}});}
 }
 
@@ -322,6 +394,34 @@ function toggleSt(){s.showSettings=!s.showSettings;R();}
 
 function toggleTermDone(id){s.termDone.has(id)?s.termDone.delete(id):s.termDone.add(id);sv();R();}
 
+function exportData(){
+  const data=JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear});
+  navigator.clipboard.writeText(data).then(()=>{
+    s.copyMsg=true;R();
+    setTimeout(()=>{s.copyMsg=false;R();},2500);
+  }).catch(()=>prompt('Copy this backup text:',data));
+}
+
+function setTheme(dark){s.darkMode=dark;applyTheme();sv();R();}
+function toggleImport(){s.showImport=!s.showImport;R();}
+
+function importData(){
+  const inp=document.getElementById('import-inp');
+  if(!inp)return;
+  try{
+    const d=JSON.parse(inp.value.trim());
+    if(d.done)s.done=new Set(d.done);
+    if(d.mdone)s.mdone=new Set(d.mdone);
+    if(d.dmp!==undefined)s.dmp=d.dmp;
+    if(d.assign)s.assign=d.assign;
+    if(d.names)s.names=d.names;
+    if(d.termDone)s.termDone=new Set(d.termDone);
+    if(d.startSem)s.startSem=d.startSem;
+    if(d.startYear)s.startYear=d.startYear;
+    s.showImport=false;sv();R();
+  }catch(e){alert('Could not read that backup — make sure you pasted the full export text.');}
+}
+
 function setStart(sem,year){
   if(year<2022||year>2027)return;
   s.startSem=sem;s.startYear=year;
@@ -338,6 +438,92 @@ function saveRename(){
     else delete s.names[s.renaming];
   }
   s.renaming=null;sv();R();
+}
+
+function copyShareLink(){
+  const data=JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode});
+  const url=window.location.origin+window.location.pathname+'#view='+btoa(encodeURIComponent(data));
+  navigator.clipboard.writeText(url).then(()=>{
+    s.shareLinkCopied=true;R();
+    setTimeout(()=>{s.shareLinkCopied=false;R();},2500);
+  }).catch(()=>prompt('Copy this share link:',url));
+}
+
+function openPrintView(){
+  const w=window.open('','_blank');
+  w.document.write(generatePrintHTML());
+  w.document.close();
+}
+
+function generatePrintHTML(){
+  const{p,cw,diss,total}=tot();
+  const terms=genTerms();
+  const xferCourses=allCourses().filter(c=>s.assign[c.id]==='_transfer');
+  const dateStr=new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'});
+  const startLabel=s.startSem[0].toUpperCase()+s.startSem.slice(1)+' '+s.startYear;
+
+  const semRows=terms.map(tm=>{
+    const tc=tcourses(tm.id);
+    if(!tc.length)return'';
+    const doneT=s.termDone.has(tm.id);
+    return`<tr style="background:${doneT?'#f0fff4':'white'}">
+      <td style="padding:6px 8px;font-weight:600;white-space:nowrap;border-left:3px solid ${doneT?'#639922':'#E5751F'};font-size:11px">${tm.name}${tm.label?` <span style="font-weight:400;color:#888;font-size:10px">(${tm.label})</span>`:''}</td>
+      <td style="padding:6px 8px">${tc.map(c=>`<div style="font-size:11px;color:#1a1a1a">${c.code} — ${dname(c)}</div>`).join('')}</td>
+      <td style="padding:6px 8px;text-align:right;color:#861F41;font-weight:600;font-size:11px;white-space:nowrap">${tc.reduce((a,c)=>a+c.cr,0)} cr.</td>
+      <td style="padding:6px 8px;text-align:center;font-size:13px;color:#639922">${doneT?'✓':''}</td>
+    </tr>`;
+  }).join('');
+
+  const courseList=p.map(b=>`<div style="margin-bottom:14px;break-inside:avoid">
+    <div style="font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;color:#861F41;margin-bottom:5px;padding-bottom:3px;border-bottom:1px solid #E5751F">${b.name} · ${b.earned}/${b.req} cr.</div>
+    ${b.courses.map(c=>{const done=isDone(c.id);return`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:.5px solid #f0f0f0">
+      <div style="width:13px;height:13px;border-radius:3px;border:1.5px solid ${done?'#639922':'#ccc'};background:${done?'#639922':'white'};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:white">${done?'✓':''}</div>
+      <span style="font-size:10px;font-family:monospace;background:#f5f5f5;padding:1px 4px;border-radius:2px;color:#666;flex-shrink:0">${c.code}</span>
+      <span style="font-size:11px;flex:1;color:${done?'#aaa':'#1a1a1a'};${done?'text-decoration:line-through':''}">${dname(c)}</span>
+      <span style="font-size:10px;color:#861F41;font-weight:600">${c.cr} cr.</span>
+    </div>`;}).join('')}
+  </div>`).join('');
+
+  const mileRows=MILESTONES.map(m=>{const done=s.mdone.has(m.id);return`<div style="display:flex;gap:10px;padding:5px 0;border-bottom:.5px solid #eee;align-items:flex-start">
+    <div style="width:15px;height:15px;border-radius:50%;border:1.5px solid ${done?'#639922':'#861F41'};background:${done?'#639922':'white'};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:white">${done?'✓':''}</div>
+    <div><div style="font-size:11px;font-weight:600;color:${done?'#aaa':'#1a1a1a'};${done?'text-decoration:line-through':''}">${m.name}</div><div style="font-size:10px;color:#E5751F;margin-top:1px">${m.target}</div></div>
+  </div>`;}).join('');
+
+  return`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>PAPA PhD Progress Report — ${startLabel}</title>
+  <style>*{box-sizing:border-box;margin:0;padding:0}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:#1a1a1a;background:white}
+  .no-print{background:#E5751F;color:white;padding:10px 20px;display:flex;justify-content:space-between;align-items:center}
+  .no-print button{background:white;color:#E5751F;border:none;border-radius:6px;padding:6px 14px;font-size:12px;font-weight:600;cursor:pointer}
+  .sec-title{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.8px;color:#861F41;border-bottom:1.5px solid #861F41;padding-bottom:4px;margin-bottom:12px}
+  @media print{.no-print{display:none}header,tr,td{-webkit-print-color-adjust:exact;print-color-adjust:exact}.page-break{page-break-before:always}}
+  </style></head><body>
+  <div class="no-print"><span style="font-size:12px;font-weight:500">Use your browser's print dialog (Ctrl+P / Cmd+P) to print or save as PDF</span><button onclick="window.print()">Print / Save PDF</button></div>
+  <header style="background:#861F41;color:white;padding:20px 28px">
+    <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:4px">Virginia Tech · Center for Public Administration and Policy</div>
+    <div style="font-size:22px;font-weight:700">PAPA PhD Progress Report</div>
+    <div style="font-size:11px;opacity:.8;margin-top:4px">Start: ${startLabel} · Generated ${dateStr}</div>
+  </header>
+  <div style="padding:20px 28px">
+    <div style="margin-bottom:24px">
+      <div class="sec-title">Progress summary</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px">
+        ${[{l:'Total credits',v:total,m:90},{l:'Coursework',v:cw,m:60},{l:'Dissertation',v:diss,m:30},{l:'DMP sessions',v:s.dmp,m:15}].map(x=>`<div style="text-align:center;padding:10px;background:#f5f1f2;border-radius:6px"><div style="font-size:24px;font-weight:700;color:${x.v>=x.m?'#639922':'#861F41'}">${x.v}</div><div style="font-size:10px;color:#666;margin-top:1px">${x.l}</div><div style="font-size:10px;color:#999">of ${x.m}</div></div>`).join('')}
+      </div>
+    </div>
+    <div style="margin-bottom:24px">
+      <div class="sec-title">Semester plan</div>
+      ${xferCourses.length?`<div style="margin-bottom:8px;padding:8px 10px;background:#fff8f0;border-left:3px solid #E5751F;border-radius:3px"><div style="font-size:10px;font-weight:600;color:#E5751F;margin-bottom:3px">Transfer in</div>${xferCourses.map(c=>`<div style="font-size:11px">${c.code} — ${dname(c)} · ${c.cr} cr.</div>`).join('')}</div>`:''}
+      ${semRows?`<table style="width:100%;border-collapse:collapse"><thead><tr style="background:#f5f1f2"><th style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase">Term</th><th style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase">Courses</th><th style="padding:6px 8px;text-align:right;font-size:10px;color:#666;font-weight:600;text-transform:uppercase">Cr.</th><th style="padding:6px 8px;text-align:center;font-size:10px;color:#666;font-weight:600;text-transform:uppercase">Done</th></tr></thead><tbody>${semRows}</tbody></table>`:'<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'}
+    </div>
+    <div class="page-break" style="margin-bottom:24px">
+      <div class="sec-title">Course completion</div>
+      <div style="columns:2;column-gap:24px">${courseList}</div>
+    </div>
+    <div style="margin-bottom:24px">
+      <div class="sec-title">Milestones</div>
+      ${mileRows}
+    </div>
+    <div style="font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:8px">Generated by PAPA PhD Tracker · deanlefor.com/tracker.html · For planning purposes only — confirm all requirements with your advisor and the VT Graduate School.</div>
+  </div></body></html>`;
 }
 
 load();
