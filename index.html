@@ -122,7 +122,7 @@
       transition: background 0.2s, color 0.2s;
       white-space: nowrap;
     }
-    .terminal-btn::before { content: 'C:\\> '; opacity: 0.5; }
+    .terminal-btn::before { content: ''; }
     .terminal-btn:hover {
       background: rgba(196,154,42,0.1);
       color: var(--gold-light);
@@ -418,6 +418,43 @@
     }
     .footer-link:hover { color: var(--gold); }
 
+    .nav-dropdown {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+    .nav-dropdown-trigger {
+      cursor: pointer;
+      user-select: none;
+    }
+    .nav-dropdown-menu {
+      display: none;
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg-card);
+      border: 1px solid var(--border-hi);
+      min-width: 210px;
+      z-index: 200;
+    }
+    .nav-dropdown-menu.open { display: block; }
+    .nav-dropdown:hover .nav-dropdown-menu { display: block; }
+    .nav-dropdown-item {
+      display: block;
+      padding: 0.75rem 1rem;
+      font-size: 0.68rem;
+      letter-spacing: 0.12em;
+      color: var(--text-dim);
+      text-decoration: none;
+      transition: background 0.15s, color 0.15s;
+      white-space: nowrap;
+    }
+    .nav-dropdown-item:hover {
+      background: var(--bg-hover);
+      color: var(--gold);
+    }
+
     /* ── Tracker card ── */
     .tracker-card {
       display: flex;
@@ -588,7 +625,12 @@
       <a class="nav-link" href="#work">Work</a>
       <a class="nav-link" href="#research">Research</a>
       <a class="nav-link" href="#service">Service</a>
-      <a class="terminal-btn" href="terminal.html">Terminal</a>
+      <div class="nav-dropdown">
+        <span class="nav-link terminal-btn nav-dropdown-trigger">Resources &#9662;</span>
+        <div class="nav-dropdown-menu">
+          <a href="https://deanlefor.com/tracker.html" class="nav-dropdown-item">VT PAPA Program Tracker</a>
+        </div>
+      </div>
     </div>
   </div>
 </nav>
@@ -854,6 +896,15 @@ function wire(id, lblId, key, reinit) {
 wire('sl-count', 'lbl-count', 'count', true);
 wire('sl-speed', 'lbl-speed', 'speed', true);
 wire('sl-size',  'lbl-size',  'size',  true);
+
+// ── Resources dropdown ──
+const dropTrigger = document.querySelector('.nav-dropdown-trigger');
+const dropMenu    = document.querySelector('.nav-dropdown-menu');
+dropTrigger.addEventListener('click', e => {
+  e.stopPropagation();
+  dropMenu.classList.toggle('open');
+});
+document.addEventListener('click', () => dropMenu.classList.remove('open'));
 
 // ── Light / dark toggle ──
 const track = document.getElementById('mode-toggle');
