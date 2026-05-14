@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PAPA PhD Tracker — User Guide & FAQ</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,300;0,400;0,600;1,400&family=DM+Sans:wght@400;500;600&display=swap');
+
+  :root {
+    --maroon: #861F41;
+    --orange: #E5751F;
+    --blue: #378ADD;
+    --green: #639922;
+    --amber: #BA7517;
+    --bg: #f8f6f2;
+    --bg2: #fff;
+    --border: #e2ddd8;
+    --text: #1a1714;
+    --text2: #2d2925;
+    --text3: #5c5550;
+    --serif: 'Source Serif 4', Georgia, serif;
+    --sans: 'DM Sans', system-ui, sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.65;
+    font-size: 15px;
+  }
+
+  /* Header */
+  .site-header {
+    background: var(--maroon);
+    color: #fff;
+    padding: 0 24px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .site-header a {
+    color: rgba(255,255,255,0.7);
+    text-decoration: none;
+    font-size: 13px;
+    transition: color .15s;
+  }
+  .site-header a:hover { color: #fff; }
+  .header-title {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .2px;
+  }
+
+  /* Hero */
+  .hero {
+    background: var(--maroon);
+    color: #fff;
+    padding: 48px 24px 56px;
+    text-align: center;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at 70% 40%, rgba(229,117,31,.25) 0%, transparent 60%);
+    pointer-events: none;
+  }
+  .hero-eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.6);
+    margin-bottom: 10px;
+  }
+  .hero h1 {
+    font-family: var(--serif);
+    font-size: clamp(26px, 5vw, 38px);
+    font-weight: 300;
+    line-height: 1.25;
+    margin-bottom: 12px;
+  }
+  .hero h1 em {
+    font-style: italic;
+    color: #ffcba0;
+  }
+  .hero-sub {
+    font-size: 14px;
+    color: rgba(255,255,255,0.7);
+    max-width: 480px;
+    margin: 0 auto 20px;
+  }
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,255,255,0.12);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 20px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: rgba(255,255,255,0.8);
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--orange); }
+
+  /* Layout */
+  .page { max-width: 860px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* Nav TOC */
+  .toc {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 40px;
+  }
+  .toc-title {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text3);
+    margin-bottom: 12px;
+  }
+  .toc-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 4px 16px;
+  }
+  .toc a {
+    color: var(--blue);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 3px 0;
+    display: block;
+    transition: color .15s;
+  }
+  .toc a:hover { color: var(--maroon); }
+
+  /* Section headings */
+  .section { margin-bottom: 48px; }
+  .section-label {
+    font-size: 10px;
+    font-weight: 600;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 6px;
+  }
+  .section h2 {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    color: var(--maroon);
+    margin-bottom: 16px;
+    padding-bottom: 10px;
+    border-bottom: 1.5px solid var(--border);
+  }
+  .section h3 {
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 20px 0 8px;
+  }
+  .section p { color: var(--text2); margin-bottom: 12px; }
+  .section p:last-child { margin-bottom: 0; }
+
+  /* Feature cards */
+  .tab-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+    gap: 10px;
+    margin-bottom: 24px;
+  }
+  .tab-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 16px;
+    transition: border-color .15s;
+  }
+  .tab-card:hover { border-color: var(--blue); }
+  .tab-icon {
+    font-size: 18px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .tab-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 3px;
+  }
+  .tab-desc {
+    font-size: 12px;
+    color: var(--text2);
+    line-height: 1.5;
+  }
+
+  /* Steps */
+  .steps { margin: 12px 0 20px; }
+  .step {
+    display: flex;
+    gap: 14px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+  }
+  .step-num {
+    width: 24px;
+    height: 24px;
+    min-width: 24px;
+    border-radius: 50%;
+    background: var(--maroon);
+    color: #fff;
+    font-size: 11px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 1px;
+  }
+  .step-body { flex: 1; }
+  .step-body strong { color: var(--text); font-size: 14px; display: block; margin-bottom: 2px; }
+  .step-body span { font-size: 13px; color: var(--text2); }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 8px;
+    padding: 14px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+    line-height: 1.6;
+  }
+  .callout-warn {
+    background: #fef3e2;
+    border: 1px solid #f5c87a;
+    color: #4a2800;
+  }
+  .callout-info {
+    background: #eaf3fc;
+    border: 1px solid #a8d1f5;
+    color: #0a2540;
+  }
+  .callout-tip {
+    background: #edf5e3;
+    border: 1px solid #b3d98a;
+    color: #1a3208;
+  }
+  .callout strong { font-weight: 600; }
+  .callout-icon { margin-right: 4px; }
+
+  /* FAQ */
+  .faq-list { margin-top: 4px; }
+  .faq-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    overflow: hidden;
+  }
+  .faq-q {
+    padding: 14px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    user-select: none;
+  }
+  .faq-q:hover { background: #f5f2ee; }
+  .faq-arrow {
+    color: var(--text3);
+    font-size: 12px;
+    min-width: 14px;
+    margin-top: 2px;
+    transition: transform .2s;
+  }
+  .faq-item.open .faq-arrow { transform: rotate(90deg); }
+  .faq-a {
+    display: none;
+    padding: 0 16px 14px;
+    font-size: 13px;
+    color: var(--text2);
+    line-height: 1.65;
+    border-top: 1px solid var(--border);
+  }
+  .faq-item.open .faq-a { display: block; }
+  .faq-a p { margin-bottom: 8px; }
+  .faq-a p:last-child { margin-bottom: 0; }
+  .faq-a strong { color: var(--text); }
+
+  /* Milestone table */
+  .milestone-table { width: 100%; border-collapse: collapse; font-size: 13px; margin: 12px 0; }
+  .milestone-table th {
+    text-align: left;
+    padding: 7px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--text3);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .milestone-table td {
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--border);
+    vertical-align: top;
+    color: var(--text2);
+  }
+  .milestone-table td:first-child { color: var(--text); font-weight: 500; white-space: nowrap; }
+  .milestone-table tr:last-child td { border-bottom: none; }
+  .badge {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 7px;
+    border-radius: 10px;
+    white-space: nowrap;
+  }
+  .badge-pre { background: #edf5e3; color: #2f5410; }
+  .badge-qe  { background: #eaf3fc; color: #1a4b76; }
+  .badge-post { background: #f5f0fc; color: #5b2c8a; }
+
+  /* Req overview */
+  .req-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin: 12px 0 20px;
+  }
+  .req-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .req-credits {
+    font-size: 24px;
+    font-weight: 600;
+    color: var(--maroon);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .req-label { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .req-total .req-credits { color: var(--orange); font-size: 28px; }
+
+  /* Data note */
+  .data-note {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-left: 3px solid var(--maroon);
+    border-radius: 0 8px 8px 0;
+    padding: 12px 16px;
+    font-size: 13px;
+    color: var(--text2);
+    margin: 16px 0;
+    line-height: 1.6;
+  }
+
+  /* Footer */
+  .site-footer {
+    text-align: center;
+    padding: 32px 24px;
+    font-size: 12px;
+    color: var(--text3);
+    border-top: 1px solid var(--border);
+  }
+  .site-footer a { color: var(--blue); text-decoration: none; }
+
+  /* Print */
+  @media print {
+    .site-header { position: static; }
+    .faq-a { display: block !important; }
+  }
+
+  @media (max-width: 600px) {
+    .toc-grid { grid-template-columns: 1fr 1fr; }
+    .tab-grid { grid-template-columns: 1fr 1fr; }
+    .req-grid { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <span class="header-title">PAPA PhD Tracker</span>
+  <a href="https://www.deanlefor.com/tracker.html">Open the Tracker &rarr;</a>
+</header>
+
+<div class="hero">
+  <div class="hero-eyebrow">Virginia Tech &middot; CPAP Doctoral Program</div>
+  <h1>User Guide &amp; <em>FAQ</em></h1>
+  <p class="hero-sub">Everything you need to know to track, plan, and share your progress through the PAPA PhD program.</p>
+  <div class="hero-badge"><span class="dot"></span> v1.0 &middot; Based on Nov 2024 Policy Guide + Apr 2026 QE &amp; Constellations update</div>
+</div>
+
+<div class="page">
+
+  <!-- TOC -->
+  <div class="toc">
+    <div class="toc-title">On this page</div>
+    <div class="toc-grid">
+      <a href="#overview">What is this tracker?</a>
+      <a href="#requirements">Credit requirements</a>
+      <a href="#tabs">The four tabs</a>
+      <a href="#getting-started">Getting started</a>
+      <a href="#milestones">Milestones overview</a>
+      <a href="#settings">Settings &amp; appearance</a>
+      <a href="#sharing">Sharing &amp; printing</a>
+      <a href="#backup">Backup &amp; restore</a>
+      <a href="#faq">FAQ</a>
+      <a href="#disclaimer">Disclaimer</a>
+    </div>
+  </div>
+
+  <!-- OVERVIEW -->
+  <div class="section" id="overview">
+    <div class="section-label">About</div>
+    <h2>What is this tracker?</h2>
+    <p>The PAPA PhD Tracker is a free, browser-based planning tool for Virginia Tech CPAP doctoral students. It lets you map your courses to semesters, track credit completion across all five requirement buckets, follow your 15 program milestones, and log Doctoral Mentoring Program (DMP) sessions.</p>
+    <p>It is <strong>not</strong> an official Virginia Tech or CPAP tool. It was built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination &amp; Constellations update (approved April 23, 2026). Use it as a planning aid and always confirm decisions with your advisor and the VT Graduate School.</p>
+    <div class="callout callout-info">
+      <strong><span class="callout-icon">ℹ️</span> No account needed.</strong> The tracker runs entirely in your browser. None of your data is ever sent to a server. Progress is stored only in your browser's local storage.
+    </div>
+  </div>
+
+  <!-- REQUIREMENTS -->
+  <div class="section" id="requirements">
+    <div class="section-label">Program overview</div>
+    <h2>Credit requirements at a glance</h2>
+    <p>The PAPA PhD requires <strong>90 total credit hours</strong> across five course buckets, plus dissertation credits.</p>
+    <div class="req-grid">
+      <div class="req-card">
+        <div class="req-credits">18</div>
+        <div class="req-label">Foundation courses<br><small>6 courses, 5 core fields</small></div>
+      </div>
+      <div class="req-card">
+        <div class="req-credits">9</div>
+        <div class="req-label">Research foundations &amp; methods</div>
+      </div>
+      <div class="req-card">
+        <div class="req-credits">9</div>
+        <div class="req-label">Research concentration</div>
+      </div>
+      <div class="req-card">
+        <div class="req-credits">3</div>
+        <div class="req-label">Concentration lecture<br><small>PAPA 7964</small></div>
+      </div>
+      <div class="req-card">
+        <div class="req-credits">3</div>
+        <div class="req-label">Capstone seminar<br><small>PAPA 6394</small></div>
+      </div>
+      <div class="req-card">
+        <div class="req-credits">30</div>
+        <div class="req-label">Dissertation (PAPA 7994)<br><small>3 of 30 fulfilled by DMP (15 sessions)</small></div>
+      </div>
+      <div class="req-card req-total">
+        <div class="req-credits">90</div>
+        <div class="req-label"><strong>Total credits required</strong></div>
+      </div>
+    </div>
+    <p>Remaining credits after the five required coursework buckets are electives (which can include transfer-in credits). Dissertation credits (PAPA 7994) are taken throughout the program, with 3 of the 30 dissertation hours reserved for the DMP and unlocked once you complete 15 sessions. The tracker handles the math automatically.</p>
+  </div>
+
+  <!-- TABS -->
+  <div class="section" id="tabs">
+    <div class="section-label">Interface</div>
+    <h2>The four tabs</h2>
+    <p>The tracker is organized into four tabs. Here is what each one does:</p>
+    <div class="tab-grid">
+      <div class="tab-card">
+        <span class="tab-icon">📊</span>
+        <div class="tab-name">Dashboard</div>
+        <div class="tab-desc">Credit summary, progress bars by bucket, and the DMP session counter.</div>
+      </div>
+      <div class="tab-card">
+        <span class="tab-icon">📅</span>
+        <div class="tab-name">Planner</div>
+        <div class="tab-desc">Drag-and-assign courses to semesters. 10 regular terms + 5 summers. Includes Transfer In section.</div>
+      </div>
+      <div class="tab-card">
+        <span class="tab-icon">📚</span>
+        <div class="tab-name">Courses</div>
+        <div class="tab-desc">Full course list grouped by bucket. Tap any row to mark a course complete.</div>
+      </div>
+      <div class="tab-card">
+        <span class="tab-icon">🎯</span>
+        <div class="tab-name">Milestones</div>
+        <div class="tab-desc">All 15 program milestones in sequence. Tap the circle to mark each one done.</div>
+      </div>
+    </div>
+
+    <h3>Dashboard</h3>
+    <p>The Dashboard is your at-a-glance view. It shows total credits earned, a breakdown by each requirement bucket, and your DMP session progress (with + and &minus; buttons to log sessions). Check this tab first to see how your plan is shaping up.</p>
+
+    <h3>Planner</h3>
+    <p>The Planner is where you build your semester-by-semester course schedule. At the top is a <strong>Transfer In</strong> section &mdash; place any courses you transferred in here and they automatically count toward your elective total. Below that are your semesters, labeled Sem 1 through Sem 10 plus five Summer terms.</p>
+    <p>Tap any course row within a semester to assign a specific course to it. A small circle on each semester card lets you mark that term as complete. There are no per-term credit limits enforced &mdash; the tracker accommodates both full-time and part-time schedules.</p>
+
+    <h3>Courses</h3>
+    <p>The Courses tab shows every course in the program grouped by bucket. Tap a row to toggle it between complete and incomplete. Completed courses show a green checkmark and are visually dimmed. This syncs automatically with the Dashboard progress bars.</p>
+
+    <h3>Milestones</h3>
+    <p>The Milestones tab lists all 15 program checkpoints in the order you should reach them. Each milestone shows its target timing and a brief description. Tap the circle to the left of any milestone to mark it done. Done milestones are struck through and slightly faded.</p>
+  </div>
+
+  <!-- GETTING STARTED -->
+  <div class="section" id="getting-started">
+    <div class="section-label">Setup</div>
+    <h2>Getting started</h2>
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <strong>Open Settings and set your start semester</strong>
+          <span>Tap the Settings button in the top bar. Choose your program start semester (e.g., Fall 2024). This labels your semesters correctly across the Planner.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <strong>Add any transfer credits</strong>
+          <span>In the Planner tab, scroll to the Transfer In section at the top. Assign any approved transfer courses there. They count toward your elective hours automatically.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <strong>Build your course plan in the Planner</strong>
+          <span>Work through each semester and assign courses to terms. You can assign the same course to multiple semesters, or leave slots open for courses you have not decided yet.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <strong>Mark completed courses and milestones as you go</strong>
+          <span>In the Courses tab, tap each course you have already passed. In the Milestones tab, check off anything you have already completed. The Dashboard updates in real time.</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <strong>Back up your progress</strong>
+          <span>Go to Settings &rarr; Backup &amp; Restore and download a .json backup file. Keep it somewhere safe. Your progress only exists in your browser's local storage, so a backup protects you if you switch devices, clear your browser, or use a different computer.</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MILESTONES -->
+  <div class="section" id="milestones">
+    <div class="section-label">Program checkpoints</div>
+    <h2>Milestones overview</h2>
+    <p>The tracker includes all 15 CPAP PhD milestones, updated to reflect the new constellation-based qualifying exam process.</p>
+
+    <div class="callout callout-warn">
+      <strong><span class="callout-icon">⚠️</span> QE system change (April 2026):</strong> The constellation-based QE replaced the prior 3-of-5-fields written exam. If you started the program before April 2026, confirm with your advisor which QE procedures apply to you.
+    </div>
+
+    <div style="overflow-x:auto">
+    <table class="milestone-table">
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Milestone</th>
+          <th>Target timing</th>
+          <th>Phase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>1</td><td>Scholarly ethics quiz</td><td>Year 1 (early)</td><td><span class="badge badge-pre">Pre-QE</span></td></tr>
+        <tr><td>2</td><td>CITI human subjects training</td><td>Year 1</td><td><span class="badge badge-pre">Pre-QE</span></td></tr>
+        <tr><td>3</td><td>Plan of study submitted</td><td>Before 24 credits</td><td><span class="badge badge-pre">Pre-QE</span></td></tr>
+        <tr><td>4</td><td>Constellation selected</td><td>Before QE registration</td><td><span class="badge badge-pre">Pre-QE</span></td></tr>
+        <tr><td>5</td><td>QE request submitted</td><td>By May 1 (hard deadline)</td><td><span class="badge badge-qe">QE</span></td></tr>
+        <tr><td>6</td><td>Submitted papers ready</td><td>By August 1</td><td><span class="badge badge-qe">QE</span></td></tr>
+        <tr><td>7</td><td>Foundations essay completed</td><td>By August 1</td><td><span class="badge badge-qe">QE</span></td></tr>
+        <tr><td>8</td><td>QE oral engagement</td><td>August only</td><td><span class="badge badge-qe">QE</span></td></tr>
+        <tr><td>9</td><td>Qualifying examination passed</td><td>August</td><td><span class="badge badge-qe">QE</span></td></tr>
+        <tr><td>10</td><td>Dissertation committee formed</td><td>After qualifying exam</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+        <tr><td>11</td><td>Concentration lecture delivered</td><td>Before Dec 1 / May 1 (not summer)</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+        <tr><td>12</td><td>Capstone seminar completed</td><td>Last semester of coursework</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+        <tr><td>13</td><td>Prospectus defense</td><td>After coursework complete</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+        <tr><td>14</td><td>Dissertation draft distributed</td><td>At least 2 weeks before defense</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+        <tr><td>15</td><td>Dissertation defense</td><td>Final milestone</td><td><span class="badge badge-post">Post-QE</span></td></tr>
+      </tbody>
+    </table>
+    </div>
+
+    <h3>Key QE dates to know</h3>
+    <p><strong>May 1</strong> &mdash; QE request deadline each year (June 1 in 2026 only, as a one-time grace period). Missing this means waiting a full year for the next August exam cycle.</p>
+    <p><strong>August 1</strong> &mdash; Submitted papers and Foundations Essay both due.</p>
+    <p><strong>August</strong> &mdash; Oral engagement (15-minute presentation + 30-minute Q&amp;A with 3-faculty committee). The regular QE runs once per year in August only. <strong>January</strong> is available as a retake window for students who did not pass the prior August exam. A second attempt must occur within one calendar year of the first. If a student fails on the second attempt, the full CPAP faculty convenes to assess the student's overall performance and decide whether they should continue to candidacy.</p>
+
+    <div class="callout callout-warn">
+      <strong><span class="callout-icon">⚠️</span> Foundations Essay independence rule:</strong> You may not work with your advisor or any faculty member while writing the Foundations Essay. This rule is explicitly stated in the April 2026 update and applies to all students under the new system.
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div class="section" id="settings">
+    <div class="section-label">Configuration</div>
+    <h2>Settings &amp; appearance</h2>
+
+    <h3>Opening Settings</h3>
+    <p>Tap the <strong>Settings</strong> button in the top bar. The Settings panel slides in from the right and contains all configuration options.</p>
+
+    <h3>Start semester</h3>
+    <p>Set the semester you began the program. This controls how Planner semesters are labeled (e.g., Fall 2024, Spring 2025, and so on).</p>
+
+    <h3>Light / Dark mode</h3>
+    <p>Under <strong>Appearance</strong>, tap Light or Dark to switch themes. Light mode uses VT's maroon and burnt orange palette. Dark mode uses a neutral dark theme. Your preference is saved automatically.</p>
+
+    <h3>Disclaimer</h3>
+    <p>The full disclaimer is accessible in Settings. It covers the source documents, data privacy, and program accuracy notes. Read it at least once.</p>
+  </div>
+
+  <!-- SHARING -->
+  <div class="section" id="sharing">
+    <div class="section-label">Share &amp; export</div>
+    <h2>Sharing with your advisor</h2>
+    <p>Both sharing options are under <strong>Settings &rarr; Share &amp; Export</strong>.</p>
+
+    <h3>Copy share link</h3>
+    <p>This encodes your entire tracker state into a URL. Copy it and send it via email, Discord, or any messaging tool. When your advisor opens the link, they see your full tracker in <strong>read-only mode</strong> with an orange "Shared view &mdash; read only" banner at the top. Nothing installs, nothing downloads. Works on any device and any browser.</p>
+    <div class="callout callout-info">
+      <strong><span class="callout-icon">ℹ️</span> Note:</strong> If you update your tracker after sharing the link, the old link will no longer reflect your new progress. Generate a fresh link any time you want your advisor to see current data.
+    </div>
+
+    <h3>Print / Save as PDF</h3>
+    <p>Opens a clean, VT-branded progress report in a new browser tab. The report includes your credit summary, full semester plan, course completion checklist, and milestone checklist. Use your browser's print dialog (Ctrl+P on Windows, Cmd+P on Mac) to print or save it as a PDF.</p>
+  </div>
+
+  <!-- BACKUP -->
+  <div class="section" id="backup">
+    <div class="section-label">Data safety</div>
+    <h2>Backup &amp; restore</h2>
+
+    <div class="data-note">
+      Your progress is stored only in your browser's local storage. It will disappear if you clear your browser history or cache, switch to a different browser, use private/incognito mode, or move to a new computer without restoring first. Back up regularly.
+    </div>
+
+    <h3>Saving a backup</h3>
+    <p>Go to <strong>Settings &rarr; Backup &amp; Restore</strong> and click <strong>Download backup (.json)</strong>. This saves a small file to your computer containing your entire tracker state. Keep it somewhere reliable, such as your Documents folder or a cloud drive.</p>
+
+    <h3>Restoring from a backup</h3>
+    <p>In the same Backup &amp; Restore section, click <strong>Restore from file</strong> and select your saved .json file. Your tracker will load exactly as it was when you made the backup.</p>
+
+    <div class="callout callout-warn">
+      <strong><span class="callout-icon">⚠️</span> Lost progress cannot be recovered.</strong> There is no server backup. If you lose your local storage and have no .json file, your progress is gone. Back up after every significant update to your plan.
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section" id="faq">
+    <div class="section-label">Common questions</div>
+    <h2>Frequently asked questions</h2>
+    <div class="faq-list">
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Is this an official Virginia Tech tool? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>No. This is a personal project built by Dean Lefor for himself and his classmates. It is not affiliated with or endorsed by Virginia Tech or the CPAP program. Always confirm your plan with your advisor and the VT Graduate School.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Where is my data stored? Can anyone see it? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Your data is stored only in your browser's local storage on your own device. Nothing is sent to a server. Nobody else can see your progress unless you share a link or export a file yourself.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          I cleared my browser history and lost all my progress. Can I get it back? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Only if you have a .json backup file saved from before you cleared the data. There is no server-side storage, so progress that is gone from your browser cannot be recovered externally. This is why regular backups (Settings &rarr; Backup &amp; Restore &rarr; Download backup) are strongly recommended.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          The tracker does not open or shows a blank screen. What should I do? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). Make sure you are using a modern browser (Chrome, Firefox, Safari, or Edge). The tracker does not support Internet Explorer. If the issue continues, try opening it in a non-incognito browser window, since incognito mode blocks local storage and will prevent the app from loading correctly.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Does it work on my phone? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Yes. The tracker is responsive and works on mobile browsers. The Planner tab in particular is easier to use on a larger screen, but all features are accessible on a phone.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Can I use this on multiple devices? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Not automatically, since there is no account or sync. To move your progress to another device, download a .json backup on the first device, then restore it on the second device under Settings &rarr; Backup &amp; Restore. To keep two devices in sync, you would need to export and import each time you make significant updates.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          How do I share my plan with my advisor? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Two options are available under Settings &rarr; Share &amp; Export. <strong>Copy share link</strong> generates a URL your advisor can open in any browser to see a read-only view of your plan. <strong>Print / Save as PDF</strong> produces a formatted report they can review on-screen or print.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          I started before April 2026. Does the new QE system apply to me? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>That depends on your cohort and any transition agreements made by the program. The April 2026 Qualifying Examination &amp; Constellations update replaced the prior 3-of-5-fields exam, but students who entered before that change may be subject to different procedures. Contact your advisor and the CPAP Graduate Director to confirm which rules apply to you.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          What are the four constellations? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p><strong>Constellation I &mdash; Public Management:</strong> Management &amp; Leadership + Complex Organizations</p>
+          <p><strong>Constellation II &mdash; PA Foundations:</strong> Theory &amp; Context + Normative Foundations</p>
+          <p><strong>Constellation III &mdash; Public Policy:</strong> Public Policy Process + Policy Design + Policy Inquiry</p>
+          <p><strong>Constellation IV &mdash; Custom:</strong> Any two courses combined from Constellations I, II, or III</p>
+          <p>To sit for the QE, you must complete all courses in your chosen constellation plus at least 5 of the 7 total foundation courses.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          What is the QE request deadline and what happens if I miss it? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>The deadline is <strong>May 1</strong> each year (June 1 in 2026 only, as a one-time exception). The regular QE takes place once per year in <strong>August</strong> before the start of fall semester. If you miss the May 1 deadline, you must wait until the following year's cycle.</p>
+          <p><strong>January is a retake date only</strong>, available to students who did not pass the previous August exam. It is not an option for a first attempt. If you fail the August exam, you may retake it the following January or August, but the second attempt must occur within one calendar year of the first.</p>
+          <p>If a student does not pass on the second attempt, the full CPAP faculty convenes as a committee of the whole to review the student's entire performance and decide whether the student should continue to candidacy.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Can I get help from my advisor on the Foundations Essay? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>No. The April 2026 update explicitly prohibits working with your advisor or any faculty member while developing the Foundations Essay. It must be completed independently.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          When can I deliver my concentration lecture? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>The concentration lecture (PAPA 7964) must be scheduled after completing 9 research concentration hours and before your prospectus defense. Deadlines are <strong>December 1</strong> for fall semester and <strong>May 1</strong> for spring semester. It cannot be delivered in summer. You are responsible for assembling your own audience of at least 6 people.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          What is the DMP counter on the Dashboard? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>The Doctoral Mentoring Program (DMP) counter tracks your mentoring sessions. A minimum of 15 sessions is required. Use the + and &minus; buttons on the Dashboard to log sessions as you complete them. The progress bar shows how many you have completed out of 15.</p>
+          <p>Once you reach 15 sessions, you become eligible to register for 3 credits of the special DMP section of PAPA 7994 (Research and Dissertation). Those 3 credits count toward your 30 dissertation credit hours. You will work with the DMP instructor and Tyler Wiltshire on permission and registration for those credits when the time comes.</p>
+        </div>
+      </div>
+
+      <div class="faq-item">
+        <div class="faq-q">
+          Something in the tracker looks wrong. What should I do? <span class="faq-arrow">&#9654;</span>
+        </div>
+        <div class="faq-a">
+          <p>Let Dean know. The tracker is a living document and corrections are made as errors are found or the program requirements change. In the meantime, always verify requirements against the official CPAP Policy Guide and your advisor.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- DISCLAIMER -->
+  <div class="section" id="disclaimer">
+    <div class="section-label">Important</div>
+    <h2>Disclaimer</h2>
+    <p>This tracker is built from the <strong>November 2024 CPAP Policy Guide</strong> and the <strong>April 2026 Qualifying Examination &amp; Constellations update</strong> (approved April 23, 2026). It is meant for planning and tracking only, not as an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.</p>
+    <p>This tool is not affiliated with or endorsed by Virginia Tech. For safety and security reasons, none of your data is stored on a server. Your progress is saved only in your browser's local storage and will disappear if you clear your browser data or use private/incognito mode. Back up your data regularly using the .json export in Settings.</p>
+    <p>The constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.</p>
+    <p style="font-style:italic; color:var(--text3)">Finally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂</p>
+  </div>
+
+</div>
+
+<footer class="site-footer">
+  <p>PAPA PhD Tracker &middot; <a href="https://www.deanlefor.com/tracker.html">Open the tracker</a> &middot; <a href="https://www.deanlefor.com">deanlefor.com</a></p>
+  <p style="margin-top:6px">Built for Virginia Tech CPAP doctoral students. Not affiliated with or endorsed by Virginia Tech.</p>
+</footer>
+
+<script>
+  // FAQ accordion
+  document.querySelectorAll('.faq-q').forEach(q => {
+    q.addEventListener('click', () => {
+      const item = q.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item.open').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    });
+  });
+</script>
+</body>
+</html>
