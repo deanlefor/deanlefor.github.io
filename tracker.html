@@ -145,7 +145,8 @@ let s={
   dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
   assign:{},picker:null,showSettings:false,
   startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set(),
-  shareLinkCopied:false,darkMode:true,readOnly:false
+  shareLinkCopied:false,darkMode:true,readOnly:false,
+  userName:'',userEmail:''
 };
 
 // Dynamic term generation
@@ -197,6 +198,8 @@ function load(){
       if(d.darkMode!==undefined)s.darkMode=d.darkMode;
       if(d.startSem)s.startSem=d.startSem;
       if(d.startYear)s.startYear=d.startYear;
+      if(d.userName!==undefined)s.userName=d.userName;
+      if(d.userEmail!==undefined)s.userEmail=d.userEmail;
     }
   }catch(e){}
   if(Object.keys(s.assign).length===0) s.assign={};
@@ -214,6 +217,8 @@ function load(){
       if(d.startSem)s.startSem=d.startSem;
       if(d.startYear)s.startYear=d.startYear;
       if(d.darkMode!==undefined)s.darkMode=d.darkMode;
+      if(d.userName!==undefined)s.userName=d.userName;
+      if(d.userEmail!==undefined)s.userEmail=d.userEmail;
       s.readOnly=true;
     }
   }catch(e){}
@@ -221,7 +226,7 @@ function load(){
   R();
 }
 
-function sv(){if(s.readOnly)return;try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode}));}catch(e){}}
+function sv(){if(s.readOnly)return;try{localStorage.setItem(KEY,JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode,userName:s.userName,userEmail:s.userEmail}));}catch(e){}}
 
 // Render helpers
 function bar(v,m){const pct=Math.min(v/m*100,100),col=v>=m?GR:'var(--accent)';return`<div class="track"><div class="fill" style="width:${pct}%;background:${col}"></div></div>`;}
@@ -237,6 +242,14 @@ function ck(){return`<svg width="10" height="8" viewBox="0 0 10 8" fill="none"><
 function rSettings(){
   return`<div class="csec" style="margin-bottom:14px;border:1px solid ${BL}55">
     <div style="font-size:13px;font-weight:500;margin-bottom:12px">Program settings</div>
+    <div class="srow" style="margin-bottom:8px">
+      <span class="slbl">Your name</span>
+      <input type="text" value="${s.userName.replace(/"/g,'&quot;')}" oninput="s.userName=this.value;sv()" placeholder="e.g. Dean Lefor" style="flex:1;font-size:12px;padding:5px 8px;border:0.5px solid var(--bd2);border-radius:var(--rm);background:var(--bg1);color:var(--tx1);outline:none">
+    </div>
+    <div class="srow" style="margin-bottom:10px">
+      <span class="slbl">Email</span>
+      <input type="email" value="${s.userEmail.replace(/"/g,'&quot;')}" oninput="s.userEmail=this.value;sv()" placeholder="e.g. dean@vt.edu" style="flex:1;font-size:12px;padding:5px 8px;border:0.5px solid var(--bd2);border-radius:var(--rm);background:var(--bg1);color:var(--tx1);outline:none">
+    </div>
     <div class="srow">
       <span class="slbl">Start semester</span>
       <div style="display:flex;gap:4px">
@@ -379,7 +392,7 @@ function R(){
     <div class="tabs">${['dashboard','planner','courses','milestones'].map(t=>`<button class="tab ${s.tab===t?'on':''}" onclick="ST('${t}')">${t[0].toUpperCase()+t.slice(1)}</button>`).join('')}</div>
   </div>
   <div class="body">
-    ${s.readOnly?`<div style="background:#E5751F;color:white;padding:8px 18px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" aria-hidden="true"></i> Shared view — read only</div>`:''}
+    ${s.readOnly?`<div style="background:#E5751F;color:white;padding:8px 18px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" aria-hidden="true"></i> Shared view — read only${s.userName?` · ${s.userName}`:''}${s.userEmail?` · ${s.userEmail}`:''}</div>`:''}
     ${s.showSettings?rSettings():''}
     ${s.tab==='dashboard'?rDash():s.tab==='planner'?rPlanner():s.tab==='courses'?rCourses():rMile()}
   </div>`;
@@ -460,7 +473,7 @@ function saveRename(){
 }
 
 function copyShareLink(){
-  const data=JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode});
+  const data=JSON.stringify({done:[...s.done],mdone:[...s.mdone],dmp:s.dmp,assign:s.assign,names:s.names,termDone:[...s.termDone],startSem:s.startSem,startYear:s.startYear,darkMode:s.darkMode,userName:s.userName,userEmail:s.userEmail});
   const url=window.location.origin+window.location.pathname+'#view='+btoa(encodeURIComponent(data));
   navigator.clipboard.writeText(url).then(()=>{
     s.shareLinkCopied=true;R();
@@ -519,6 +532,7 @@ function generatePrintHTML(){
   <header style="background:#861F41;color:white;padding:20px 28px">
     <div style="font-size:10px;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-bottom:4px">Virginia Tech · Center for Public Administration and Policy</div>
     <div style="font-size:22px;font-weight:700">PAPA PhD Progress Report</div>
+    ${s.userName||s.userEmail?`<div style="font-size:13px;font-weight:500;margin-top:5px;opacity:.95">${[s.userName,s.userEmail].filter(Boolean).join(' · ')}</div>`:''}
     <div style="font-size:11px;opacity:.8;margin-top:4px">Start: ${startLabel} · Generated ${dateStr}</div>
   </header>
   <div style="padding:20px 28px">
