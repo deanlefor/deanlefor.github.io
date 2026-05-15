@@ -145,7 +145,7 @@ let s={
   dmp:0,open:new Set(['foundation','methods','electives','dissertation']),
   assign:{},picker:null,showSettings:false,
   startSem:'fall',startYear:2025,names:{},renaming:null,termDone:new Set(),
-  shareLinkCopied:false,darkMode:true,readOnly:false,
+  shareLinkCopied:false,darkMode:false,readOnly:false,
   userName:'',userEmail:''
 };
 
@@ -379,7 +379,7 @@ function rMile(){
 function R(){
   const{total}=tot();
   document.getElementById('app').innerHTML=`
-  <div class="topbar"><span style="font-size:13px;font-weight:500;color:var(--topbar-tx)">PAPA PhD Tracker</span><span style="font-size:11px;color:var(--topbar-link);margin-left:6px">${VERSION}</span><div style="display:flex;align-items:center;gap:14px"><a href="/tracker-guide.html" target="_blank">User Guide</a><a href="/">deanlefor.com</a></div></div>
+  <div class="topbar"><span style="font-size:13px;font-weight:700;color:var(--topbar-tx)">PAPA PhD Tracker</span><span style="font-size:11px;color:var(--topbar-link);margin-left:6px">${VERSION}</span><div style="display:flex;align-items:center;gap:14px"><a href="/tracker-guide.html" target="_blank">User Guide</a><a href="/">deanlefor.com</a></div></div>
   <div class="hdr">
     <div style="font-size:11px;color:var(--tx2);letter-spacing:.8px;text-transform:uppercase;margin-bottom:2px">Virginia Tech &#183; CPAP</div>
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:3px">
