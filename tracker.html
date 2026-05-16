@@ -60,7 +60,7 @@
 <script>
 const BL='#378ADD',GR='#639922',AM='#BA7517';
 const KEY='phd-tracker-v2';
-const VERSION='v1.02';
+const VERSION='v1.01';
 
 const DISCLAIMER=`This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nThe constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nFor safety and security reasons, none of this is stored on a server. I do not see your data and it is not saved anywhere other than on your computer. However, since your progress is saved in your browser’s local storage it will disappear if you clear your browser data or use private/incognito mode. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
 
@@ -288,7 +288,10 @@ function rSettings(){
 
     </div>
     <div style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px">
-      <div style="font-size:12px;font-weight:500;color:var(--tx2);margin-bottom:6px">Help</div>
+      <div style="font-size:12px;font-weight:500;color:#c0392b;margin-bottom:6px">Reset</div>
+      <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">Clears all courses, milestones, DMP sessions, semester assignments, and custom names. Your name, email, start semester, and appearance settings are kept. This cannot be undone.</div>
+      <button class="btn" onclick="resetAll()" style="border-color:#c0392b;color:#c0392b">&#9888; Reset all progress</button>
+    </div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">New to the tracker? The User Guide covers all features, milestones, and frequently asked questions.</div>
       <a href="/tracker-guide.html" target="_blank" style="display:inline-flex;align-items:center;gap:5px;background:var(--bg2);border:0.5px solid var(--bd2);border-radius:var(--rm);padding:5px 11px;font-size:12px;font-weight:500;color:var(--tx1);text-decoration:none"><i class="ti ti-book" style="font-size:13px" aria-hidden="true"></i> Open User Guide</a>
     </div>
@@ -449,6 +452,18 @@ function loadFromFile(input){
     }catch(e){alert('Could not read that file. Make sure it is a valid tracker backup (.json).');}
   };
   reader.readAsText(file);
+}
+
+function resetAll(){
+  if(!confirm('Reset all progress?\n\nThis will clear all completed courses, milestones, DMP sessions, semester assignments, and custom names.\n\nYour name, email, start semester, and appearance settings will be kept.\n\nThis cannot be undone.'))return;
+  s.done=new Set();
+  s.mdone=new Set();
+  s.dmp=0;
+  s.assign={};
+  s.names={};
+  s.termDone=new Set();
+  s.open=new Set(['foundation','methods','electives','dissertation']);
+  sv();R();
 }
 
 
