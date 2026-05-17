@@ -43,7 +43,7 @@
             min-height: 100dvh;
         }
 
-        /* ---- SCORE STRIP (persistent header) ---- */
+        /* ---- SCORE STRIP (tappable button) ---- */
         .score-strip {
             position: sticky;
             top: 0;
@@ -54,7 +54,13 @@
             grid-template-columns: repeat(3, 1fr);
             padding: 6px 10px;
             gap: 4px;
+            width: 100%;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            border: none;
+            text-align: left;
         }
+        .score-strip:active { background: var(--surface2); }
         .ss-cell {
             text-align: center;
             padding: 5px 2px;
@@ -132,54 +138,38 @@
         }
         .hint-btn:hover { color: var(--cream); }
 
-        /* ---- MAIN SCROLL AREA ---- */
-        .tab-content {
-            flex: 1;
-            overflow-y: auto;
-            padding: 14px 14px 86px;
+        /* ---- MAIN CONTENT ---- */
+        .main-content {
+            padding: 14px 14px 24px;
         }
 
-        /* ---- BOTTOM NAV ---- */
-        .bottom-nav {
+        /* ---- OVERLAY ---- */
+        .overlay-backdrop {
             position: fixed;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 520px;
-            background: var(--surface);
-            border-top: 1px solid var(--border);
-            display: flex;
-            z-index: 20;
-            padding-bottom: env(safe-area-inset-bottom, 0px);
-        }
-        .nav-btn {
-            flex: 1;
-            padding: 9px 4px 7px;
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.68rem;
-            font-weight: 600;
-            cursor: pointer;
+            inset: 0;
+            background: rgba(0,0,0,0.55);
+            z-index: 30;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 3px;
-            transition: color 0.15s;
-            -webkit-tap-highlight-color: transparent;
+            justify-content: flex-end;
         }
-        .nav-btn.active { color: var(--gold); }
-        .nav-btn svg { width: 22px; height: 22px; }
-        .nav-badge {
-            background: var(--gold);
-            color: var(--bg);
-            border-radius: 10px;
-            font-size: 0.6rem;
-            font-weight: 700;
-            padding: 1px 5px;
-            line-height: 1.4;
+        .overlay-sheet {
+            background: var(--bg);
+            border-radius: 18px 18px 0 0;
+            border-top: 1px solid var(--border);
+            max-height: 92dvh;
+            overflow-y: auto;
+            padding: 8px 14px 32px;
+            max-width: 520px;
+            width: 100%;
+            margin: 0 auto;
+        }
+        .overlay-handle {
+            width: 36px;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            margin: 0 auto 16px;
         }
 
         /* ---- CARDS ---- */
@@ -387,6 +377,7 @@
             pointer-events: none;
         }
         .toggle-pill.on { background: #1a5c38; }
+        .toggle-pill.warn.on { background: #8b2020; }
         .toggle-pill::after {
             content: '';
             position: absolute;
@@ -621,10 +612,11 @@
         { label: '♦ Diamonds', cls: 'red-suit'  },
     ];
 
-    const EMPTY_ROUND = { bidder: null, bid: '', trump: '', bidMade: true, meld: [null,null,null], tricks: [null,null,null] };
+    const EMPTY_ROUND = { bidder: null, bid: '', trump: '', bidMade: true, handThrown: false, meld: [null,null,null], tricks: [null,null,null] };
 
     function PinochleScorer() {
         const [tab,           setTab]           = useState('scores');
+        const [showScores,    setShowScores]    = useState(false);
         const [step,          setStep]          = useState(0);
         const [gameStarted,   setGameStarted]   = useState(false);
         const [players,       setPlayers]       = useState([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
@@ -701,17 +693,31 @@
             }
 
             setAutoFilledIdx(newAutoIdx);
-            setRound({ ...round, tricks: t });
+
+            // Auto-set bidMade once all tricks are known
+            let newBidMade = round.bidMade;
+            if (t.every(x => x !== null) && round.bidder !== null && round.bid) {
+                const bidderTricks = t[round.bidder];
+                const bidderMeld   = round.meld[round.bidder] ?? 0;
+                newBidMade = bidderTricks > 0 && (bidderMeld + bidderTricks) >= parseInt(round.bid, 10);
+            }
+
+            setRound({ ...round, tricks: t, bidMade: newBidMade });
         };
 
         const calcTotal = (r, i) => {
-            const tricks = r.tricks[i];
-            const meld   = r.meld[i] ?? 0;
-            const shutout = r.tricks.findIndex(t=>t===25);
-            if (!r.bidMade && i === r.bidder) return -(parseInt(r.bid,10)||0);
-            if (shutout !== -1) return i === shutout ? meld + (tricks??0) : (tricks??0);
+            // Bidder throws the hand: bidder goes negative, others keep meld, no tricks played
+            if (r.handThrown) {
+                if (i === r.bidder) return -(parseInt(r.bid, 10) || 0);
+                return r.meld[i] ?? 0;
+            }
+            const tricks  = r.tricks[i];
+            const meld    = r.meld[i] ?? 0;
+            const shutout = r.tricks.findIndex(t => t === 25);
+            if (!r.bidMade && i === r.bidder) return -(parseInt(r.bid, 10) || 0);
+            if (shutout !== -1) return i === shutout ? meld + (tricks ?? 0) : (tricks ?? 0);
             if (tricks !== null && tricks === 0) return 0;
-            return meld + (tricks??0);
+            return meld + (tricks ?? 0);
         };
 
         const submitRound = () => {
@@ -738,7 +744,6 @@
                 });
             }
             resetRound();
-            setTab('scores');
         };
 
         const undoLastRound = () => {
@@ -789,7 +794,7 @@
 
         return (
             <div>
-                <div className="score-strip">
+                <button className="score-strip" onClick={() => setShowScores(true)} aria-label="View scores and history">
                     {players.map((p,i) => (
                         <div key={i} className={`ss-cell ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
                             {dealer===i && <span className="ss-dealer-dot" title="Dealer" />}
@@ -797,114 +802,108 @@
                             <span className={`ss-score ${p.score<0?'neg':''}`}>{p.score}</span>
                         </div>
                     ))}
+                </button>
+
+                <div className="main-content">
+                    <RoundTab players={players} round={round} setRound={setRound}
+                        updateMeld={updateMeld} updateTricks={updateTricks} calcTotal={calcTotal}
+                        submitRound={submitRound} history={history} dealer={dealer} setDealer={setDealer}
+                        step={step} setStep={setStep} />
                 </div>
 
-                <div className="tab-content">
-                    {tab==='scores' && (
-                        <ScoresTab players={players} winner={winner} dealer={dealer} session={session}
-                            editingPlayer={editingPlayer} setEditingPlayer={setEditingPlayer}
-                            updateName={updateName} history={history} winningScore={winningScore}
-                            setWinningScore={setWinningScore}
-                            undoLastRound={undoLastRound} resetGame={resetGame} setTab={setTab} />
-                    )}
-                    {tab==='round' && (
-                        <RoundTab players={players} round={round} setRound={setRound}
-                            updateMeld={updateMeld} updateTricks={updateTricks} calcTotal={calcTotal}
-                            submitRound={submitRound} history={history} dealer={dealer} setDealer={setDealer}
-                            step={step} setStep={setStep} />
-                    )}
-                </div>
-
-                <nav className="bottom-nav">
-                    <button className={`nav-btn ${tab==='scores'?'active':''}`} onClick={()=>setTab('scores')}>
-                        <IcoScores /><span>Scores</span>
-                    </button>
-                    <button className={`nav-btn ${tab==='round'?'active':''}`} onClick={()=>setTab('round')}>
-                        <IcoRound />
-                        <span>Round <span className="nav-badge">{history.length+1}</span></span>
-                    </button>
-                </nav>
+                {showScores && (
+                    <ScoreOverlay
+                        players={players} winner={winner} dealer={dealer} session={session}
+                        editingPlayer={editingPlayer} setEditingPlayer={setEditingPlayer}
+                        updateName={updateName} history={history}
+                        undoLastRound={undoLastRound} resetGame={resetGame}
+                        onClose={() => setShowScores(false)} />
+                )}
             </div>
         );
     }
 
-    function ScoresTab({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, winningScore, setWinningScore, undoLastRound, resetGame, setTab }) {
+    function ScoreOverlay({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, undoLastRound, resetGame, onClose }) {
         const hasDefaultNames = players.some(p => /^Player [123]$/.test(p.name));
         return (
-            <div>
-                {winner && (
-                    <div className="winner-banner">
-                        <h2>🎉 {winner.name} Wins!</h2>
-                        <p>Final Score: {winner.score} points</p>
-                    </div>
-                )}
+            <div className="overlay-backdrop" onClick={onClose}>
+                <div className="overlay-sheet" onClick={e => e.stopPropagation()}>
+                    <div className="overlay-handle" />
 
-                <div className="score-grid">
-                    {players.map((p,i) => (
-                        <div key={i} className={`score-card ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
-                            {dealer===i && <span className="dealer-pip">Dealer</span>}
-                            <div className="sc-name">
-                                {editingPlayer===i ? (
-                                    <input type="text" value={p.name} autoFocus
-                                        onChange={e=>updateName(i,e.target.value)}
-                                        onBlur={()=>setEditingPlayer(null)}
-                                        onKeyDown={e=>e.key==='Enter'&&setEditingPlayer(null)} />
-                                ) : (
-                                    <span onClick={()=>setEditingPlayer(i)}>{p.name}</span>
-                                )}
-                            </div>
-                            <div className={`sc-score ${p.score<0?'neg':''}`}>{p.score}</div>
-                            <div className="sc-wins">{session.winTally[i]||0} win{session.winTally[i]!==1?'s':''}</div>
+                    {winner && (
+                        <div className="winner-banner">
+                            <h2>🎉 {winner.name} Wins!</h2>
+                            <p>Final Score: {winner.score} points</p>
                         </div>
-                    ))}
-                </div>
+                    )}
 
-                <button className="btn btn-gold" style={{marginBottom:10}} onClick={()=>setTab('round')}>
-                    + Enter Round {history.length+1}
-                </button>
-
-                <div className="card">
-                    <div className="card-title">Game Controls</div>
-                    <div className="control-row">
-                        <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
-                            <IcoUndo /> Undo Round
-                        </button>
-                        <button className="btn btn-danger" onClick={resetGame}>
-                            <IcoTrash /> New Game
-                        </button>
-                    </div>
-                </div>
-
-                {hasDefaultNames && (
-                    <div className="info-box">Tap any player name to rename them.</div>
-                )}
-
-                {history.length > 0 && (
-                    <div>
-                        <div className="card-title" style={{marginBottom:10}}>Score History</div>
-                        {[...history].reverse().map((r,ri) => (
-                            <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
-                                <div className="hc-header">
-                                    <span className="hc-round">Round {r.round}</span>
-                                    <span className="hc-meta">
-                                        {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
-                                    </span>
+                    <div className="score-grid">
+                        {players.map((p,i) => (
+                            <div key={i} className={`score-card ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
+                                {dealer===i && <span className="dealer-pip">Dealer</span>}
+                                <div className="sc-name">
+                                    {editingPlayer===i ? (
+                                        <input type="text" value={p.name} autoFocus
+                                            onChange={e=>updateName(i,e.target.value)}
+                                            onBlur={()=>setEditingPlayer(null)}
+                                            onKeyDown={e=>e.key==='Enter'&&setEditingPlayer(null)} />
+                                    ) : (
+                                        <span onClick={()=>setEditingPlayer(i)}>{p.name}</span>
+                                    )}
                                 </div>
-                                <div className="hc-scores">
-                                    {players.map((p,i) => (
-                                        <div key={i} className="hc-player">
-                                            <div className="hc-pname">{p.name}</div>
-                                            <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
-                                                {r.totals[i]>0&&'+'}{r.totals[i]}
-                                            </div>
-                                            <div className="hc-pdetail">M:{r.meld[i]??0} T:{r.tricks[i]??0}</div>
-                                        </div>
-                                    ))}
-                                </div>
+                                <div className={`sc-score ${p.score<0?'neg':''}`}>{p.score}</div>
+                                <div className="sc-wins">{session.winTally[i]||0} win{session.winTally[i]!==1?'s':''}</div>
                             </div>
                         ))}
                     </div>
-                )}
+
+                    <div className="card">
+                        <div className="card-title">Game Controls</div>
+                        <div className="control-row">
+                            <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
+                                <IcoUndo /> Undo Round
+                            </button>
+                            <button className="btn btn-danger" onClick={resetGame}>
+                                <IcoTrash /> New Game
+                            </button>
+                        </div>
+                    </div>
+
+                    {hasDefaultNames && (
+                        <div className="info-box">Tap any player name to rename them.</div>
+                    )}
+
+                    {history.length > 0 && (
+                        <div>
+                            <div className="card-title" style={{marginBottom:10}}>Score History</div>
+                            {[...history].reverse().map((r,ri) => (
+                                <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
+                                    <div className="hc-header">
+                                        <span className="hc-round">Round {r.round}</span>
+                                        <span className="hc-meta">
+                                            {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
+                                        </span>
+                                    </div>
+                                    <div className="hc-scores">
+                                        {players.map((p,i) => (
+                                            <div key={i} className="hc-player">
+                                                <div className="hc-pname">{p.name}</div>
+                                                <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
+                                                    {r.totals[i]>0&&'+'}{r.totals[i]}
+                                                </div>
+                                                <div className="hc-pdetail">M:{r.meld[i]??0} T:{r.tricks[i]??0}</div>
+                                            </div>
+                                        ))}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    {history.length === 0 && (
+                        <div className="empty-state">No rounds played yet.</div>
+                    )}
+                </div>
             </div>
         );
     }
@@ -981,9 +980,18 @@
                                 <div className="tc-label">Bid {round.bid} − Meld {bidderMeld}</div>
                             </div>
                         )}
+                        <div className="toggle-row" onClick={()=>setRound({...round, handThrown:!round.handThrown, tricks:[null,null,null]})}>
+                            <span className="toggle-label">Bidder Throws Hand?</span>
+                            <div className={`toggle-pill warn ${round.handThrown?'on':''}`} />
+                        </div>
+                        {round.handThrown && (
+                            <div className="info-box warn">Bidder goes −{round.bid||'bid'}. Other players keep their meld. No tricks played.</div>
+                        )}
                         <div className="step-nav">
                             <button className="btn-back" onClick={()=>setStep(0)}>← Back</button>
-                            <button className="btn-next" onClick={()=>setStep(2)}>Next: Tricks →</button>
+                            <button className="btn-next" onClick={()=>setStep(round.handThrown ? 3 : 2)}>
+                                {round.handThrown ? 'Preview →' : 'Next: Tricks →'}
+                            </button>
                         </div>
                     </div>
                 )}
@@ -1033,7 +1041,7 @@
                     <div>
                         <div className="card">
                             <div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:10}}>
-                                {round.trump||'No trump'} &bull; Bid {round.bid||'—'} by {round.bidder!==null?players[round.bidder]?.name:'—'} &bull; {round.bidMade?'Bid made ✓':'Bid failed ✗'}
+                                {round.trump||'No trump'} &bull; Bid {round.bid||'—'} by {round.bidder!==null?players[round.bidder]?.name:'—'} &bull; {round.handThrown ? '🚫 Hand thrown' : round.bidMade ? 'Bid made ✓' : 'Bid failed ✗'}
                             </div>
                             {players.map((p,i) => {
                                 const total = calcTotal(round,i);
@@ -1041,7 +1049,7 @@
                                     <div key={i} className="preview-row">
                                         <div>
                                             <div className="pr-name">{p.name}</div>
-                                            <div className="pr-detail">Meld {round.meld[i]??0} + Tricks {round.tricks[i]??'?'}</div>
+                                            <div className="pr-detail">Meld {round.meld[i]??0}{round.handThrown ? ' · No tricks' : ` + Tricks ${round.tricks[i]??'?'}`}</div>
                                         </div>
                                         <div className={`pr-total ${total<0?'neg':'pos'}`}>{total>0&&'+'}{total}</div>
                                     </div>
@@ -1049,7 +1057,7 @@
                             })}
                         </div>
                         <div className="step-nav">
-                            <button className="btn-back" onClick={()=>setStep(2)}>← Back</button>
+                            <button className="btn-back" onClick={()=>setStep(round.handThrown ? 1 : 2)}>← Back</button>
                             <button className="btn-next" onClick={submitRound}>Submit Round ✓</button>
                         </div>
                     </div>
