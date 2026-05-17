@@ -43,44 +43,94 @@
             min-height: 100dvh;
         }
 
-        /* ---- HEADER ---- */
-        .header {
+        /* ---- SCORE STRIP (persistent header) ---- */
+        .score-strip {
             position: sticky;
             top: 0;
             z-index: 20;
             background: var(--surface);
             border-bottom: 1px solid var(--border);
-            padding: 10px 16px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            padding: 6px 10px;
+            gap: 4px;
+        }
+        .ss-cell {
+            text-align: center;
+            padding: 5px 2px;
+            border-radius: 6px;
+            position: relative;
+        }
+        .ss-cell.is-dealer { background: rgba(91,155,213,0.12); }
+        .ss-cell.is-winner { background: rgba(201,168,76,0.12); }
+        .ss-name {
+            font-size: 0.62rem;
+            font-weight: 600;
+            color: var(--muted);
+            display: block;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .ss-score {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.25rem;
+            color: var(--gold);
+            display: block;
+            line-height: 1.1;
+        }
+        .ss-score.neg { color: var(--red); }
+        .ss-dealer-dot {
+            position: absolute;
+            top: 3px; right: 4px;
+            width: 5px; height: 5px;
+            border-radius: 50%;
+            background: var(--blue);
+        }
+
+        /* ---- PLAYING TO ROW (in Game Controls card) ---- */
+        .playing-to-row {
             display: flex;
             align-items: center;
             justify-content: space-between;
-        }
-        .header-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.15rem;
-            color: var(--gold);
-        }
-        .playing-to {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            font-size: 0.75rem;
-            color: var(--muted);
-        }
-        .playing-to input {
-            width: 54px;
             background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 10px 14px;
+            margin-bottom: 10px;
+            font-size: 0.875rem;
+        }
+        .playing-to-row input {
+            width: 64px;
+            background: var(--surface);
             border: 1px solid var(--border);
             border-radius: 6px;
             color: var(--cream);
             text-align: center;
-            padding: 5px 6px;
-            font-size: 0.8rem;
+            padding: 6px 8px;
+            font-size: 0.9rem;
             font-family: 'DM Sans', sans-serif;
             -webkit-appearance: none;
             outline: none;
         }
-        .playing-to input:focus { border-color: var(--gold); }
+        .playing-to-row input:focus { border-color: var(--gold); }
+
+        /* ---- HINT BUTTON ---- */
+        .hint-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.75rem;
+            cursor: pointer;
+            padding: 4px 0;
+            margin-bottom: 10px;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .hint-btn:hover { color: var(--cream); }
 
         /* ---- MAIN SCROLL AREA ---- */
         .tab-content {
@@ -516,6 +566,7 @@
         const [step,          setStep]          = useState(0);
         const [players,       setPlayers]       = useState([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
         const [round,         setRound]         = useState(EMPTY_ROUND);
+        const [autoFilledIdx, setAutoFilledIdx] = useState(null);
         const [history,       setHistory]       = useState([]);
         const [editingPlayer, setEditingPlayer] = useState(null);
         const [winningScore,  setWinningScore]  = useState(150);
@@ -549,7 +600,7 @@
             sessionStorage.setItem('pinochleSession', JSON.stringify(session));
         }, [session]);
 
-        const resetRound = () => { setRound(EMPTY_ROUND); setStep(0); };
+        const resetRound = () => { setRound(EMPTY_ROUND); setStep(0); setAutoFilledIdx(null); };
 
         const updateMeld = (i, v) => {
             const m = [...round.meld];
@@ -560,11 +611,31 @@
         const updateTricks = (i, v) => {
             const t = [...round.tricks];
             t[i] = v === '' ? null : parseInt(v, 10);
-            const filled = t.map((x,j)=>({j,x})).filter(e=>e.x!==null);
-            if (filled.length === 2) {
-                const empty = t.findIndex(x=>x===null);
-                if (empty !== -1) t[empty] = Math.max(0, 25 - filled.reduce((a,e)=>a+e.x, 0));
+
+            // If user edits the auto-filled field it becomes manual; clear the tracking
+            let newAutoIdx = (autoFilledIdx === i) ? null : autoFilledIdx;
+
+            if (t[i] === null && newAutoIdx !== null) {
+                // User cleared a field — also clear the auto-filled field so it doesn't linger
+                t[newAutoIdx] = null;
+                newAutoIdx = null;
+            } else {
+                // Determine which slot to auto-fill: the previously auto-filled one (so
+                // subsequent edits keep updating it), or the first empty slot if none yet
+                const targetIdx = newAutoIdx !== null ? newAutoIdx : t.findIndex(x => x === null);
+
+                if (targetIdx !== -1 && targetIdx !== i) {
+                    // Only auto-fill when the two non-target fields are both present
+                    const othersAllFilled = t.filter((x, j) => j !== targetIdx && x !== null).length === 2;
+                    if (othersAllFilled) {
+                        const sum = t.reduce((a, x, j) => j !== targetIdx ? a + (x ?? 0) : a, 0);
+                        t[targetIdx] = Math.max(0, 25 - sum);
+                        newAutoIdx = targetIdx;
+                    }
+                }
             }
+
+            setAutoFilledIdx(newAutoIdx);
             setRound({ ...round, tricks: t });
         };
 
@@ -613,6 +684,7 @@
             setHistory(history.slice(0,-1));
             setDealer(last.dealer);
             setRound({ bidder:last.bidder??null, bid:last.bid??'', trump:last.trump??'', bidMade:last.bidMade!==false, meld:[...last.meld], tricks:[...last.tricks] });
+            setAutoFilledIdx(null);
             if (session.recordedWinner !== null && (newPlayers[session.recordedWinner]?.score??0) < winningScore) {
                 setSession(prev => {
                     if (prev.recordedWinner===null) return prev;
@@ -639,21 +711,22 @@
 
         return (
             <div>
-                <div className="header">
-                    <span className="header-title">🃏 Pinochle</span>
-                    <div className="playing-to">
-                        <span>Playing to</span>
-                        <input type="number" value={winningScore}
-                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
-                        <span>pts</span>
-                    </div>
+                <div className="score-strip">
+                    {players.map((p,i) => (
+                        <div key={i} className={`ss-cell ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
+                            {dealer===i && <span className="ss-dealer-dot" title="Dealer" />}
+                            <span className="ss-name">{p.name}</span>
+                            <span className={`ss-score ${p.score<0?'neg':''}`}>{p.score}</span>
+                        </div>
+                    ))}
                 </div>
 
                 <div className="tab-content">
                     {tab==='scores' && (
                         <ScoresTab players={players} winner={winner} dealer={dealer} session={session}
                             editingPlayer={editingPlayer} setEditingPlayer={setEditingPlayer}
-                            updateName={updateName} history={history}
+                            updateName={updateName} history={history} winningScore={winningScore}
+                            setWinningScore={setWinningScore}
                             undoLastRound={undoLastRound} resetGame={resetGame} setTab={setTab} />
                     )}
                     {tab==='round' && (
@@ -677,7 +750,7 @@
         );
     }
 
-    function ScoresTab({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, undoLastRound, resetGame, setTab }) {
+    function ScoresTab({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, winningScore, setWinningScore, undoLastRound, resetGame, setTab }) {
         const hasDefaultNames = players.some(p => /^Player [123]$/.test(p.name));
         return (
             <div>
@@ -714,6 +787,12 @@
 
                 <div className="card">
                     <div className="card-title">Game Controls</div>
+                    <div className="playing-to-row">
+                        <span>Playing to</span>
+                        <input type="number" value={winningScore}
+                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
+                        <span>points</span>
+                    </div>
                     <div className="control-row">
                         <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
                             <IcoUndo /> Undo Round
@@ -759,6 +838,8 @@
     }
 
     function RoundTab({ players, round, setRound, updateMeld, updateTricks, calcTotal, submitRound, history, dealer, setDealer, step, setStep }) {
+        const [showTricksHint,   setShowTricksHint]   = useState(false);
+        const [showShutoutRule,  setShowShutoutRule]   = useState(false);
         const bidderMeld   = round.bidder!==null ? (round.meld[round.bidder] ?? 0) : 0;
         const tricksNeeded = round.bid && bidderMeld > 0
             ? Math.max(0, parseInt(round.bid) - bidderMeld)
@@ -851,7 +932,12 @@
                 {step===2 && (
                     <div>
                         <div className="card-title">Tricks</div>
-                        <div className="info-box">Enter any two players — the third auto-calculates to reach 25.</div>
+                        <button className="hint-btn" onClick={()=>setShowTricksHint(v=>!v)}>
+                            ⓘ {showTricksHint ? 'Hide hint' : 'How auto-calculate works'}
+                        </button>
+                        {showTricksHint && (
+                            <div className="info-box">Enter any two players — the third auto-calculates to reach 25.</div>
+                        )}
                         {players.map((p,i) => (
                             <div key={i} className="pi-row">
                                 <div className="pi-name">
@@ -870,9 +956,14 @@
                         {!round.bidMade && (
                             <div className="info-box warn">Bidder loses the bid amount. Others score meld + tricks normally.</div>
                         )}
-                        <div className="info-box">
-                            0 tricks = player loses their meld. Shutout rule: taking all 25 trick points means only that player keeps their meld.
-                        </div>
+                        <button className="hint-btn" onClick={()=>setShowShutoutRule(v=>!v)}>
+                            ⓘ {showShutoutRule ? 'Hide rules' : 'Scoring rules'}
+                        </button>
+                        {showShutoutRule && (
+                            <div className="info-box">
+                                0 tricks = player loses their meld. Shutout rule: taking all 25 trick points means only that player keeps their meld.
+                            </div>
+                        )}
                         <div className="step-nav">
                             <button className="btn-back" onClick={()=>setStep(1)}>← Back</button>
                             <button className="btn-next" onClick={()=>setStep(3)}>Preview →</button>
