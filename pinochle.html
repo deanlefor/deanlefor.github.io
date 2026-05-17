@@ -517,6 +517,68 @@
         .hc-pdetail { font-size: 0.62rem; color: var(--muted); }
 
         .empty-state { text-align: center; color: var(--muted); padding: 50px 20px; font-size: 0.9rem; line-height: 1.7; }
+
+        /* ---- SETUP SCREEN ---- */
+        .setup-screen {
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 32px 20px 40px;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+        .setup-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.2rem;
+            color: var(--gold);
+            margin-bottom: 4px;
+            text-align: center;
+        }
+        .setup-subtitle {
+            font-size: 0.8rem;
+            color: var(--muted);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        .setup-card {
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 18px 16px;
+            margin-bottom: 14px;
+        }
+        .setup-card-label {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 10px;
+        }
+        .setup-score-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .setup-score-row input {
+            width: 80px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--cream);
+            text-align: center;
+            padding: 10px 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            font-family: 'DM Sans', sans-serif;
+            -webkit-appearance: none;
+            outline: none;
+        }
+        .setup-score-row input:focus { border-color: var(--gold); }
+        .setup-score-row span { font-size: 0.875rem; color: var(--muted); }
     </style>
 </head>
 <body>
@@ -564,6 +626,7 @@
     function PinochleScorer() {
         const [tab,           setTab]           = useState('scores');
         const [step,          setStep]          = useState(0);
+        const [gameStarted,   setGameStarted]   = useState(false);
         const [players,       setPlayers]       = useState([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
         const [round,         setRound]         = useState(EMPTY_ROUND);
         const [autoFilledIdx, setAutoFilledIdx] = useState(null);
@@ -581,6 +644,8 @@
                     setHistory(d.history || []);
                     setWinningScore(d.winningScore || 150);
                     setDealer(d.dealer ?? 0);
+                    // Resume an in-progress game automatically
+                    if (d.gameStarted) setGameStarted(true);
                 }
             } catch(e) {}
             try {
@@ -593,8 +658,8 @@
         }, []);
 
         useEffect(() => {
-            localStorage.setItem('pinochleGame', JSON.stringify({ players, history, winningScore, dealer }));
-        }, [players, history, winningScore, dealer]);
+            localStorage.setItem('pinochleGame', JSON.stringify({ players, history, winningScore, dealer, gameStarted }));
+        }, [players, history, winningScore, dealer, gameStarted]);
 
         useEffect(() => {
             sessionStorage.setItem('pinochleSession', JSON.stringify(session));
@@ -696,11 +761,13 @@
 
         const resetGame = () => {
             if (!window.confirm('Reset the entire game? This cannot be undone.')) return;
-            setPlayers(players.map(p=>({...p,score:0})));
+            setPlayers([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
             resetRound();
             setHistory([]);
             setDealer(0);
+            setWinningScore(150);
             setSession(prev=>({...prev, recordedWinner:null}));
+            setGameStarted(false);
         };
 
         const updateName = (i, v) => {
@@ -708,6 +775,17 @@
         };
 
         const winner = players.find(p => p.score >= winningScore);
+
+        if (!gameStarted) {
+            return (
+                <SetupScreen
+                    players={players} updateName={updateName}
+                    dealer={dealer} setDealer={setDealer}
+                    winningScore={winningScore} setWinningScore={setWinningScore}
+                    onStart={() => setGameStarted(true)}
+                />
+            );
+        }
 
         return (
             <div>
@@ -787,12 +865,6 @@
 
                 <div className="card">
                     <div className="card-title">Game Controls</div>
-                    <div className="playing-to-row">
-                        <span>Playing to</span>
-                        <input type="number" value={winningScore}
-                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
-                        <span>points</span>
-                    </div>
                     <div className="control-row">
                         <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
                             <IcoUndo /> Undo Round
@@ -848,7 +920,7 @@
         return (
             <div>
                 <div className="round-hdr">
-                    <h2>Round {history.length+1}</h2>
+                    <h2>Round {history.length+1}{step > 0 ? ` — ${['Bid','Meld','Tricks','Preview'][step]}` : ' — Bid'}</h2>
                     <p>Dealer: {players[dealer]?.name}</p>
                 </div>
 
@@ -857,18 +929,6 @@
                         <div key={i} className={`step-dot ${i===step?'active':i<step?'done':''}`} title={s} />
                     ))}
                 </div>
-
-                {history.length===0 && step===0 && (
-                    <div className="dealer-prompt">
-                        <p>Who is dealing first?</p>
-                        <div className="choice-grid-3">
-                            {players.map((p,i) => (
-                                <button key={i} className={`dealer-btn ${dealer===i?'active':''}`}
-                                    onClick={()=>setDealer(i)}>{p.name}</button>
-                            ))}
-                        </div>
-                    </div>
-                )}
 
                 {step===0 && (
                     <div>
@@ -904,7 +964,6 @@
 
                 {step===1 && (
                     <div>
-                        <div className="card-title">Meld</div>
                         {players.map((p,i) => (
                             <div key={i} className="pi-row">
                                 <div className="pi-name">
@@ -931,7 +990,6 @@
 
                 {step===2 && (
                     <div>
-                        <div className="card-title">Tricks</div>
                         <button className="hint-btn" onClick={()=>setShowTricksHint(v=>!v)}>
                             ⓘ {showTricksHint ? 'Hide hint' : 'How auto-calculate works'}
                         </button>
@@ -1032,6 +1090,49 @@
                         </div>
                     </div>
                 ))}
+            </div>
+        );
+    }
+
+    function SetupScreen({ players, updateName, dealer, setDealer, winningScore, setWinningScore, onStart }) {
+        return (
+            <div className="setup-screen">
+                <div className="setup-title">🃏 Pinochle</div>
+                <div className="setup-subtitle">Score Keeper</div>
+
+                <div className="setup-card">
+                    <div className="setup-card-label">Player Names</div>
+                    {players.map((p, i) => (
+                        <div key={i} style={{marginBottom: i < 2 ? 8 : 0}}>
+                            <input type="text" value={p.name}
+                                onChange={e => updateName(i, e.target.value)}
+                                placeholder={`Player ${i+1}`} />
+                        </div>
+                    ))}
+                </div>
+
+                <div className="setup-card">
+                    <div className="setup-card-label">Who Deals First?</div>
+                    <div className="choice-grid-3">
+                        {players.map((p, i) => (
+                            <button key={i} className={`choice-btn ${dealer===i?'active':''}`}
+                                onClick={() => setDealer(i)}>{p.name}</button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="setup-card">
+                    <div className="setup-card-label">Playing To</div>
+                    <div className="setup-score-row">
+                        <input type="number" value={winningScore}
+                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
+                        <span>points to win</span>
+                    </div>
+                </div>
+
+                <button className="btn btn-gold" style={{width:'100%', marginTop:4}} onClick={onStart}>
+                    Start Game
+                </button>
             </div>
         );
     }
