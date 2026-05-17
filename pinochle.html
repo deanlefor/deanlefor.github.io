@@ -1,0 +1,951 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+    <title>Pinochle Score Keeper</title>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg:       #0d2218;
+            --surface:  #152e20;
+            --surface2: #1c3d2b;
+            --gold:     #c9a84c;
+            --gold-lt:  #e8c96e;
+            --cream:    #f0ead8;
+            --muted:    #8a9e8e;
+            --red:      #d9534f;
+            --blue:     #5b9bd5;
+            --border:   rgba(201,168,76,0.18);
+            --radius:   12px;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--cream);
+            min-height: 100dvh;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.02) 0%, transparent 60%),
+                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.015) 0%, transparent 50%);
+        }
+
+        #root {
+            max-width: 520px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            min-height: 100dvh;
+        }
+
+        /* ---- HEADER ---- */
+        .header {
+            position: sticky;
+            top: 0;
+            z-index: 20;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 10px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .header-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.15rem;
+            color: var(--gold);
+        }
+        .playing-to {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--muted);
+        }
+        .playing-to input {
+            width: 54px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--cream);
+            text-align: center;
+            padding: 5px 6px;
+            font-size: 0.8rem;
+            font-family: 'DM Sans', sans-serif;
+            -webkit-appearance: none;
+            outline: none;
+        }
+        .playing-to input:focus { border-color: var(--gold); }
+
+        /* ---- MAIN SCROLL AREA ---- */
+        .tab-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 14px 86px;
+        }
+
+        /* ---- BOTTOM NAV ---- */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 520px;
+            background: var(--surface);
+            border-top: 1px solid var(--border);
+            display: flex;
+            z-index: 20;
+            padding-bottom: env(safe-area-inset-bottom, 0px);
+        }
+        .nav-btn {
+            flex: 1;
+            padding: 9px 4px 7px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-size: 0.68rem;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 3px;
+            transition: color 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .nav-btn.active { color: var(--gold); }
+        .nav-btn svg { width: 22px; height: 22px; }
+        .nav-badge {
+            background: var(--gold);
+            color: var(--bg);
+            border-radius: 10px;
+            font-size: 0.6rem;
+            font-weight: 700;
+            padding: 1px 5px;
+            line-height: 1.4;
+        }
+
+        /* ---- CARDS ---- */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px;
+            margin-bottom: 12px;
+        }
+        .card-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1rem;
+            color: var(--gold);
+            margin-bottom: 12px;
+        }
+
+        /* ---- SCORE GRID ---- */
+        .score-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        .score-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px 8px;
+            text-align: center;
+            position: relative;
+            transition: border-color 0.2s;
+        }
+        .score-card.is-dealer { border-color: var(--blue); }
+        .score-card.is-winner { border-color: var(--gold); background: rgba(201,168,76,0.07); }
+        .dealer-pip {
+            position: absolute;
+            top: 5px; right: 5px;
+            font-size: 0.57rem;
+            font-weight: 700;
+            color: var(--blue);
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
+        }
+        .sc-name {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            margin-bottom: 5px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+        }
+        .sc-name:hover { color: var(--cream); }
+        .sc-name input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            border-bottom: 1px solid var(--gold);
+            color: var(--cream);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            font-family: 'DM Sans', sans-serif;
+            outline: none;
+        }
+        .sc-score {
+            font-family: 'Playfair Display', serif;
+            font-size: 2.1rem;
+            color: var(--gold);
+            line-height: 1;
+        }
+        .sc-score.neg { color: var(--red); }
+        .sc-wins {
+            font-size: 0.62rem;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        /* ---- WINNER BANNER ---- */
+        .winner-banner {
+            background: linear-gradient(135deg, var(--gold), var(--gold-lt));
+            border-radius: var(--radius);
+            padding: 14px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .winner-banner h2 {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.3rem;
+            color: var(--bg);
+        }
+        .winner-banner p { font-size: 0.82rem; color: var(--bg); opacity: 0.75; margin-top: 3px; }
+
+        /* ---- BUTTONS ---- */
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 12px 16px;
+            border-radius: 10px;
+            border: none;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.875rem;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            transition: opacity 0.15s, transform 0.1s;
+        }
+        .btn:active  { transform: scale(0.97); }
+        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
+        .btn-gold   { background: var(--gold); color: var(--bg); width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 700; }
+        .btn-amber  { background: #7a5a0a; color: #f0ead8; }
+        .btn-danger { background: #7a1f1f; color: #f0ead8; }
+        .btn-next   { background: var(--gold); color: var(--bg); font-weight: 700; flex: 2; padding: 13px; border-radius: 10px; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .btn-back   { background: transparent; border: 1px solid var(--border); color: var(--muted); flex: 1; padding: 13px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+
+        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+        /* ---- FORM ELEMENTS ---- */
+        .field { margin-bottom: 14px; }
+        .field-label {
+            display: block;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            margin-bottom: 7px;
+        }
+        input[type="number"],
+        input[type="text"] {
+            width: 100%;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            color: var(--cream);
+            padding: 12px 14px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            outline: none;
+            -webkit-appearance: none;
+            transition: border-color 0.15s;
+        }
+        input[type="number"]:focus,
+        input[type="text"]:focus { border-color: var(--gold); }
+        input.center { text-align: center; font-size: 1.3rem; font-weight: 700; padding: 11px 10px; }
+
+        /* ---- CHOICE BUTTONS ---- */
+        .choice-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+        .choice-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .choice-btn {
+            padding: 12px 8px;
+            border-radius: 9px;
+            border: 1px solid var(--border);
+            background: var(--bg);
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.82rem;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.15s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .choice-btn.active      { background: var(--gold);  color: var(--bg);   border-color: var(--gold); }
+        .choice-btn.active-red  { background: #b83030;      color: #fff;        border-color: #b83030; }
+        .choice-btn.red-suit    { color: #e06060; }
+        .choice-btn.blue-suit   { color: #7ab0e0; }
+
+        /* ---- PLAYER INPUT ROW ---- */
+        .pi-row {
+            display: grid;
+            grid-template-columns: 1fr 90px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        .pi-name { font-size: 0.9rem; font-weight: 500; }
+        .pi-sub  { font-size: 0.7rem; color: var(--muted); font-style: italic; }
+
+        /* ---- TOGGLE ---- */
+        .toggle-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 13px 14px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .toggle-label { font-size: 0.9rem; font-weight: 500; user-select: none; }
+        .toggle-pill {
+            width: 46px; height: 26px;
+            border-radius: 13px;
+            background: #5a1a1a;
+            position: relative;
+            transition: background 0.2s;
+            flex-shrink: 0;
+            pointer-events: none;
+        }
+        .toggle-pill.on { background: #1a5c38; }
+        .toggle-pill::after {
+            content: '';
+            position: absolute;
+            width: 20px; height: 20px;
+            background: white;
+            border-radius: 50%;
+            top: 3px; left: 3px;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+        }
+        .toggle-pill.on::after { transform: translateX(20px); }
+
+        /* ---- INFO BOXES ---- */
+        .info-box {
+            background: rgba(201,168,76,0.07);
+            border: 1px solid rgba(201,168,76,0.18);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.75rem;
+            color: var(--muted);
+            line-height: 1.55;
+            margin-bottom: 10px;
+        }
+        .info-box.warn {
+            background: rgba(217,83,79,0.07);
+            border-color: rgba(217,83,79,0.22);
+            color: #e89090;
+        }
+
+        /* ---- TRICKS CALC ---- */
+        .tricks-calc {
+            background: rgba(201,168,76,0.09);
+            border: 1px solid rgba(201,168,76,0.22);
+            border-radius: 9px;
+            padding: 12px;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        .tc-need  { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); line-height: 1; }
+        .tc-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
+
+        /* ---- PREVIEW ---- */
+        .preview-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 9px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .preview-row:last-child { border-bottom: none; }
+        .pr-name   { font-size: 0.85rem; font-weight: 500; }
+        .pr-detail { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
+        .pr-total  { font-family: 'Playfair Display', serif; font-size: 1.3rem; }
+        .pr-total.pos { color: var(--gold); }
+        .pr-total.neg { color: var(--red); }
+
+        /* ---- STEP NAV ---- */
+        .step-nav { display: flex; gap: 10px; margin-top: 14px; }
+        .step-dots {
+            display: flex;
+            justify-content: center;
+            gap: 7px;
+            margin-bottom: 18px;
+        }
+        .step-dot {
+            width: 7px; height: 7px;
+            border-radius: 50%;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            transition: all 0.2s;
+        }
+        .step-dot.active { background: var(--gold); border-color: var(--gold); width: 20px; border-radius: 4px; }
+        .step-dot.done   { background: #2a6642; border-color: #2a6642; }
+
+        /* ---- ROUND HEADER ---- */
+        .round-hdr { margin-bottom: 16px; }
+        .round-hdr h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; }
+        .round-hdr p  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+        /* ---- DEALER PROMPT ---- */
+        .dealer-prompt {
+            background: rgba(91,155,213,0.08);
+            border: 1px solid rgba(91,155,213,0.2);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 14px;
+        }
+        .dealer-prompt p { font-size: 0.78rem; color: var(--muted); text-align: center; margin-bottom: 9px; }
+        .dealer-btn {
+            padding: 11px 8px;
+            border-radius: 9px;
+            border: 1px solid rgba(91,155,213,0.25);
+            background: var(--bg);
+            color: var(--muted);
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 0.8rem;
+            cursor: pointer;
+            text-align: center;
+            -webkit-tap-highlight-color: transparent;
+            transition: all 0.15s;
+        }
+        .dealer-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
+
+        /* ---- HISTORY ---- */
+        .history-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .history-card.bust { border-color: rgba(217,83,79,0.3); background: rgba(217,83,79,0.04); }
+        .hc-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            margin-bottom: 9px;
+        }
+        .hc-round  { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+        .hc-meta   { font-size: 0.72rem; color: var(--muted); }
+        .hc-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+        .hc-player { text-align: center; }
+        .hc-pname  { font-size: 0.68rem; color: var(--muted); margin-bottom: 2px; }
+        .hc-ptotal { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
+        .hc-ptotal.pos { color: var(--gold); }
+        .hc-ptotal.neg { color: var(--red); }
+        .hc-pdetail { font-size: 0.62rem; color: var(--muted); }
+
+        .empty-state { text-align: center; color: var(--muted); padding: 50px 20px; font-size: 0.9rem; line-height: 1.7; }
+    </style>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel">
+    const { useState, useEffect } = React;
+
+    const IcoScores = () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="3" width="20" height="18" rx="2"/>
+            <path d="M8 10h8M8 14h5M8 6h8"/>
+        </svg>
+    );
+    const IcoRound = () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/>
+        </svg>
+    );
+    const IcoHistory = () => (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+            <path d="M12 7v5l4 2"/>
+        </svg>
+    );
+    const IcoUndo = () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
+        </svg>
+    );
+    const IcoTrash = () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
+        </svg>
+    );
+
+    const TRUMP_SUITS = [
+        { label: '♠ Spades',   cls: 'blue-suit' },
+        { label: '♥ Hearts',   cls: 'red-suit'  },
+        { label: '♣ Clubs',    cls: 'blue-suit' },
+        { label: '♦ Diamonds', cls: 'red-suit'  },
+    ];
+
+    const EMPTY_ROUND = { bidder: null, bid: '', trump: '', bidMade: true, meld: [null,null,null], tricks: [null,null,null] };
+
+    function PinochleScorer() {
+        const [tab,           setTab]           = useState('scores');
+        const [step,          setStep]          = useState(0);
+        const [players,       setPlayers]       = useState([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
+        const [round,         setRound]         = useState(EMPTY_ROUND);
+        const [history,       setHistory]       = useState([]);
+        const [editingPlayer, setEditingPlayer] = useState(null);
+        const [winningScore,  setWinningScore]  = useState(150);
+        const [dealer,        setDealer]        = useState(0);
+        const [session,       setSession]       = useState({ winTally:[0,0,0], recordedWinner:null });
+
+        useEffect(() => {
+            try {
+                const d = JSON.parse(localStorage.getItem('pinochleGame') || 'null');
+                if (d) {
+                    setPlayers(d.players || players);
+                    setHistory(d.history || []);
+                    setWinningScore(d.winningScore || 150);
+                    setDealer(d.dealer ?? 0);
+                }
+            } catch(e) {}
+            try {
+                const s = JSON.parse(sessionStorage.getItem('pinochleSession') || 'null');
+                if (s) setSession({
+                    winTally: Array.isArray(s.winTally) && s.winTally.length===3 ? s.winTally : [0,0,0],
+                    recordedWinner: Number.isInteger(s.recordedWinner) ? s.recordedWinner : null
+                });
+            } catch(e) {}
+        }, []);
+
+        useEffect(() => {
+            localStorage.setItem('pinochleGame', JSON.stringify({ players, history, winningScore, dealer }));
+        }, [players, history, winningScore, dealer]);
+
+        useEffect(() => {
+            sessionStorage.setItem('pinochleSession', JSON.stringify(session));
+        }, [session]);
+
+        const resetRound = () => { setRound(EMPTY_ROUND); setStep(0); };
+
+        const updateMeld = (i, v) => {
+            const m = [...round.meld];
+            m[i] = v === '' ? null : parseInt(v, 10);
+            setRound({ ...round, meld: m });
+        };
+
+        const updateTricks = (i, v) => {
+            const t = [...round.tricks];
+            t[i] = v === '' ? null : parseInt(v, 10);
+            const filled = t.map((x,j)=>({j,x})).filter(e=>e.x!==null);
+            if (filled.length === 2) {
+                const empty = t.findIndex(x=>x===null);
+                if (empty !== -1) t[empty] = Math.max(0, 25 - filled.reduce((a,e)=>a+e.x, 0));
+            }
+            setRound({ ...round, tricks: t });
+        };
+
+        const calcTotal = (r, i) => {
+            const tricks = r.tricks[i];
+            const meld   = r.meld[i] ?? 0;
+            const shutout = r.tricks.findIndex(t=>t===25);
+            if (!r.bidMade && i === r.bidder) return -(parseInt(r.bid,10)||0);
+            if (shutout !== -1) return i === shutout ? meld + (tricks??0) : (tricks??0);
+            if (tricks !== null && tricks === 0) return 0;
+            return meld + (tricks??0);
+        };
+
+        const submitRound = () => {
+            if (round.bidder === null) { alert('Please select who took the bid.'); return; }
+            const filled = round.tricks.filter(t=>t!==null);
+            if (filled.length === 3) {
+                const sum = filled.reduce((a,b)=>a+b, 0);
+                if (sum !== 25) { alert(`Tricks must total 25 (currently ${sum}). Please correct before submitting.`); return; }
+            }
+            const totals     = players.map((_,i) => calcTotal(round, i));
+            const newPlayers = players.map((p,i) => ({ ...p, score: p.score + totals[i] }));
+            const winnerIdx  = newPlayers.findIndex(p => p.score >= winningScore);
+            setPlayers(newPlayers);
+            setHistory([...history, {
+                round: history.length+1, dealer,
+                bidder: round.bidder, bid: round.bid, trump: round.trump, bidMade: round.bidMade,
+                meld: [...round.meld], tricks: [...round.tricks], totals
+            }]);
+            setDealer((dealer+1) % 3);
+            if (winnerIdx !== -1 && session.recordedWinner === null) {
+                setSession(prev => {
+                    const t = [...prev.winTally]; t[winnerIdx]++;
+                    return { winTally:t, recordedWinner:winnerIdx };
+                });
+            }
+            resetRound();
+            setTab('scores');
+        };
+
+        const undoLastRound = () => {
+            if (!history.length) return;
+            const last       = history[history.length-1];
+            const newPlayers = players.map((p,i) => ({ ...p, score: p.score - last.totals[i] }));
+            setPlayers(newPlayers);
+            setHistory(history.slice(0,-1));
+            setDealer(last.dealer);
+            setRound({ bidder:last.bidder??null, bid:last.bid??'', trump:last.trump??'', bidMade:last.bidMade!==false, meld:[...last.meld], tricks:[...last.tricks] });
+            if (session.recordedWinner !== null && (newPlayers[session.recordedWinner]?.score??0) < winningScore) {
+                setSession(prev => {
+                    if (prev.recordedWinner===null) return prev;
+                    const t = [...prev.winTally]; t[prev.recordedWinner] = Math.max(0, t[prev.recordedWinner]-1);
+                    return { winTally:t, recordedWinner:null };
+                });
+            }
+        };
+
+        const resetGame = () => {
+            if (!window.confirm('Reset the entire game? This cannot be undone.')) return;
+            setPlayers(players.map(p=>({...p,score:0})));
+            resetRound();
+            setHistory([]);
+            setDealer(0);
+            setSession(prev=>({...prev, recordedWinner:null}));
+        };
+
+        const updateName = (i, v) => {
+            const p = [...players]; p[i] = {...p[i], name:v}; setPlayers(p);
+        };
+
+        const winner = players.find(p => p.score >= winningScore);
+
+        return (
+            <div>
+                <div className="header">
+                    <span className="header-title">🃏 Pinochle</span>
+                    <div className="playing-to">
+                        <span>Playing to</span>
+                        <input type="number" value={winningScore}
+                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
+                        <span>pts</span>
+                    </div>
+                </div>
+
+                <div className="tab-content">
+                    {tab==='scores' && (
+                        <ScoresTab players={players} winner={winner} dealer={dealer} session={session}
+                            editingPlayer={editingPlayer} setEditingPlayer={setEditingPlayer}
+                            updateName={updateName} history={history}
+                            undoLastRound={undoLastRound} resetGame={resetGame} setTab={setTab} />
+                    )}
+                    {tab==='round' && (
+                        <RoundTab players={players} round={round} setRound={setRound}
+                            updateMeld={updateMeld} updateTricks={updateTricks} calcTotal={calcTotal}
+                            submitRound={submitRound} history={history} dealer={dealer} setDealer={setDealer}
+                            step={step} setStep={setStep} />
+                    )}
+                </div>
+
+                <nav className="bottom-nav">
+                    <button className={`nav-btn ${tab==='scores'?'active':''}`} onClick={()=>setTab('scores')}>
+                        <IcoScores /><span>Scores</span>
+                    </button>
+                    <button className={`nav-btn ${tab==='round'?'active':''}`} onClick={()=>setTab('round')}>
+                        <IcoRound />
+                        <span>Round <span className="nav-badge">{history.length+1}</span></span>
+                    </button>
+                </nav>
+            </div>
+        );
+    }
+
+    function ScoresTab({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, undoLastRound, resetGame, setTab }) {
+        const hasDefaultNames = players.some(p => /^Player [123]$/.test(p.name));
+        return (
+            <div>
+                {winner && (
+                    <div className="winner-banner">
+                        <h2>🎉 {winner.name} Wins!</h2>
+                        <p>Final Score: {winner.score} points</p>
+                    </div>
+                )}
+
+                <div className="score-grid">
+                    {players.map((p,i) => (
+                        <div key={i} className={`score-card ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
+                            {dealer===i && <span className="dealer-pip">Dealer</span>}
+                            <div className="sc-name">
+                                {editingPlayer===i ? (
+                                    <input type="text" value={p.name} autoFocus
+                                        onChange={e=>updateName(i,e.target.value)}
+                                        onBlur={()=>setEditingPlayer(null)}
+                                        onKeyDown={e=>e.key==='Enter'&&setEditingPlayer(null)} />
+                                ) : (
+                                    <span onClick={()=>setEditingPlayer(i)}>{p.name}</span>
+                                )}
+                            </div>
+                            <div className={`sc-score ${p.score<0?'neg':''}`}>{p.score}</div>
+                            <div className="sc-wins">{session.winTally[i]||0} win{session.winTally[i]!==1?'s':''}</div>
+                        </div>
+                    ))}
+                </div>
+
+                <button className="btn btn-gold" style={{marginBottom:10}} onClick={()=>setTab('round')}>
+                    + Enter Round {history.length+1}
+                </button>
+
+                <div className="card">
+                    <div className="card-title">Game Controls</div>
+                    <div className="control-row">
+                        <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
+                            <IcoUndo /> Undo Round
+                        </button>
+                        <button className="btn btn-danger" onClick={resetGame}>
+                            <IcoTrash /> New Game
+                        </button>
+                    </div>
+                </div>
+
+                {hasDefaultNames && (
+                    <div className="info-box">Tap any player name to rename them.</div>
+                )}
+
+                {history.length > 0 && (
+                    <div>
+                        <div className="card-title" style={{marginBottom:10}}>Score History</div>
+                        {[...history].reverse().map((r,ri) => (
+                            <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
+                                <div className="hc-header">
+                                    <span className="hc-round">Round {r.round}</span>
+                                    <span className="hc-meta">
+                                        {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
+                                    </span>
+                                </div>
+                                <div className="hc-scores">
+                                    {players.map((p,i) => (
+                                        <div key={i} className="hc-player">
+                                            <div className="hc-pname">{p.name}</div>
+                                            <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
+                                                {r.totals[i]>0&&'+'}{r.totals[i]}
+                                            </div>
+                                            <div className="hc-pdetail">M:{r.meld[i]??0} T:{r.tricks[i]??0}</div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    function RoundTab({ players, round, setRound, updateMeld, updateTricks, calcTotal, submitRound, history, dealer, setDealer, step, setStep }) {
+        const bidderMeld   = round.bidder!==null ? (round.meld[round.bidder] ?? 0) : 0;
+        const tricksNeeded = round.bid && bidderMeld > 0
+            ? Math.max(0, parseInt(round.bid) - bidderMeld)
+            : null;
+
+        return (
+            <div>
+                <div className="round-hdr">
+                    <h2>Round {history.length+1}</h2>
+                    <p>Dealer: {players[dealer]?.name}</p>
+                </div>
+
+                <div className="step-dots">
+                    {['Bid','Meld','Tricks','Submit'].map((s,i) => (
+                        <div key={i} className={`step-dot ${i===step?'active':i<step?'done':''}`} title={s} />
+                    ))}
+                </div>
+
+                {history.length===0 && step===0 && (
+                    <div className="dealer-prompt">
+                        <p>Who is dealing first?</p>
+                        <div className="choice-grid-3">
+                            {players.map((p,i) => (
+                                <button key={i} className={`dealer-btn ${dealer===i?'active':''}`}
+                                    onClick={()=>setDealer(i)}>{p.name}</button>
+                            ))}
+                        </div>
+                    </div>
+                )}
+
+                {step===0 && (
+                    <div>
+                        <div className="field">
+                            <span className="field-label">Who Took the Bid?</span>
+                            <div className="choice-grid-3">
+                                {players.map((p,i) => (
+                                    <button key={i} className={`choice-btn ${round.bidder===i?'active':''}`}
+                                        onClick={()=>setRound({...round,bidder:i})}>{p.name}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="field">
+                            <label className="field-label">Bid Amount</label>
+                            <input type="number" value={round.bid} placeholder="e.g. 25"
+                                onChange={e=>setRound({...round,bid:e.target.value})} />
+                        </div>
+                        <div className="field">
+                            <span className="field-label">Trump Suit</span>
+                            <div className="choice-grid-2">
+                                {TRUMP_SUITS.map(s => (
+                                    <button key={s.label}
+                                        className={`choice-btn ${s.cls} ${round.trump===s.label?(s.cls==='red-suit'?'active-red':'active'):''}`}
+                                        onClick={()=>setRound({...round,trump:s.label})}>{s.label}</button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="step-nav">
+                            <button className="btn-next" onClick={()=>setStep(1)}>Next: Meld →</button>
+                        </div>
+                    </div>
+                )}
+
+                {step===1 && (
+                    <div>
+                        <div className="card-title">Meld</div>
+                        {players.map((p,i) => (
+                            <div key={i} className="pi-row">
+                                <div className="pi-name">
+                                    {p.name}
+                                    {i===round.bidder && <div className="pi-sub">Bidder</div>}
+                                </div>
+                                <input type="number" className="center" value={round.meld[i]??''}
+                                    placeholder="0" onChange={e=>updateMeld(i,e.target.value)} />
+                            </div>
+                        ))}
+                        {tricksNeeded !== null && (
+                            <div className="tricks-calc">
+                                <div className="tc-label">{players[round.bidder]?.name} needs in tricks</div>
+                                <div className="tc-need">{tricksNeeded} pts</div>
+                                <div className="tc-label">Bid {round.bid} − Meld {bidderMeld}</div>
+                            </div>
+                        )}
+                        <div className="step-nav">
+                            <button className="btn-back" onClick={()=>setStep(0)}>← Back</button>
+                            <button className="btn-next" onClick={()=>setStep(2)}>Next: Tricks →</button>
+                        </div>
+                    </div>
+                )}
+
+                {step===2 && (
+                    <div>
+                        <div className="card-title">Tricks</div>
+                        <div className="info-box">Enter any two players — the third auto-calculates to reach 25.</div>
+                        {players.map((p,i) => (
+                            <div key={i} className="pi-row">
+                                <div className="pi-name">
+                                    {p.name}
+                                    {i===round.bidder && <div className="pi-sub">Bidder</div>}
+                                </div>
+                                <input type="number" className="center"
+                                    value={round.tricks[i]===null?'':round.tricks[i]}
+                                    placeholder="0" onChange={e=>updateTricks(i,e.target.value)} />
+                            </div>
+                        ))}
+                        <div className="toggle-row" onClick={()=>setRound({...round,bidMade:!round.bidMade})}>
+                            <span className="toggle-label">Bid Made?</span>
+                            <div className={`toggle-pill ${round.bidMade?'on':''}`} />
+                        </div>
+                        {!round.bidMade && (
+                            <div className="info-box warn">Bidder loses the bid amount. Others score meld + tricks normally.</div>
+                        )}
+                        <div className="info-box">
+                            0 tricks = player loses their meld. Shutout rule: taking all 25 trick points means only that player keeps their meld.
+                        </div>
+                        <div className="step-nav">
+                            <button className="btn-back" onClick={()=>setStep(1)}>← Back</button>
+                            <button className="btn-next" onClick={()=>setStep(3)}>Preview →</button>
+                        </div>
+                    </div>
+                )}
+
+                {step===3 && (
+                    <div>
+                        <div className="card">
+                            <div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:10}}>
+                                {round.trump||'No trump'} &bull; Bid {round.bid||'—'} by {round.bidder!==null?players[round.bidder]?.name:'—'} &bull; {round.bidMade?'Bid made ✓':'Bid failed ✗'}
+                            </div>
+                            {players.map((p,i) => {
+                                const total = calcTotal(round,i);
+                                return (
+                                    <div key={i} className="preview-row">
+                                        <div>
+                                            <div className="pr-name">{p.name}</div>
+                                            <div className="pr-detail">Meld {round.meld[i]??0} + Tricks {round.tricks[i]??'?'}</div>
+                                        </div>
+                                        <div className={`pr-total ${total<0?'neg':'pos'}`}>{total>0&&'+'}{total}</div>
+                                    </div>
+                                );
+                            })}
+                        </div>
+                        <div className="step-nav">
+                            <button className="btn-back" onClick={()=>setStep(2)}>← Back</button>
+                            <button className="btn-next" onClick={submitRound}>Submit Round ✓</button>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    function HistoryTab({ history, players }) {
+        if (!history.length) {
+            return (
+                <div className="empty-state">
+                    <div style={{fontSize:'2.5rem',marginBottom:10}}>🃏</div>
+                    No rounds played yet.<br/>Head to the Round tab to get started.
+                </div>
+            );
+        }
+        return (
+            <div>
+                {[...history].reverse().map((r,ri) => (
+                    <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
+                        <div className="hc-header">
+                            <span className="hc-round">Round {r.round}</span>
+                            <span className="hc-meta">
+                                {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
+                            </span>
+                        </div>
+                        <div className="hc-scores">
+                            {players.map((p,i) => (
+                                <div key={i} className="hc-player">
+                                    <div className="hc-pname">{p.name}</div>
+                                    <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
+                                        {r.totals[i]>0&&'+'}{r.totals[i]}
+                                    </div>
+                                    <div className="hc-pdetail">M:{r.meld[i]} T:{r.tricks[i]}</div>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                ))}
+            </div>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')).render(<PinochleScorer />);
+</script>
+</body>
+</html>
