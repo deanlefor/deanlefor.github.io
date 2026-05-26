@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Running Across North Dakota</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#141210;--surf:#1e1c17;--card:#252218;--bdr:#3a3528;
+  --amber:#e8a020;--amber-dk:#9a6810;--teal:#2ec4b6;
+  --green:#76c442;--text:#f0e6c8;--muted:#7a6e58;--danger:#e05c48;
+}
+body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-serif;min-height:100vh}
+
+.hdr{padding:.875rem 1.25rem .75rem;border-bottom:1px solid var(--bdr);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.hdr-title{font-family:'Oswald',sans-serif;font-size:1.4rem;font-weight:600;color:var(--amber);text-transform:uppercase;letter-spacing:.06em}
+.hdr-sub{font-family:'IBM Plex Mono',monospace;font-size:.74rem;color:var(--muted);margin-top:3px}
+.hdr-right{text-align:right;font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--muted)}
+.hdr-right strong{color:var(--amber);font-size:1.15rem}
+.loc-badge{display:inline-block;background:rgba(232,160,32,.1);border:1px solid rgba(232,160,32,.2);border-radius:3px;padding:2px 7px;font-size:.72rem;color:var(--amber);margin-top:3px}
+
+#map{height:340px;width:100%;background:#141210}
+.prog-bar{height:3px;background:var(--bdr)}
+.prog-fill{height:100%;background:var(--amber);transition:width .6s ease}
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);border-bottom:1px solid var(--bdr)}
+.stat{padding:.75rem 1rem;border-right:1px solid var(--bdr);text-align:center}
+.stat:last-child{border-right:none}
+.stat-v{font-family:'IBM Plex Mono',monospace;font-size:1.45rem;font-weight:500;color:var(--amber);display:block;line-height:1}
+.stat-l{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;margin-top:4px;display:block}
+
+.main{display:grid;grid-template-columns:1fr 1fr}
+.panel{padding:1.1rem 1.25rem;border-right:1px solid var(--bdr);border-bottom:1px solid var(--bdr)}
+.panel:last-child{border-right:none}
+.ptitle{font-family:'Oswald',sans-serif;font-size:.7rem;font-weight:500;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:.875rem}
+
+.c25k-wrap{display:flex;flex-direction:column;gap:5px}
+.c25k-row{display:grid;grid-template-columns:36px 1fr 1fr 1fr;align-items:center;gap:5px}
+.wlbl{font-family:'IBM Plex Mono',monospace;font-size:.68rem;color:var(--muted)}
+.cday{display:flex;align-items:center;justify-content:center;height:26px;border-radius:5px;border:1px solid var(--bdr);background:var(--surf);cursor:pointer;font-size:.72rem;color:var(--muted);font-family:'IBM Plex Mono',monospace;transition:all .12s;user-select:none}
+.cday:hover{border-color:var(--amber-dk);color:var(--amber)}
+.cday.done{background:#1c2b0e;border-color:#3a5a18;color:var(--green)}
+.c25k-banner{display:none;background:#1c2b0e;border:1px solid #3a5a18;border-radius:6px;padding:.6rem 1rem;color:var(--green);font-family:'Oswald',sans-serif;font-size:.9rem;text-align:center;letter-spacing:.04em}
+
+.fg{margin-bottom:.8rem}
+.fl{display:block;font-size:.7rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-bottom:.3rem}
+.fi{width:100%;background:var(--surf);border:1px solid var(--bdr);border-radius:5px;padding:.45rem .7rem;color:var(--text);font-family:'Source Sans 3',sans-serif;font-size:.9rem;outline:none}
+.fi:focus{border-color:var(--amber-dk)}
+.fi::placeholder{color:var(--muted)}
+.feel-row{display:flex;gap:.4rem}
+.fbtn{flex:1;padding:.35rem .25rem;background:var(--surf);border:1px solid var(--bdr);border-radius:5px;color:var(--muted);cursor:pointer;font-size:.82rem;text-align:center;transition:all .12s;font-family:'Source Sans 3',sans-serif}
+.fbtn:hover,.fbtn.active{border-color:var(--amber-dk);color:var(--text);background:#2a2518}
+.submit{width:100%;padding:.6rem;background:var(--amber);color:#141210;border:none;border-radius:5px;font-family:'Oswald',sans-serif;font-size:.95rem;font-weight:600;text-transform:uppercase;letter-spacing:.08em;cursor:pointer;transition:background .12s;margin-top:.2rem}
+.submit:hover{background:#f0b030}
+.c25k-selects{display:flex;gap:.4rem}
+.c25k-selects .fi{flex:1}
+
+.hist{padding:1.1rem 1.25rem}
+.run{display:grid;grid-template-columns:95px 62px 1fr 24px 28px;align-items:center;gap:.6rem;padding:.55rem 0;border-bottom:1px solid var(--bdr);font-size:.88rem}
+.run:last-child{border-bottom:none}
+.rdate{font-family:'IBM Plex Mono',monospace;font-size:.77rem;color:var(--muted)}
+.rmiles{font-family:'IBM Plex Mono',monospace;font-weight:500;color:var(--amber)}
+.rnotes{color:var(--muted);font-size:.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rdel{background:none;border:none;color:var(--muted);cursor:pointer;font-size:1.1rem;padding:0;line-height:1;opacity:.45;transition:all .12s}
+.rdel:hover{color:var(--danger);opacity:1}
+.empty{color:var(--muted);font-size:.88rem;text-align:center;padding:1.5rem 0}
+
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+
+@media(max-width:580px){
+  .main{grid-template-columns:1fr}
+  .panel{border-right:none}
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .stat:nth-child(2){border-right:none}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div>
+    <div class="hdr-title">Running Across North Dakota</div>
+    <div class="hdr-sub">Fargo &rarr; Montana Border &middot; 440 miles</div>
+  </div>
+  <div class="hdr-right">
+    <strong id="hdr-miles">0.0</strong> miles logged<br>
+    <span class="loc-badge" id="hdr-loc">Start: Fargo, ND</span>
+  </div>
+</header>
+
+<div id="map"></div>
+<div class="prog-bar"><div class="prog-fill" id="prog" style="width:0%"></div></div>
+
+<div class="stats">
+  <div class="stat"><span class="stat-v" id="sv-miles">0.0</span><span class="stat-l">Miles Logged</span></div>
+  <div class="stat"><span class="stat-v" id="sv-runs">0</span><span class="stat-l">Total Runs</span></div>
+  <div class="stat"><span class="stat-v" id="sv-c25k">0/27</span><span class="stat-l">C25K Progress</span></div>
+  <div class="stat"><span class="stat-v" id="sv-left">440</span><span class="stat-l">Miles to Go</span></div>
+</div>
+
+<div class="main">
+  <div class="panel">
+    <div class="ptitle">C25K Program &mdash; 27 Workouts</div>
+    <div id="c25k-banner" class="c25k-banner">&#10003; C25K Complete &mdash; Keep on Running!</div>
+    <div class="c25k-wrap" id="c25k-grid"></div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle">Log a Run</div>
+    <div class="fg">
+      <label class="fl">Date</label>
+      <input type="date" id="f-date" class="fi">
+    </div>
+    <div class="fg">
+      <label class="fl">Distance (miles)</label>
+      <input type="number" id="f-miles" class="fi" placeholder="0.0" step="0.1" min="0.01">
+    </div>
+    <div class="fg">
+      <label class="fl">How did it feel?</label>
+      <div class="feel-row">
+        <button type="button" class="fbtn" data-f="great" onclick="selFeel('great')">&#x1F4AA; Strong</button>
+        <button type="button" class="fbtn active" data-f="ok" onclick="selFeel('ok')">&#x1F44D; Solid</button>
+        <button type="button" class="fbtn" data-f="tough" onclick="selFeel('tough')">&#x1F624; Tough</button>
+      </div>
+    </div>
+    <div class="fg">
+      <label class="fl">Notes (optional)</label>
+      <input type="text" id="f-notes" class="fi" placeholder="Route, weather, thoughts...">
+    </div>
+    <div class="fg">
+      <label class="fl">C25K Workout?</label>
+      <div class="c25k-selects">
+        <select id="f-week" class="fi" onchange="onC25KSelect()">
+          <option value="">Not C25K</option>
+          <option value="1">Week 1</option><option value="2">Week 2</option>
+          <option value="3">Week 3</option><option value="4">Week 4</option>
+          <option value="5">Week 5</option><option value="6">Week 6</option>
+          <option value="7">Week 7</option><option value="8">Week 8</option>
+          <option value="9">Week 9</option>
+        </select>
+        <select id="f-day" class="fi" onchange="onC25KSelect()">
+          <option value="">Day</option>
+          <option value="1">Day 1</option>
+          <option value="2">Day 2</option>
+          <option value="3">Day 3</option>
+        </select>
+      </div>
+    </div>
+    <button type="button" class="submit" onclick="logRun()">Log This Run &rarr;</button>
+  </div>
+</div>
+
+<div class="hist">
+  <div class="ptitle" style="margin-bottom:.6rem">Run History</div>
+  <div id="run-hist"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.min.js"></script>
+<script>
+// ── Route ─────────────────────────────────────────────────────────────────────
+const COORDS = [
+  [46.8772,-96.7898],  // Fargo
+  [46.9236,-98.0036],  // Valley City
+  [46.9065,-98.7081],  // Jamestown
+  [46.8083,-100.7837], // Bismarck
+  [46.8261,-100.8893], // Mandan
+  [46.8491,-101.4138], // New Salem
+  [46.7731,-102.6716], // Lefor ★
+  [46.8792,-102.7930], // Dickinson
+  [46.8880,-103.1972], // Belfield
+  [46.9158,-103.5177], // Medora
+  [46.9000,-104.0489]  // Montana Border
+];
+const LABELS = ['Fargo','Valley City','Jamestown','Bismarck','Mandan',
+                'New Salem','Lefor \u2605','Dickinson','Belfield','Medora','Montana'];
+const TOTAL = 440;
+
+// Estimated C25K distances per workout [week][day]
+const C25K_DIST = [
+  [1.5,1.5,1.5],[1.6,1.6,1.6],[1.8,1.8,1.8],
+  [2.0,2.0,2.0],[2.2,2.4,2.8],[2.5,2.8,3.0],
+  [2.8,2.8,2.8],[3.0,3.0,3.0],[3.1,3.1,3.1]
+];
+
+// ── Geometry ──────────────────────────────────────────────────────────────────
+function hav(a,b,c,d){
+  const R=3959,dL=(c-a)*Math.PI/180,dO=(d-b)*Math.PI/180;
+  const q=Math.sin(dL/2)**2+Math.cos(a*Math.PI/180)*Math.cos(c*Math.PI/180)*Math.sin(dO/2)**2;
+  return 2*R*Math.asin(Math.sqrt(q));
+}
+const rawSegs = COORDS.slice(0,-1).map((c,i)=>hav(c[0],c[1],COORDS[i+1][0],COORDS[i+1][1]));
+const rawTotal = rawSegs.reduce((a,b)=>a+b,0);
+const segs = rawSegs.map(s=>s*TOTAL/rawTotal);
+
+function posOnRoute(miles){
+  let rem=Math.min(miles,TOTAL);
+  for(let i=0;i<segs.length;i++){
+    if(rem<=segs[i]){
+      const t=rem/segs[i];
+      return [COORDS[i][0]+t*(COORDS[i+1][0]-COORDS[i][0]),
+              COORDS[i][1]+t*(COORDS[i+1][1]-COORDS[i][1])];
+    }
+    rem-=segs[i];
+  }
+  return COORDS[COORDS.length-1];
+}
+
+function cityFor(miles){
+  if(miles<=0) return 'Start: Fargo, ND';
+  let cum=0;
+  for(let i=0;i<segs.length;i++){
+    const next=cum+segs[i];
+    if(miles<next){
+      const frac=(miles-cum)/segs[i];
+      if(frac<0.15) return i===0?'Departing Fargo':`Near ${LABELS[i]}`;
+      if(frac>0.85) return `Approaching ${LABELS[i+1]}`;
+      return `${LABELS[i]} \u2192 ${LABELS[i+1]}`;
+    }
+    cum=next;
+  }
+  return 'Montana Border \u2605';
+}
+
+// ── Storage (localStorage with in-memory fallback) ────────────────────────────
+let _mem={runs:[],c25k:{}};
+function load(){
+  try{
+    const s=localStorage.getItem('nd-run');
+    if(s) return JSON.parse(s);
+  }catch(e){}
+  return _mem;
+}
+function save(d){
+  _mem=d;
+  try{localStorage.setItem('nd-run',JSON.stringify(d))}catch(e){}
+}
+function getD(){const d=load();d.runs=d.runs||[];d.c25k=d.c25k||{};return d}
+
+// ── Map ───────────────────────────────────────────────────────────────────────
+let map=null;
+let progLine=null;
+let runner=null;
+
+function initMap(){
+  const mapEl=document.getElementById('map');
+  if(!window.L){
+    mapEl.innerHTML='<div class="empty">Map unavailable right now, but your runs will still log.</div>';
+    return;
+  }
+
+  try{
+    map=L.map('map',{
+      zoomControl:false,scrollWheelZoom:false,dragging:false,
+      touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false
+    });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
+      attribution:'&copy; <a href="https://openstreetmap.org">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+      subdomains:'abcd',maxZoom:16
+    }).addTo(map);
+    map.fitBounds([[45.9,-104.2],[49.1,-96.4]]);
+
+    L.polyline(COORDS,{color:'#3a3020',weight:4,opacity:1}).addTo(map);
+    progLine=L.polyline([],{color:'#e8a020',weight:4,opacity:.9}).addTo(map);
+
+    const SHOW_LBL=[0,3,6,10]; // Fargo, Bismarck, Lefor, Montana
+    COORDS.forEach((c,i)=>{
+      const isLefor=(i===6);
+      L.circleMarker(c,{
+        radius:isLefor?6:3,
+        fillColor:isLefor?'#e8a020':'#4a4030',
+        color:isLefor?'#f0c060':'#3a3020',
+        weight:1,fillOpacity:1
+      }).addTo(map);
+      if(SHOW_LBL.includes(i)){
+        L.tooltip({permanent:true,direction:'top',className:'clbl'})
+         .setContent(LABELS[i]).setLatLng(c).addTo(map);
+      }
+    });
+
+    const icon=L.divIcon({
+      html:`<div style="background:#e8a020;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:12px;border:2px solid #f0c060;animation:pulse 2s infinite">&#x1F3C3;</div>`,
+      iconSize:[22,22],iconAnchor:[11,11],className:''
+    });
+    runner=L.marker(COORDS[0],{icon}).addTo(map);
+
+    const ts=document.createElement('style');
+    ts.textContent=`.clbl{background:rgba(14,12,9,.92)!important;border:1px solid #3a3020!important;color:#7a6e58!important;font-family:'IBM Plex Mono',monospace!important;font-size:10px!important;border-radius:3px!important;padding:2px 6px!important;box-shadow:none!important;}.clbl::before{display:none!important}`;
+    document.head.appendChild(ts);
+  }catch(e){
+    console.error('Map init failed:',e);
+    map=null;
+    progLine=null;
+    runner=null;
+    mapEl.innerHTML='<div class="empty">Map unavailable right now, but your runs will still log.</div>';
+  }
+}
+
+// ── C25K Grid ─────────────────────────────────────────────────────────────────
+function buildGrid(){
+  const d=getD();
+  const grid=document.getElementById('c25k-grid');
+  const banner=document.getElementById('c25k-banner');
+  grid.innerHTML='';
+  let done=0;
+  for(let w=1;w<=9;w++){
+    const row=document.createElement('div');
+    row.className='c25k-row';
+    const lbl=document.createElement('div');
+    lbl.className='wlbl';lbl.textContent=`Wk${w}`;
+    row.appendChild(lbl);
+    for(let day=1;day<=3;day++){
+      const k=`w${w}d${day}`;
+      const isDone=!!d.c25k[k];
+      if(isDone)done++;
+      const cell=document.createElement('div');
+      cell.className='cday'+(isDone?' done':'');
+      cell.textContent=isDone?`\u2713 D${day}`:`D${day}`;
+      cell.title=`Week ${w}, Day ${day} \u2014 est. ${C25K_DIST[w-1][day-1]} mi`;
+      cell.onclick=()=>toggleC25K(w,day);
+      row.appendChild(cell);
+    }
+    grid.appendChild(row);
+  }
+  if(done===27){banner.style.display='block';grid.style.display='none';}
+  else{banner.style.display='none';grid.style.display='flex';}
+}
+
+function toggleC25K(w,day){
+  const d=getD(),k=`w${w}d${day}`;
+  d.c25k[k]?delete d.c25k[k]:(d.c25k[k]=true);
+  save(d);buildGrid();refresh();
+}
+
+// ── Form ──────────────────────────────────────────────────────────────────────
+let feeling='ok';
+function selFeel(f){
+  feeling=f;
+  document.querySelectorAll('.fbtn').forEach(b=>b.classList.toggle('active',b.dataset.f===f));
+}
+
+function onC25KSelect(){
+  const w=parseInt(document.getElementById('f-week').value);
+  const day=parseInt(document.getElementById('f-day').value);
+  if(w&&day){
+    const fld=document.getElementById('f-miles');
+    if(!fld.value||parseFloat(fld.value)===0) fld.value=C25K_DIST[w-1][day-1];
+  }
+}
+
+function showMsg(msg,color){
+  let el=document.getElementById('log-msg');
+  if(!el){el=document.createElement('div');el.id='log-msg';
+    el.style.cssText='font-size:.82rem;margin-top:.5rem;padding:.35rem .6rem;border-radius:4px;text-align:center;transition:opacity .4s';
+    document.querySelector('.submit').insertAdjacentElement('afterend',el);}
+  el.textContent=msg;
+  el.style.background=color==='ok'?'#1c2b0e':'#2b0e0e';
+  el.style.color=color==='ok'?'var(--green)':'var(--danger)';
+  el.style.opacity='1';
+  clearTimeout(el._t);el._t=setTimeout(()=>{el.style.opacity='0'},2500);
+}
+
+function esc(s){
+  return String(s).replace(/[&<>"']/g,ch=>({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#39;'
+  })[ch]);
+}
+
+function logRun(){
+  const miles=parseFloat(document.getElementById('f-miles').value);
+  const date=document.getElementById('f-date').value;
+  const notes=document.getElementById('f-notes').value.trim();
+  const w=document.getElementById('f-week').value;
+  const day=document.getElementById('f-day').value;
+  if(!miles||miles<=0){showMsg('Please enter a distance.','err');return;}
+  if(!date){showMsg('Please enter a date.','err');return;}
+
+  const d=getD();
+  if(w&&day) d.c25k[`w${w}d${day}`]=true;
+  d.runs.unshift({id:Date.now(),date,miles,feeling,notes,w:w?+w:null,day:day?+day:null});
+  save(d);
+
+  document.getElementById('f-miles').value='';
+  document.getElementById('f-notes').value='';
+  document.getElementById('f-week').value='';
+  document.getElementById('f-day').value='';
+  document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+  selFeel('ok');
+  const total=d.runs.reduce((s,r)=>s+r.miles,0);
+  showMsg('\u2713 '+miles.toFixed(1)+' mi logged \u2014 '+cityFor(total),'ok');
+  buildGrid();refresh();
+}
+
+function delRun(id){
+  const d=getD();
+  d.runs=d.runs.filter(r=>r.id!==id);
+  save(d);refresh();
+}
+
+// ── Refresh UI ────────────────────────────────────────────────────────────────
+function refresh(){
+  const d=getD();
+  const total=d.runs.reduce((s,r)=>s+(r.miles||0),0);
+  const c25kDone=Object.keys(d.c25k).length;
+
+  document.getElementById('sv-miles').textContent=total.toFixed(1);
+  document.getElementById('sv-runs').textContent=d.runs.length;
+  document.getElementById('sv-c25k').textContent=`${c25kDone}/27`;
+  document.getElementById('sv-left').textContent=Math.max(0,TOTAL-total).toFixed(0);
+  document.getElementById('hdr-miles').textContent=total.toFixed(1);
+  document.getElementById('hdr-loc').textContent=cityFor(total);
+  document.getElementById('prog').style.width=Math.min(100,total/TOTAL*100)+'%';
+
+  if(runner) runner.setLatLng(posOnRoute(total));
+
+  // Build amber progress polyline
+  const pts=[COORDS[0]];
+  let rem=Math.min(total,TOTAL);
+  for(let i=0;i<segs.length;i++){
+    if(rem<=segs[i]){
+      const t=rem/segs[i];
+      pts.push([COORDS[i][0]+t*(COORDS[i+1][0]-COORDS[i][0]),
+                COORDS[i][1]+t*(COORDS[i+1][1]-COORDS[i][1])]);
+      break;
+    }
+    rem-=segs[i];
+    pts.push(COORDS[i+1]);
+  }
+  if(progLine) progLine.setLatLngs(pts);
+
+  // History
+  const hist=document.getElementById('run-hist');
+  const feels={great:'&#x1F4AA;',ok:'&#x1F44D;',tough:'&#x1F624;'};
+  if(!d.runs.length){
+    hist.innerHTML='<div class="empty">No runs logged yet \u2014 let\'s get moving!</div>';
+    return;
+  }
+  hist.innerHTML=d.runs.map(r=>{
+    const dt=new Date(r.date+'T12:00:00');
+    const ds=dt.toLocaleDateString('en-US',{month:'short',day:'numeric',year:'2-digit'});
+    const tag=r.w?`<span style="color:var(--teal);font-size:.78rem">C25K W${r.w}D${r.day}</span>`:'';
+    const noteDisplay=r.notes?esc(r.notes):(tag||'<span style="opacity:.4">\u2014</span>');
+    return `<div class="run">
+      <span class="rdate">${ds}</span>
+      <span class="rmiles">${r.miles.toFixed(1)} mi</span>
+      <span class="rnotes">${noteDisplay}</span>
+      <span style="font-size:.9rem">${feels[r.feeling]||feels.ok}</span>
+      <button class="rdel" onclick="delRun(${r.id})" title="Delete run">&times;</button>
+    </div>`;
+  }).join('');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+document.getElementById('f-date').value=new Date().toISOString().split('T')[0];
+initMap();
+buildGrid();
+refresh();
+</script>
+</body>
+</html>
