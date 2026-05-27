@@ -173,20 +173,37 @@ body{background:var(--bg);color:var(--text);font-family:'Source Sans 3',sans-ser
 // ── Route ─────────────────────────────────────────────────────────────────────
 const COORDS = [
   [46.8772,-96.7898],  // Fargo
+  [46.8747,-96.9004],  // West Fargo
+  [46.8925,-97.0545],  // Mapleton
+  [46.9005,-97.2112],  // Casselton
+  [46.9230,-97.6781],  // Tower City
   [46.9236,-98.0036],  // Valley City
+  [46.9420,-98.2340],  // Sanborn
   [46.9065,-98.7081],  // Jamestown
+  [46.8966,-99.3007],  // Medina
+  [46.8547,-99.9157],  // Steele
+  [46.8294,-100.4015], // Sterling
   [46.8083,-100.7837], // Bismarck
   [46.8261,-100.8893], // Mandan
   [46.8491,-101.4138], // New Salem
+  [46.8128,-101.8282], // Glen Ullin
+  [46.9019,-102.0385], // Hebron
+  [46.8816,-102.3157], // Richardton
   [46.7731,-102.6716], // Lefor ★
   [46.8792,-102.7930], // Dickinson
+  [46.8569,-103.0491], // South Heart
   [46.8880,-103.1972], // Belfield
   [46.9158,-103.5177], // Medora
+  [46.9186,-104.0055], // Beach
   [46.9000,-104.0489]  // Montana Border
 ];
-const LABELS = ['Fargo','Valley City','Jamestown','Bismarck','Mandan',
-                'New Salem','Lefor \u2605','Dickinson','Belfield','Medora','Montana'];
+const LABELS = ['Fargo','West Fargo','Mapleton','Casselton','Tower City',
+                'Valley City','Sanborn','Jamestown','Medina','Steele',
+                'Sterling','Bismarck','Mandan','New Salem','Glen Ullin',
+                'Hebron','Richardton','Lefor \u2605','Dickinson','South Heart',
+                'Belfield','Medora','Beach','Montana'];
 const TOTAL = 440;
+const ROUTE_BOUNDS = [[45.9,-104.2],[49.1,-96.4]];
 
 // Estimated C25K distances per workout [week][day]
 const C25K_DIST = [
@@ -263,19 +280,21 @@ function initMap(){
 
   try{
     map=L.map('map',{
-      zoomControl:false,scrollWheelZoom:false,dragging:false,
-      touchZoom:false,doubleClickZoom:false,boxZoom:false,keyboard:false
+      zoomControl:true,scrollWheelZoom:true,dragging:true,
+      touchZoom:true,doubleClickZoom:true,boxZoom:false,keyboard:false,
+      zoomSnap:0.25,zoomDelta:0.5,maxBounds:ROUTE_BOUNDS,maxBoundsViscosity:1
     });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{
       attribution:'&copy; <a href="https://openstreetmap.org">OSM</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
       subdomains:'abcd',maxZoom:16
     }).addTo(map);
-    map.fitBounds([[45.9,-104.2],[49.1,-96.4]]);
+    map.fitBounds(ROUTE_BOUNDS,{padding:[16,16]});
+    map.setMinZoom(map.getZoom());
 
     L.polyline(COORDS,{color:'#3a3020',weight:4,opacity:1}).addTo(map);
     progLine=L.polyline([],{color:'#e8a020',weight:4,opacity:.9}).addTo(map);
 
-    const SHOW_LBL=[0,3,6,10]; // Fargo, Bismarck, Lefor, Montana
+    const SHOW_LBL=[0,11,17,23]; // Fargo, Bismarck, Lefor, Montana
     COORDS.forEach((c,i)=>{
       const isLefor=(i===6);
       L.circleMarker(c,{
