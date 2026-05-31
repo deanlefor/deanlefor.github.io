@@ -27,8 +27,10 @@ button{cursor:pointer}
 .seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
 .seg button:last-child{border-right:0}
 .seg button.active{background:var(--green);color:#fff}
+.settings .seg button{min-height:36px;padding:7px 12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
-.settings{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1.4fr);gap:12px;margin-bottom:14px;padding:12px}
+.settings{margin-bottom:14px;padding:12px}
+.settings-main{display:grid;grid-template-columns:auto minmax(220px,.8fr) minmax(420px,1.6fr);gap:8px;align-items:end}
 .field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 .field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
 label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
@@ -76,7 +78,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
 .toast.show{opacity:1}
 @media(max-width:760px){
-  .wrap{padding:12px}.top,.settings{grid-template-columns:1fr}.toolbar{justify-content:flex-start}
+  .wrap{padding:12px}.top,.settings-main{grid-template-columns:1fr}.toolbar{justify-content:flex-start}
   .name-grid,.score-strip{grid-template-columns:repeat(2,1fr)}
   .rules{grid-template-columns:repeat(2,1fr)}
 }
@@ -105,25 +107,25 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   </header>
 
   <section class="settings panel">
-    <div>
-      <div class="label" style="margin-bottom:6px">Players</div>
-      <div class="field-row">
+    <div class="settings-main">
+      <div class="field">
+        <span class="label">Players</span>
         <div class="seg" id="playerCount" aria-label="Player count">
           <button type="button" data-count="2">2</button>
           <button type="button" data-count="3">3</button>
           <button type="button" data-count="4">4</button>
         </div>
-        <div class="field">
-          <label for="gameTitle">Game Name</label>
-          <input id="gameTitle" type="text" maxlength="48">
-        </div>
       </div>
-      <p class="hint">Scores save automatically in this browser. Use Export before clearing browser data or moving to another device.</p>
+      <div class="field">
+        <label for="gameTitle">Game Name</label>
+        <input id="gameTitle" type="text" maxlength="48">
+      </div>
+      <div class="field">
+        <span class="label">Player Names</span>
+        <div class="name-grid" id="nameGrid"></div>
+      </div>
     </div>
-    <div>
-      <div class="label" style="margin-bottom:6px">Player Names</div>
-      <div class="name-grid" id="nameGrid"></div>
-    </div>
+    <p class="hint">Scores save automatically in this browser. Use Export before clearing browser data or moving to another device.</p>
   </section>
 
   <section class="score-strip" id="scoreStrip"></section>
