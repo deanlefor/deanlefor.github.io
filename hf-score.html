@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Hand &amp; Foot Remastered Scorecard</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#191816;--paper:#fbfaf7;--panel:#ffffff;--line:#c9c3b8;
+  --soft:#f0eee9;--soft2:#e5e0d7;--gold:#c3922e;--green:#2f6b55;
+  --red:#a33b32;--blue:#335f88;--muted:#746d63;--shadow:0 14px 38px rgba(29,25,18,.12);
+}
+body{margin:0;background:#ebe7df;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1380px;margin:0 auto;padding:18px}
+.top{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin-bottom:14px}
+.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.03em;text-transform:uppercase}
+.brand p{margin:5px 0 0;color:var(--muted);font-size:.95rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.btn,.seg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;min-height:40px;box-shadow:0 1px 0 rgba(255,255,255,.65) inset}
+.btn:hover,.seg button:hover{border-color:#8e8678}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.danger{color:var(--red)}
+.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
+.seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--green);color:#fff}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
+.settings{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1.4fr);gap:12px;margin-bottom:14px;padding:12px}
+.field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
+label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
+input,select{border:1px solid var(--line);background:#fff;border-radius:5px;min-height:36px;padding:7px 9px;color:var(--ink);width:100%}
+input:focus,select:focus{outline:2px solid rgba(47,107,85,.18);border-color:var(--green)}
+input[type=number]{text-align:right}
+.name-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
+.score-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.score-card{padding:12px;border-left:5px solid var(--green)}
+.score-card:nth-child(2){border-left-color:var(--blue)}
+.score-card:nth-child(3){border-left-color:var(--gold)}
+.score-card:nth-child(4){border-left-color:var(--red)}
+.score-name{color:var(--muted);font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score-total{font-size:2rem;font-weight:800;line-height:1.05;margin-top:4px}
+.score-sub{color:var(--muted);font-size:.78rem;margin-top:3px}
+.sheet{overflow:auto;border-radius:8px}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;background:var(--panel)}
+th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center}
+th:first-child,td:first-child{border-left:1px solid var(--line)}
+thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid var(--line);padding:9px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+.row-label{width:178px;text-align:left;background:#f8f6f1;padding:8px 10px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#423d36}
+.round-head th{background:var(--ink);color:#fff;border-color:#2b2926;padding:8px 10px;text-align:left;text-transform:uppercase;letter-spacing:.08em;font-size:.82rem}
+.round-head input{width:70px;min-height:28px;padding:3px 6px;text-align:center;margin:0 3px;color:#fff;background:#2f2d2a;border-color:#55514a}
+.total-row .row-label,.cum-row .row-label{background:var(--soft2)}
+.total-row td,.cum-row td{background:#f0eee9}
+.calc{font-weight:800;min-height:37px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px}
+.calc.negative{color:var(--red)}
+.calc.positive{color:var(--green)}
+.calc.big{font-size:1.03rem}
+.cell{min-width:110px;padding:4px}
+.cell-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px}
+.mini{min-width:0;min-height:32px;padding:4px 5px;font-size:.9rem}
+.check-cell{display:flex;align-items:center;justify-content:center;min-height:37px}
+.check-cell input{width:20px;height:20px;min-height:20px;accent-color:var(--green)}
+.hint{font-size:.75rem;color:var(--muted);line-height:1.35}
+.rules{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0}
+.rule{background:#fff;padding:10px;text-align:center}
+.rule strong{display:block;font-size:1rem}
+.rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:12px;color:var(--muted);font-size:.8rem}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
+.toast.show{opacity:1}
+@media(max-width:760px){
+  .wrap{padding:12px}.top,.settings{grid-template-columns:1fr}.toolbar{justify-content:flex-start}
+  .name-grid,.score-strip{grid-template-columns:repeat(2,1fr)}
+  .rules{grid-template-columns:repeat(2,1fr)}
+}
+@media print{
+  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.footer{display:none}
+  .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(4,1fr)}
+  .sheet{overflow:visible}table{min-width:0;font-size:10px}.row-label{width:120px}
+  input{border:0;padding:0}.round-head input{background:transparent;color:#fff}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <h1>Hand &amp; Foot Remastered</h1>
+      <p>Five-round scorecard with browser storage, computed bonuses, card totals, and cumulative standings.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="printBtn" title="Print scorecard">Print</button>
+      <button class="btn" id="exportBtn" title="Download a JSON backup">Export</button>
+      <button class="btn" id="importBtn" title="Restore a JSON backup">Import</button>
+      <button class="btn danger" id="resetBtn" title="Clear this scorecard">Reset</button>
+      <input type="file" id="importFile" accept="application/json,.json" style="display:none">
+    </div>
+  </header>
+
+  <section class="settings panel">
+    <div>
+      <div class="label" style="margin-bottom:6px">Players</div>
+      <div class="field-row">
+        <div class="seg" id="playerCount" aria-label="Player count">
+          <button type="button" data-count="2">2</button>
+          <button type="button" data-count="3">3</button>
+          <button type="button" data-count="4">4</button>
+        </div>
+        <div class="field">
+          <label for="gameTitle">Game Name</label>
+          <input id="gameTitle" type="text" maxlength="48">
+        </div>
+      </div>
+      <p class="hint">Scores save automatically in this browser. Use Export before clearing browser data or moving to another device.</p>
+    </div>
+    <div>
+      <div class="label" style="margin-bottom:6px">Player Names</div>
+      <div class="name-grid" id="nameGrid"></div>
+    </div>
+  </section>
+
+  <section class="score-strip" id="scoreStrip"></section>
+
+  <section class="rules" aria-label="Scoring reference">
+    <div class="rule"><strong>1500</strong><span>Wild Book</span></div>
+    <div class="rule"><strong>700</strong><span>Clean Book</span></div>
+    <div class="rule"><strong>300</strong><span>Dirty Book</span></div>
+    <div class="rule"><strong>100</strong><span>Going Out</span></div>
+    <div class="rule"><strong>100</strong><span>Perfect Deal</span></div>
+  </section>
+
+  <main class="sheet panel">
+    <table id="scoreTable"></table>
+  </main>
+
+  <div class="footer">
+    <span>Round 1-4 meld requirements follow the published team-play rules; Round 5 defaults to 180 and can be edited.</span>
+    <span id="saveState">Saved</span>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = 'handFootRemasteredScorecard.v1';
+const DEFAULT_REQUIREMENTS = [60,90,120,150,180];
+const PLAYER_COLORS = ['#2f6b55','#335f88','#c3922e','#a33b32'];
+const SECTION_META = {
+  perfectDeal:{label:'Perfect Deal', type:'check', points:100},
+  goingOut:{label:'Going Out', type:'check', points:100},
+  red3:{label:'Red 3s', type:'count', points:100},
+  black3:{label:'Black 3s', type:'count', points:-100},
+  wildBooks:{label:'Wild Books', type:'count', points:1500},
+  cleanBooks:{label:'Clean Books', type:'count', points:700},
+  dirtyBooks:{label:'Dirty Books', type:'count', points:300},
+  bookTotal:{label:'Book Total', type:'computed'},
+  cardTotal:{label:'Card Total', type:'number'},
+  roundTotal:{label:'Round Total', type:'computed'},
+  cumulative:{label:'Cumulative Total', type:'computed'}
+};
+const ROWS = ['perfectDeal','goingOut','red3','black3','wildBooks','cleanBooks','dirtyBooks','bookTotal','cardTotal','roundTotal','cumulative'];
+
+let state = loadState();
+let saveTimer = 0;
+
+function newRound(){
+  return {
+    perfectDeal:false, goingOut:false, red3:0, black3:0,
+    wildBooks:0, cleanBooks:0, dirtyBooks:0, cardTotal:0
+  };
+}
+
+function defaultState(){
+  return {
+    title:'Game Night',
+    playerCount:4,
+    players:['Player 1','Player 2','Player 3','Player 4'],
+    requirements:[...DEFAULT_REQUIREMENTS],
+    scores:Array.from({length:5},()=>Array.from({length:4},newRound))
+  };
+}
+
+function loadState(){
+  try{
+    const saved = JSON.parse(storageGet(STORE_KEY));
+    return normalizeState(saved || defaultState());
+  }catch(error){
+    return defaultState();
+  }
+}
+
+function storageGet(key){
+  try{
+    return window.localStorage ? window.localStorage.getItem(key) : null;
+  }catch(error){
+    return null;
+  }
+}
+
+function storageSet(key,value){
+  try{
+    if(!window.localStorage) return false;
+    window.localStorage.setItem(key,value);
+    return true;
+  }catch(error){
+    return false;
+  }
+}
+
+function normalizeState(next){
+  const base = defaultState();
+  next = {...base,...next};
+  next.playerCount = Math.min(4,Math.max(2,Number(next.playerCount) || 4));
+  next.players = Array.from({length:4},(_,i)=>String(next.players?.[i] || base.players[i]));
+  next.requirements = Array.from({length:5},(_,i)=>Number(next.requirements?.[i] ?? DEFAULT_REQUIREMENTS[i]) || 0);
+  next.scores = Array.from({length:5},(_,r)=>Array.from({length:4},(_,p)=>({
+    ...newRound(),
+    ...(next.scores?.[r]?.[p] || {})
+  })));
+  return next;
+}
+
+function save(){
+  const didPersist = storageSet(STORE_KEY,JSON.stringify(state));
+  const saveState = document.getElementById('saveState');
+  saveState.textContent = (didPersist ? 'Saved ' : 'Saved for this tab ') + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+}
+
+function scheduleSave(){
+  document.getElementById('saveState').textContent = 'Saving...';
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(save,120);
+}
+
+function n(value){
+  const number = Number(value);
+  if(!Number.isFinite(number) || Object.is(number,-0)) return 0;
+  return number;
+}
+
+function fmt(value){
+  const number = n(value);
+  if(Object.is(number,-0)) return '0';
+  return number.toLocaleString();
+}
+
+function playerRound(roundIndex, playerIndex){
+  return state.scores[roundIndex][playerIndex];
+}
+
+function bookTotal(roundIndex, playerIndex){
+  const row = playerRound(roundIndex, playerIndex);
+  return n(row.wildBooks)*1500 + n(row.cleanBooks)*700 + n(row.dirtyBooks)*300;
+}
+
+function sectionValue(roundIndex, playerIndex, key){
+  const row = playerRound(roundIndex, playerIndex);
+  if(key === 'perfectDeal') return row.perfectDeal ? 100 : 0;
+  if(key === 'goingOut') return row.goingOut ? 100 : 0;
+  if(key === 'red3') return n(row.red3) ? n(row.red3)*100 : 0;
+  if(key === 'black3') return n(row.black3) ? n(row.black3)*-100 : 0;
+  if(key === 'wildBooks') return n(row.wildBooks) ? n(row.wildBooks)*1500 : 0;
+  if(key === 'cleanBooks') return n(row.cleanBooks) ? n(row.cleanBooks)*700 : 0;
+  if(key === 'dirtyBooks') return n(row.dirtyBooks) ? n(row.dirtyBooks)*300 : 0;
+  if(key === 'bookTotal') return bookTotal(roundIndex, playerIndex);
+  if(key === 'cardTotal') return n(row.cardTotal);
+  return 0;
+}
+
+function roundTotal(roundIndex, playerIndex){
+  return ['perfectDeal','goingOut','red3','black3','wildBooks','cleanBooks','dirtyBooks','cardTotal']
+    .reduce((sum,key)=>sum + sectionValue(roundIndex, playerIndex, key),0);
+}
+
+function cumulative(roundIndex, playerIndex){
+  let total = 0;
+  for(let r=0;r<=roundIndex;r++) total += roundTotal(r, playerIndex);
+  return total;
+}
+
+function visiblePlayers(){
+  return Array.from({length:state.playerCount},(_,i)=>i);
+}
+
+function render(){
+  document.getElementById('gameTitle').value = state.title;
+  renderPlayerCount();
+  renderNames();
+  renderScoreStrip();
+  renderTable();
+}
+
+function renderPlayerCount(){
+  document.querySelectorAll('#playerCount button').forEach(button=>{
+    button.classList.toggle('active',Number(button.dataset.count) === state.playerCount);
+  });
+}
+
+function renderNames(){
+  const grid = document.getElementById('nameGrid');
+  grid.innerHTML = '';
+  for(let i=0;i<4;i++){
+    const input = document.createElement('input');
+    input.type = 'text';
+    input.maxLength = 24;
+    input.value = state.players[i];
+    input.placeholder = 'Player ' + (i+1);
+    input.disabled = i >= state.playerCount;
+    input.style.borderLeft = '5px solid ' + PLAYER_COLORS[i];
+    input.addEventListener('input',()=>{
+      state.players[i] = input.value;
+      renderScoreStrip();
+      renderTable();
+      scheduleSave();
+    });
+    grid.appendChild(input);
+  }
+}
+
+function renderScoreStrip(){
+  const strip = document.getElementById('scoreStrip');
+  strip.innerHTML = '';
+  visiblePlayers().forEach(playerIndex=>{
+    const card = document.createElement('div');
+    card.className = 'score-card panel';
+    card.style.borderLeftColor = PLAYER_COLORS[playerIndex];
+    const total = cumulative(4,playerIndex);
+    const last = roundTotal(4,playerIndex);
+    card.innerHTML = `
+      <div class="score-name">${escapeHtml(state.players[playerIndex] || 'Player ' + (playerIndex+1))}</div>
+      <div class="score-total">${fmt(total)}</div>
+      <div class="score-sub">Round 5: ${last >= 0 ? '+' : ''}${fmt(last)}</div>
+    `;
+    strip.appendChild(card);
+  });
+}
+
+function renderTable(){
+  const table = document.getElementById('scoreTable');
+  const players = visiblePlayers();
+  let html = '<thead><tr><th class="row-label">Section</th>';
+  players.forEach(i=>html += `<th>${escapeHtml(state.players[i] || 'Player ' + (i+1))}</th>`);
+  html += '</tr></thead><tbody>';
+
+  for(let round=0;round<5;round++){
+    html += `<tr class="round-head"><th colspan="${players.length + 1}">Round ${round + 1}: <input type="number" data-req="${round}" value="${state.requirements[round]}"> points required</th></tr>`;
+    ROWS.forEach(key=>{
+      const meta = SECTION_META[key];
+      const rowClass = key === 'roundTotal' ? 'total-row' : key === 'cumulative' ? 'cum-row' : '';
+      html += `<tr class="${rowClass}"><th class="row-label">${meta.label}</th>`;
+      players.forEach(player=>{
+        html += `<td>${cellHtml(round,player,key)}</td>`;
+      });
+      html += '</tr>';
+    });
+  }
+  html += '</tbody>';
+  table.innerHTML = html;
+  wireTable();
+}
+
+function cellHtml(round, player, key){
+  const row = playerRound(round,player);
+  const meta = SECTION_META[key];
+  if(meta.type === 'check'){
+    return `<div class="check-cell"><input type="checkbox" data-r="${round}" data-p="${player}" data-k="${key}" ${row[key] ? 'checked' : ''} aria-label="${meta.label} ${state.players[player]} round ${round+1}"></div>`;
+  }
+  if(meta.type === 'count'){
+    const value = n(row[key]);
+    const points = sectionValue(round,player,key);
+    return `<div class="cell cell-grid"><input class="mini" type="number" min="0" step="1" data-r="${round}" data-p="${player}" data-k="${key}" value="${value || ''}" aria-label="${meta.label} count"><div class="calc ${points < 0 ? 'negative' : points > 0 ? 'positive' : ''}" data-calc="${key}" data-r="${round}" data-p="${player}">${fmt(points)}</div></div>`;
+  }
+  if(meta.type === 'number'){
+    return `<div class="cell"><input class="mini" type="number" step="5" data-r="${round}" data-p="${player}" data-k="${key}" value="${n(row[key]) || ''}" aria-label="${meta.label}"></div>`;
+  }
+  const value = key === 'roundTotal' ? roundTotal(round,player) : key === 'cumulative' ? cumulative(round,player) : sectionValue(round,player,key);
+  return `<div class="calc big ${value < 0 ? 'negative' : value > 0 ? 'positive' : ''}" data-calc="${key}" data-r="${round}" data-p="${player}">${value > 0 && key !== 'cumulative' ? '+' : ''}${fmt(value)}</div>`;
+}
+
+function wireTable(){
+  document.querySelectorAll('[data-req]').forEach(input=>{
+    input.addEventListener('input',()=>{
+      state.requirements[Number(input.dataset.req)] = n(input.value);
+      scheduleSave();
+    });
+  });
+  document.querySelectorAll('#scoreTable input[data-k]').forEach(input=>{
+    input.addEventListener('input',handleScoreInput);
+    input.addEventListener('change',handleScoreInput);
+  });
+}
+
+function handleScoreInput(event){
+  const input = event.currentTarget;
+  const round = Number(input.dataset.r);
+  const player = Number(input.dataset.p);
+  const key = input.dataset.k;
+  const row = playerRound(round,player);
+  row[key] = input.type === 'checkbox' ? input.checked : n(input.value);
+  renderScoreStrip();
+  refreshCalculations(round, player, key);
+  scheduleSave();
+}
+
+function setCalcText(node, value, showPlus = false){
+  node.textContent = (showPlus && value > 0 ? '+' : '') + fmt(value);
+  node.classList.toggle('negative', value < 0);
+  node.classList.toggle('positive', value > 0);
+}
+
+function refreshCalculations(round, player, key){
+  const direct = document.querySelector(`[data-calc="${key}"][data-r="${round}"][data-p="${player}"]`);
+  if(direct) setCalcText(direct, sectionValue(round, player, key));
+
+  const book = document.querySelector(`[data-calc="bookTotal"][data-r="${round}"][data-p="${player}"]`);
+  if(book) setCalcText(book, bookTotal(round, player), true);
+
+  const roundNode = document.querySelector(`[data-calc="roundTotal"][data-r="${round}"][data-p="${player}"]`);
+  if(roundNode) setCalcText(roundNode, roundTotal(round, player), true);
+
+  for(let r=round; r<5; r++){
+    const cumulativeNode = document.querySelector(`[data-calc="cumulative"][data-r="${r}"][data-p="${player}"]`);
+    if(cumulativeNode) setCalcText(cumulativeNode, cumulative(r, player));
+  }
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[char]));
+}
+
+function toast(message){
+  const node = document.getElementById('toast');
+  node.textContent = message;
+  node.classList.add('show');
+  setTimeout(()=>node.classList.remove('show'),1700);
+}
+
+document.getElementById('gameTitle').addEventListener('input',event=>{
+  state.title = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('playerCount').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-count]');
+  if(!button) return;
+  state.playerCount = Number(button.dataset.count);
+  render();
+  scheduleSave();
+});
+
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Clear this Hand & Foot scorecard?')) return;
+  state = defaultState();
+  save();
+  render();
+  toast('Scorecard reset');
+});
+
+document.getElementById('exportBtn').addEventListener('click',()=>{
+  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  link.href = url;
+  link.download = `hand-foot-scorecard-${stamp}.json`;
+  link.click();
+  URL.revokeObjectURL(url);
+  toast('Backup exported');
+});
+
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',event=>{
+  const file = event.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      state = normalizeState(JSON.parse(reader.result));
+      save();
+      render();
+      toast('Backup imported');
+    }catch(error){
+      alert('That backup could not be imported.');
+    }
+  };
+  reader.readAsText(file);
+  event.target.value = '';
+});
+
+render();
+save();
+</script>
+</body>
+</html>
