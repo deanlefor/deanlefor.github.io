@@ -36,7 +36,7 @@ input,select{border:1px solid var(--line);background:#fff;border-radius:5px;min-
 input:focus,select:focus{outline:2px solid rgba(47,107,85,.18);border-color:var(--green)}
 input[type=number]{text-align:right}
 .name-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
-.score-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}
+.score-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:#ebe7df;border-bottom:1px solid rgba(201,195,184,.75)}
 .score-card{padding:12px;border-left:5px solid var(--green)}
 .score-card:nth-child(2){border-left-color:var(--blue)}
 .score-card:nth-child(3){border-left-color:var(--gold)}
@@ -51,7 +51,9 @@ th:first-child,td:first-child{border-left:1px solid var(--line)}
 thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid var(--line);padding:9px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
 .row-label{width:178px;text-align:left;background:#f8f6f1;padding:8px 10px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#423d36}
 .round-head th{background:var(--ink);color:#fff;border-color:#2b2926;padding:8px 10px;text-align:left;text-transform:uppercase;letter-spacing:.08em;font-size:.82rem}
-.round-head input{width:70px;min-height:28px;padding:3px 6px;text-align:center;margin:0 3px;color:#fff;background:#2f2d2a;border-color:#55514a}
+.round-points{display:inline-block;margin:0 3px;padding:2px 7px;border:1px solid #55514a;border-radius:4px;background:#2f2d2a;color:#fff}
+.player-repeat th{background:#f8f6f1;padding:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#423d36}
+.player-repeat .row-label{background:#eeeae2}
 .total-row .row-label,.cum-row .row-label{background:var(--soft2)}
 .total-row td,.cum-row td{background:#f0eee9}
 .calc{font-weight:800;min-height:37px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px}
@@ -64,7 +66,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 .check-cell{display:flex;align-items:center;justify-content:center;min-height:37px}
 .check-cell input{width:20px;height:20px;min-height:20px;accent-color:var(--green)}
 .hint{font-size:.75rem;color:var(--muted);line-height:1.35}
-.rules{display:grid;grid-template-columns:repeat(6,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0}
+.rules{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0}
 .rule{background:#fff;padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
@@ -80,7 +82,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.footer{display:none}
   .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(4,1fr)}
   .sheet{overflow:visible}table{min-width:0;font-size:10px}.row-label{width:120px}
-  input{border:0;padding:0}.round-head input{background:transparent;color:#fff}
+  input{border:0;padding:0}.round-points{border:0;background:transparent;padding:0}
 }
 </style>
 </head>
@@ -89,7 +91,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   <header class="top">
     <div class="brand">
       <h1>Hand &amp; Foot Remastered</h1>
-      <p>Five-round scorecard with browser storage, computed bonuses, card totals, and cumulative standings.</p>
+      <p>Four-round scorecard with browser storage, computed bonuses, card totals, and cumulative standings.</p>
     </div>
     <div class="toolbar">
       <button class="btn" id="printBtn" title="Print scorecard">Print</button>
@@ -137,7 +139,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   </main>
 
   <div class="footer">
-    <span>Round 1-4 meld requirements follow the published team-play rules; Round 5 defaults to 180 and can be edited.</span>
+    <span>Round meld requirements are fixed to the published team-play rules: 60, 90, 120, and 150 points.</span>
     <span id="saveState">Saved</span>
   </div>
 </div>
@@ -145,7 +147,8 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
-const DEFAULT_REQUIREMENTS = [60,90,120,150,180];
+const ROUND_COUNT = 4;
+const DEFAULT_REQUIREMENTS = [60,90,120,150];
 const PLAYER_COLORS = ['#2f6b55','#335f88','#c3922e','#a33b32'];
 const SECTION_META = {
   perfectDeal:{label:'Perfect Deal', type:'check', points:100},
@@ -178,7 +181,7 @@ function defaultState(){
     playerCount:4,
     players:['Player 1','Player 2','Player 3','Player 4'],
     requirements:[...DEFAULT_REQUIREMENTS],
-    scores:Array.from({length:5},()=>Array.from({length:4},newRound))
+    scores:Array.from({length:ROUND_COUNT},()=>Array.from({length:4},newRound))
   };
 }
 
@@ -214,8 +217,8 @@ function normalizeState(next){
   next = {...base,...next};
   next.playerCount = Math.min(4,Math.max(2,Number(next.playerCount) || 4));
   next.players = Array.from({length:4},(_,i)=>String(next.players?.[i] || base.players[i]));
-  next.requirements = Array.from({length:5},(_,i)=>Number(next.requirements?.[i] ?? DEFAULT_REQUIREMENTS[i]) || 0);
-  next.scores = Array.from({length:5},(_,r)=>Array.from({length:4},(_,p)=>({
+  next.requirements = [...DEFAULT_REQUIREMENTS];
+  next.scores = Array.from({length:ROUND_COUNT},(_,r)=>Array.from({length:4},(_,p)=>({
     ...newRound(),
     ...(next.scores?.[r]?.[p] || {})
   })));
@@ -326,12 +329,13 @@ function renderScoreStrip(){
     const card = document.createElement('div');
     card.className = 'score-card panel';
     card.style.borderLeftColor = PLAYER_COLORS[playerIndex];
-    const total = cumulative(4,playerIndex);
-    const last = roundTotal(4,playerIndex);
+    const finalRound = ROUND_COUNT - 1;
+    const total = cumulative(finalRound,playerIndex);
+    const last = roundTotal(finalRound,playerIndex);
     card.innerHTML = `
       <div class="score-name">${escapeHtml(state.players[playerIndex] || 'Player ' + (playerIndex+1))}</div>
       <div class="score-total">${fmt(total)}</div>
-      <div class="score-sub">Round 5: ${last >= 0 ? '+' : ''}${fmt(last)}</div>
+      <div class="score-sub">Round ${ROUND_COUNT}: ${last >= 0 ? '+' : ''}${fmt(last)}</div>
     `;
     strip.appendChild(card);
   });
@@ -344,8 +348,11 @@ function renderTable(){
   players.forEach(i=>html += `<th>${escapeHtml(state.players[i] || 'Player ' + (i+1))}</th>`);
   html += '</tr></thead><tbody>';
 
-  for(let round=0;round<5;round++){
-    html += `<tr class="round-head"><th colspan="${players.length + 1}">Round ${round + 1}: <input type="number" data-req="${round}" value="${state.requirements[round]}"> points required</th></tr>`;
+  for(let round=0;round<ROUND_COUNT;round++){
+    html += `<tr class="round-head"><th colspan="${players.length + 1}">Round ${round + 1}: <span class="round-points">${state.requirements[round]}</span> points required</th></tr>`;
+    html += '<tr class="player-repeat"><th class="row-label">Section</th>';
+    players.forEach(i=>html += `<th>${escapeHtml(state.players[i] || 'Player ' + (i+1))}</th>`);
+    html += '</tr>';
     ROWS.forEach(key=>{
       const meta = SECTION_META[key];
       const rowClass = key === 'roundTotal' ? 'total-row' : key === 'cumulative' ? 'cum-row' : '';
@@ -380,12 +387,6 @@ function cellHtml(round, player, key){
 }
 
 function wireTable(){
-  document.querySelectorAll('[data-req]').forEach(input=>{
-    input.addEventListener('input',()=>{
-      state.requirements[Number(input.dataset.req)] = n(input.value);
-      scheduleSave();
-    });
-  });
   document.querySelectorAll('#scoreTable input[data-k]').forEach(input=>{
     input.addEventListener('input',handleScoreInput);
     input.addEventListener('change',handleScoreInput);
@@ -420,7 +421,7 @@ function refreshCalculations(round, player, key){
   const roundNode = document.querySelector(`[data-calc="roundTotal"][data-r="${round}"][data-p="${player}"]`);
   if(roundNode) setCalcText(roundNode, roundTotal(round, player), true);
 
-  for(let r=round; r<5; r++){
+  for(let r=round; r<ROUND_COUNT; r++){
     const cumulativeNode = document.querySelector(`[data-calc="cumulative"][data-r="${r}"][data-p="${player}"]`);
     if(cumulativeNode) setCalcText(cumulativeNode, cumulative(r, player));
   }
