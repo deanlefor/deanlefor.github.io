@@ -70,7 +70,9 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 .rule{background:#fff;padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
-.footer{display:flex;justify-content:space-between;gap:12px;align-items:center;margin-top:12px;color:var(--muted);font-size:.8rem}
+.footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
+.footer-notes{display:flex;flex-direction:column;gap:4px;line-height:1.35}
+.disclaimer{font-size:.74rem}
 .toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
 .toast.show{opacity:1}
 @media(max-width:760px){
@@ -139,7 +141,10 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   </main>
 
   <div class="footer">
-    <span>Round meld requirements are fixed to the published team-play rules: 60, 90, 120, and 150 points.</span>
+    <div class="footer-notes">
+      <span>Round meld requirements are fixed to the published team-play rules: 60, 90, 120, and 150 points.</span>
+      <span class="disclaimer">Unofficial scorecard for personal use. Hand &amp; Foot Remastered is owned by its respective rights holders. This tool is not affiliated with, endorsed by, or sponsored by Gray Dog Games.</span>
+    </div>
     <span id="saveState">Saved</span>
   </div>
 </div>
