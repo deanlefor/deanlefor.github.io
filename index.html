@@ -454,6 +454,11 @@
       background: var(--bg-hover);
       color: var(--gold);
     }
+    .nav-dropdown-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 0.25rem 0;
+    }
 
     /* ── Tracker card ── */
     .tracker-card {
@@ -488,6 +493,58 @@
     .tracker-card:hover .tracker-arrow {
       transform: translateX(4px);
       color: var(--gold-light);
+    }
+
+    /* ── Project cards ── */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1.5px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+    .project-card {
+      background: var(--bg-card);
+      padding: 1.75rem 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      text-decoration: none;
+      transition: background 0.25s;
+      position: relative;
+      overflow: hidden;
+    }
+    .project-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(to right, var(--gold), transparent);
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s;
+    }
+    .project-card:hover { background: var(--bg-hover); }
+    .project-card:hover::before { transform: scaleX(1); }
+    .project-icon {
+      font-size: 1.6rem;
+      flex-shrink: 0;
+    }
+    .project-info { flex: 1; }
+    .project-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.05rem;
+      font-weight: 400;
+      color: var(--text);
+      margin-bottom: 0.3rem;
+    }
+    .project-desc {
+      font-size: 0.68rem;
+      line-height: 1.65;
+      color: var(--text-dim);
+    }
+    @media (max-width: 768px) {
+      .projects-grid { grid-template-columns: 1fr; }
     }
 
     /* ── Animations ── */
@@ -609,6 +666,8 @@
       .tl-item { grid-template-columns: 90px 1px 1fr; }
       .hero-name { font-size: clamp(2.8rem, 12vw, 4rem); }
       .nav-right .nav-link { display: none; }
+      .nav-dropdown { display: flex; }
+      .nav-dropdown .nav-link { display: flex; }
     }
   </style>
 </head>
@@ -630,6 +689,10 @@
         <div class="nav-dropdown-menu">
           <a href="https://deanlefor.com/tracker.html" class="nav-dropdown-item">VT PAPA Program Tracker</a>
           <a href="/tracker-guide.html" target="_blank" class="nav-dropdown-item">Tracker User Guide</a>
+          <div class="nav-dropdown-divider"></div>
+          <a href="/pinochle.html" target="_blank" class="nav-dropdown-item">Pinochle Scorecard</a>
+          <a href="/hf-score.html" target="_blank" class="nav-dropdown-item">Hand &amp; Foot Scorecard</a>
+          <a href="/run-tracker.html" target="_blank" class="nav-dropdown-item">Run Tracker</a>
         </div>
       </div>
     </div>
@@ -708,6 +771,43 @@
     <div class="research-wide reveal">
       <p class="research-tag">Theoretical Interests</p>
       <p class="research-body">Punctuated Equilibrium Theory &nbsp;·&nbsp; Policy Process Theory &nbsp;·&nbsp; Bureaucratic Information Processing &nbsp;·&nbsp; Congressional Oversight &nbsp;·&nbsp; Federal Budget Dynamics &nbsp;·&nbsp; Public Library Policy &nbsp;·&nbsp; Information Access and Policy &nbsp;·&nbsp; AI Governance in the Public Sector &nbsp;·&nbsp; Inspector General Independence</p>
+    </div>
+  </section>
+</div>
+
+<!-- Side Projects -->
+<div class="wrapper">
+  <section class="section" id="projects">
+    <p class="section-label reveal">Side Projects</p>
+    <div class="projects-grid reveal">
+
+      <a href="/pinochle.html" target="_blank" class="project-card">
+        <span class="project-icon">🃏</span>
+        <div class="project-info">
+          <p class="project-title">Pinochle Scorecard</p>
+          <p class="project-desc">A mobile-friendly scorekeeper for Pinochle with full bidding, meld, and tricks tracking.</p>
+        </div>
+        <span class="tracker-arrow">&rarr;</span>
+      </a>
+
+      <a href="/hf-score.html" target="_blank" class="project-card">
+        <span class="project-icon">🤝</span>
+        <div class="project-info">
+          <p class="project-title">Hand &amp; Foot Scorecard</p>
+          <p class="project-desc">Keep score across rounds of Hand and Foot without a scrap of paper.</p>
+        </div>
+        <span class="tracker-arrow">&rarr;</span>
+      </a>
+
+      <a href="/run-tracker.html" target="_blank" class="project-card">
+        <span class="project-icon">🏃</span>
+        <div class="project-info">
+          <p class="project-title">Run Tracker</p>
+          <p class="project-desc">Track C25K progress and a virtual run across North Dakota, mile by mile.</p>
+        </div>
+        <span class="tracker-arrow">&rarr;</span>
+      </a>
+
     </div>
   </section>
 </div>
