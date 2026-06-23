@@ -1,1151 +1,1083 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-    <title>Pinochle Score Keeper</title>
-    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg:       #0d2218;
-            --surface:  #152e20;
-            --surface2: #1c3d2b;
-            --gold:     #c9a84c;
-            --gold-lt:  #e8c96e;
-            --cream:    #f0ead8;
-            --muted:    #8a9e8e;
-            --red:      #d9534f;
-            --blue:     #5b9bd5;
-            --border:   rgba(201,168,76,0.18);
-            --radius:   12px;
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-        body {
-            font-family: 'DM Sans', sans-serif;
-            background: var(--bg);
-            color: var(--cream);
-            min-height: 100dvh;
-            background-image:
-                radial-gradient(circle at 20% 20%, rgba(255,255,255,0.02) 0%, transparent 60%),
-                radial-gradient(circle at 80% 80%, rgba(255,255,255,0.015) 0%, transparent 50%);
-        }
-
-        #root {
-            max-width: 520px;
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            min-height: 100dvh;
-        }
-
-        /* ---- SCORE STRIP (tappable button) ---- */
-        .score-strip {
-            position: sticky;
-            top: 0;
-            z-index: 20;
-            background: var(--surface);
-            border-bottom: 1px solid var(--border);
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            padding: 6px 10px;
-            gap: 4px;
-            width: 100%;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            border: none;
-            text-align: left;
-        }
-        .score-strip:active { background: var(--surface2); }
-        .ss-cell {
-            text-align: center;
-            padding: 5px 2px;
-            border-radius: 6px;
-            position: relative;
-        }
-        .ss-cell.is-dealer { background: rgba(91,155,213,0.12); }
-        .ss-cell.is-winner { background: rgba(201,168,76,0.12); }
-        .ss-name {
-            font-size: 0.62rem;
-            font-weight: 600;
-            color: var(--muted);
-            display: block;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-        .ss-score {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.25rem;
-            color: var(--gold);
-            display: block;
-            line-height: 1.1;
-        }
-        .ss-score.neg { color: var(--red); }
-        .ss-dealer-dot {
-            position: absolute;
-            top: 3px; right: 4px;
-            width: 5px; height: 5px;
-            border-radius: 50%;
-            background: var(--blue);
-        }
-
-        /* ---- PLAYING TO ROW (in Game Controls card) ---- */
-        .playing-to-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            padding: 10px 14px;
-            margin-bottom: 10px;
-            font-size: 0.875rem;
-        }
-        .playing-to-row input {
-            width: 64px;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: 6px;
-            color: var(--cream);
-            text-align: center;
-            padding: 6px 8px;
-            font-size: 0.9rem;
-            font-family: 'DM Sans', sans-serif;
-            -webkit-appearance: none;
-            outline: none;
-        }
-        .playing-to-row input:focus { border-color: var(--gold); }
-
-        /* ---- HINT BUTTON ---- */
-        .hint-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
-            background: none;
-            border: none;
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-size: 0.75rem;
-            cursor: pointer;
-            padding: 4px 0;
-            margin-bottom: 10px;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .hint-btn:hover { color: var(--cream); }
-
-        /* ---- MAIN CONTENT ---- */
-        .main-content {
-            padding: 14px 14px 24px;
-        }
-
-        /* ---- OVERLAY ---- */
-        .overlay-backdrop {
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.55);
-            z-index: 30;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-end;
-        }
-        .overlay-sheet {
-            background: var(--bg);
-            border-radius: 18px 18px 0 0;
-            border-top: 1px solid var(--border);
-            max-height: 92dvh;
-            overflow-y: auto;
-            padding: 8px 14px 32px;
-            max-width: 520px;
-            width: 100%;
-            margin: 0 auto;
-        }
-        .overlay-handle {
-            width: 36px;
-            height: 4px;
-            background: var(--border);
-            border-radius: 2px;
-            margin: 0 auto 16px;
-        }
-
-        /* ---- CARDS ---- */
-        .card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 14px;
-            margin-bottom: 12px;
-        }
-        .card-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 1rem;
-            color: var(--gold);
-            margin-bottom: 12px;
-        }
-
-        /* ---- SCORE GRID ---- */
-        .score-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 8px;
-            margin-bottom: 12px;
-        }
-        .score-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px 8px;
-            text-align: center;
-            position: relative;
-            transition: border-color 0.2s;
-        }
-        .score-card.is-dealer { border-color: var(--blue); }
-        .score-card.is-winner { border-color: var(--gold); background: rgba(201,168,76,0.07); }
-        .dealer-pip {
-            position: absolute;
-            top: 5px; right: 5px;
-            font-size: 0.57rem;
-            font-weight: 700;
-            color: var(--blue);
-            text-transform: uppercase;
-            letter-spacing: 0.4px;
-        }
-        .sc-name {
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--muted);
-            margin-bottom: 5px;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            cursor: pointer;
-        }
-        .sc-name:hover { color: var(--cream); }
-        .sc-name input {
-            width: 100%;
-            background: transparent;
-            border: none;
-            border-bottom: 1px solid var(--gold);
-            color: var(--cream);
-            font-size: 0.75rem;
-            font-weight: 600;
-            text-align: center;
-            font-family: 'DM Sans', sans-serif;
-            outline: none;
-        }
-        .sc-score {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.1rem;
-            color: var(--gold);
-            line-height: 1;
-        }
-        .sc-score.neg { color: var(--red); }
-        .sc-wins {
-            font-size: 0.62rem;
-            color: var(--muted);
-            margin-top: 4px;
-        }
-
-        /* ---- WINNER BANNER ---- */
-        .winner-banner {
-            background: linear-gradient(135deg, var(--gold), var(--gold-lt));
-            border-radius: var(--radius);
-            padding: 14px;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .winner-banner h2 {
-            font-family: 'Playfair Display', serif;
-            font-size: 1.3rem;
-            color: var(--bg);
-        }
-        .winner-banner p { font-size: 0.82rem; color: var(--bg); opacity: 0.75; margin-top: 3px; }
-
-        /* ---- BUTTONS ---- */
-        .btn {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            padding: 12px 16px;
-            border-radius: 10px;
-            border: none;
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 0.875rem;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-            transition: opacity 0.15s, transform 0.1s;
-        }
-        .btn:active  { transform: scale(0.97); }
-        .btn:disabled { opacity: 0.35; cursor: not-allowed; }
-        .btn-gold   { background: var(--gold); color: var(--bg); width: 100%; padding: 14px; font-size: 0.95rem; font-weight: 700; }
-        .btn-amber  { background: #7a5a0a; color: #f0ead8; }
-        .btn-danger { background: #7a1f1f; color: #f0ead8; }
-        .btn-next   { background: var(--gold); color: var(--bg); font-weight: 700; flex: 2; padding: 13px; border-radius: 10px; border: none; font-family: 'DM Sans', sans-serif; font-size: 0.9rem; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-        .btn-back   { background: transparent; border: 1px solid var(--border); color: var(--muted); flex: 1; padding: 13px; border-radius: 10px; font-family: 'DM Sans', sans-serif; font-size: 0.875rem; font-weight: 600; cursor: pointer; -webkit-tap-highlight-color: transparent; }
-
-        .control-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-
-        /* ---- FORM ELEMENTS ---- */
-        .field { margin-bottom: 14px; }
-        .field-label {
-            display: block;
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 7px;
-        }
-        input[type="number"],
-        input[type="text"] {
-            width: 100%;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 9px;
-            color: var(--cream);
-            padding: 12px 14px;
-            font-family: 'DM Sans', sans-serif;
-            font-size: 1rem;
-            outline: none;
-            -webkit-appearance: none;
-            transition: border-color 0.15s;
-        }
-        input[type="number"]:focus,
-        input[type="text"]:focus { border-color: var(--gold); }
-        input.center { text-align: center; font-size: 1.3rem; font-weight: 700; padding: 11px 10px; }
-
-        /* ---- CHOICE BUTTONS ---- */
-        .choice-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-        .choice-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
-        .choice-btn {
-            padding: 12px 8px;
-            border-radius: 9px;
-            border: 1px solid var(--border);
-            background: var(--bg);
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 0.82rem;
-            cursor: pointer;
-            text-align: center;
-            transition: all 0.15s;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .choice-btn.active      { background: var(--gold);  color: var(--bg);   border-color: var(--gold); }
-        .choice-btn.active-red  { background: #b83030;      color: #fff;        border-color: #b83030; }
-        .choice-btn.red-suit    { color: #e06060; }
-        .choice-btn.blue-suit   { color: #7ab0e0; }
-
-        /* ---- PLAYER INPUT ROW ---- */
-        .pi-row {
-            display: grid;
-            grid-template-columns: 1fr 90px;
-            align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
-        }
-        .pi-name { font-size: 0.9rem; font-weight: 500; }
-        .pi-sub  { font-size: 0.7rem; color: var(--muted); font-style: italic; }
-
-        /* ---- TOGGLE ---- */
-        .toggle-row {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 13px 14px;
-            margin-bottom: 10px;
-            cursor: pointer;
-            -webkit-tap-highlight-color: transparent;
-        }
-        .toggle-label { font-size: 0.9rem; font-weight: 500; user-select: none; }
-        .toggle-pill {
-            width: 46px; height: 26px;
-            border-radius: 13px;
-            background: #5a1a1a;
-            position: relative;
-            transition: background 0.2s;
-            flex-shrink: 0;
-            pointer-events: none;
-        }
-        .toggle-pill.on { background: #1a5c38; }
-        .toggle-pill.warn.on { background: #8b2020; }
-        .toggle-pill::after {
-            content: '';
-            position: absolute;
-            width: 20px; height: 20px;
-            background: white;
-            border-radius: 50%;
-            top: 3px; left: 3px;
-            transition: transform 0.2s;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
-        }
-        .toggle-pill.on::after { transform: translateX(20px); }
-
-        /* ---- INFO BOXES ---- */
-        .info-box {
-            background: rgba(201,168,76,0.07);
-            border: 1px solid rgba(201,168,76,0.18);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 0.75rem;
-            color: var(--muted);
-            line-height: 1.55;
-            margin-bottom: 10px;
-        }
-        .info-box.warn {
-            background: rgba(217,83,79,0.07);
-            border-color: rgba(217,83,79,0.22);
-            color: #e89090;
-        }
-
-        /* ---- TRICKS CALC ---- */
-        .tricks-calc {
-            background: rgba(201,168,76,0.09);
-            border: 1px solid rgba(201,168,76,0.22);
-            border-radius: 9px;
-            padding: 12px;
-            text-align: center;
-            margin-bottom: 12px;
-        }
-        .tc-need  { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--gold); line-height: 1; }
-        .tc-label { font-size: 0.7rem; color: var(--muted); margin-top: 2px; }
-
-        /* ---- PREVIEW ---- */
-        .preview-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 9px 0;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .preview-row:last-child { border-bottom: none; }
-        .pr-name   { font-size: 0.85rem; font-weight: 500; }
-        .pr-detail { font-size: 0.68rem; color: var(--muted); margin-top: 2px; }
-        .pr-total  { font-family: 'Playfair Display', serif; font-size: 1.3rem; }
-        .pr-total.pos { color: var(--gold); }
-        .pr-total.neg { color: var(--red); }
-
-        /* ---- STEP NAV ---- */
-        .step-nav { display: flex; gap: 10px; margin-top: 14px; }
-        .step-dots {
-            display: flex;
-            justify-content: center;
-            gap: 7px;
-            margin-bottom: 18px;
-        }
-        .step-dot {
-            width: 7px; height: 7px;
-            border-radius: 50%;
-            background: var(--surface2);
-            border: 1px solid var(--border);
-            transition: all 0.2s;
-        }
-        .step-dot.active { background: var(--gold); border-color: var(--gold); width: 20px; border-radius: 4px; }
-        .step-dot.done   { background: #2a6642; border-color: #2a6642; }
-
-        /* ---- ROUND HEADER ---- */
-        .round-hdr { margin-bottom: 16px; }
-        .round-hdr h2 { font-family: 'Playfair Display', serif; font-size: 1.15rem; }
-        .round-hdr p  { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
-
-        /* ---- DEALER PROMPT ---- */
-        .dealer-prompt {
-            background: rgba(91,155,213,0.08);
-            border: 1px solid rgba(91,155,213,0.2);
-            border-radius: var(--radius);
-            padding: 12px;
-            margin-bottom: 14px;
-        }
-        .dealer-prompt p { font-size: 0.78rem; color: var(--muted); text-align: center; margin-bottom: 9px; }
-        .dealer-btn {
-            padding: 11px 8px;
-            border-radius: 9px;
-            border: 1px solid rgba(91,155,213,0.25);
-            background: var(--bg);
-            color: var(--muted);
-            font-family: 'DM Sans', sans-serif;
-            font-weight: 600;
-            font-size: 0.8rem;
-            cursor: pointer;
-            text-align: center;
-            -webkit-tap-highlight-color: transparent;
-            transition: all 0.15s;
-        }
-        .dealer-btn.active { background: var(--blue); color: white; border-color: var(--blue); }
-
-        /* ---- HISTORY ---- */
-        .history-card {
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-        .history-card.bust { border-color: rgba(217,83,79,0.3); background: rgba(217,83,79,0.04); }
-        .hc-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 9px;
-        }
-        .hc-round  { font-size: 0.65rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-        .hc-meta   { font-size: 0.72rem; color: var(--muted); }
-        .hc-scores { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
-        .hc-player { text-align: center; }
-        .hc-pname  { font-size: 0.68rem; color: var(--muted); margin-bottom: 2px; }
-        .hc-ptotal { font-family: 'Playfair Display', serif; font-size: 1.1rem; }
-        .hc-ptotal.pos { color: var(--gold); }
-        .hc-ptotal.neg { color: var(--red); }
-        .hc-pdetail { font-size: 0.62rem; color: var(--muted); }
-
-        .empty-state { text-align: center; color: var(--muted); padding: 50px 20px; font-size: 0.9rem; line-height: 1.7; }
-
-        /* ---- SETUP SCREEN ---- */
-        .setup-screen {
-            min-height: 100dvh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            padding: 32px 20px 40px;
-            max-width: 520px;
-            margin: 0 auto;
-        }
-        .setup-title {
-            font-family: 'Playfair Display', serif;
-            font-size: 2.2rem;
-            color: var(--gold);
-            margin-bottom: 4px;
-            text-align: center;
-        }
-        .setup-subtitle {
-            font-size: 0.8rem;
-            color: var(--muted);
-            text-align: center;
-            margin-bottom: 32px;
-        }
-        .setup-card {
-            width: 100%;
-            background: var(--surface);
-            border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 18px 16px;
-            margin-bottom: 14px;
-        }
-        .setup-card-label {
-            font-size: 0.7rem;
-            font-weight: 700;
-            color: var(--muted);
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 10px;
-        }
-        .setup-score-row {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .setup-score-row input {
-            width: 80px;
-            background: var(--bg);
-            border: 1px solid var(--border);
-            border-radius: 8px;
-            color: var(--cream);
-            text-align: center;
-            padding: 10px 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            font-family: 'DM Sans', sans-serif;
-            -webkit-appearance: none;
-            outline: none;
-        }
-        .setup-score-row input:focus { border-color: var(--gold); }
-        .setup-score-row span { font-size: 0.875rem; color: var(--muted); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pinochle Score Keeper</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  --ink:#1f2420;
+  --muted:#69736c;
+  --paper:#f5f2eb;
+  --panel:#fffdf8;
+  --soft:#ebe4d8;
+  --line:#d3cab9;
+  --green:#2f684d;
+  --green-dark:#214c38;
+  --gold:#b8892f;
+  --red:#a33b32;
+  --blue:#2f5f8c;
+  --shadow:0 12px 34px rgba(38,32,22,.1);
+}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1320px;margin:0 auto;padding:18px}
+.top{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:14px;
+  align-items:end;
+  margin-bottom:14px;
+}
+.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.02em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.layout{display:grid;grid-template-columns:minmax(360px,.95fr) minmax(460px,1.15fr);gap:14px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+}
+.section{padding:14px}
+.section-title{
+  margin:0 0 12px;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.settings{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) auto minmax(140px,.45fr);
+  gap:10px;
+  align-items:end;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+label,.label{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+input,select{
+  width:100%;
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fff;
+  color:var(--ink);
+  padding:8px 10px;
+  outline:none;
+}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,104,77,.12)}
+input[type=number]{text-align:right}
+.seg{
+  display:flex;
+  border:1px solid var(--line);
+  border-radius:7px;
+  overflow:hidden;
+  background:#fff;
+}
+.seg button{
+  min-width:44px;
+  min-height:38px;
+  padding:7px 12px;
+  border:0;
+  border-right:1px solid var(--line);
+  background:#fff;
+  color:var(--ink);
+  font-weight:800;
+}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--green);color:#fff}
+.btn{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:#fff;
+  color:var(--ink);
+  padding:8px 12px;
+  font-weight:800;
+}
+.btn:hover{border-color:#948873}
+.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn.primary:hover{background:var(--green-dark)}
+.btn.warn{color:var(--red)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.round-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.round-head h2{margin:0;font-size:1.25rem}
+.save-state{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.form-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.player-count-2 .score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.score-matrix{
+  display:grid;
+  grid-template-columns:76px repeat(3,minmax(0,1fr));
+  gap:8px;
+  align-items:end;
+}
+.player-count-2 .score-matrix{grid-template-columns:76px repeat(2,minmax(0,1fr))}
+.score-matrix .matrix-label{
+  align-self:center;
+  color:var(--muted);
+  font-size:.76rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.score-matrix .matrix-head{
+  color:var(--muted);
+  font-size:.8rem;
+  font-weight:900;
+  overflow:hidden;
+  text-align:center;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.score-matrix input{font-size:1.2rem;font-weight:900;text-align:center}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.checks{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.check{
+  display:inline-flex;
+  gap:8px;
+  align-items:center;
+  min-height:38px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  font-weight:700;
+}
+.check input{width:18px;min-height:18px;accent-color:var(--green)}
+.needed{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:8px;
+  align-items:center;
+  padding:10px 12px;
+  border:1px solid rgba(184,137,47,.35);
+  border-radius:7px;
+  background:#fff8e8;
+  margin-top:10px;
+}
+.needed b{font-size:1.35rem;color:#7d5a16}
+.message{
+  display:none;
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:6px;
+  border:1px solid rgba(163,59,50,.25);
+  background:#fff1ef;
+  color:var(--red);
+  font-size:.88rem;
+}
+.message.show{display:block}
+.preview{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:8px;
+}
+.player-count-2 .preview{grid-template-columns:repeat(2,minmax(0,1fr))}
+.preview-card{
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:#fff;
+  padding:10px;
+  text-align:center;
+}
+.preview-card .name{font-size:.82rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview-card .total{font-size:1.55rem;font-weight:900;margin-top:3px}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn.primary{flex:1 1 180px}
+.winner{
+  display:none;
+  border:1px solid rgba(184,137,47,.4);
+  background:#fff6df;
+  border-radius:8px;
+  padding:12px;
+  font-weight:900;
+  color:#725111;
+}
+.winner.show{display:block}
+.score-sheet{overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#fff}
+.score-sheet-head{
+  display:grid;
+  grid-template-columns:132px minmax(0,1fr) 76px;
+  background:#f8f5ee;
+  border-bottom:1px solid var(--line);
+}
+.score-sheet-players{
+  display:grid;
+  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+}
+.score-round{
+  display:grid;
+  grid-template-columns:132px minmax(0,1fr) 76px;
+  border-bottom:1px solid var(--line);
+  background:#fff;
+}
+.score-round:last-child{border-bottom:0}
+.round-info{
+  padding:6px 8px;
+  border-right:1px solid var(--line);
+  background:#fbf8f1;
+}
+.round-no{font-size:1rem;font-weight:900;line-height:1}
+.round-meta{margin-top:4px;color:var(--muted);font-size:.72rem;line-height:1.22}
+.round-meta strong{display:block;color:var(--ink);font-size:.8rem}
+.score-lines{
+  display:grid;
+  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+}
+.sheet-head,.sheet-label,.sheet-cell{
+  min-height:26px;
+  padding:4px 7px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.score-lines > :nth-last-child(-n + 4),
+.score-sheet-players > *{border-bottom:0}
+.player-count-2 .score-lines > :nth-last-child(-n + 3){border-bottom:0}
+.sheet-head{
+  color:#4a453d;
+  background:#fbf8f1;
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  overflow:hidden;
+  text-align:center;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.sheet-label{
+  color:var(--muted);
+  background:#fbf8f1;
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.sheet-cell{text-align:center;font-weight:800}
+.sheet-cell.total{font-size:1rem;font-weight:900}
+.sheet-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:4px 6px;
+}
+.sheet-actions .btn{min-height:28px;padding:4px 9px}
+.empty{
+  padding:34px 16px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.45);
+}
+.file-input{display:none}
+@media(max-width:900px){
+  .top,.layout,.settings{grid-template-columns:1fr}
+  .toolbar{justify-content:flex-start}
+}
+@media(max-width:620px){
+  .wrap{padding:12px}
+  .form-grid,.score-grid,.player-count-2 .score-grid,.preview,.player-count-2 .preview{grid-template-columns:1fr}
+  .score-matrix{grid-template-columns:64px repeat(3,minmax(54px,1fr))}
+  .player-count-2 .score-matrix{grid-template-columns:64px repeat(2,minmax(70px,1fr))}
+  .score-sheet-head,.score-round{grid-template-columns:1fr}
+  .score-sheet-head > div:first-child,.score-sheet-head > div:last-child{display:none}
+  .round-info{border-right:0;border-bottom:1px solid var(--line)}
+  .sheet-actions{justify-content:flex-end;border-top:1px solid var(--line)}
+  .round-head{align-items:flex-start;flex-direction:column}
+}
+@media print{
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .toolbar,.actions,.settings-panel,.message,.sheet-actions{display:none}
+  .panel{box-shadow:none}
+  .layout{grid-template-columns:1fr}
+}
+</style>
 </head>
 <body>
-<div id="root"></div>
-<script type="text/babel">
-    const { useState, useEffect } = React;
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Pinochle Score Keeper</h1>
+      <p id="saveState">Loading...</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn" id="printBtn" type="button">Print</button>
+      <button class="btn" id="exportBtn" type="button">Export</button>
+      <button class="btn" id="importBtn" type="button">Import</button>
+      <button class="btn warn" id="resetBtn" type="button">New Game</button>
+      <input class="file-input" id="importFile" type="file" accept="application/json,.json">
+    </div>
+  </header>
 
-    const IcoScores = () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <rect x="2" y="3" width="20" height="18" rx="2"/>
-            <path d="M8 10h8M8 14h5M8 6h8"/>
-        </svg>
-    );
-    const IcoRound = () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="12" r="9"/><path d="M12 8v4l3 3"/>
-        </svg>
-    );
-    const IcoHistory = () => (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-            <path d="M12 7v5l4 2"/>
-        </svg>
-    );
-    const IcoUndo = () => (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/>
-        </svg>
-    );
-    const IcoTrash = () => (
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 6h18M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2M10 11v6M14 11v6"/>
-        </svg>
-    );
-
-    const TRUMP_SUITS = [
-        { label: '♠ Spades',   cls: 'blue-suit' },
-        { label: '♥ Hearts',   cls: 'red-suit'  },
-        { label: '♣ Clubs',    cls: 'blue-suit' },
-        { label: '♦ Diamonds', cls: 'red-suit'  },
-    ];
-
-    const EMPTY_ROUND = { bidder: null, bid: '', trump: '', bidMade: true, handThrown: false, meld: [null,null,null], tricks: [null,null,null] };
-
-    function PinochleScorer() {
-        const [tab,           setTab]           = useState('scores');
-        const [showScores,    setShowScores]    = useState(false);
-        const [step,          setStep]          = useState(0);
-        const [gameStarted,   setGameStarted]   = useState(false);
-        const [players,       setPlayers]       = useState([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
-        const [round,         setRound]         = useState(EMPTY_ROUND);
-        const [autoFilledIdx, setAutoFilledIdx] = useState(null);
-        const [history,       setHistory]       = useState([]);
-        const [editingPlayer, setEditingPlayer] = useState(null);
-        const [winningScore,  setWinningScore]  = useState(150);
-        const [dealer,        setDealer]        = useState(0);
-        const [session,       setSession]       = useState({ winTally:[0,0,0], recordedWinner:null });
-
-        useEffect(() => {
-            try {
-                const d = JSON.parse(localStorage.getItem('pinochleGame') || 'null');
-                if (d) {
-                    setPlayers(d.players || players);
-                    setHistory(d.history || []);
-                    setWinningScore(d.winningScore || 150);
-                    setDealer(d.dealer ?? 0);
-                    // Resume an in-progress game automatically
-                    if (d.gameStarted) setGameStarted(true);
-                }
-            } catch(e) {}
-            try {
-                const s = JSON.parse(sessionStorage.getItem('pinochleSession') || 'null');
-                if (s) setSession({
-                    winTally: Array.isArray(s.winTally) && s.winTally.length===3 ? s.winTally : [0,0,0],
-                    recordedWinner: Number.isInteger(s.recordedWinner) ? s.recordedWinner : null
-                });
-            } catch(e) {}
-        }, []);
-
-        useEffect(() => {
-            localStorage.setItem('pinochleGame', JSON.stringify({ players, history, winningScore, dealer, gameStarted }));
-        }, [players, history, winningScore, dealer, gameStarted]);
-
-        useEffect(() => {
-            sessionStorage.setItem('pinochleSession', JSON.stringify(session));
-        }, [session]);
-
-        const resetRound = () => { setRound(EMPTY_ROUND); setStep(0); setAutoFilledIdx(null); };
-
-        const updateMeld = (i, v) => {
-            const m = [...round.meld];
-            m[i] = v === '' ? null : parseInt(v, 10);
-            setRound({ ...round, meld: m });
-        };
-
-        const updateTricks = (i, v) => {
-            const t = [...round.tricks];
-            t[i] = v === '' ? null : parseInt(v, 10);
-
-            // If user edits the auto-filled field it becomes manual; clear the tracking
-            let newAutoIdx = (autoFilledIdx === i) ? null : autoFilledIdx;
-
-            if (t[i] === null && newAutoIdx !== null) {
-                // User cleared a field — also clear the auto-filled field so it doesn't linger
-                t[newAutoIdx] = null;
-                newAutoIdx = null;
-            } else {
-                // Determine which slot to auto-fill: the previously auto-filled one (so
-                // subsequent edits keep updating it), or the first empty slot if none yet
-                const targetIdx = newAutoIdx !== null ? newAutoIdx : t.findIndex(x => x === null);
-
-                if (targetIdx !== -1 && targetIdx !== i) {
-                    // Only auto-fill when the two non-target fields are both present
-                    const othersAllFilled = t.filter((x, j) => j !== targetIdx && x !== null).length === 2;
-                    if (othersAllFilled) {
-                        const sum = t.reduce((a, x, j) => j !== targetIdx ? a + (x ?? 0) : a, 0);
-                        t[targetIdx] = Math.max(0, 25 - sum);
-                        newAutoIdx = targetIdx;
-                    }
-                }
-            }
-
-            setAutoFilledIdx(newAutoIdx);
-
-            // Auto-set bidMade once all tricks are known
-            let newBidMade = round.bidMade;
-            if (t.every(x => x !== null) && round.bidder !== null && round.bid) {
-                const bidderTricks = t[round.bidder];
-                const bidderMeld   = round.meld[round.bidder] ?? 0;
-                newBidMade = bidderTricks > 0 && (bidderMeld + bidderTricks) >= parseInt(round.bid, 10);
-            }
-
-            setRound({ ...round, tricks: t, bidMade: newBidMade });
-        };
-
-        const calcTotal = (r, i) => {
-            // Bidder throws the hand: bidder goes negative, others keep meld, no tricks played
-            if (r.handThrown) {
-                if (i === r.bidder) return -(parseInt(r.bid, 10) || 0);
-                return r.meld[i] ?? 0;
-            }
-            const tricks  = r.tricks[i];
-            const meld    = r.meld[i] ?? 0;
-            const shutout = r.tricks.findIndex(t => t === 25);
-            if (!r.bidMade && i === r.bidder) return -(parseInt(r.bid, 10) || 0);
-            if (shutout !== -1) return i === shutout ? meld + (tricks ?? 0) : (tricks ?? 0);
-            if (tricks !== null && tricks === 0) return 0;
-            return meld + (tricks ?? 0);
-        };
-
-        const submitRound = () => {
-            if (round.bidder === null) { alert('Please select who took the bid.'); return; }
-            const filled = round.tricks.filter(t=>t!==null);
-            if (filled.length === 3) {
-                const sum = filled.reduce((a,b)=>a+b, 0);
-                if (sum !== 25) { alert(`Tricks must total 25 (currently ${sum}). Please correct before submitting.`); return; }
-            }
-            const totals     = players.map((_,i) => calcTotal(round, i));
-            const newPlayers = players.map((p,i) => ({ ...p, score: p.score + totals[i] }));
-            const winnerIdx  = newPlayers.findIndex(p => p.score >= winningScore);
-            setPlayers(newPlayers);
-            setHistory([...history, {
-                round: history.length+1, dealer,
-                bidder: round.bidder, bid: round.bid, trump: round.trump, bidMade: round.bidMade,
-                meld: [...round.meld], tricks: [...round.tricks], totals
-            }]);
-            setDealer((dealer+1) % 3);
-            if (winnerIdx !== -1 && session.recordedWinner === null) {
-                setSession(prev => {
-                    const t = [...prev.winTally]; t[winnerIdx]++;
-                    return { winTally:t, recordedWinner:winnerIdx };
-                });
-            }
-            resetRound();
-        };
-
-        const undoLastRound = () => {
-            if (!history.length) return;
-            const last       = history[history.length-1];
-            const newPlayers = players.map((p,i) => ({ ...p, score: p.score - last.totals[i] }));
-            setPlayers(newPlayers);
-            setHistory(history.slice(0,-1));
-            setDealer(last.dealer);
-            setRound({ bidder:last.bidder??null, bid:last.bid??'', trump:last.trump??'', bidMade:last.bidMade!==false, meld:[...last.meld], tricks:[...last.tricks] });
-            setAutoFilledIdx(null);
-            if (session.recordedWinner !== null && (newPlayers[session.recordedWinner]?.score??0) < winningScore) {
-                setSession(prev => {
-                    if (prev.recordedWinner===null) return prev;
-                    const t = [...prev.winTally]; t[prev.recordedWinner] = Math.max(0, t[prev.recordedWinner]-1);
-                    return { winTally:t, recordedWinner:null };
-                });
-            }
-        };
-
-        const resetGame = () => {
-            if (!window.confirm('Reset the entire game? This cannot be undone.')) return;
-            setPlayers([{name:'Player 1',score:0},{name:'Player 2',score:0},{name:'Player 3',score:0}]);
-            resetRound();
-            setHistory([]);
-            setDealer(0);
-            setWinningScore(150);
-            setSession(prev=>({...prev, recordedWinner:null}));
-            setGameStarted(false);
-        };
-
-        const updateName = (i, v) => {
-            const p = [...players]; p[i] = {...p[i], name:v}; setPlayers(p);
-        };
-
-        const winner = players.find(p => p.score >= winningScore);
-
-        if (!gameStarted) {
-            return (
-                <SetupScreen
-                    players={players} updateName={updateName}
-                    dealer={dealer} setDealer={setDealer}
-                    winningScore={winningScore} setWinningScore={setWinningScore}
-                    onStart={() => setGameStarted(true)}
-                />
-            );
-        }
-
-        return (
-            <div>
-                <button className="score-strip" onClick={() => setShowScores(true)} aria-label="View scores and history">
-                    {players.map((p,i) => (
-                        <div key={i} className={`ss-cell ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
-                            {dealer===i && <span className="ss-dealer-dot" title="Dealer" />}
-                            <span className="ss-name">{p.name}</span>
-                            <span className={`ss-score ${p.score<0?'neg':''}`}>{p.score}</span>
-                        </div>
-                    ))}
-                </button>
-
-                <div className="main-content">
-                    <RoundTab players={players} round={round} setRound={setRound}
-                        updateMeld={updateMeld} updateTricks={updateTricks} calcTotal={calcTotal}
-                        submitRound={submitRound} history={history} dealer={dealer} setDealer={setDealer}
-                        step={step} setStep={setStep} />
-                </div>
-
-                {showScores && (
-                    <ScoreOverlay
-                        players={players} winner={winner} dealer={dealer} session={session}
-                        editingPlayer={editingPlayer} setEditingPlayer={setEditingPlayer}
-                        updateName={updateName} history={history}
-                        undoLastRound={undoLastRound} resetGame={resetGame}
-                        onClose={() => setShowScores(false)} />
-                )}
+  <main class="layout">
+    <section class="stack">
+      <div class="panel section settings-panel">
+        <div class="settings">
+          <div class="field">
+            <label for="gameTitle">Game Name</label>
+            <input id="gameTitle" type="text" maxlength="48">
+          </div>
+          <div class="field">
+            <span class="label">Players/Teams</span>
+            <div class="seg" id="playerCount" aria-label="Players or teams">
+              <button type="button" data-count="2">2</button>
+              <button type="button" data-count="3">3</button>
             </div>
-        );
+          </div>
+          <div class="field">
+            <label for="targetScore">Playing To</label>
+            <input id="targetScore" type="number" min="1" step="1">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="score-grid" id="nameGrid"></div>
+      </div>
+
+      <form class="panel section" id="roundForm">
+        <div class="round-head">
+          <h2 id="roundTitle">Round</h2>
+          <span class="save-state" id="editState"></span>
+        </div>
+
+        <div class="form-grid">
+          <div class="field">
+            <label for="dealer">Dealer</label>
+            <select id="dealer"></select>
+          </div>
+          <div class="field">
+            <label for="bidder">Bidder</label>
+            <select id="bidder"></select>
+          </div>
+          <div class="field">
+            <label for="bid">Bid</label>
+            <input id="bid" type="number" min="0" step="1" placeholder="25">
+          </div>
+        </div>
+
+        <div class="form-grid" style="margin-top:10px">
+          <div class="field">
+            <label for="trump">Trump</label>
+            <select id="trump">
+              <option value="">Select trump</option>
+              <option>Spades</option>
+              <option>Hearts</option>
+              <option>Clubs</option>
+              <option>Diamonds</option>
+            </select>
+          </div>
+          <div class="field">
+            <span class="label">Round State</span>
+            <label class="check">
+              <input id="thrown" type="checkbox">
+              Bidder conceded
+            </label>
+          </div>
+        </div>
+
+        <div class="needed" id="neededBox">
+          <span id="neededLabel">Needed</span>
+          <b id="neededValue">0</b>
+        </div>
+
+        <div class="divider"></div>
+        <h3 class="section-title">Scores</h3>
+        <div class="score-matrix" id="scoreMatrix"></div>
+
+        <div class="divider"></div>
+        <h3 class="section-title">Round Preview</h3>
+        <div class="preview" id="previewGrid"></div>
+        <div class="message" id="formMessage"></div>
+
+        <div class="actions">
+          <button class="btn primary" id="submitRound" type="submit">Add Round</button>
+          <button class="btn ghost" id="cancelEdit" type="button">Cancel Edit</button>
+          <button class="btn ghost" id="clearRound" type="button">Clear Round</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="stack">
+      <div class="winner" id="winnerBox"></div>
+      <div class="panel section">
+        <h2 class="section-title">Running Tally</h2>
+        <div id="history"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+const STORE_KEY = 'pinochleScorekeeper.v2';
+const LEGACY_KEY = 'pinochleGame';
+const MAX_PLAYERS = 3;
+const TRICK_TOTAL = 25;
+const COLORS = ['#2f684d','#2f5f8c','#b8892f'];
+
+let state = loadState();
+let saveTimer = 0;
+let autoTrickIndex = null;
+
+function emptyRound(dealer){
+  return {
+    dealer: clampPlayer(dealer ?? 0),
+    bidder: null,
+    bid: null,
+    trump: '',
+    thrown: false,
+    meld: Array(MAX_PLAYERS).fill(null),
+    tricks: Array(MAX_PLAYERS).fill(null)
+  };
+}
+
+function defaultState(){
+  return {
+    version: 2,
+    title: 'Game Night',
+    playerCount: 3,
+    targetScore: 150,
+    players: ['Player 1','Player 2','Player 3'],
+    rounds: [],
+    editingIndex: null,
+    draft: emptyRound(0)
+  };
+}
+
+function loadState(){
+  const saved = readJson(STORE_KEY);
+  if(saved) return normalizeState(saved);
+
+  const legacy = readJson(LEGACY_KEY);
+  if(legacy) return normalizeState(migrateLegacy(legacy));
+
+  return defaultState();
+}
+
+function readJson(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    return null;
+  }
+}
+
+function saveNow(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+  }catch(error){
+    setSaveState('Saved for this tab');
+  }
+}
+
+function scheduleSave(){
+  setSaveState('Saving...');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 120);
+}
+
+function setSaveState(text){
+  document.getElementById('saveState').textContent = text;
+}
+
+function migrateLegacy(legacy){
+  const players = Array.from({length:MAX_PLAYERS},(_,i)=>{
+    const player = legacy.players?.[i];
+    return String(player?.name || player || 'Player ' + (i+1));
+  });
+  const rounds = Array.isArray(legacy.history) ? legacy.history.map(round => normalizeRound({
+    dealer: round.dealer,
+    bidder: round.bidder,
+    bid: round.bid,
+    trump: round.trump,
+    thrown: !!round.handThrown,
+    meld: round.meld,
+    tricks: round.tricks
+  })) : [];
+
+  return {
+    ...defaultState(),
+    title: 'Game Night',
+    playerCount: 3,
+    targetScore: numberOr(legacy.winningScore, 150),
+    players,
+    rounds,
+    draft: emptyRound(numberOr(legacy.dealer, nextDealerFrom(rounds, 3)))
+  };
+}
+
+function normalizeState(next){
+  const base = defaultState();
+  next = {...base, ...next};
+  next.version = 2;
+  next.playerCount = Math.min(MAX_PLAYERS, Math.max(2, numberOr(next.playerCount, 3)));
+  next.targetScore = Math.max(1, numberOr(next.targetScore ?? next.winningScore, 150));
+  next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(next.players?.[i] || base.players[i]));
+  next.rounds = Array.isArray(next.rounds) ? next.rounds.map(normalizeRound) : [];
+  next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
+  if(next.editingIndex !== null && (next.editingIndex < 0 || next.editingIndex >= next.rounds.length)){
+    next.editingIndex = null;
+  }
+  next.draft = normalizeRound(next.draft || emptyRound(nextDealerFrom(next.rounds, next.playerCount)));
+  normalizeForPlayerCount(next);
+  return next;
+}
+
+function normalizeForPlayerCount(model){
+  model.rounds.forEach(round => {
+    round.dealer = clampPlayer(round.dealer, model.playerCount);
+    round.bidder = round.bidder === null ? null : clampPlayer(round.bidder, model.playerCount);
+  });
+  model.draft.dealer = clampPlayer(model.draft.dealer, model.playerCount);
+  if(model.draft.bidder !== null) model.draft.bidder = clampPlayer(model.draft.bidder, model.playerCount);
+}
+
+function normalizeRound(round){
+  const next = emptyRound(round?.dealer ?? 0);
+  next.bidder = round?.bidder === null || round?.bidder === undefined ? null : clampPlayer(round.bidder);
+  next.bid = nullableNumber(round?.bid);
+  next.trump = String(round?.trump || '');
+  next.thrown = !!round?.thrown || !!round?.handThrown;
+  next.meld = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(round?.meld?.[i]));
+  next.tricks = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(round?.tricks?.[i]));
+  if(next.thrown) next.tricks = Array(MAX_PLAYERS).fill(null);
+  return next;
+}
+
+function visiblePlayers(){
+  return Array.from({length:state.playerCount},(_,i)=>i);
+}
+
+function clampPlayer(value, count){
+  const limit = count || MAX_PLAYERS;
+  return Math.min(limit - 1, Math.max(0, numberOr(value, 0)));
+}
+
+function nullableNumber(value){
+  if(value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0, number) : null;
+}
+
+function numberOr(value, fallback){
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function format(value){
+  const number = numberOr(value, 0);
+  return number.toLocaleString();
+}
+
+function signed(value){
+  return value > 0 ? '+' + format(value) : format(value);
+}
+
+function nextDealerFrom(rounds, playerCount){
+  if(!rounds.length) return 0;
+  return (clampPlayer(rounds[rounds.length - 1].dealer, playerCount) + 1) % playerCount;
+}
+
+function currentTotals(round){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  const bid = numberOr(round.bid, 0);
+  const bidder = round.bidder;
+  const visible = visiblePlayers();
+
+  if(round.thrown){
+    visible.forEach(i => {
+      totals[i] = i === bidder ? -bid : numberOr(round.meld[i], 0);
+    });
+    return totals;
+  }
+
+  const shutout = visible.find(i => numberOr(round.tricks[i], 0) === TRICK_TOTAL);
+  const bidMade = isBidMade(round);
+
+  visible.forEach(i => {
+    const meld = numberOr(round.meld[i], 0);
+    const tricks = numberOr(round.tricks[i], 0);
+    if(!bidMade && i === bidder){
+      totals[i] = -bid;
+    }else if(shutout !== undefined){
+      totals[i] = i === shutout ? meld + tricks : tricks;
+    }else if(tricks === 0){
+      totals[i] = 0;
+    }else{
+      totals[i] = meld + tricks;
     }
+  });
+  return totals;
+}
 
-    function ScoreOverlay({ players, winner, dealer, session, editingPlayer, setEditingPlayer, updateName, history, undoLastRound, resetGame, onClose }) {
-        const hasDefaultNames = players.some(p => /^Player [123]$/.test(p.name));
-        return (
-            <div className="overlay-backdrop" onClick={onClose}>
-                <div className="overlay-sheet" onClick={e => e.stopPropagation()}>
-                    <div className="overlay-handle" />
+function isBidMade(round){
+  if(round.thrown || round.bidder === null) return false;
+  const tricks = numberOr(round.tricks[round.bidder], 0);
+  if(tricks <= 0) return false;
+  return numberOr(round.meld[round.bidder], 0) + tricks >= numberOr(round.bid, 0);
+}
 
-                    {winner && (
-                        <div className="winner-banner">
-                            <h2>🎉 {winner.name} Wins!</h2>
-                            <p>Final Score: {winner.score} points</p>
-                        </div>
-                    )}
+function cumulativeTotals(throughIndex){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  const end = throughIndex === undefined ? state.rounds.length - 1 : throughIndex;
+  for(let r=0; r<=end; r++){
+    const roundTotals = currentTotals(state.rounds[r]);
+    visiblePlayers().forEach(i => totals[i] += roundTotals[i]);
+  }
+  return totals;
+}
 
-                    <div className="score-grid">
-                        {players.map((p,i) => (
-                            <div key={i} className={`score-card ${dealer===i?'is-dealer':''} ${winner&&winner===p?'is-winner':''}`}>
-                                {dealer===i && <span className="dealer-pip">Dealer</span>}
-                                <div className="sc-name">
-                                    {editingPlayer===i ? (
-                                        <input type="text" value={p.name} autoFocus
-                                            onChange={e=>updateName(i,e.target.value)}
-                                            onBlur={()=>setEditingPlayer(null)}
-                                            onKeyDown={e=>e.key==='Enter'&&setEditingPlayer(null)} />
-                                    ) : (
-                                        <span onClick={()=>setEditingPlayer(i)}>{p.name}</span>
-                                    )}
-                                </div>
-                                <div className={`sc-score ${p.score<0?'neg':''}`}>{p.score}</div>
-                                <div className="sc-wins">{session.winTally[i]||0} win{session.winTally[i]!==1?'s':''}</div>
-                            </div>
-                        ))}
-                    </div>
+function winnerIndex(){
+  const totals = cumulativeTotals();
+  return visiblePlayers().find(i => totals[i] >= state.targetScore);
+}
 
-                    <div className="card">
-                        <div className="card-title">Game Controls</div>
-                        <div className="control-row">
-                            <button className="btn btn-amber" onClick={undoLastRound} disabled={history.length===0}>
-                                <IcoUndo /> Undo Round
-                            </button>
-                            <button className="btn btn-danger" onClick={resetGame}>
-                                <IcoTrash /> New Game
-                            </button>
-                        </div>
-                    </div>
+function validateRound(round){
+  if(round.bidder === null) return 'Select a bidder.';
+  if(!numberOr(round.bid, 0)) return 'Enter the bid.';
+  if(round.thrown) return '';
 
-                    {hasDefaultNames && (
-                        <div className="info-box">Tap any player name to rename them.</div>
-                    )}
+  const visible = visiblePlayers();
+  const missing = visible.some(i => round.tricks[i] === null);
+  if(missing) return 'Enter trick points for each player/team.';
 
-                    {history.length > 0 && (
-                        <div>
-                            <div className="card-title" style={{marginBottom:10}}>Score History</div>
-                            {[...history].reverse().map((r,ri) => (
-                                <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
-                                    <div className="hc-header">
-                                        <span className="hc-round">Round {r.round}</span>
-                                        <span className="hc-meta">
-                                            {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
-                                        </span>
-                                    </div>
-                                    <div className="hc-scores">
-                                        {players.map((p,i) => (
-                                            <div key={i} className="hc-player">
-                                                <div className="hc-pname">{p.name}</div>
-                                                <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
-                                                    {r.totals[i]>0&&'+'}{r.totals[i]}
-                                                </div>
-                                                <div className="hc-pdetail">M:{r.meld[i]??0} T:{r.tricks[i]??0}</div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    )}
+  const sum = visible.reduce((total,i)=>total + numberOr(round.tricks[i], 0), 0);
+  if(sum !== TRICK_TOTAL) return 'Trick points must total ' + TRICK_TOTAL + '. Current total is ' + sum + '.';
 
-                    {history.length === 0 && (
-                        <div className="empty-state">No rounds played yet.</div>
-                    )}
-                </div>
-            </div>
-        );
+  return '';
+}
+
+function render(){
+  document.getElementById('app').classList.toggle('player-count-2', state.playerCount === 2);
+  document.getElementById('gameTitle').value = state.title;
+  document.getElementById('targetScore').value = state.targetScore;
+  renderPlayerCount();
+  renderNameGrid();
+  renderRoundForm();
+  renderHistory();
+  renderWinner();
+}
+
+function renderPlayerCount(){
+  document.querySelectorAll('#playerCount button').forEach(button=>{
+    button.classList.toggle('active', Number(button.dataset.count) === state.playerCount);
+  });
+}
+
+function renderNameGrid(){
+  const grid = document.getElementById('nameGrid');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const field = document.createElement('div');
+    field.className = 'field';
+    field.innerHTML = '<label for="playerName' + i + '">Name ' + (i+1) + '</label>';
+    const input = document.createElement('input');
+    input.id = 'playerName' + i;
+    input.type = 'text';
+    input.maxLength = 24;
+    input.value = state.players[i];
+    input.style.borderLeft = '5px solid ' + COLORS[i];
+    input.addEventListener('input',()=>{
+      state.players[i] = input.value;
+      syncPlayerSelects();
+      renderScoreMatrix();
+      renderHistory();
+      renderPreview();
+      scheduleSave();
+    });
+    field.appendChild(input);
+    grid.appendChild(field);
+  });
+}
+
+function renderRoundForm(){
+  document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Round ' + (state.rounds.length + 1) : 'Round ' + (state.editingIndex + 1);
+  document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
+  document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Round' : 'Save Round';
+  document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
+
+  syncPlayerSelects();
+  document.getElementById('bid').value = state.draft.bid ?? '';
+  document.getElementById('trump').value = state.draft.trump || '';
+  document.getElementById('thrown').checked = !!state.draft.thrown;
+  renderScoreMatrix();
+  renderNeeded();
+  renderPreview();
+  setMessage('');
+}
+
+function syncPlayerSelects(){
+  const dealer = document.getElementById('dealer');
+  const bidder = document.getElementById('bidder');
+  const dealerValue = String(clampPlayer(state.draft.dealer, state.playerCount));
+  const bidderValue = state.draft.bidder === null ? '' : String(clampPlayer(state.draft.bidder, state.playerCount));
+
+  dealer.innerHTML = '';
+  bidder.innerHTML = '<option value="">Select bidder</option>';
+  visiblePlayers().forEach(i=>{
+    const dealerOption = new Option(state.players[i] || 'Player ' + (i+1), String(i));
+    const bidderOption = new Option(state.players[i] || 'Player ' + (i+1), String(i));
+    dealer.add(dealerOption);
+    bidder.add(bidderOption);
+  });
+  dealer.value = dealerValue;
+  bidder.value = bidderValue;
+}
+
+function renderScoreMatrix(){
+  const grid = document.getElementById('scoreMatrix');
+  grid.innerHTML = '<div></div>';
+
+  visiblePlayers().forEach(i=>{
+    const head = document.createElement('div');
+    head.className = 'matrix-head';
+    head.textContent = state.players[i] || 'Player ' + (i+1);
+    grid.appendChild(head);
+  });
+
+  appendScoreRow(grid, 'Meld', 'meld');
+  appendScoreRow(grid, 'Tricks', 'tricks');
+}
+
+function appendScoreRow(grid, label, key){
+  const rowLabel = document.createElement('div');
+  rowLabel.className = 'matrix-label';
+  rowLabel.textContent = label;
+  grid.appendChild(rowLabel);
+
+  visiblePlayers().forEach(i=>{
+    const input = document.createElement('input');
+    input.type = 'number';
+    input.step = '1';
+    input.min = '0';
+    input.value = state.draft[key][i] ?? '';
+    input.placeholder = '0';
+    input.disabled = key === 'tricks' && state.draft.thrown;
+    input.setAttribute('aria-label', label + ' for ' + (state.players[i] || 'Player ' + (i+1)));
+    input.addEventListener('input',()=>{
+      if(key === 'tricks') setDraftTrick(i, input.value);
+      else state.draft.meld[i] = nullableNumber(input.value);
+      renderNeeded();
+      renderPreview();
+      scheduleSave();
+    });
+    grid.appendChild(input);
+  });
+}
+
+function setDraftTrick(index, value){
+  const tricks = state.draft.tricks;
+  tricks[index] = nullableNumber(value);
+
+  if(autoTrickIndex === index) autoTrickIndex = null;
+  if(tricks[index] === null && autoTrickIndex !== null){
+    tricks[autoTrickIndex] = null;
+    autoTrickIndex = null;
+  }
+
+  let target = autoTrickIndex;
+  const visible = visiblePlayers();
+  const empty = visible.filter(i => tricks[i] === null);
+  if(target === null || target === index){
+    target = empty.length === 1 ? empty[0] : null;
+  }
+
+  if(target !== null && target !== index){
+    const others = visible.filter(i => i !== target);
+    if(others.every(i => tricks[i] !== null)){
+      const sum = others.reduce((total,i)=>total + numberOr(tricks[i], 0), 0);
+      tricks[target] = Math.max(0, TRICK_TOTAL - sum);
+      autoTrickIndex = target;
     }
+  }
 
-    function RoundTab({ players, round, setRound, updateMeld, updateTricks, calcTotal, submitRound, history, dealer, setDealer, step, setStep }) {
-        const [showTricksHint,   setShowTricksHint]   = useState(false);
-        const [showShutoutRule,  setShowShutoutRule]   = useState(false);
-        const bidderMeld   = round.bidder!==null ? (round.meld[round.bidder] ?? 0) : 0;
-        const tricksNeeded = round.bid && bidderMeld > 0
-            ? Math.max(0, parseInt(round.bid) - bidderMeld)
-            : null;
+  renderScoreMatrix();
+}
 
-        return (
-            <div>
-                <div className="round-hdr">
-                    <h2>Round {history.length+1}{step > 0 ? ` — ${['Bid','Meld','Tricks','Preview'][step]}` : ' — Bid'}</h2>
-                    <p>Dealer: {players[dealer]?.name}</p>
-                </div>
+function renderNeeded(){
+  const box = document.getElementById('neededBox');
+  const bidder = state.draft.bidder;
+  if(bidder === null || !numberOr(state.draft.bid, 0)){
+    box.style.display = 'none';
+    return;
+  }
+  box.style.display = '';
+  const needed = Math.max(0, numberOr(state.draft.bid, 0) - numberOr(state.draft.meld[bidder], 0));
+  document.getElementById('neededLabel').textContent = (state.players[bidder] || 'Bidder') + ' needs';
+  document.getElementById('neededValue').textContent = format(needed);
+}
 
-                <div className="step-dots">
-                    {['Bid','Meld','Tricks','Submit'].map((s,i) => (
-                        <div key={i} className={`step-dot ${i===step?'active':i<step?'done':''}`} title={s} />
-                    ))}
-                </div>
+function renderPreview(){
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+  const totals = currentTotals(state.draft);
+  visiblePlayers().forEach(i=>{
+    const card = document.createElement('div');
+    const value = totals[i];
+    card.className = 'preview-card';
+    card.innerHTML = '<div class="name">' + escapeHtml(state.players[i] || 'Player ' + (i+1)) + '</div>' +
+      '<div class="total ' + (value < 0 ? 'negative' : 'positive') + '">' + signed(value) + '</div>';
+    grid.appendChild(card);
+  });
+}
 
-                {step===0 && (
-                    <div>
-                        <div className="field">
-                            <span className="field-label">Who Took the Bid?</span>
-                            <div className="choice-grid-3">
-                                {players.map((p,i) => (
-                                    <button key={i} className={`choice-btn ${round.bidder===i?'active':''}`}
-                                        onClick={()=>setRound({...round,bidder:i})}>{p.name}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="field">
-                            <label className="field-label">Bid Amount</label>
-                            <input type="number" value={round.bid} placeholder="e.g. 25"
-                                onChange={e=>setRound({...round,bid:e.target.value})} />
-                        </div>
-                        <div className="field">
-                            <span className="field-label">Trump Suit</span>
-                            <div className="choice-grid-2">
-                                {TRUMP_SUITS.map(s => (
-                                    <button key={s.label}
-                                        className={`choice-btn ${s.cls} ${round.trump===s.label?(s.cls==='red-suit'?'active-red':'active'):''}`}
-                                        onClick={()=>setRound({...round,trump:s.label})}>{s.label}</button>
-                                ))}
-                            </div>
-                        </div>
-                        <div className="step-nav">
-                            <button className="btn-next" onClick={()=>setStep(1)}>Next: Meld →</button>
-                        </div>
-                    </div>
-                )}
+function renderWinner(){
+  const winner = winnerIndex();
+  const box = document.getElementById('winnerBox');
+  if(winner === undefined){
+    box.classList.remove('show');
+    box.textContent = '';
+  }else{
+    box.classList.add('show');
+    box.textContent = (state.players[winner] || 'Player ' + (winner + 1)) + ' has reached ' + state.targetScore + '.';
+  }
+}
 
-                {step===1 && (
-                    <div>
-                        {players.map((p,i) => (
-                            <div key={i} className="pi-row">
-                                <div className="pi-name">
-                                    {p.name}
-                                    {i===round.bidder && <div className="pi-sub">Bidder</div>}
-                                </div>
-                                <input type="number" className="center" value={round.meld[i]??''}
-                                    placeholder="0" onChange={e=>updateMeld(i,e.target.value)} />
-                            </div>
-                        ))}
-                        {tricksNeeded !== null && (
-                            <div className="tricks-calc">
-                                <div className="tc-label">{players[round.bidder]?.name} needs in tricks</div>
-                                <div className="tc-need">{tricksNeeded} pts</div>
-                                <div className="tc-label">Bid {round.bid} − Meld {bidderMeld}</div>
-                            </div>
-                        )}
-                        <div className="toggle-row" onClick={()=>setRound({...round, handThrown:!round.handThrown, tricks:[null,null,null]})}>
-                            <span className="toggle-label">Bidder Throws Hand?</span>
-                            <div className={`toggle-pill warn ${round.handThrown?'on':''}`} />
-                        </div>
-                        {round.handThrown && (
-                            <div className="info-box warn">Bidder goes −{round.bid||'bid'}. Other players keep their meld. No tricks played.</div>
-                        )}
-                        <div className="step-nav">
-                            <button className="btn-back" onClick={()=>setStep(0)}>← Back</button>
-                            <button className="btn-next" onClick={()=>setStep(round.handThrown ? 3 : 2)}>
-                                {round.handThrown ? 'Preview →' : 'Next: Tricks →'}
-                            </button>
-                        </div>
-                    </div>
-                )}
+function renderHistory(){
+  const target = document.getElementById('history');
+  if(!state.rounds.length){
+    target.innerHTML = '<div class="empty">No rounds yet.</div>';
+    return;
+  }
 
-                {step===2 && (
-                    <div>
-                        <button className="hint-btn" onClick={()=>setShowTricksHint(v=>!v)}>
-                            ⓘ {showTricksHint ? 'Hide hint' : 'How auto-calculate works'}
-                        </button>
-                        {showTricksHint && (
-                            <div className="info-box">Enter any two players — the third auto-calculates to reach 25.</div>
-                        )}
-                        {players.map((p,i) => (
-                            <div key={i} className="pi-row">
-                                <div className="pi-name">
-                                    {p.name}
-                                    {i===round.bidder && <div className="pi-sub">Bidder</div>}
-                                </div>
-                                <input type="number" className="center"
-                                    value={round.tricks[i]===null?'':round.tricks[i]}
-                                    placeholder="0" onChange={e=>updateTricks(i,e.target.value)} />
-                            </div>
-                        ))}
-                        <div className="toggle-row" onClick={()=>setRound({...round,bidMade:!round.bidMade})}>
-                            <span className="toggle-label">Bid Made?</span>
-                            <div className={`toggle-pill ${round.bidMade?'on':''}`} />
-                        </div>
-                        {!round.bidMade && (
-                            <div className="info-box warn">Bidder loses the bid amount. Others score meld + tricks normally.</div>
-                        )}
-                        <button className="hint-btn" onClick={()=>setShowShutoutRule(v=>!v)}>
-                            ⓘ {showShutoutRule ? 'Hide rules' : 'Scoring rules'}
-                        </button>
-                        {showShutoutRule && (
-                            <div className="info-box">
-                                0 tricks = player loses their meld. Shutout rule: taking all 25 trick points means only that player keeps their meld.
-                            </div>
-                        )}
-                        <div className="step-nav">
-                            <button className="btn-back" onClick={()=>setStep(1)}>← Back</button>
-                            <button className="btn-next" onClick={()=>setStep(3)}>Preview →</button>
-                        </div>
-                    </div>
-                )}
+  const players = visiblePlayers();
+  let html = '<div class="score-sheet">';
+  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '"><div></div>';
+  players.forEach(i=>{
+    html += '<div class="sheet-head">' + escapeHtml(state.players[i] || 'Player ' + (i+1)) + '</div>';
+  });
+  html += '</div><div></div></div>';
 
-                {step===3 && (
-                    <div>
-                        <div className="card">
-                            <div style={{fontSize:'0.72rem',color:'var(--muted)',marginBottom:10}}>
-                                {round.trump||'No trump'} &bull; Bid {round.bid||'—'} by {round.bidder!==null?players[round.bidder]?.name:'—'} &bull; {round.handThrown ? '🚫 Hand thrown' : round.bidMade ? 'Bid made ✓' : 'Bid failed ✗'}
-                            </div>
-                            {players.map((p,i) => {
-                                const total = calcTotal(round,i);
-                                return (
-                                    <div key={i} className="preview-row">
-                                        <div>
-                                            <div className="pr-name">{p.name}</div>
-                                            <div className="pr-detail">Meld {round.meld[i]??0}{round.handThrown ? ' · No tricks' : ` + Tricks ${round.tricks[i]??'?'}`}</div>
-                                        </div>
-                                        <div className={`pr-total ${total<0?'neg':'pos'}`}>{total>0&&'+'}{total}</div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                        <div className="step-nav">
-                            <button className="btn-back" onClick={()=>setStep(round.handThrown ? 1 : 2)}>← Back</button>
-                            <button className="btn-next" onClick={submitRound}>Submit Round ✓</button>
-                        </div>
-                    </div>
-                )}
-            </div>
-        );
+  state.rounds.forEach((round, roundIndex)=>{
+    const roundTotals = currentTotals(round);
+    const runningTotals = cumulativeTotals(roundIndex);
+    const bidderName = round.bidder === null ? '-' : state.players[round.bidder];
+    const bidMade = isBidMade(round);
+    const bidderSet = !round.thrown && !bidMade;
+    const status = round.thrown ? 'Conceded' : (bidMade ? 'Made' : 'Set');
+    html += '<div class="score-round">';
+    html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
+    html += '<div class="round-meta"><strong>' + escapeHtml(bidderName || '-') + ' bid ' + format(round.bid || 0) + '</strong>';
+    html += 'Dealer: ' + escapeHtml(state.players[round.dealer] || '-') + '<br>';
+    html += 'Trump: ' + escapeHtml(round.trump || '-') + '<br>';
+    html += 'Result: ' + status + '</div></div>';
+
+    html += '<div class="score-lines" style="--players:' + players.length + '">';
+    html += '<div class="sheet-label">Meld</div>';
+    players.forEach(i=>{
+      const shownMeld = (round.thrown || bidderSet) && i === round.bidder ? -numberOr(round.bid, 0) : numberOr(round.meld[i], 0);
+      html += '<div class="sheet-cell ' + (shownMeld < 0 ? 'negative' : '') + '">' + (shownMeld < 0 ? signed(shownMeld) : format(shownMeld)) + '</div>';
+    });
+    html += '<div class="sheet-label">Tricks</div>';
+    players.forEach(i=>{
+      const shownTricks = (round.thrown || (bidderSet && i === round.bidder)) ? '-' : format(round.tricks[i] || 0);
+      html += '<div class="sheet-cell">' + shownTricks + '</div>';
+    });
+    html += '<div class="sheet-label">Total</div>';
+    players.forEach(i=>{
+      html += '<div class="sheet-cell total ' + (runningTotals[i] < 0 ? 'negative' : 'positive') + '">' + signed(runningTotals[i]) + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button></div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  target.innerHTML = html;
+}
+
+function setMessage(text){
+  const message = document.getElementById('formMessage');
+  message.textContent = text;
+  message.classList.toggle('show', !!text);
+}
+
+function saveDraft(){
+  const error = validateRound(state.draft);
+  if(error){
+    setMessage(error);
+    return;
+  }
+
+  const round = normalizeRound(state.draft);
+  if(state.editingIndex === null){
+    state.rounds.push(round);
+  }else{
+    state.rounds[state.editingIndex] = round;
+    state.editingIndex = null;
+  }
+
+  state.draft = emptyRound(nextDealerFrom(state.rounds, state.playerCount));
+  autoTrickIndex = null;
+  render();
+  scheduleSave();
+}
+
+function clearDraft(){
+  state.draft = emptyRound(state.editingIndex === null ? nextDealerFrom(state.rounds, state.playerCount) : state.draft.dealer);
+  autoTrickIndex = null;
+  renderRoundForm();
+  scheduleSave();
+}
+
+function cancelEdit(){
+  state.editingIndex = null;
+  state.draft = emptyRound(nextDealerFrom(state.rounds, state.playerCount));
+  autoTrickIndex = null;
+  render();
+  scheduleSave();
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  link.href = url;
+  link.download = 'pinochle-scorekeeper-' + stamp + '.json';
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      state = normalizeState(JSON.parse(reader.result));
+      autoTrickIndex = null;
+      render();
+      saveNow();
+    }catch(error){
+      setMessage('That backup could not be imported.');
     }
+  };
+  reader.readAsText(file);
+}
 
-    function HistoryTab({ history, players }) {
-        if (!history.length) {
-            return (
-                <div className="empty-state">
-                    <div style={{fontSize:'2.5rem',marginBottom:10}}>🃏</div>
-                    No rounds played yet.<br/>Head to the Round tab to get started.
-                </div>
-            );
-        }
-        return (
-            <div>
-                {[...history].reverse().map((r,ri) => (
-                    <div key={ri} className={`history-card ${!r.bidMade?'bust':''}`}>
-                        <div className="hc-header">
-                            <span className="hc-round">Round {r.round}</span>
-                            <span className="hc-meta">
-                                {r.trump||'—'} &bull; {r.bidder!==null?players[r.bidder]?.name:'?'} bid {r.bid||'—'} {r.bidMade?'✓':'✗'}
-                            </span>
-                        </div>
-                        <div className="hc-scores">
-                            {players.map((p,i) => (
-                                <div key={i} className="hc-player">
-                                    <div className="hc-pname">{p.name}</div>
-                                    <div className={`hc-ptotal ${r.totals[i]<0?'neg':'pos'}`}>
-                                        {r.totals[i]>0&&'+'}{r.totals[i]}
-                                    </div>
-                                    <div className="hc-pdetail">M:{r.meld[i]} T:{r.tricks[i]}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                ))}
-            </div>
-        );
-    }
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[char]));
+}
 
-    function SetupScreen({ players, updateName, dealer, setDealer, winningScore, setWinningScore, onStart }) {
-        return (
-            <div className="setup-screen">
-                <div className="setup-title">🃏 Pinochle</div>
-                <div className="setup-subtitle">Score Keeper</div>
+document.getElementById('gameTitle').addEventListener('input',event=>{
+  state.title = event.target.value;
+  scheduleSave();
+});
 
-                <div className="setup-card">
-                    <div className="setup-card-label">Player Names</div>
-                    {players.map((p, i) => (
-                        <div key={i} style={{marginBottom: i < 2 ? 8 : 0}}>
-                            <input type="text" value={p.name}
-                                onChange={e => updateName(i, e.target.value)}
-                                placeholder={`Player ${i+1}`} />
-                        </div>
-                    ))}
-                </div>
+document.getElementById('targetScore').addEventListener('input',event=>{
+  state.targetScore = Math.max(1, numberOr(event.target.value, 150));
+  renderWinner();
+  scheduleSave();
+});
 
-                <div className="setup-card">
-                    <div className="setup-card-label">Who Deals First?</div>
-                    <div className="choice-grid-3">
-                        {players.map((p, i) => (
-                            <button key={i} className={`choice-btn ${dealer===i?'active':''}`}
-                                onClick={() => setDealer(i)}>{p.name}</button>
-                        ))}
-                    </div>
-                </div>
+document.getElementById('playerCount').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-count]');
+  if(!button) return;
+  state.playerCount = Number(button.dataset.count);
+  normalizeForPlayerCount(state);
+  if(state.editingIndex === null) state.draft.dealer = nextDealerFrom(state.rounds, state.playerCount);
+  autoTrickIndex = null;
+  render();
+  scheduleSave();
+});
 
-                <div className="setup-card">
-                    <div className="setup-card-label">Playing To</div>
-                    <div className="setup-score-row">
-                        <input type="number" value={winningScore}
-                            onChange={e => setWinningScore(parseInt(e.target.value)||150)} />
-                        <span>points to win</span>
-                    </div>
-                </div>
+document.getElementById('dealer').addEventListener('change',event=>{
+  state.draft.dealer = Number(event.target.value);
+  scheduleSave();
+});
 
-                <button className="btn btn-gold" style={{width:'100%', marginTop:4}} onClick={onStart}>
-                    Start Game
-                </button>
-            </div>
-        );
-    }
+document.getElementById('bidder').addEventListener('change',event=>{
+  state.draft.bidder = event.target.value === '' ? null : Number(event.target.value);
+  renderNeeded();
+  renderPreview();
+  scheduleSave();
+});
 
-    ReactDOM.createRoot(document.getElementById('root')).render(<PinochleScorer />);
+document.getElementById('bid').addEventListener('input',event=>{
+  state.draft.bid = nullableNumber(event.target.value);
+  renderNeeded();
+  renderPreview();
+  scheduleSave();
+});
+
+document.getElementById('trump').addEventListener('change',event=>{
+  state.draft.trump = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('thrown').addEventListener('change',event=>{
+  state.draft.thrown = event.target.checked;
+  if(state.draft.thrown) state.draft.tricks = Array(MAX_PLAYERS).fill(null);
+  autoTrickIndex = null;
+  renderRoundForm();
+  scheduleSave();
+});
+
+document.getElementById('roundForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  saveDraft();
+});
+
+document.getElementById('clearRound').addEventListener('click',clearDraft);
+document.getElementById('cancelEdit').addEventListener('click',cancelEdit);
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+document.getElementById('exportBtn').addEventListener('click',exportData);
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',event=>{
+  const file = event.target.files[0];
+  if(file) importData(file);
+  event.target.value = '';
+});
+
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Start a new Pinochle game?')) return;
+  state = defaultState();
+  autoTrickIndex = null;
+  render();
+  saveNow();
+});
+
+document.getElementById('history').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-edit]');
+  if(!button) return;
+  const index = Number(button.dataset.edit);
+  state.editingIndex = index;
+  state.draft = normalizeRound(state.rounds[index]);
+  autoTrickIndex = null;
+  render();
+  document.getElementById('roundForm').scrollIntoView({behavior:'smooth', block:'start'});
+  scheduleSave();
+});
+
+render();
+saveNow();
 </script>
 </body>
 </html>
