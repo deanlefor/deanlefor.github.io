@@ -38,16 +38,20 @@ input,select{border:1px solid var(--line);background:#fff;border-radius:5px;min-
 input:focus,select:focus{outline:2px solid rgba(47,107,85,.18);border-color:var(--green)}
 input[type=number]{text-align:right}
 .name-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
-.score-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:#ebe7df;border-bottom:1px solid rgba(201,195,184,.75)}
+.score-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:#ebe7df;border-bottom:1px solid rgba(201,195,184,.75)}
 .score-card{padding:12px;border-left:5px solid var(--green)}
 .score-card:nth-child(2){border-left-color:var(--blue)}
 .score-card:nth-child(3){border-left-color:var(--gold)}
 .score-card:nth-child(4){border-left-color:var(--red)}
+.score-card:nth-child(5){border-left-color:#6a4c93}
+.score-card:nth-child(6){border-left-color:#2a8c82}
+.score-card:nth-child(7){border-left-color:#b4682f}
+.score-card:nth-child(8){border-left-color:#5c6670}
 .score-name{color:var(--muted);font-weight:700;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .score-total{font-size:2rem;font-weight:800;line-height:1.05;margin-top:4px}
 .score-sub{color:var(--muted);font-size:.78rem;margin-top:3px}
 .sheet{overflow:auto;border-radius:8px}
-table{border-collapse:separate;border-spacing:0;width:100%;min-width:900px;background:var(--panel)}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:1120px;background:var(--panel)}
 th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center}
 th:first-child,td:first-child{border-left:1px solid var(--line)}
 thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid var(--line);padding:9px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
@@ -72,6 +76,11 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 .rule{background:#fff;padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.house-rules{margin:14px 0;padding:14px}
+.house-rules h2{margin:0 0 10px;font-size:1rem}
+.house-rule-list{margin:0;padding-left:20px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:#423d36;font-size:.9rem;line-height:1.35}
+.house-rule-list li{break-inside:avoid}
+.house-rule-list strong{font-weight:800}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
 .footer-notes{display:flex;flex-direction:column;gap:4px;line-height:1.35}
 .disclaimer{font-size:.74rem}
@@ -81,10 +90,11 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   .wrap{padding:12px}.top,.settings-main{grid-template-columns:1fr}.toolbar{justify-content:flex-start}
   .name-grid,.score-strip{grid-template-columns:repeat(2,1fr)}
   .rules{grid-template-columns:repeat(2,1fr)}
+  .house-rule-list{grid-template-columns:1fr}
 }
 @media print{
-  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.footer{display:none}
-  .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(4,1fr)}
+  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.house-rules,.footer{display:none}
+  .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
   .sheet{overflow:visible}table{min-width:0;font-size:10px}.row-label{width:120px}
   input{border:0;padding:0}.round-points{border:0;background:transparent;padding:0}
 }
@@ -114,6 +124,10 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
           <button type="button" data-count="2">2</button>
           <button type="button" data-count="3">3</button>
           <button type="button" data-count="4">4</button>
+          <button type="button" data-count="5">5</button>
+          <button type="button" data-count="6">6</button>
+          <button type="button" data-count="7">7</button>
+          <button type="button" data-count="8">8</button>
         </div>
       </div>
       <div class="field">
@@ -138,6 +152,18 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
     <div class="rule"><strong>100</strong><span>Perfect Deal</span></div>
   </section>
 
+  <section class="house-rules panel" aria-labelledby="houseRulesHeading">
+    <h2 id="houseRulesHeading">House Rules</h2>
+    <ul class="house-rule-list">
+      <li>If you get stuck with negative cards in your hand, they remain negative.</li>
+      <li>You can have more than one book of the same number.</li>
+      <li><strong>Take Cover:</strong> the end of the game changes; the ONLY way to end is to complete a clean book.</li>
+      <li>You can play an attack or action before reaching the minimum required points for the round.</li>
+      <li><strong>Foot Pain:</strong> all players, including the person who played the card, skip the next round if they are in their foot.</li>
+      <li>If you have 5 cards of one number in your meld and a sixth in your hand, you can pick up a seventh from the discard pile. If you have 6 cards melded, you cannot pick up the seventh.</li>
+    </ul>
+  </section>
+
   <main class="sheet panel">
     <table id="scoreTable"></table>
   </main>
@@ -155,13 +181,16 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const ROUND_COUNT = 4;
+const SCHEMA_VERSION = 2;
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 8;
+const DEFAULT_PLAYER_COUNT = 4;
 const DEFAULT_REQUIREMENTS = [60,90,120,150];
-const PLAYER_COLORS = ['#2f6b55','#335f88','#c3922e','#a33b32'];
+const PLAYER_COLORS = ['#2f6b55','#335f88','#c3922e','#a33b32','#6a4c93','#2a8c82','#b4682f','#5c6670'];
 const SECTION_META = {
   perfectDeal:{label:'Perfect Deal', type:'check', points:100},
   goingOut:{label:'Going Out', type:'check', points:100},
   red3:{label:'Red 3s', type:'count', points:100},
-  black3:{label:'Black 3s', type:'count', points:-100},
   wildBooks:{label:'Wild Books', type:'count', points:1500},
   cleanBooks:{label:'Clean Books', type:'count', points:700},
   dirtyBooks:{label:'Dirty Books', type:'count', points:300},
@@ -170,25 +199,26 @@ const SECTION_META = {
   roundTotal:{label:'Round Total', type:'computed'},
   cumulative:{label:'Cumulative Total', type:'computed'}
 };
-const ROWS = ['perfectDeal','goingOut','red3','black3','wildBooks','cleanBooks','dirtyBooks','bookTotal','cardTotal','roundTotal','cumulative'];
+const ROWS = ['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','bookTotal','cardTotal','roundTotal','cumulative'];
 
 let state = loadState();
 let saveTimer = 0;
 
 function newRound(){
   return {
-    perfectDeal:false, goingOut:false, red3:0, black3:0,
+    perfectDeal:false, goingOut:false, red3:0,
     wildBooks:0, cleanBooks:0, dirtyBooks:0, cardTotal:0
   };
 }
 
 function defaultState(){
   return {
+    schemaVersion:SCHEMA_VERSION,
     title:'Game Night',
-    playerCount:4,
-    players:['Player 1','Player 2','Player 3','Player 4'],
+    playerCount:DEFAULT_PLAYER_COUNT,
+    players:Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i+1)),
     requirements:[...DEFAULT_REQUIREMENTS],
-    scores:Array.from({length:ROUND_COUNT},()=>Array.from({length:4},newRound))
+    scores:Array.from({length:ROUND_COUNT},()=>Array.from({length:MAX_PLAYERS},newRound))
   };
 }
 
@@ -219,17 +249,30 @@ function storageSet(key,value){
   }
 }
 
-function normalizeState(next){
+function normalizeState(saved){
   const base = defaultState();
-  next = {...base,...next};
-  next.playerCount = Math.min(4,Math.max(2,Number(next.playerCount) || 4));
-  next.players = Array.from({length:4},(_,i)=>String(next.players?.[i] || base.players[i]));
+  const source = saved && typeof saved === 'object' ? saved : {};
+  const savedSchema = Number(source.schemaVersion) || 1;
+  const next = {...base,...source,schemaVersion:SCHEMA_VERSION};
+  next.playerCount = Math.min(MAX_PLAYERS,Math.max(MIN_PLAYERS,Number(next.playerCount) || DEFAULT_PLAYER_COUNT));
+  next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(source.players?.[i] || base.players[i]));
   next.requirements = [...DEFAULT_REQUIREMENTS];
-  next.scores = Array.from({length:ROUND_COUNT},(_,r)=>Array.from({length:4},(_,p)=>({
-    ...newRound(),
-    ...(next.scores?.[r]?.[p] || {})
-  })));
+  next.scores = Array.from({length:ROUND_COUNT},(_,r)=>Array.from({length:MAX_PLAYERS},(_,p)=>normalizeRound(source.scores?.[r]?.[p],savedSchema)));
   return next;
+}
+
+function normalizeRound(savedRound, savedSchema){
+  const source = savedRound && typeof savedRound === 'object' ? savedRound : {};
+  const round = newRound();
+  Object.keys(round).forEach(key=>{
+    if(Object.prototype.hasOwnProperty.call(source,key)){
+      round[key] = key === 'perfectDeal' || key === 'goingOut' ? Boolean(source[key]) : n(source[key]);
+    }
+  });
+  if(savedSchema < SCHEMA_VERSION && Object.prototype.hasOwnProperty.call(source,'black3')){
+    round.cardTotal = n(round.cardTotal) + n(source.black3) * -100;
+  }
+  return round;
 }
 
 function save(){
@@ -270,7 +313,6 @@ function sectionValue(roundIndex, playerIndex, key){
   if(key === 'perfectDeal') return row.perfectDeal ? 100 : 0;
   if(key === 'goingOut') return row.goingOut ? 100 : 0;
   if(key === 'red3') return n(row.red3) ? n(row.red3)*100 : 0;
-  if(key === 'black3') return n(row.black3) ? n(row.black3)*-100 : 0;
   if(key === 'wildBooks') return n(row.wildBooks) ? n(row.wildBooks)*1500 : 0;
   if(key === 'cleanBooks') return n(row.cleanBooks) ? n(row.cleanBooks)*700 : 0;
   if(key === 'dirtyBooks') return n(row.dirtyBooks) ? n(row.dirtyBooks)*300 : 0;
@@ -280,7 +322,7 @@ function sectionValue(roundIndex, playerIndex, key){
 }
 
 function roundTotal(roundIndex, playerIndex){
-  return ['perfectDeal','goingOut','red3','black3','wildBooks','cleanBooks','dirtyBooks','cardTotal']
+  return ['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','cardTotal']
     .reduce((sum,key)=>sum + sectionValue(roundIndex, playerIndex, key),0);
 }
 
@@ -304,14 +346,16 @@ function render(){
 
 function renderPlayerCount(){
   document.querySelectorAll('#playerCount button').forEach(button=>{
-    button.classList.toggle('active',Number(button.dataset.count) === state.playerCount);
+    const isActive = Number(button.dataset.count) === state.playerCount;
+    button.classList.toggle('active',isActive);
+    button.setAttribute('aria-pressed',String(isActive));
   });
 }
 
 function renderNames(){
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
-  for(let i=0;i<4;i++){
+  for(let i=0;i<MAX_PLAYERS;i++){
     const input = document.createElement('input');
     input.type = 'text';
     input.maxLength = 24;
