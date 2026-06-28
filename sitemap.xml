@@ -22,6 +22,11 @@
   </url>
 
   <url>
+    <loc>https://deanlefor.com/cards-score.html</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
     <loc>https://deanlefor.com/hf-score.html</loc>
     <priority>0.6</priority>
   </url>

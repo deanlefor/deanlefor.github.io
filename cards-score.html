@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cards Scorecard</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --ink:#1f2420;
+  --muted:#69736c;
+  --paper:#f5f2eb;
+  --panel:#fffdf8;
+  --soft:#ebe4d8;
+  --line:#d3cab9;
+  --green:#2f684d;
+  --green-dark:#214c38;
+  --gold:#b8892f;
+  --red:#a33b32;
+  --blue:#2f5f8c;
+  --purple:#6a4c93;
+  --teal:#2a8c82;
+  --clay:#b4682f;
+  --gray:#5c6670;
+  --shadow:0 12px 34px rgba(38,32,22,.1);
+  --input:#fff;
+  --button-bg:#fff;
+  --button-hover:#948873;
+  --on-accent:#fff;
+  --focus:rgba(47,104,77,.12);
+  --leader-bg:#fff6df;
+  --leader-line:rgba(184,137,47,.4);
+  --leader-ink:#725111;
+  --message-bg:#fff1ef;
+  --message-line:rgba(163,59,50,.25);
+  --sheet-bg:#fff;
+  --sheet-head-bg:#f8f5ee;
+  --round-info-bg:#fbf8f1;
+  --sheet-head-ink:#4a453d;
+  --empty-bg:rgba(255,255,255,.45);
+  --toast-bg:#191816;
+  --toast-ink:#fff;
+}
+html.dark-mode{
+  color-scheme:dark;
+  --ink:#f2eee6;
+  --muted:#c1b8aa;
+  --paper:#15130f;
+  --panel:#22201c;
+  --soft:#2d2923;
+  --line:#5b554b;
+  --green:#6ea98f;
+  --green-dark:#5b937a;
+  --gold:#d7a94a;
+  --red:#ef8177;
+  --blue:#7fa2c3;
+  --purple:#b59ad7;
+  --teal:#83c6bc;
+  --clay:#e1a06b;
+  --gray:#b7c0ca;
+  --shadow:0 12px 34px rgba(0,0,0,.34);
+  --input:#1b1a17;
+  --button-bg:#22201c;
+  --button-hover:#d0c6b6;
+  --on-accent:#101510;
+  --focus:rgba(110,169,143,.2);
+  --leader-bg:#332814;
+  --leader-line:rgba(215,169,74,.45);
+  --leader-ink:#f1d37d;
+  --message-bg:#34201f;
+  --message-line:rgba(239,129,119,.35);
+  --sheet-bg:#1c1a16;
+  --sheet-head-bg:#2b2822;
+  --round-info-bg:#26231e;
+  --sheet-head-ink:#e7dece;
+  --empty-bg:rgba(255,255,255,.06);
+  --toast-bg:#f2eee6;
+  --toast-ink:#15130f;
+}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--paper);
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1360px;margin:0 auto;padding:18px}
+.top{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:14px;
+  align-items:end;
+  margin-bottom:14px;
+}
+.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.02em}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.layout{display:grid;grid-template-columns:minmax(360px,.92fr) minmax(520px,1.18fr);gap:14px;align-items:start}
+.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+}
+.section{padding:14px}
+.section-title{
+  margin:0 0 12px;
+  font-size:1rem;
+  font-weight:800;
+  letter-spacing:.02em;
+}
+.settings{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) auto auto minmax(120px,.42fr);
+  gap:10px;
+  align-items:end;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+label,.label{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:800;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+input,select,textarea{
+  width:100%;
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--input);
+  color:var(--ink);
+  padding:8px 10px;
+  outline:none;
+}
+textarea{min-height:66px;resize:vertical}
+input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--focus)}
+input[type=number]{text-align:right}
+.seg{
+  display:flex;
+  border:1px solid var(--line);
+  border-radius:7px;
+  overflow:hidden;
+  background:var(--input);
+}
+.seg button{
+  min-width:42px;
+  min-height:38px;
+  padding:7px 11px;
+  border:0;
+  border-right:1px solid var(--line);
+  background:var(--input);
+  color:var(--ink);
+  font-weight:800;
+}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--green);color:var(--on-accent)}
+.mode-seg button{min-width:76px}
+.btn{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--button-bg);
+  color:var(--ink);
+  padding:8px 12px;
+  font-weight:800;
+}
+.btn:hover{border-color:var(--button-hover)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-accent)}
+.btn.primary:hover{background:var(--green-dark)}
+.btn.warn{color:var(--red)}
+.btn.ghost{background:transparent}
+.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.player-name input{border-left-width:5px;border-left-style:solid}
+.hint{margin:10px 0 0;color:var(--muted);font-size:.78rem;line-height:1.35}
+.score-strip{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
+  gap:10px;
+  margin-bottom:14px;
+}
+.score-card{
+  padding:12px;
+  border-left:5px solid var(--green);
+  min-width:0;
+}
+.score-card.leader{background:var(--leader-bg);border-color:var(--leader-line);border-left-width:5px}
+.score-name{color:var(--muted);font-weight:800;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score-total{font-size:2rem;font-weight:900;line-height:1.05;margin-top:4px}
+.score-sub{color:var(--muted);font-size:.78rem;margin-top:3px}
+.score-card.leader .score-sub{color:var(--leader-ink);font-weight:800}
+.round-head{
+  display:flex;
+  justify-content:space-between;
+  gap:10px;
+  align-items:center;
+  margin-bottom:12px;
+}
+.round-head h2{margin:0;font-size:1.25rem}
+.save-state{font-size:.8rem;color:var(--muted);white-space:nowrap}
+.entry-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  align-items:end;
+}
+.score-inputs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.score-field input{
+  min-height:46px;
+  font-size:1.18rem;
+  font-weight:900;
+  text-align:center;
+  border-left-width:5px;
+  border-left-style:solid;
+}
+.round-preview{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:8px;
+}
+.preview-card{
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--sheet-bg);
+  padding:10px;
+  text-align:center;
+  min-width:0;
+}
+.preview-card .name{font-size:.82rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview-card .total{font-size:1.45rem;font-weight:900;margin-top:3px}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn.primary{flex:1 1 180px}
+.message{
+  display:none;
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:6px;
+  border:1px solid var(--message-line);
+  background:var(--message-bg);
+  color:var(--red);
+  font-size:.88rem;
+}
+.message.show{display:block}
+.score-sheet{overflow:hidden;border:1px solid var(--line);border-radius:8px;background:var(--sheet-bg)}
+.score-sheet-head{
+  display:grid;
+  grid-template-columns:136px minmax(0,1fr) 122px;
+  background:var(--sheet-head-bg);
+  border-bottom:1px solid var(--line);
+}
+.score-sheet-players{
+  display:grid;
+  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+}
+.score-round{
+  display:grid;
+  grid-template-columns:136px minmax(0,1fr) 122px;
+  border-bottom:1px solid var(--line);
+  background:var(--sheet-bg);
+}
+.score-round:last-child{border-bottom:0}
+.round-info{
+  padding:8px;
+  border-right:1px solid var(--line);
+  background:var(--round-info-bg);
+}
+.round-no{font-size:1rem;font-weight:900;line-height:1}
+.round-meta{margin-top:5px;color:var(--muted);font-size:.72rem;line-height:1.25}
+.round-meta strong{display:block;color:var(--ink);font-size:.8rem;margin-bottom:2px}
+.score-lines{
+  display:grid;
+  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+}
+.sheet-head,.sheet-label,.sheet-cell{
+  min-height:28px;
+  padding:5px 7px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.score-sheet-players > *{border-bottom:0}
+.sheet-label.last-row,.sheet-cell.last-row{border-bottom:0}
+.sheet-head{
+  color:var(--sheet-head-ink);
+  background:var(--round-info-bg);
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  overflow:hidden;
+  text-align:center;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.sheet-label{
+  color:var(--muted);
+  background:var(--round-info-bg);
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.sheet-cell{text-align:center;font-weight:800}
+.sheet-cell.total{font-size:1rem;font-weight:900}
+.sheet-cell.raw{color:var(--muted);font-size:.82rem}
+.sheet-actions{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:6px;
+  padding:6px;
+  flex-wrap:wrap;
+}
+.sheet-actions .btn{min-height:30px;padding:5px 9px}
+.empty{
+  padding:34px 16px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed var(--line);
+  border-radius:8px;
+  background:var(--empty-bg);
+}
+.status-box{
+  display:none;
+  border:1px solid var(--leader-line);
+  background:var(--leader-bg);
+  border-radius:8px;
+  padding:12px;
+  font-weight:900;
+  color:var(--leader-ink);
+}
+.status-box.show{display:block}
+.file-input{display:none}
+.footer{
+  display:flex;
+  justify-content:space-between;
+  gap:12px;
+  align-items:flex-start;
+  margin-top:12px;
+  color:var(--muted);
+  font-size:.8rem;
+}
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  background:var(--toast-bg);
+  color:var(--toast-ink);
+  padding:10px 14px;
+  border-radius:6px;
+  box-shadow:var(--shadow);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s;
+  z-index:20;
+}
+.toast.show{opacity:1}
+@media(max-width:980px){
+  .top,.layout,.settings{grid-template-columns:1fr}
+  .toolbar{justify-content:flex-start}
+}
+@media(max-width:640px){
+  .wrap{padding:12px}
+  .name-grid,.score-inputs,.round-preview,.entry-grid{grid-template-columns:1fr}
+  .score-sheet-head,.score-round{grid-template-columns:1fr}
+  .score-sheet-head > div:first-child,.score-sheet-head > div:last-child{display:none}
+  .round-info{border-right:0;border-bottom:1px solid var(--line)}
+  .sheet-actions{justify-content:flex-end;border-top:1px solid var(--line)}
+  .round-head{align-items:flex-start;flex-direction:column}
+  .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media print{
+  html.dark-mode{
+    color-scheme:light;
+    --ink:#1f2420;
+    --muted:#69736c;
+    --paper:#fff;
+    --panel:#fffdf8;
+    --line:#d3cab9;
+    --green:#2f684d;
+    --green-dark:#214c38;
+    --gold:#b8892f;
+    --red:#a33b32;
+    --blue:#2f5f8c;
+    --input:#fff;
+    --button-bg:#fff;
+    --on-accent:#fff;
+    --leader-bg:#fff6df;
+    --leader-line:rgba(184,137,47,.4);
+    --leader-ink:#725111;
+    --message-bg:#fff1ef;
+    --message-line:rgba(163,59,50,.25);
+    --sheet-bg:#fff;
+    --sheet-head-bg:#f8f5ee;
+    --round-info-bg:#fbf8f1;
+    --sheet-head-ink:#4a453d;
+    --empty-bg:rgba(255,255,255,.45);
+  }
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .toolbar,.settings-panel,.round-form,.message,.sheet-actions,.toast{display:none}
+  .panel{box-shadow:none}
+  .layout{grid-template-columns:1fr}
+  .score-strip{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+}
+</style>
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('cardsScorecard.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Cards Scorecard</h1>
+      <p id="saveState">Loading...</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
+      <button class="btn" id="printBtn" type="button">Print</button>
+      <button class="btn" id="exportBtn" type="button">Export</button>
+      <button class="btn" id="importBtn" type="button">Import</button>
+      <button class="btn warn" id="resetBtn" type="button">New Game</button>
+      <input class="file-input" id="importFile" type="file" accept="application/json,.json">
+    </div>
+  </header>
+
+  <section class="score-strip" id="scoreStrip" aria-label="Current standings"></section>
+
+  <main class="layout">
+    <section class="stack">
+      <div class="panel section settings-panel">
+        <div class="settings">
+          <div class="field">
+            <label for="gameTitle">Game Name</label>
+            <input id="gameTitle" type="text" maxlength="48">
+          </div>
+          <div class="field">
+            <span class="label">Players</span>
+            <div class="seg" id="playerCount" aria-label="Player count">
+              <button type="button" data-count="2">2</button>
+              <button type="button" data-count="3">3</button>
+              <button type="button" data-count="4">4</button>
+              <button type="button" data-count="5">5</button>
+              <button type="button" data-count="6">6</button>
+              <button type="button" data-count="7">7</button>
+              <button type="button" data-count="8">8</button>
+            </div>
+          </div>
+          <div class="field">
+            <span class="label">Standings</span>
+            <div class="seg mode-seg" id="scoreMode" aria-label="Standings mode">
+              <button type="button" data-mode="high">High</button>
+              <button type="button" data-mode="low">Low</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="targetScore">Playing To</label>
+            <input id="targetScore" type="number" min="1" step="1" placeholder="Optional">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <h2 class="section-title">Players</h2>
+        <div class="name-grid" id="nameGrid"></div>
+        <p class="hint">Use High for games where points win, Low for games where points hurt. Scores save automatically in this browser.</p>
+      </div>
+
+      <form class="panel section round-form" id="roundForm">
+        <div class="round-head">
+          <h2 id="roundTitle">Hand</h2>
+          <span class="save-state" id="editState"></span>
+        </div>
+
+        <div class="entry-grid">
+          <div class="field">
+            <label for="roundNote">Hand Note</label>
+            <input id="roundNote" type="text" maxlength="40" placeholder="Optional">
+          </div>
+          <div class="field">
+            <span class="label">Multiplier</span>
+            <div class="seg" id="multiplier" aria-label="Round multiplier">
+              <button type="button" data-multiplier="1">1x</button>
+              <button type="button" data-multiplier="2">2x</button>
+              <button type="button" data-multiplier="3">3x</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <h3 class="section-title">Scores</h3>
+        <div class="score-inputs" id="scoreInputs"></div>
+
+        <div class="divider"></div>
+        <h3 class="section-title">Hand Preview</h3>
+        <div class="round-preview" id="previewGrid"></div>
+        <div class="message" id="formMessage"></div>
+
+        <div class="actions">
+          <button class="btn primary" id="submitRound" type="submit">Add Hand</button>
+          <button class="btn ghost" id="cancelEdit" type="button">Cancel Edit</button>
+          <button class="btn ghost" id="clearRound" type="button">Clear Hand</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="stack">
+      <div class="status-box" id="statusBox"></div>
+      <div class="panel section">
+        <h2 class="section-title">Running Tally</h2>
+        <div id="history"></div>
+      </div>
+    </section>
+  </main>
+
+  <div class="footer">
+    <span>Generic scorecard for trick-taking, shedding, rummy-style, and house-rule card games.</span>
+    <span id="roundCount">0 hands</span>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = 'cardsScorecard.v1';
+const THEME_KEY = 'cardsScorecard.darkMode.v1';
+const MIN_PLAYERS = 2;
+const MAX_PLAYERS = 8;
+const DEFAULT_PLAYER_COUNT = 4;
+const COLORS = ['#2f684d','#2f5f8c','#b8892f','#a33b32','#6a4c93','#2a8c82','#b4682f','#5c6670'];
+
+let state = loadState();
+let darkMode = loadDarkMode();
+let saveTimer = 0;
+
+function emptyDraft(){
+  return {
+    note:'',
+    multiplier:1,
+    scores:Array(MAX_PLAYERS).fill(null)
+  };
+}
+
+function defaultState(){
+  return {
+    version:1,
+    title:'Game Night',
+    playerCount:DEFAULT_PLAYER_COUNT,
+    scoreMode:'high',
+    targetScore:null,
+    players:Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i + 1)),
+    rounds:[],
+    editingIndex:null,
+    draft:emptyDraft()
+  };
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    return normalizeState(raw ? JSON.parse(raw) : defaultState());
+  }catch(error){
+    return defaultState();
+  }
+}
+
+function loadDarkMode(){
+  try{
+    return localStorage.getItem(THEME_KEY) === 'true';
+  }catch(error){
+    return false;
+  }
+}
+
+function saveDarkMode(){
+  try{
+    localStorage.setItem(THEME_KEY, darkMode ? 'true' : 'false');
+  }catch(error){}
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode', darkMode);
+  const themeButton = document.getElementById('themeBtn');
+  if(!themeButton) return;
+  themeButton.classList.toggle('active', darkMode);
+  themeButton.setAttribute('aria-pressed', String(darkMode));
+  themeButton.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  themeButton.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
+function normalizeState(source){
+  const base = defaultState();
+  const next = source && typeof source === 'object' ? {...base, ...source, version:1} : base;
+  next.title = String(next.title || base.title).slice(0,48);
+  next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
+  next.scoreMode = next.scoreMode === 'low' ? 'low' : 'high';
+  next.targetScore = nullableNumber(next.targetScore);
+  if(next.targetScore !== null) next.targetScore = Math.max(1, next.targetScore);
+  next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(source?.players?.[i] || base.players[i]).slice(0,24));
+  next.rounds = Array.isArray(source?.rounds) ? source.rounds.map(normalizeRound) : [];
+  next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
+  if(next.editingIndex !== null && (next.editingIndex < 0 || next.editingIndex >= next.rounds.length)){
+    next.editingIndex = null;
+  }
+  next.draft = normalizeDraft(source?.draft);
+  return next;
+}
+
+function normalizeDraft(source){
+  const draft = emptyDraft();
+  if(source && typeof source === 'object'){
+    draft.note = String(source.note || '').slice(0,40);
+    draft.multiplier = normalizeMultiplier(source.multiplier);
+    draft.scores = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(source.scores?.[i]));
+  }
+  return draft;
+}
+
+function normalizeRound(source){
+  const round = normalizeDraft(source);
+  round.createdAt = source?.createdAt || new Date().toISOString();
+  return round;
+}
+
+function normalizeMultiplier(value){
+  const number = Number(value);
+  if(!Number.isFinite(number)) return 1;
+  return Math.min(3, Math.max(1, Math.round(number)));
+}
+
+function clampNumber(value, min, max, fallback){
+  const number = Number(value);
+  if(!Number.isFinite(number)) return fallback;
+  return Math.min(max, Math.max(min, Math.round(number)));
+}
+
+function nullableNumber(value){
+  if(value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) && !Object.is(number, -0) ? number : null;
+}
+
+function numberOr(value, fallback){
+  const number = Number(value);
+  return Number.isFinite(number) && !Object.is(number, -0) ? number : fallback;
+}
+
+function visiblePlayers(){
+  return Array.from({length:state.playerCount},(_,i)=>i);
+}
+
+function playerName(index){
+  return state.players[index] || 'Player ' + (index + 1);
+}
+
+function format(value){
+  const number = numberOr(value, 0);
+  if(Object.is(number, -0)) return '0';
+  return number.toLocaleString();
+}
+
+function signed(value){
+  const number = numberOr(value, 0);
+  return number > 0 ? '+' + format(number) : format(number);
+}
+
+function adjustedScore(round, player){
+  return numberOr(round.scores[player], 0) * normalizeMultiplier(round.multiplier);
+}
+
+function roundScores(round){
+  return Array.from({length:MAX_PLAYERS},(_,i)=>adjustedScore(round, i));
+}
+
+function cumulativeTotals(throughIndex){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  const end = throughIndex === undefined ? state.rounds.length - 1 : throughIndex;
+  for(let r=0; r<=end; r++){
+    const scores = roundScores(state.rounds[r]);
+    visiblePlayers().forEach(i => totals[i] += scores[i]);
+  }
+  return totals;
+}
+
+function leaders(){
+  const players = visiblePlayers();
+  const totals = cumulativeTotals();
+  if(!players.length) return [];
+  const best = state.scoreMode === 'low'
+    ? Math.min(...players.map(i => totals[i]))
+    : Math.max(...players.map(i => totals[i]));
+  return players.filter(i => totals[i] === best);
+}
+
+function targetReached(){
+  if(state.targetScore === null || !state.rounds.length) return [];
+  const totals = cumulativeTotals();
+  return visiblePlayers().filter(i => totals[i] >= state.targetScore);
+}
+
+function saveNow(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+  }catch(error){
+    setSaveState('Saved for this tab');
+  }
+}
+
+function scheduleSave(){
+  setSaveState('Saving...');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 120);
+}
+
+function setSaveState(text){
+  document.getElementById('saveState').textContent = text;
+}
+
+function render(){
+  applyTheme();
+  document.getElementById('gameTitle').value = state.title;
+  document.getElementById('targetScore').value = state.targetScore ?? '';
+  renderPlayerCount();
+  renderScoreMode();
+  renderNames();
+  renderScoreStrip();
+  renderRoundForm();
+  renderHistory();
+  renderStatus();
+  document.getElementById('roundCount').textContent = state.rounds.length + (state.rounds.length === 1 ? ' hand' : ' hands');
+}
+
+function renderPlayerCount(){
+  document.querySelectorAll('#playerCount button').forEach(button=>{
+    const isActive = Number(button.dataset.count) === state.playerCount;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
+function renderScoreMode(){
+  document.querySelectorAll('#scoreMode button').forEach(button=>{
+    const isActive = button.dataset.mode === state.scoreMode;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
+function renderNames(){
+  const grid = document.getElementById('nameGrid');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const field = document.createElement('div');
+    field.className = 'field player-name';
+    field.innerHTML = '<label for="playerName' + i + '">Name ' + (i + 1) + '</label>';
+    const input = document.createElement('input');
+    input.id = 'playerName' + i;
+    input.type = 'text';
+    input.maxLength = 24;
+    input.value = state.players[i];
+    input.placeholder = 'Player ' + (i + 1);
+    input.style.borderLeftColor = COLORS[i];
+    input.addEventListener('input',()=>{
+      state.players[i] = input.value;
+      renderScoreStrip();
+      renderScoreInputs();
+      renderPreview();
+      renderHistory();
+      renderStatus();
+      scheduleSave();
+    });
+    field.appendChild(input);
+    grid.appendChild(field);
+  });
+}
+
+function renderScoreStrip(){
+  const strip = document.getElementById('scoreStrip');
+  strip.innerHTML = '';
+  const totals = cumulativeTotals();
+  const leaderSet = new Set(leaders());
+  visiblePlayers().forEach(i=>{
+    const card = document.createElement('div');
+    card.className = 'score-card panel';
+    card.classList.toggle('leader', leaderSet.has(i) && state.rounds.length > 0);
+    card.style.borderLeftColor = COLORS[i];
+    const last = state.rounds.length ? adjustedScore(state.rounds[state.rounds.length - 1], i) : 0;
+    const status = leaderSet.has(i) && state.rounds.length > 0 ? 'Leader' : (state.rounds.length ? 'Last hand ' + signed(last) : 'Ready');
+    card.innerHTML = '<div class="score-name">' + escapeHtml(playerName(i)) + '</div>' +
+      '<div class="score-total">' + format(totals[i]) + '</div>' +
+      '<div class="score-sub">' + escapeHtml(status) + '</div>';
+    strip.appendChild(card);
+  });
+}
+
+function renderRoundForm(){
+  document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Hand ' + (state.rounds.length + 1) : 'Hand ' + (state.editingIndex + 1);
+  document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
+  document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Hand' : 'Save Hand';
+  document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
+  document.getElementById('roundNote').value = state.draft.note;
+  renderMultiplier();
+  renderScoreInputs();
+  renderPreview();
+  setMessage('');
+}
+
+function renderMultiplier(){
+  document.querySelectorAll('#multiplier button').forEach(button=>{
+    const isActive = Number(button.dataset.multiplier) === state.draft.multiplier;
+    button.classList.toggle('active', isActive);
+    button.setAttribute('aria-pressed', String(isActive));
+  });
+}
+
+function renderScoreInputs(){
+  const grid = document.getElementById('scoreInputs');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const field = document.createElement('div');
+    field.className = 'field score-field';
+    field.innerHTML = '<label for="score' + i + '">' + escapeHtml(playerName(i)) + '</label>';
+    const input = document.createElement('input');
+    input.id = 'score' + i;
+    input.type = 'number';
+    input.step = '1';
+    input.value = state.draft.scores[i] ?? '';
+    input.placeholder = '0';
+    input.style.borderLeftColor = COLORS[i];
+    input.setAttribute('aria-label', 'Score for ' + playerName(i));
+    input.addEventListener('input',()=>{
+      state.draft.scores[i] = nullableNumber(input.value);
+      renderPreview();
+      scheduleSave();
+    });
+    input.addEventListener('keydown',handleScoreTab);
+    field.appendChild(input);
+    grid.appendChild(field);
+  });
+}
+
+function renderPreview(){
+  const grid = document.getElementById('previewGrid');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const value = adjustedScore(state.draft, i);
+    const raw = numberOr(state.draft.scores[i], 0);
+    const card = document.createElement('div');
+    card.className = 'preview-card';
+    card.innerHTML = '<div class="name">' + escapeHtml(playerName(i)) + '</div>' +
+      '<div class="total ' + scoreClass(value) + '">' + signed(value) + '</div>' +
+      '<div class="score-sub">' + (state.draft.multiplier > 1 ? format(raw) + ' x ' + state.draft.multiplier : 'Raw hand') + '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function renderHistory(){
+  const target = document.getElementById('history');
+  if(!state.rounds.length){
+    target.innerHTML = '<div class="empty">No hands yet.</div>';
+    return;
+  }
+
+  const players = visiblePlayers();
+  let html = '<div class="score-sheet">';
+  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '"><div></div>';
+  players.forEach(i=>{
+    html += '<div class="sheet-head">' + escapeHtml(playerName(i)) + '</div>';
+  });
+  html += '</div><div></div></div>';
+
+  state.rounds.forEach((round, roundIndex)=>{
+    const runningTotals = cumulativeTotals(roundIndex);
+    const showRaw = round.multiplier > 1;
+    html += '<div class="score-round">';
+    html += '<div class="round-info"><div class="round-no">Hand ' + (roundIndex + 1) + '</div>';
+    html += '<div class="round-meta"><strong>' + escapeHtml(round.note || 'Score entry') + '</strong>';
+    html += 'Multiplier: ' + round.multiplier + 'x</div></div>';
+
+    html += '<div class="score-lines" style="--players:' + players.length + '">';
+    if(showRaw){
+      html += '<div class="sheet-label">Raw</div>';
+      players.forEach(i=>{
+        html += '<div class="sheet-cell raw">' + signed(numberOr(round.scores[i], 0)) + '</div>';
+      });
+    }
+    html += '<div class="sheet-label">Hand</div>';
+    players.forEach(i=>{
+      const value = adjustedScore(round, i);
+      html += '<div class="sheet-cell ' + scoreClass(value) + '">' + signed(value) + '</div>';
+    });
+    html += '<div class="sheet-label last-row">Total</div>';
+    players.forEach(i=>{
+      html += '<div class="sheet-cell total last-row ' + scoreClass(runningTotals[i]) + '">' + format(runningTotals[i]) + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>';
+    html += '</div>';
+  });
+
+  html += '</div>';
+  target.innerHTML = html;
+}
+
+function renderStatus(){
+  const box = document.getElementById('statusBox');
+  const reached = targetReached();
+  const leaderList = leaders();
+  if(!state.rounds.length){
+    box.classList.remove('show');
+    box.textContent = '';
+    return;
+  }
+  if(reached.length){
+    const names = reached.map(playerName).join(', ');
+    box.classList.add('show');
+    box.textContent = names + ' reached ' + format(state.targetScore) + '. ' + leaderText(leaderList) + '.';
+    return;
+  }
+  box.classList.add('show');
+  box.textContent = leaderText(leaderList) + '.';
+}
+
+function leaderText(list){
+  const names = list.map(playerName).join(', ');
+  return names + (list.length === 1 ? ' leads' : ' lead') + ' with ' + format(cumulativeTotals()[list[0]]);
+}
+
+function scoreClass(value){
+  return value < 0 ? 'negative' : value > 0 ? 'positive' : '';
+}
+
+function setMessage(text){
+  const message = document.getElementById('formMessage');
+  message.textContent = text;
+  message.classList.toggle('show', !!text);
+}
+
+function handleScoreTab(event){
+  if(event.key !== 'Tab') return;
+  const inputs = Array.from(document.querySelectorAll('#scoreInputs input'));
+  const index = inputs.indexOf(event.currentTarget);
+  if(index === -1) return;
+  const next = inputs[index + (event.shiftKey ? -1 : 1)];
+  if(!next) return;
+  event.preventDefault();
+  next.focus();
+  if(typeof next.select === 'function') next.select();
+}
+
+function saveDraft(){
+  const hasScore = visiblePlayers().some(i => state.draft.scores[i] !== null);
+  if(!hasScore){
+    setMessage('Enter at least one score.');
+    return;
+  }
+
+  const round = normalizeRound(state.draft);
+  if(state.editingIndex === null){
+    state.rounds.push(round);
+  }else{
+    state.rounds[state.editingIndex] = round;
+    state.editingIndex = null;
+  }
+
+  state.draft = emptyDraft();
+  render();
+  scheduleSave();
+}
+
+function editRound(index){
+  const round = state.rounds[index];
+  if(!round) return;
+  state.editingIndex = index;
+  state.draft = normalizeDraft(round);
+  renderRoundForm();
+  setMessage('');
+  document.getElementById('roundForm').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function deleteRound(index){
+  if(!state.rounds[index]) return;
+  state.rounds.splice(index, 1);
+  if(state.editingIndex === index){
+    state.editingIndex = null;
+    state.draft = emptyDraft();
+  }else if(state.editingIndex !== null && state.editingIndex > index){
+    state.editingIndex -= 1;
+  }
+  render();
+  scheduleSave();
+  toast('Hand deleted');
+}
+
+function clearDraft(){
+  state.draft = emptyDraft();
+  renderRoundForm();
+  scheduleSave();
+}
+
+function cancelEdit(){
+  state.editingIndex = null;
+  state.draft = emptyDraft();
+  render();
+  scheduleSave();
+}
+
+function exportData(){
+  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  link.href = url;
+  link.download = 'cards-scorecard-' + stamp + '.json';
+  link.click();
+  URL.revokeObjectURL(url);
+  toast('Backup exported');
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      state = normalizeState(JSON.parse(reader.result));
+      render();
+      saveNow();
+      toast('Backup imported');
+    }catch(error){
+      setMessage('That backup could not be imported.');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, char => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[char]));
+}
+
+function toast(message){
+  const node = document.getElementById('toast');
+  node.textContent = message;
+  node.classList.add('show');
+  setTimeout(()=>node.classList.remove('show'),1700);
+}
+
+document.getElementById('gameTitle').addEventListener('input',event=>{
+  state.title = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('targetScore').addEventListener('input',event=>{
+  state.targetScore = nullableNumber(event.target.value);
+  if(state.targetScore !== null) state.targetScore = Math.max(1, state.targetScore);
+  renderStatus();
+  scheduleSave();
+});
+
+document.getElementById('playerCount').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-count]');
+  if(!button) return;
+  state.playerCount = Number(button.dataset.count);
+  render();
+  scheduleSave();
+});
+
+document.getElementById('scoreMode').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-mode]');
+  if(!button) return;
+  state.scoreMode = button.dataset.mode === 'low' ? 'low' : 'high';
+  renderScoreMode();
+  renderScoreStrip();
+  renderStatus();
+  scheduleSave();
+});
+
+document.getElementById('roundNote').addEventListener('input',event=>{
+  state.draft.note = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('multiplier').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-multiplier]');
+  if(!button) return;
+  state.draft.multiplier = normalizeMultiplier(button.dataset.multiplier);
+  renderMultiplier();
+  renderPreview();
+  scheduleSave();
+});
+
+document.getElementById('roundForm').addEventListener('submit',event=>{
+  event.preventDefault();
+  saveDraft();
+});
+
+document.getElementById('cancelEdit').addEventListener('click',cancelEdit);
+document.getElementById('clearRound').addEventListener('click',clearDraft);
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  applyTheme();
+  saveDarkMode();
+  toast(darkMode ? 'Dark mode on' : 'Dark mode off');
+});
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+document.getElementById('exportBtn').addEventListener('click',exportData);
+document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change',event=>{
+  const file = event.target.files[0];
+  if(file) importData(file);
+  event.target.value = '';
+});
+document.getElementById('resetBtn').addEventListener('click',()=>{
+  if(!confirm('Start a new cards scorecard?')) return;
+  state = defaultState();
+  render();
+  saveNow();
+  toast('Scorecard reset');
+});
+document.getElementById('history').addEventListener('click',event=>{
+  const editButton = event.target.closest('button[data-edit]');
+  const deleteButton = event.target.closest('button[data-delete]');
+  if(editButton){
+    editRound(Number(editButton.dataset.edit));
+  }else if(deleteButton){
+    deleteRound(Number(deleteButton.dataset.delete));
+  }
+});
+
+render();
+saveNow();
+</script>
+</body>
+</html>
