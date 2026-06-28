@@ -115,8 +115,15 @@ button{cursor:pointer}
 }
 .settings{
   display:grid;
-  grid-template-columns:minmax(180px,1fr) auto auto minmax(120px,.42fr);
-  gap:10px;
+  grid-template-columns:minmax(170px,1fr) minmax(250px,auto);
+  gap:12px;
+  align-items:end;
+}
+.win-config{
+  display:grid;
+  grid-column:1 / -1;
+  grid-template-columns:minmax(0,1fr) 132px;
+  gap:12px;
   align-items:end;
 }
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -159,7 +166,16 @@ input[type=number]{text-align:right}
 }
 .seg button:last-child{border-right:0}
 .seg button.active{background:var(--green);color:var(--on-accent)}
-.mode-seg button{min-width:76px}
+.player-seg{
+  display:grid;
+  grid-template-columns:repeat(7,38px);
+}
+.player-seg button{min-width:38px;padding:7px 0}
+.win-seg{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+}
+.win-seg button{min-width:0;white-space:normal;line-height:1.15}
 .btn{
   min-height:38px;
   border:1px solid var(--line);
@@ -180,11 +196,73 @@ input[type=number]{text-align:right}
 .name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .player-name input{border-left-width:5px;border-left-style:solid}
 .hint{margin:10px 0 0;color:var(--muted);font-size:.78rem;line-height:1.35}
+.cheat-sheet{padding:0;overflow:hidden}
+.cheat-sheet summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-height:46px;
+  padding:12px 14px;
+  cursor:pointer;
+  font-weight:900;
+  list-style:none;
+}
+.cheat-sheet summary::-webkit-details-marker{display:none}
+.cheat-title{font-size:1rem}
+.cheat-sub{color:var(--muted);font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.cheat-sheet summary::after{
+  content:"+";
+  width:24px;
+  height:24px;
+  display:grid;
+  place-items:center;
+  border:1px solid var(--line);
+  border-radius:6px;
+  color:var(--muted);
+  flex:0 0 auto;
+}
+.cheat-sheet[open] summary{border-bottom:1px solid var(--line)}
+.cheat-sheet[open] summary::after{content:"-"}
+.cheat-grid{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) 90px 82px;
+  padding:0 14px 14px;
+}
+.cheat-cell{
+  min-height:34px;
+  display:flex;
+  align-items:center;
+  border-bottom:1px solid var(--line);
+  font-size:.9rem;
+  font-weight:800;
+}
+.cheat-head{
+  color:var(--muted);
+  font-size:.72rem;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.cheat-cell:nth-last-child(-n + 3){border-bottom:0}
+.cheat-value{justify-content:flex-end}
+.cheat-note{
+  margin:0;
+  padding:0 14px 14px;
+  color:var(--muted);
+  font-size:.78rem;
+  line-height:1.35;
+}
 .score-strip{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
   gap:10px;
-  margin-bottom:14px;
+  margin:0 -4px 14px;
+  padding:8px 4px;
+  position:sticky;
+  top:0;
+  z-index:8;
+  background:var(--paper);
+  border-bottom:1px solid var(--line);
 }
 .score-card{
   padding:12px;
@@ -205,12 +283,6 @@ input[type=number]{text-align:right}
 }
 .round-head h2{margin:0;font-size:1.25rem}
 .save-state{font-size:.8rem;color:var(--muted);white-space:nowrap}
-.entry-grid{
-  display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
-  align-items:end;
-}
 .score-inputs{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -314,7 +386,6 @@ input[type=number]{text-align:right}
 }
 .sheet-cell{text-align:center;font-weight:800}
 .sheet-cell.total{font-size:1rem;font-weight:900}
-.sheet-cell.raw{color:var(--muted);font-size:.82rem}
 .sheet-actions{
   display:flex;
   align-items:center;
@@ -371,16 +442,23 @@ input[type=number]{text-align:right}
 @media(max-width:980px){
   .top,.layout,.settings{grid-template-columns:1fr}
   .toolbar{justify-content:flex-start}
+  .win-config{grid-template-columns:1fr}
 }
 @media(max-width:640px){
   .wrap{padding:12px}
-  .name-grid,.score-inputs,.round-preview,.entry-grid{grid-template-columns:1fr}
+  .name-grid,.score-inputs,.round-preview{grid-template-columns:1fr}
   .score-sheet-head,.score-round{grid-template-columns:1fr}
   .score-sheet-head > div:first-child,.score-sheet-head > div:last-child{display:none}
   .round-info{border-right:0;border-bottom:1px solid var(--line)}
   .sheet-actions{justify-content:flex-end;border-top:1px solid var(--line)}
   .round-head{align-items:flex-start;flex-direction:column}
   .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(hover:none) and (pointer:coarse){
+  .score-strip{top:calc(env(safe-area-inset-top, 0px) + 52px);z-index:10}
+}
+@media(hover:none) and (pointer:coarse) and (max-width:640px){
+  .score-strip{top:calc(env(safe-area-inset-top, 0px) + 12px)}
 }
 @media print{
   html.dark-mode{
@@ -414,7 +492,7 @@ input[type=number]{text-align:right}
   .toolbar,.settings-panel,.round-form,.message,.sheet-actions,.toast{display:none}
   .panel{box-shadow:none}
   .layout{grid-template-columns:1fr}
-  .score-strip{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
+  .score-strip{position:static;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));margin-bottom:12px;padding:0;background:transparent;border-bottom:0}
 }
 </style>
 <script>
@@ -454,7 +532,7 @@ try{
           </div>
           <div class="field">
             <span class="label">Players</span>
-            <div class="seg" id="playerCount" aria-label="Player count">
+            <div class="seg player-seg" id="playerCount" aria-label="Player count">
               <button type="button" data-count="2">2</button>
               <button type="button" data-count="3">3</button>
               <button type="button" data-count="4">4</button>
@@ -464,58 +542,76 @@ try{
               <button type="button" data-count="8">8</button>
             </div>
           </div>
-          <div class="field">
-            <span class="label">Standings</span>
-            <div class="seg mode-seg" id="scoreMode" aria-label="Standings mode">
-              <button type="button" data-mode="high">High</button>
-              <button type="button" data-mode="low">Low</button>
+          <div class="win-config">
+            <div class="field win-field">
+              <span class="label">Win Condition</span>
+              <div class="seg win-seg" id="winCondition" aria-label="Win condition">
+                <button type="button" data-win-condition="rounds-high">Rounds: High</button>
+                <button type="button" data-win-condition="rounds-low">Rounds: Low</button>
+                <button type="button" data-win-condition="score">Score Limit</button>
+              </div>
             </div>
-          </div>
-          <div class="field">
-            <label for="targetScore">Playing To</label>
-            <input id="targetScore" type="number" min="1" step="1" placeholder="Optional">
+            <div class="field limit-field">
+              <label for="limitValue" id="limitValueLabel">Round Limit</label>
+              <input id="limitValue" type="number" min="1" step="1">
+            </div>
           </div>
         </div>
         <div class="divider"></div>
         <h2 class="section-title">Players</h2>
         <div class="name-grid" id="nameGrid"></div>
-        <p class="hint">Use High for games where points win, Low for games where points hurt. Scores save automatically in this browser.</p>
+        <p class="hint">Enter each round's points and the scorecard will keep the running total. Scores save automatically in this browser.</p>
       </div>
+
+      <details class="panel cheat-sheet">
+        <summary>
+          <span class="cheat-title">Cheat Sheet</span>
+          <span class="cheat-sub">Common rounds</span>
+        </summary>
+        <div class="cheat-grid" aria-label="Common card game settings">
+          <div class="cheat-cell cheat-head">Name</div>
+          <div class="cheat-cell cheat-head cheat-value">Rounds</div>
+          <div class="cheat-cell cheat-head cheat-value">Winner</div>
+          <div class="cheat-cell">Shanghai Rummy</div>
+          <div class="cheat-cell cheat-value">7</div>
+          <div class="cheat-cell cheat-value">Low</div>
+          <div class="cheat-cell">Golf</div>
+          <div class="cheat-cell cheat-value">9</div>
+          <div class="cheat-cell cheat-value">Low</div>
+          <div class="cheat-cell">Sevens</div>
+          <div class="cheat-cell cheat-value">7</div>
+          <div class="cheat-cell cheat-value">Low</div>
+          <div class="cheat-cell">Flip 7</div>
+          <div class="cheat-cell cheat-value">200 pts</div>
+          <div class="cheat-cell cheat-value">High</div>
+          <div class="cheat-cell">Chickenfoot</div>
+          <div class="cheat-cell cheat-value">10</div>
+          <div class="cheat-cell cheat-value">Low</div>
+          <div class="cheat-cell">Cắt Tê</div>
+          <div class="cheat-cell cheat-value">5 pts</div>
+          <div class="cheat-cell cheat-value">High</div>
+        </div>
+        <p class="cheat-note">For Cắt Tê, enter 1 for the player who wins a round and play to 5.</p>
+      </details>
 
       <form class="panel section round-form" id="roundForm">
         <div class="round-head">
-          <h2 id="roundTitle">Hand</h2>
+          <h2 id="roundTitle">Round</h2>
           <span class="save-state" id="editState"></span>
         </div>
 
-        <div class="entry-grid">
-          <div class="field">
-            <label for="roundNote">Hand Note</label>
-            <input id="roundNote" type="text" maxlength="40" placeholder="Optional">
-          </div>
-          <div class="field">
-            <span class="label">Multiplier</span>
-            <div class="seg" id="multiplier" aria-label="Round multiplier">
-              <button type="button" data-multiplier="1">1x</button>
-              <button type="button" data-multiplier="2">2x</button>
-              <button type="button" data-multiplier="3">3x</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="divider"></div>
         <h3 class="section-title">Scores</h3>
         <div class="score-inputs" id="scoreInputs"></div>
 
         <div class="divider"></div>
-        <h3 class="section-title">Hand Preview</h3>
+        <h3 class="section-title">Round Preview</h3>
         <div class="round-preview" id="previewGrid"></div>
         <div class="message" id="formMessage"></div>
 
         <div class="actions">
-          <button class="btn primary" id="submitRound" type="submit">Add Hand</button>
+          <button class="btn primary" id="submitRound" type="submit">Add Round</button>
           <button class="btn ghost" id="cancelEdit" type="button">Cancel Edit</button>
-          <button class="btn ghost" id="clearRound" type="button">Clear Hand</button>
+          <button class="btn ghost" id="clearRound" type="button">Clear Round</button>
         </div>
       </form>
     </section>
@@ -531,7 +627,7 @@ try{
 
   <div class="footer">
     <span>Generic scorecard for trick-taking, shedding, rummy-style, and house-rule card games.</span>
-    <span id="roundCount">0 hands</span>
+    <span id="roundCount">0 rounds</span>
   </div>
 </div>
 <div class="toast" id="toast"></div>
@@ -542,6 +638,8 @@ const THEME_KEY = 'cardsScorecard.darkMode.v1';
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const DEFAULT_PLAYER_COUNT = 4;
+const DEFAULT_ROUND_LIMIT = 10;
+const DEFAULT_SCORE_LIMIT = 500;
 const COLORS = ['#2f684d','#2f5f8c','#b8892f','#a33b32','#6a4c93','#2a8c82','#b4682f','#5c6670'];
 
 let state = loadState();
@@ -550,19 +648,18 @@ let saveTimer = 0;
 
 function emptyDraft(){
   return {
-    note:'',
-    multiplier:1,
     scores:Array(MAX_PLAYERS).fill(null)
   };
 }
 
 function defaultState(){
   return {
-    version:1,
+    version:2,
     title:'Game Night',
     playerCount:DEFAULT_PLAYER_COUNT,
-    scoreMode:'high',
-    targetScore:null,
+    limitType:'rounds',
+    limitValue:DEFAULT_ROUND_LIMIT,
+    winnerMode:'high',
     players:Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i + 1)),
     rounds:[],
     editingIndex:null,
@@ -605,12 +702,14 @@ function applyTheme(){
 
 function normalizeState(source){
   const base = defaultState();
-  const next = source && typeof source === 'object' ? {...base, ...source, version:1} : base;
+  const next = source && typeof source === 'object' ? {...base, ...source, version:2} : base;
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
-  next.scoreMode = next.scoreMode === 'low' ? 'low' : 'high';
-  next.targetScore = nullableNumber(next.targetScore);
-  if(next.targetScore !== null) next.targetScore = Math.max(1, next.targetScore);
+  next.limitType = source?.limitType
+    ? (source.limitType === 'score' ? 'score' : 'rounds')
+    : (source?.targetScore ? 'score' : 'rounds');
+  next.limitValue = normalizeLimitValue(source, next.limitType);
+  next.winnerMode = (next.winnerMode || source?.scoreMode) === 'low' ? 'low' : 'high';
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(source?.players?.[i] || base.players[i]).slice(0,24));
   next.rounds = Array.isArray(source?.rounds) ? source.rounds.map(normalizeRound) : [];
   next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
@@ -624,9 +723,11 @@ function normalizeState(source){
 function normalizeDraft(source){
   const draft = emptyDraft();
   if(source && typeof source === 'object'){
-    draft.note = String(source.note || '').slice(0,40);
-    draft.multiplier = normalizeMultiplier(source.multiplier);
-    draft.scores = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(source.scores?.[i]));
+    const multiplier = normalizeLegacyMultiplier(source.multiplier);
+    draft.scores = Array.from({length:MAX_PLAYERS},(_,i)=>{
+      const score = nullableNumber(source.scores?.[i]);
+      return score === null ? null : score * multiplier;
+    });
   }
   return draft;
 }
@@ -637,10 +738,16 @@ function normalizeRound(source){
   return round;
 }
 
-function normalizeMultiplier(value){
+function normalizeLegacyMultiplier(value){
   const number = Number(value);
   if(!Number.isFinite(number)) return 1;
   return Math.min(3, Math.max(1, Math.round(number)));
+}
+
+function normalizeLimitValue(source, limitType){
+  const fallback = limitType === 'score' ? DEFAULT_SCORE_LIMIT : DEFAULT_ROUND_LIMIT;
+  const legacy = limitType === 'score' ? source?.targetScore : source?.roundLimit;
+  return Math.max(1, clampNumber(source?.limitValue ?? legacy, 1, 999999, fallback));
 }
 
 function clampNumber(value, min, max, fallback){
@@ -679,12 +786,8 @@ function signed(value){
   return number > 0 ? '+' + format(number) : format(number);
 }
 
-function adjustedScore(round, player){
-  return numberOr(round.scores[player], 0) * normalizeMultiplier(round.multiplier);
-}
-
 function roundScores(round){
-  return Array.from({length:MAX_PLAYERS},(_,i)=>adjustedScore(round, i));
+  return Array.from({length:MAX_PLAYERS},(_,i)=>numberOr(round.scores[i], 0));
 }
 
 function cumulativeTotals(throughIndex){
@@ -701,16 +804,23 @@ function leaders(){
   const players = visiblePlayers();
   const totals = cumulativeTotals();
   if(!players.length) return [];
-  const best = state.scoreMode === 'low'
+  const best = activeWinnerMode() === 'low'
     ? Math.min(...players.map(i => totals[i]))
     : Math.max(...players.map(i => totals[i]));
   return players.filter(i => totals[i] === best);
 }
 
+function activeWinnerMode(){
+  return state.limitType === 'rounds' ? state.winnerMode : 'high';
+}
+
 function targetReached(){
-  if(state.targetScore === null || !state.rounds.length) return [];
+  if(!state.rounds.length) return [];
+  if(state.limitType === 'rounds'){
+    return state.rounds.length >= state.limitValue ? leaders() : [];
+  }
   const totals = cumulativeTotals();
-  return visiblePlayers().filter(i => totals[i] >= state.targetScore);
+  return visiblePlayers().filter(i => totals[i] >= state.limitValue);
 }
 
 function saveNow(){
@@ -735,15 +845,15 @@ function setSaveState(text){
 function render(){
   applyTheme();
   document.getElementById('gameTitle').value = state.title;
-  document.getElementById('targetScore').value = state.targetScore ?? '';
+  document.getElementById('limitValue').value = state.limitValue;
   renderPlayerCount();
-  renderScoreMode();
+  renderWinCondition();
   renderNames();
   renderScoreStrip();
   renderRoundForm();
   renderHistory();
   renderStatus();
-  document.getElementById('roundCount').textContent = state.rounds.length + (state.rounds.length === 1 ? ' hand' : ' hands');
+  document.getElementById('roundCount').textContent = state.rounds.length + (state.rounds.length === 1 ? ' round' : ' rounds');
 }
 
 function renderPlayerCount(){
@@ -754,12 +864,32 @@ function renderPlayerCount(){
   });
 }
 
-function renderScoreMode(){
-  document.querySelectorAll('#scoreMode button').forEach(button=>{
-    const isActive = button.dataset.mode === state.scoreMode;
+function renderWinCondition(){
+  document.querySelectorAll('#winCondition button').forEach(button=>{
+    const isActive = button.dataset.winCondition === winCondition();
     button.classList.toggle('active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
+  document.getElementById('limitValueLabel').textContent = state.limitType === 'score' ? 'Score Limit' : 'Round Limit';
+}
+
+function winCondition(){
+  if(state.limitType === 'score') return 'score';
+  return state.winnerMode === 'low' ? 'rounds-low' : 'rounds-high';
+}
+
+function setWinCondition(value){
+  const oldLimitType = state.limitType;
+  if(value === 'score'){
+    state.limitType = 'score';
+    state.winnerMode = 'high';
+  }else{
+    state.limitType = 'rounds';
+    state.winnerMode = value === 'rounds-low' ? 'low' : 'high';
+  }
+  if(oldLimitType !== state.limitType){
+    state.limitValue = state.limitType === 'score' ? DEFAULT_SCORE_LIMIT : DEFAULT_ROUND_LIMIT;
+  }
 }
 
 function renderNames(){
@@ -800,8 +930,9 @@ function renderScoreStrip(){
     card.className = 'score-card panel';
     card.classList.toggle('leader', leaderSet.has(i) && state.rounds.length > 0);
     card.style.borderLeftColor = COLORS[i];
-    const last = state.rounds.length ? adjustedScore(state.rounds[state.rounds.length - 1], i) : 0;
-    const status = leaderSet.has(i) && state.rounds.length > 0 ? 'Leader' : (state.rounds.length ? 'Last hand ' + signed(last) : 'Ready');
+    const last = state.rounds.length ? roundScores(state.rounds[state.rounds.length - 1])[i] : 0;
+    const label = targetReached().length ? 'Winner' : 'Leader';
+    const status = leaderSet.has(i) && state.rounds.length > 0 ? label : (state.rounds.length ? 'Last round ' + signed(last) : 'Ready');
     card.innerHTML = '<div class="score-name">' + escapeHtml(playerName(i)) + '</div>' +
       '<div class="score-total">' + format(totals[i]) + '</div>' +
       '<div class="score-sub">' + escapeHtml(status) + '</div>';
@@ -810,23 +941,13 @@ function renderScoreStrip(){
 }
 
 function renderRoundForm(){
-  document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Hand ' + (state.rounds.length + 1) : 'Hand ' + (state.editingIndex + 1);
+  document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Round ' + (state.rounds.length + 1) : 'Round ' + (state.editingIndex + 1);
   document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
-  document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Hand' : 'Save Hand';
+  document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Round' : 'Save Round';
   document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
-  document.getElementById('roundNote').value = state.draft.note;
-  renderMultiplier();
   renderScoreInputs();
   renderPreview();
   setMessage('');
-}
-
-function renderMultiplier(){
-  document.querySelectorAll('#multiplier button').forEach(button=>{
-    const isActive = Number(button.dataset.multiplier) === state.draft.multiplier;
-    button.classList.toggle('active', isActive);
-    button.setAttribute('aria-pressed', String(isActive));
-  });
 }
 
 function renderScoreInputs(){
@@ -859,13 +980,12 @@ function renderPreview(){
   const grid = document.getElementById('previewGrid');
   grid.innerHTML = '';
   visiblePlayers().forEach(i=>{
-    const value = adjustedScore(state.draft, i);
-    const raw = numberOr(state.draft.scores[i], 0);
+    const value = numberOr(state.draft.scores[i], 0);
     const card = document.createElement('div');
     card.className = 'preview-card';
     card.innerHTML = '<div class="name">' + escapeHtml(playerName(i)) + '</div>' +
       '<div class="total ' + scoreClass(value) + '">' + signed(value) + '</div>' +
-      '<div class="score-sub">' + (state.draft.multiplier > 1 ? format(raw) + ' x ' + state.draft.multiplier : 'Raw hand') + '</div>';
+      '<div class="score-sub">This round</div>';
     grid.appendChild(card);
   });
 }
@@ -873,7 +993,7 @@ function renderPreview(){
 function renderHistory(){
   const target = document.getElementById('history');
   if(!state.rounds.length){
-    target.innerHTML = '<div class="empty">No hands yet.</div>';
+    target.innerHTML = '<div class="empty">No rounds yet.</div>';
     return;
   }
 
@@ -887,22 +1007,15 @@ function renderHistory(){
 
   state.rounds.forEach((round, roundIndex)=>{
     const runningTotals = cumulativeTotals(roundIndex);
-    const showRaw = round.multiplier > 1;
     html += '<div class="score-round">';
-    html += '<div class="round-info"><div class="round-no">Hand ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta"><strong>' + escapeHtml(round.note || 'Score entry') + '</strong>';
-    html += 'Multiplier: ' + round.multiplier + 'x</div></div>';
+    html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
+    html += '<div class="round-meta"><strong>Score entry</strong>';
+    html += 'Running total</div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
-    if(showRaw){
-      html += '<div class="sheet-label">Raw</div>';
-      players.forEach(i=>{
-        html += '<div class="sheet-cell raw">' + signed(numberOr(round.scores[i], 0)) + '</div>';
-      });
-    }
-    html += '<div class="sheet-label">Hand</div>';
+    html += '<div class="sheet-label">Round</div>';
     players.forEach(i=>{
-      const value = adjustedScore(round, i);
+      const value = roundScores(round)[i];
       html += '<div class="sheet-cell ' + scoreClass(value) + '">' + signed(value) + '</div>';
     });
     html += '<div class="sheet-label last-row">Total</div>';
@@ -928,18 +1041,33 @@ function renderStatus(){
     return;
   }
   if(reached.length){
-    const names = reached.map(playerName).join(', ');
     box.classList.add('show');
-    box.textContent = names + ' reached ' + format(state.targetScore) + '. ' + leaderText(leaderList) + '.';
+    if(state.limitType === 'rounds'){
+      box.textContent = 'Round limit reached. ' + winnerText(reached) + '.';
+    }else{
+      const names = reached.map(playerName).join(', ');
+      box.textContent = names + ' reached ' + format(state.limitValue) + '. ' + leaderText(leaderList) + '.';
+    }
     return;
   }
   box.classList.add('show');
-  box.textContent = leaderText(leaderList) + '.';
+  box.textContent = leaderText(leaderList) + '. ' + limitText() + '.';
 }
 
 function leaderText(list){
   const names = list.map(playerName).join(', ');
   return names + (list.length === 1 ? ' leads' : ' lead') + ' with ' + format(cumulativeTotals()[list[0]]);
+}
+
+function winnerText(list){
+  const names = list.map(playerName).join(', ');
+  return names + (list.length === 1 ? ' wins' : ' tie') + ' with ' + format(cumulativeTotals()[list[0]]);
+}
+
+function limitText(){
+  return state.limitType === 'rounds'
+    ? 'Round ' + state.rounds.length + ' of ' + format(state.limitValue)
+    : 'First to ' + format(state.limitValue);
 }
 
 function scoreClass(value){
@@ -965,6 +1093,10 @@ function handleScoreTab(event){
 }
 
 function saveDraft(){
+  if(state.limitType === 'rounds' && state.editingIndex === null && state.rounds.length >= state.limitValue){
+    setMessage('Round limit reached.');
+    return;
+  }
   const hasScore = visiblePlayers().some(i => state.draft.scores[i] !== null);
   if(!hasScore){
     setMessage('Enter at least one score.');
@@ -1005,7 +1137,7 @@ function deleteRound(index){
   }
   render();
   scheduleSave();
-  toast('Hand deleted');
+  toast('Round deleted');
 }
 
 function clearDraft(){
@@ -1066,9 +1198,22 @@ document.getElementById('gameTitle').addEventListener('input',event=>{
   scheduleSave();
 });
 
-document.getElementById('targetScore').addEventListener('input',event=>{
-  state.targetScore = nullableNumber(event.target.value);
-  if(state.targetScore !== null) state.targetScore = Math.max(1, state.targetScore);
+document.getElementById('limitValue').addEventListener('input',event=>{
+  const value = nullableNumber(event.target.value);
+  state.limitValue = value === null ? 1 : Math.max(1, Math.round(value));
+  renderScoreStrip();
+  renderStatus();
+  scheduleSave();
+});
+
+document.getElementById('winCondition').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-win-condition]');
+  if(!button) return;
+  if(winCondition() === button.dataset.winCondition) return;
+  setWinCondition(button.dataset.winCondition);
+  document.getElementById('limitValue').value = state.limitValue;
+  renderWinCondition();
+  renderScoreStrip();
   renderStatus();
   scheduleSave();
 });
@@ -1078,30 +1223,6 @@ document.getElementById('playerCount').addEventListener('click',event=>{
   if(!button) return;
   state.playerCount = Number(button.dataset.count);
   render();
-  scheduleSave();
-});
-
-document.getElementById('scoreMode').addEventListener('click',event=>{
-  const button = event.target.closest('button[data-mode]');
-  if(!button) return;
-  state.scoreMode = button.dataset.mode === 'low' ? 'low' : 'high';
-  renderScoreMode();
-  renderScoreStrip();
-  renderStatus();
-  scheduleSave();
-});
-
-document.getElementById('roundNote').addEventListener('input',event=>{
-  state.draft.note = event.target.value;
-  scheduleSave();
-});
-
-document.getElementById('multiplier').addEventListener('click',event=>{
-  const button = event.target.closest('button[data-multiplier]');
-  if(!button) return;
-  state.draft.multiplier = normalizeMultiplier(button.dataset.multiplier);
-  renderMultiplier();
-  renderPreview();
   scheduleSave();
 });
 
