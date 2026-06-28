@@ -7,6 +7,7 @@
 <style>
 *{box-sizing:border-box}
 :root{
+  color-scheme:light;
   --ink:#1f2420;
   --muted:#69736c;
   --paper:#f5f2eb;
@@ -19,6 +20,59 @@
   --red:#a33b32;
   --blue:#2f5f8c;
   --shadow:0 12px 34px rgba(38,32,22,.1);
+  --input:#fff;
+  --button-bg:#fff;
+  --button-hover:#948873;
+  --on-accent:#fff;
+  --focus:rgba(47,104,77,.12);
+  --needed-bg:#fff8e8;
+  --needed-line:rgba(184,137,47,.35);
+  --needed-ink:#7d5a16;
+  --message-bg:#fff1ef;
+  --message-line:rgba(163,59,50,.25);
+  --preview-bg:#fff;
+  --winner-bg:#fff6df;
+  --winner-line:rgba(184,137,47,.4);
+  --winner-ink:#725111;
+  --sheet-bg:#fff;
+  --sheet-head-bg:#f8f5ee;
+  --round-info-bg:#fbf8f1;
+  --sheet-head-ink:#4a453d;
+  --empty-bg:rgba(255,255,255,.45);
+}
+html.dark-mode{
+  color-scheme:dark;
+  --ink:#f2eee6;
+  --muted:#c1b8aa;
+  --paper:#15130f;
+  --panel:#22201c;
+  --soft:#2d2923;
+  --line:#5b554b;
+  --green:#6ea98f;
+  --green-dark:#5b937a;
+  --gold:#d7a94a;
+  --red:#ef8177;
+  --blue:#7fa2c3;
+  --shadow:0 12px 34px rgba(0,0,0,.34);
+  --input:#1b1a17;
+  --button-bg:#22201c;
+  --button-hover:#d0c6b6;
+  --on-accent:#101510;
+  --focus:rgba(110,169,143,.2);
+  --needed-bg:#2d2618;
+  --needed-line:rgba(215,169,74,.4);
+  --needed-ink:#f0cf75;
+  --message-bg:#34201f;
+  --message-line:rgba(239,129,119,.35);
+  --preview-bg:#1f1d19;
+  --winner-bg:#332814;
+  --winner-line:rgba(215,169,74,.45);
+  --winner-ink:#f1d37d;
+  --sheet-bg:#1c1a16;
+  --sheet-head-bg:#2b2822;
+  --round-info-bg:#26231e;
+  --sheet-head-ink:#e7dece;
+  --empty-bg:rgba(255,255,255,.06);
 }
 body{
   margin:0;
@@ -74,19 +128,19 @@ input,select{
   min-height:38px;
   border:1px solid var(--line);
   border-radius:6px;
-  background:#fff;
+  background:var(--input);
   color:var(--ink);
   padding:8px 10px;
   outline:none;
 }
-input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(47,104,77,.12)}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--focus)}
 input[type=number]{text-align:right}
 .seg{
   display:flex;
   border:1px solid var(--line);
   border-radius:7px;
   overflow:hidden;
-  background:#fff;
+  background:var(--input);
 }
 .seg button{
   min-width:44px;
@@ -94,26 +148,27 @@ input[type=number]{text-align:right}
   padding:7px 12px;
   border:0;
   border-right:1px solid var(--line);
-  background:#fff;
+  background:var(--input);
   color:var(--ink);
   font-weight:800;
 }
 .seg button:last-child{border-right:0}
-.seg button.active{background:var(--green);color:#fff}
+.seg button.active{background:var(--green);color:var(--on-accent)}
 .btn{
   min-height:38px;
   border:1px solid var(--line);
   border-radius:6px;
-  background:#fff;
+  background:var(--button-bg);
   color:var(--ink);
   padding:8px 12px;
   font-weight:800;
 }
-.btn:hover{border-color:#948873}
-.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
+.btn:hover{border-color:var(--button-hover)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-accent)}
 .btn.primary:hover{background:var(--green-dark)}
 .btn.warn{color:var(--red)}
 .btn.ghost{background:transparent}
+.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .round-head{
   display:flex;
@@ -162,7 +217,7 @@ input[type=number]{text-align:right}
   padding:8px 10px;
   border:1px solid var(--line);
   border-radius:7px;
-  background:#fff;
+  background:var(--input);
   font-weight:700;
 }
 .check input{width:18px;min-height:18px;accent-color:var(--green)}
@@ -172,19 +227,19 @@ input[type=number]{text-align:right}
   gap:8px;
   align-items:center;
   padding:10px 12px;
-  border:1px solid rgba(184,137,47,.35);
+  border:1px solid var(--needed-line);
   border-radius:7px;
-  background:#fff8e8;
+  background:var(--needed-bg);
   margin-top:10px;
 }
-.needed b{font-size:1.35rem;color:#7d5a16}
+.needed b{font-size:1.35rem;color:var(--needed-ink)}
 .message{
   display:none;
   margin-top:10px;
   padding:9px 10px;
   border-radius:6px;
-  border:1px solid rgba(163,59,50,.25);
-  background:#fff1ef;
+  border:1px solid var(--message-line);
+  background:var(--message-bg);
   color:var(--red);
   font-size:.88rem;
 }
@@ -198,7 +253,7 @@ input[type=number]{text-align:right}
 .preview-card{
   border:1px solid var(--line);
   border-radius:7px;
-  background:#fff;
+  background:var(--preview-bg);
   padding:10px;
   text-align:center;
 }
@@ -210,19 +265,19 @@ input[type=number]{text-align:right}
 .actions .btn.primary{flex:1 1 180px}
 .winner{
   display:none;
-  border:1px solid rgba(184,137,47,.4);
-  background:#fff6df;
+  border:1px solid var(--winner-line);
+  background:var(--winner-bg);
   border-radius:8px;
   padding:12px;
   font-weight:900;
-  color:#725111;
+  color:var(--winner-ink);
 }
 .winner.show{display:block}
-.score-sheet{overflow:hidden;border:1px solid var(--line);border-radius:8px;background:#fff}
+.score-sheet{overflow:hidden;border:1px solid var(--line);border-radius:8px;background:var(--sheet-bg)}
 .score-sheet-head{
   display:grid;
   grid-template-columns:132px minmax(0,1fr) 76px;
-  background:#f8f5ee;
+  background:var(--sheet-head-bg);
   border-bottom:1px solid var(--line);
 }
 .score-sheet-players{
@@ -233,13 +288,13 @@ input[type=number]{text-align:right}
   display:grid;
   grid-template-columns:132px minmax(0,1fr) 76px;
   border-bottom:1px solid var(--line);
-  background:#fff;
+  background:var(--sheet-bg);
 }
 .score-round:last-child{border-bottom:0}
 .round-info{
   padding:6px 8px;
   border-right:1px solid var(--line);
-  background:#fbf8f1;
+  background:var(--round-info-bg);
 }
 .round-no{font-size:1rem;font-weight:900;line-height:1}
 .round-meta{margin-top:4px;color:var(--muted);font-size:.72rem;line-height:1.22}
@@ -258,8 +313,8 @@ input[type=number]{text-align:right}
 .score-sheet-players > *{border-bottom:0}
 .player-count-2 .score-lines > :nth-last-child(-n + 3){border-bottom:0}
 .sheet-head{
-  color:#4a453d;
-  background:#fbf8f1;
+  color:var(--sheet-head-ink);
+  background:var(--round-info-bg);
   font-size:.72rem;
   font-weight:900;
   letter-spacing:.06em;
@@ -271,7 +326,7 @@ input[type=number]{text-align:right}
 }
 .sheet-label{
   color:var(--muted);
-  background:#fbf8f1;
+  background:var(--round-info-bg);
   font-size:.72rem;
   font-weight:900;
   letter-spacing:.06em;
@@ -292,7 +347,7 @@ input[type=number]{text-align:right}
   color:var(--muted);
   border:1px dashed var(--line);
   border-radius:8px;
-  background:rgba(255,255,255,.45);
+  background:var(--empty-bg);
 }
 .file-input{display:none}
 @media(max-width:900px){
@@ -311,6 +366,36 @@ input[type=number]{text-align:right}
   .round-head{align-items:flex-start;flex-direction:column}
 }
 @media print{
+  html.dark-mode{
+    color-scheme:light;
+    --ink:#1f2420;
+    --muted:#69736c;
+    --paper:#fff;
+    --panel:#fffdf8;
+    --line:#d3cab9;
+    --green:#2f684d;
+    --green-dark:#214c38;
+    --gold:#b8892f;
+    --red:#a33b32;
+    --blue:#2f5f8c;
+    --input:#fff;
+    --button-bg:#fff;
+    --on-accent:#fff;
+    --needed-bg:#fff8e8;
+    --needed-line:rgba(184,137,47,.35);
+    --needed-ink:#7d5a16;
+    --message-bg:#fff1ef;
+    --message-line:rgba(163,59,50,.25);
+    --preview-bg:#fff;
+    --winner-bg:#fff6df;
+    --winner-line:rgba(184,137,47,.4);
+    --winner-ink:#725111;
+    --sheet-bg:#fff;
+    --sheet-head-bg:#f8f5ee;
+    --round-info-bg:#fbf8f1;
+    --sheet-head-ink:#4a453d;
+    --empty-bg:rgba(255,255,255,.45);
+  }
   body{background:#fff}
   .wrap{max-width:none;padding:0}
   .toolbar,.actions,.settings-panel,.message,.sheet-actions{display:none}
@@ -318,6 +403,13 @@ input[type=number]{text-align:right}
   .layout{grid-template-columns:1fr}
 }
 </style>
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('pinochleScorekeeper.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
 </head>
 <body>
 <div class="wrap" id="app">
@@ -327,6 +419,7 @@ input[type=number]{text-align:right}
       <p id="saveState">Loading...</p>
     </div>
     <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
       <button class="btn" id="printBtn" type="button">Print</button>
       <button class="btn" id="exportBtn" type="button">Export</button>
       <button class="btn" id="importBtn" type="button">Import</button>
@@ -434,12 +527,14 @@ input[type=number]{text-align:right}
 
 <script>
 const STORE_KEY = 'pinochleScorekeeper.v2';
+const THEME_KEY = 'pinochleScorekeeper.darkMode.v1';
 const LEGACY_KEY = 'pinochleGame';
 const MAX_PLAYERS = 3;
 const TRICK_TOTAL = 25;
 const COLORS = ['#2f684d','#2f5f8c','#b8892f'];
 
 let state = loadState();
+let darkMode = loadDarkMode();
 let saveTimer = 0;
 let autoTrickIndex = null;
 
@@ -485,6 +580,30 @@ function readJson(key){
   }catch(error){
     return null;
   }
+}
+
+function loadDarkMode(){
+  try{
+    return localStorage.getItem(THEME_KEY) === 'true';
+  }catch(error){
+    return false;
+  }
+}
+
+function saveDarkMode(){
+  try{
+    localStorage.setItem(THEME_KEY, darkMode ? 'true' : 'false');
+  }catch(error){}
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode', darkMode);
+  const themeButton = document.getElementById('themeBtn');
+  if(!themeButton) return;
+  themeButton.classList.toggle('active', darkMode);
+  themeButton.setAttribute('aria-pressed', String(darkMode));
+  themeButton.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  themeButton.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
 function saveNow(){
@@ -674,6 +793,7 @@ function validateRound(round){
 }
 
 function render(){
+  applyTheme();
   document.getElementById('app').classList.toggle('player-count-2', state.playerCount === 2);
   document.getElementById('gameTitle').value = state.title;
   document.getElementById('targetScore').value = state.targetScore;
@@ -1047,6 +1167,11 @@ document.getElementById('roundForm').addEventListener('submit',event=>{
 
 document.getElementById('clearRound').addEventListener('click',clearDraft);
 document.getElementById('cancelEdit').addEventListener('click',cancelEdit);
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  applyTheme();
+  saveDarkMode();
+});
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
 document.getElementById('exportBtn').addEventListener('click',exportData);
 document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
