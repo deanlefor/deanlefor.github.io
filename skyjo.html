@@ -125,10 +125,11 @@ button{cursor:pointer}
 }
 .settings{
   display:grid;
-  grid-template-columns:minmax(170px,1fr) auto minmax(120px,.44fr);
+  grid-template-columns:minmax(170px,1fr) minmax(110px,.42fr);
   gap:10px;
   align-items:end;
 }
+.player-count-field{grid-column:1 / -1;grid-row:2}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 label,.label{
   color:var(--muted);
@@ -151,13 +152,15 @@ input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--fo
 input[type=number]{text-align:right}
 .seg{
   display:flex;
+  width:100%;
   border:1px solid var(--line);
   border-radius:7px;
   overflow:hidden;
   background:var(--input);
 }
 .seg button{
-  min-width:38px;
+  flex:1 1 0;
+  min-width:0;
   min-height:38px;
   padding:7px 10px;
   border:0;
@@ -485,7 +488,7 @@ try{
             <label for="gameTitle">Game Name</label>
             <input id="gameTitle" type="text" maxlength="48">
           </div>
-          <div class="field">
+          <div class="field player-count-field">
             <span class="label">Players</span>
             <div class="seg" id="playerCount" aria-label="Player count">
               <button type="button" data-count="2">2</button>
