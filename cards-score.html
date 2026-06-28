@@ -173,7 +173,7 @@ input[type=number]{text-align:right}
 .player-seg button{min-width:38px;padding:7px 0}
 .win-seg{
   display:grid;
-  grid-template-columns:repeat(3,minmax(0,1fr));
+  grid-template-columns:repeat(4,minmax(0,1fr));
 }
 .win-seg button{min-width:0;white-space:normal;line-height:1.15}
 .btn{
@@ -546,9 +546,10 @@ try{
             <div class="field win-field">
               <span class="label">Win Condition</span>
               <div class="seg win-seg" id="winCondition" aria-label="Win condition">
+                <button type="button" data-win-condition="score-high">Score: High</button>
+                <button type="button" data-win-condition="score-low">Score: Low</button>
                 <button type="button" data-win-condition="rounds-high">Rounds: High</button>
                 <button type="button" data-win-condition="rounds-low">Rounds: Low</button>
-                <button type="button" data-win-condition="score">Score Limit</button>
               </div>
             </div>
             <div class="field limit-field">
@@ -705,11 +706,10 @@ function normalizeState(source){
   const next = source && typeof source === 'object' ? {...base, ...source, version:2} : base;
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
-  next.limitType = source?.limitType
-    ? (source.limitType === 'score' ? 'score' : 'rounds')
-    : (source?.targetScore ? 'score' : 'rounds');
+  const condition = normalizeWinCondition(source);
+  next.limitType = condition.startsWith('score') ? 'score' : 'rounds';
   next.limitValue = normalizeLimitValue(source, next.limitType);
-  next.winnerMode = (next.winnerMode || source?.scoreMode) === 'low' ? 'low' : 'high';
+  next.winnerMode = condition.endsWith('low') ? 'low' : 'high';
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(source?.players?.[i] || base.players[i]).slice(0,24));
   next.rounds = Array.isArray(source?.rounds) ? source.rounds.map(normalizeRound) : [];
   next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
@@ -718,6 +718,19 @@ function normalizeState(source){
   }
   next.draft = normalizeDraft(source?.draft);
   return next;
+}
+
+function normalizeWinCondition(source){
+  if(source?.winCondition) return validWinCondition(source.winCondition);
+  const limitType = source?.limitType
+    ? (source.limitType === 'score' ? 'score' : 'rounds')
+    : (source?.targetScore ? 'score' : 'rounds');
+  const winner = (source?.winnerMode || source?.scoreMode) === 'low' ? 'low' : 'high';
+  return limitType + '-' + winner;
+}
+
+function validWinCondition(value){
+  return ['score-high','score-low','rounds-high','rounds-low'].includes(value) ? value : 'rounds-high';
 }
 
 function normalizeDraft(source){
@@ -811,7 +824,7 @@ function leaders(){
 }
 
 function activeWinnerMode(){
-  return state.limitType === 'rounds' ? state.winnerMode : 'high';
+  return state.winnerMode;
 }
 
 function targetReached(){
@@ -820,7 +833,7 @@ function targetReached(){
     return state.rounds.length >= state.limitValue ? leaders() : [];
   }
   const totals = cumulativeTotals();
-  return visiblePlayers().filter(i => totals[i] >= state.limitValue);
+  return visiblePlayers().some(i => totals[i] >= state.limitValue) ? leaders() : [];
 }
 
 function saveNow(){
@@ -874,15 +887,15 @@ function renderWinCondition(){
 }
 
 function winCondition(){
-  if(state.limitType === 'score') return 'score';
-  return state.winnerMode === 'low' ? 'rounds-low' : 'rounds-high';
+  return state.limitType + '-' + state.winnerMode;
 }
 
 function setWinCondition(value){
+  value = validWinCondition(value);
   const oldLimitType = state.limitType;
-  if(value === 'score'){
+  if(value.startsWith('score')){
     state.limitType = 'score';
-    state.winnerMode = 'high';
+    state.winnerMode = value.endsWith('low') ? 'low' : 'high';
   }else{
     state.limitType = 'rounds';
     state.winnerMode = value === 'rounds-low' ? 'low' : 'high';
@@ -1045,8 +1058,7 @@ function renderStatus(){
     if(state.limitType === 'rounds'){
       box.textContent = 'Round limit reached. ' + winnerText(reached) + '.';
     }else{
-      const names = reached.map(playerName).join(', ');
-      box.textContent = names + ' reached ' + format(state.limitValue) + '. ' + leaderText(leaderList) + '.';
+      box.textContent = 'Score limit reached. ' + winnerText(reached) + '.';
     }
     return;
   }
@@ -1065,9 +1077,8 @@ function winnerText(list){
 }
 
 function limitText(){
-  return state.limitType === 'rounds'
-    ? 'Round ' + state.rounds.length + ' of ' + format(state.limitValue)
-    : 'First to ' + format(state.limitValue);
+  if(state.limitType === 'rounds') return 'Round ' + state.rounds.length + ' of ' + format(state.limitValue);
+  return 'Score limit ' + format(state.limitValue) + ', ' + activeWinnerMode() + ' wins';
 }
 
 function scoreClass(value){
