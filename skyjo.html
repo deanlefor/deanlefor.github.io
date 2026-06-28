@@ -326,69 +326,61 @@ input[type=number]{text-align:right}
   font-weight:900;
 }
 .winner.show{display:block}
-.score-sheet{
-  overflow:hidden;
+.tally-grid{
+  display:grid;
+  grid-template-columns:minmax(86px,.72fr) repeat(var(--players),minmax(48px,1fr));
+  gap:1px;
   border:1px solid var(--line);
   border-radius:8px;
+  overflow:hidden;
+  background:var(--line);
+}
+.tally-head,.tally-round,.tally-cell{
+  min-width:0;
   background:var(--panel);
 }
-.score-sheet-head{
-  display:grid;
-  grid-template-columns:108px minmax(0,1fr);
+.tally-head{
+  min-height:28px;
+  padding:6px 7px;
   background:var(--soft);
-  border-bottom:1px solid var(--line);
-}
-.score-sheet-players{
-  display:grid;
-  grid-template-columns:repeat(var(--players),minmax(44px,1fr));
-}
-.score-round{
-  display:grid;
-  grid-template-columns:96px minmax(0,1fr);
-  border-bottom:1px solid var(--line);
-  align-items:start;
-}
-.score-round:last-child{border-bottom:0}
-.round-info{
-  min-height:100%;
-  padding:5px 7px;
-  border-right:1px solid var(--line);
-  background:var(--soft);
-}
-.round-no{font-size:.84rem;font-weight:950;line-height:1}
-.round-meta{margin-top:2px;color:var(--muted);font-size:.62rem;line-height:1.12}
-.round-meta strong{display:block;color:var(--ink);font-size:.66rem}
-.score-lines{
-  display:grid;
-  grid-template-columns:repeat(var(--players),minmax(44px,1fr));
-}
-.sheet-head,.sheet-cell{
-  min-height:24px;
-  padding:3px 6px;
-  border-right:1px solid var(--line);
-}
-.sheet-head{
   color:var(--muted);
-  background:var(--soft);
-  font-size:.66rem;
+  font-size:.68rem;
   font-weight:950;
-  letter-spacing:.06em;
+  letter-spacing:.08em;
   overflow:hidden;
   text-align:center;
   text-overflow:ellipsis;
   text-transform:uppercase;
   white-space:nowrap;
 }
-.sheet-cell{
+.tally-round{
+  padding:5px 7px;
+  background:var(--soft);
+}
+.tally-round-title{font-size:.82rem;font-weight:950;line-height:1}
+.tally-round-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:3px 5px;
+  align-items:center;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:.62rem;
+  font-weight:850;
+  line-height:1.1;
+}
+.tally-actions{display:flex;gap:3px}
+.tally-actions .btn{min-height:18px;padding:0 5px;font-size:.6rem}
+.tally-cell{
+  min-height:42px;
   display:flex;
   align-items:center;
   justify-content:center;
   gap:3px;
-  min-width:0;
-  height:36px;
-  text-align:center;
+  padding:4px 6px;
   font-size:1rem;
   font-weight:900;
+  text-align:center;
 }
 .score-flags{
   color:var(--muted);
@@ -396,17 +388,6 @@ input[type=number]{text-align:right}
   font-weight:950;
   letter-spacing:.04em;
   text-transform:uppercase;
-}
-.sheet-actions{
-  display:flex;
-  gap:4px;
-  align-items:center;
-  margin-top:4px;
-}
-.sheet-actions .btn{
-  min-height:21px;
-  padding:1px 5px;
-  font-size:.64rem;
 }
 .empty{
   padding:34px 16px;
@@ -443,8 +424,8 @@ input[type=number]{text-align:right}
   .wrap{padding:12px}
   .name-grid,.score-inputs,.standings,.summary,.rule-strip{grid-template-columns:1fr}
   .round-controls{grid-template-columns:1fr}
-  .score-sheet{overflow:auto}
-  .score-sheet-head,.score-round{min-width:620px}
+  #history{overflow:auto}
+  .tally-grid{min-width:620px}
   .round-head{align-items:flex-start;flex-direction:column}
 }
 @media print{
@@ -458,10 +439,9 @@ input[type=number]{text-align:right}
   }
   body{background:#fff}
   .wrap{max-width:none;padding:0}
-  .toolbar,.settings-panel,.actions,.message,.sheet-actions,.toast{display:none}
+  .toolbar,.settings-panel,.actions,.message,.tally-actions,.toast{display:none}
   .layout{grid-template-columns:1fr}
   .panel{box-shadow:none}
-  .score-sheet-head,.score-round{grid-template-columns:96px minmax(0,1fr)}
 }
 </style>
 <script>
@@ -1016,23 +996,21 @@ function renderHistory(){
   }
 
   const players = visiblePlayers();
-  let html = '<div class="score-sheet">';
-  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '">';
+  let html = '<div class="tally-grid" style="--players:' + players.length + '">';
+  html += '<div class="tally-head"></div>';
   players.forEach(i => {
-    html += '<div class="sheet-head">' + escapeHtml(playerName(i)) + '</div>';
+    html += '<div class="tally-head">' + escapeHtml(playerName(i)) + '</div>';
   });
-  html += '</div></div>';
 
   state.rounds.forEach((round,roundIndex) => {
     const meta = roundMeta(round);
     const penalty = meta.penalty ? 'x2 penalty' : 'Low ' + signed(meta.lowest);
 
-    html += '<div class="score-round">';
-    html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta"><strong>' + escapeHtml(penalty) + '</strong></div>';
-    html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div></div>';
+    html += '<div class="tally-round">';
+    html += '<div class="tally-round-title">Round ' + (roundIndex + 1) + '</div>';
+    html += '<div class="tally-round-meta"><span>' + escapeHtml(penalty) + '</span><span class="tally-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></span></div>';
+    html += '</div>';
 
-    html += '<div class="score-lines" style="--players:' + players.length + '">';
     players.forEach(i => {
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
@@ -1041,10 +1019,8 @@ function renderHistory(){
       if(round.closer === i) flags.push('C');
       if(meta.penalty && round.closer === i) flags.push('x2');
       const rawNote = adjusted !== raw ? ' title="Raw score ' + signed(raw) + '"' : '';
-      html += '<div class="sheet-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
+      html += '<div class="tally-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
     });
-    html += '</div>';
-    html += '</div>';
   });
   html += '</div>';
   host.innerHTML = html;
