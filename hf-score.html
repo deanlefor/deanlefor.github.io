@@ -7,11 +7,26 @@
 <style>
 *{box-sizing:border-box}
 :root{
+  color-scheme:light;
   --ink:#191816;--paper:#fbfaf7;--panel:#ffffff;--line:#c9c3b8;
   --soft:#f0eee9;--soft2:#e5e0d7;--gold:#c3922e;--green:#2f6b55;
   --red:#a33b32;--blue:#335f88;--muted:#746d63;--shadow:0 14px 38px rgba(29,25,18,.12);
+  --page:#ebe7df;--input:#fff;--button-hover:#8e8678;--button-inset:rgba(255,255,255,.65);
+  --table-head:#f8f6f1;--row-label-bg:#f8f6f1;--row-label-alt:#eeeae2;--table-label:#423d36;
+  --total-bg:#f0eee9;--round-head:#191816;--round-head-line:#2b2926;--round-pill-bg:#2f2d2a;--round-pill-line:#55514a;
+  --rule-bg:#fff;--house-text:#423d36;--toast-bg:#191816;--toast-ink:#fff;--on-accent:#fff;
 }
-body{margin:0;background:#ebe7df;color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+html.dark-mode{
+  color-scheme:dark;
+  --ink:#f2eee6;--paper:#171613;--panel:#22201c;--line:#5b554b;
+  --soft:#29261f;--soft2:#343024;--gold:#d7a94a;--green:#6ea98f;
+  --red:#ef8177;--blue:#7fa2c3;--muted:#c1b6a4;--shadow:0 14px 38px rgba(0,0,0,.34);
+  --page:#15130f;--input:#1b1a17;--button-hover:#d0c6b6;--button-inset:rgba(255,255,255,.08);
+  --table-head:#2b2822;--row-label-bg:#2b2822;--row-label-alt:#26231e;--table-label:#e7dece;
+  --total-bg:#302c24;--round-head:#080806;--round-head-line:#3d382f;--round-pill-bg:#1f1d19;--round-pill-line:#6a6257;
+  --rule-bg:#22201c;--house-text:#e3dacd;--toast-bg:#f2eee6;--toast-ink:#15130f;--on-accent:#101510;
+}
+body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
 button,input,select{font:inherit}
 button{cursor:pointer}
 .wrap{max-width:1380px;margin:0 auto;padding:18px}
@@ -19,14 +34,15 @@ button{cursor:pointer}
 .brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.03em;text-transform:uppercase}
 .brand p{margin:5px 0 0;color:var(--muted);font-size:.95rem}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.btn,.seg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;min-height:40px;box-shadow:0 1px 0 rgba(255,255,255,.65) inset}
-.btn:hover,.seg button:hover{border-color:#8e8678}
+.btn,.seg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;min-height:40px;box-shadow:0 1px 0 var(--button-inset) inset}
+.btn:hover,.seg button:hover{border-color:var(--button-hover)}
 .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
 .btn.danger{color:var(--red)}
+.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
 .seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
 .seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
 .seg button:last-child{border-right:0}
-.seg button.active{background:var(--green);color:#fff}
+.seg button.active{background:var(--green);color:var(--on-accent)}
 .settings .seg button{min-height:36px;padding:7px 12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 .settings{margin-bottom:14px;padding:12px}
@@ -34,11 +50,11 @@ button{cursor:pointer}
 .field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 .field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
 label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
-input,select{border:1px solid var(--line);background:#fff;border-radius:5px;min-height:36px;padding:7px 9px;color:var(--ink);width:100%}
+input,select{border:1px solid var(--line);background:var(--input);border-radius:5px;min-height:36px;padding:7px 9px;color:var(--ink);width:100%}
 input:focus,select:focus{outline:2px solid rgba(47,107,85,.18);border-color:var(--green)}
 input[type=number]{text-align:right}
 .name-grid{display:grid;grid-template-columns:repeat(4,minmax(120px,1fr));gap:8px}
-.score-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:#ebe7df;border-bottom:1px solid rgba(201,195,184,.75)}
+.score-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:var(--page);border-bottom:1px solid var(--line)}
 .score-card{padding:12px;border-left:5px solid var(--green)}
 .score-card:nth-child(2){border-left-color:var(--blue)}
 .score-card:nth-child(3){border-left-color:var(--gold)}
@@ -54,14 +70,14 @@ input[type=number]{text-align:right}
 table{border-collapse:separate;border-spacing:0;width:100%;min-width:1120px;background:var(--panel)}
 th,td{border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:0;text-align:center}
 th:first-child,td:first-child{border-left:1px solid var(--line)}
-thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid var(--line);padding:9px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
-.row-label{width:178px;text-align:left;background:#f8f6f1;padding:8px 10px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:#423d36}
-.round-head th{background:var(--ink);color:#fff;border-color:#2b2926;padding:8px 10px;text-align:left;text-transform:uppercase;letter-spacing:.08em;font-size:.82rem}
-.round-points{display:inline-block;margin:0 3px;padding:2px 7px;border:1px solid #55514a;border-radius:4px;background:#2f2d2a;color:#fff}
-.player-repeat th{background:#f8f6f1;padding:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:#423d36}
-.player-repeat .row-label{background:#eeeae2}
+thead th{position:sticky;top:0;z-index:2;background:var(--table-head);border-top:1px solid var(--line);padding:9px 8px;font-size:.78rem;text-transform:uppercase;letter-spacing:.05em}
+.row-label{width:178px;text-align:left;background:var(--row-label-bg);padding:8px 10px;font-size:.78rem;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--table-label)}
+.round-head th{background:var(--round-head);color:#fff;border-color:var(--round-head-line);padding:8px 10px;text-align:left;text-transform:uppercase;letter-spacing:.08em;font-size:.82rem}
+.round-points{display:inline-block;margin:0 3px;padding:2px 7px;border:1px solid var(--round-pill-line);border-radius:4px;background:var(--round-pill-bg);color:#fff}
+.player-repeat th{background:var(--table-head);padding:8px;font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;color:var(--table-label)}
+.player-repeat .row-label{background:var(--row-label-alt)}
 .total-row .row-label,.cum-row .row-label{background:var(--soft2)}
-.total-row td,.cum-row td{background:#f0eee9}
+.total-row td,.cum-row td{background:var(--total-bg)}
 .calc{font-weight:800;min-height:37px;display:flex;align-items:center;justify-content:flex-end;padding:0 10px}
 .calc.negative{color:var(--red)}
 .calc.positive{color:var(--green)}
@@ -73,18 +89,18 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 .check-cell input{width:20px;height:20px;min-height:20px;accent-color:var(--green)}
 .hint{font-size:.75rem;color:var(--muted);line-height:1.35}
 .rules{display:grid;grid-template-columns:repeat(5,1fr);gap:1px;background:var(--line);border:1px solid var(--line);border-radius:8px;overflow:hidden;margin:14px 0}
-.rule{background:#fff;padding:10px;text-align:center}
+.rule{background:var(--rule-bg);padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
 .house-rules{margin:14px 0;padding:14px}
 .house-rules h2{margin:0 0 10px;font-size:1rem}
-.house-rule-list{margin:0;padding-left:20px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:#423d36;font-size:.9rem;line-height:1.35}
+.house-rule-list{margin:0;padding-left:20px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:var(--house-text);font-size:.9rem;line-height:1.35}
 .house-rule-list li{break-inside:avoid}
 .house-rule-list strong{font-weight:800}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
 .footer-notes{display:flex;flex-direction:column;gap:4px;line-height:1.35}
 .disclaimer{font-size:.74rem}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--ink);color:#fff;padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
+.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-ink);padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
 .toast.show{opacity:1}
 @media(max-width:760px){
   .wrap{padding:12px}.top,.settings-main{grid-template-columns:1fr}.toolbar{justify-content:flex-start}
@@ -93,12 +109,20 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
   .house-rule-list{grid-template-columns:1fr}
 }
 @media print{
+  html.dark-mode{color-scheme:light;--ink:#191816;--panel:#ffffff;--line:#c9c3b8;--soft:#f0eee9;--soft2:#e5e0d7;--page:#ffffff;--input:#ffffff;--table-head:#f8f6f1;--row-label-bg:#f8f6f1;--row-label-alt:#eeeae2;--table-label:#423d36;--total-bg:#f0eee9;--round-head:#191816;--round-head-line:#2b2926;--round-pill-bg:#2f2d2a;--round-pill-line:#55514a;--rule-bg:#ffffff;--house-text:#423d36;--toast-bg:#191816;--toast-ink:#ffffff}
   body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.house-rules,.footer{display:none}
   .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
   .sheet{overflow:visible}table{min-width:0;font-size:10px}.row-label{width:120px}
   input{border:0;padding:0}.round-points{border:0;background:transparent;padding:0}
 }
 </style>
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('handFootRemasteredScorecard.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -108,6 +132,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
       <p>Four-round scorecard with browser storage, computed bonuses, card totals, and cumulative standings.</p>
     </div>
     <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
       <button class="btn" id="printBtn" title="Print scorecard">Print</button>
       <button class="btn" id="exportBtn" title="Download a JSON backup">Export</button>
       <button class="btn" id="importBtn" title="Restore a JSON backup">Import</button>
@@ -180,6 +205,7 @@ thead th{position:sticky;top:0;z-index:2;background:#f8f6f1;border-top:1px solid
 
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
+const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
 const ROUND_COUNT = 4;
 const SCHEMA_VERSION = 2;
 const MIN_PLAYERS = 2;
@@ -200,8 +226,10 @@ const SECTION_META = {
   cumulative:{label:'Cumulative Total', type:'computed'}
 };
 const ROWS = ['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','bookTotal','cardTotal','roundTotal','cumulative'];
+const PLAYER_ENTRY_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks'];
 
 let state = loadState();
+let darkMode = loadDarkMode();
 let saveTimer = 0;
 
 function newRound(){
@@ -247,6 +275,24 @@ function storageSet(key,value){
   }catch(error){
     return false;
   }
+}
+
+function loadDarkMode(){
+  return storageGet(THEME_KEY) === 'true';
+}
+
+function saveDarkMode(){
+  storageSet(THEME_KEY,darkMode ? 'true' : 'false');
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode',darkMode);
+  const themeButton = document.getElementById('themeBtn');
+  if(!themeButton) return;
+  themeButton.classList.toggle('active',darkMode);
+  themeButton.setAttribute('aria-pressed',String(darkMode));
+  themeButton.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  themeButton.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
 function normalizeState(saved){
@@ -337,6 +383,7 @@ function visiblePlayers(){
 }
 
 function render(){
+  applyTheme();
   document.getElementById('gameTitle').value = state.title;
   renderPlayerCount();
   renderNames();
@@ -441,7 +488,37 @@ function wireTable(){
   document.querySelectorAll('#scoreTable input[data-k]').forEach(input=>{
     input.addEventListener('input',handleScoreInput);
     input.addEventListener('change',handleScoreInput);
+    input.addEventListener('keydown',handleScoreTab);
   });
+}
+
+function scoreTabSequence(){
+  const order = [];
+  const players = visiblePlayers();
+  for(let round=0; round<ROUND_COUNT; round++){
+    players.forEach(player=>{
+      PLAYER_ENTRY_KEYS.forEach(key=>pushScoreInput(order, round, player, key));
+    });
+    players.forEach(player=>pushScoreInput(order, round, player, 'cardTotal'));
+  }
+  return order;
+}
+
+function pushScoreInput(order, round, player, key){
+  const input = document.querySelector(`#scoreTable input[data-r="${round}"][data-p="${player}"][data-k="${key}"]`);
+  if(input) order.push(input);
+}
+
+function handleScoreTab(event){
+  if(event.key !== 'Tab') return;
+  const order = scoreTabSequence();
+  const index = order.indexOf(event.currentTarget);
+  if(index === -1) return;
+  const next = order[index + (event.shiftKey ? -1 : 1)];
+  if(!next) return;
+  event.preventDefault();
+  next.focus();
+  if(typeof next.select === 'function') next.select();
 }
 
 function handleScoreInput(event){
@@ -502,6 +579,13 @@ document.getElementById('playerCount').addEventListener('click',event=>{
   state.playerCount = Number(button.dataset.count);
   render();
   scheduleSave();
+});
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  applyTheme();
+  saveDarkMode();
+  toast(darkMode ? 'Dark mode on' : 'Dark mode off');
 });
 
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
