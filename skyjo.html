@@ -1052,8 +1052,6 @@ function renderHistory(){
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
       const flags = [];
-      if(round.dealer === i) flags.push('D');
-      if(round.closer === i) flags.push('C');
       if(meta.penalty && round.closer === i) flags.push('x2');
       const rawNote = adjusted !== raw ? ' title="Raw score ' + signed(raw) + '"' : '';
       html += '<div class="sheet-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
