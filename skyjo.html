@@ -326,37 +326,97 @@ input[type=number]{text-align:right}
   font-weight:900;
 }
 .winner.show{display:block}
-.history-list{display:flex;flex-direction:column;gap:8px}
-.history-round{
+.score-sheet{
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:8px;
   background:var(--panel);
 }
-.history-round-head{
+.score-sheet-head{
   display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  gap:8px;
-  align-items:center;
-  padding:8px 10px;
+  grid-template-columns:112px minmax(0,1fr) 74px;
+  background:var(--soft);
   border-bottom:1px solid var(--line);
+}
+.score-sheet-players{
+  display:grid;
+  grid-template-columns:52px repeat(var(--players),minmax(44px,1fr));
+}
+.score-round{
+  display:grid;
+  grid-template-columns:112px minmax(0,1fr) 74px;
+  border-bottom:1px solid var(--line);
+}
+.score-round:last-child{border-bottom:0}
+.round-info{
+  padding:6px 8px;
+  border-right:1px solid var(--line);
   background:var(--soft);
 }
-.history-round-title{font-weight:950}
-.history-round-meta{margin-top:1px;color:var(--muted);font-size:.76rem;line-height:1.25}
-.history-score-grid{
+.round-no{font-size:.95rem;font-weight:950;line-height:1}
+.round-meta{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.2}
+.round-meta strong{display:block;color:var(--ink);font-size:.74rem}
+.score-lines{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(92px,1fr));
-  gap:1px;
-  background:var(--line);
+  grid-template-columns:52px repeat(var(--players),minmax(44px,1fr));
 }
-.history-player{min-width:0;background:var(--panel);padding:7px 9px}
-.history-name{color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.history-score{font-size:1.05rem;font-weight:950;line-height:1.1}
-.history-cum{display:block;margin-top:1px;color:var(--muted);font-size:.7rem;font-weight:800}
-.history-detail{display:block;margin-top:1px;color:var(--muted);font-size:.68rem;line-height:1.2}
-.history-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
-.history-actions .btn{min-height:30px;padding:5px 8px}
+.sheet-head,.sheet-label,.sheet-cell{
+  min-height:25px;
+  padding:4px 6px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+.score-sheet-players > *{border-bottom:0}
+.sheet-head{
+  color:var(--muted);
+  background:var(--soft);
+  font-size:.66rem;
+  font-weight:950;
+  letter-spacing:.06em;
+  overflow:hidden;
+  text-align:center;
+  text-overflow:ellipsis;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.sheet-label{
+  color:var(--muted);
+  background:var(--soft);
+  font-size:.66rem;
+  font-weight:950;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.sheet-cell{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-width:0;
+  text-align:center;
+  font-weight:900;
+}
+.sheet-cell.total{font-size:.94rem}
+.score-flags{
+  color:var(--muted);
+  font-size:.58rem;
+  font-weight:950;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.sheet-actions{
+  display:flex;
+  flex-direction:column;
+  gap:4px;
+  align-items:stretch;
+  justify-content:center;
+  padding:4px 6px;
+}
+.sheet-actions .btn{
+  min-height:27px;
+  padding:3px 6px;
+  font-size:.78rem;
+}
 .empty{
   padding:34px 16px;
   text-align:center;
@@ -392,8 +452,8 @@ input[type=number]{text-align:right}
   .wrap{padding:12px}
   .name-grid,.score-inputs,.standings,.summary,.rule-strip{grid-template-columns:1fr}
   .round-controls{grid-template-columns:1fr}
-  .history-round-head{grid-template-columns:1fr}
-  .history-actions{justify-content:flex-start}
+  .score-sheet{overflow:auto}
+  .score-sheet-head,.score-round{min-width:620px}
   .round-head{align-items:flex-start;flex-direction:column}
 }
 @media print{
@@ -407,10 +467,11 @@ input[type=number]{text-align:right}
   }
   body{background:#fff}
   .wrap{max-width:none;padding:0}
-  .toolbar,.settings-panel,.actions,.message,.history-actions,.toast{display:none}
+  .toolbar,.settings-panel,.actions,.message,.sheet-actions,.toast{display:none}
   .layout{grid-template-columns:1fr}
   .panel{box-shadow:none}
-  .history-score-grid{grid-template-columns:repeat(4,1fr)}
+  .score-sheet-head,.score-round{grid-template-columns:96px minmax(0,1fr)}
+  .score-sheet-head > div:last-child{display:none}
 }
 </style>
 <script>
@@ -964,37 +1025,46 @@ function renderHistory(){
     return;
   }
 
-  let html = '<div class="history-list">';
+  const players = visiblePlayers();
+  let html = '<div class="score-sheet">';
+  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '"><div></div>';
+  players.forEach(i => {
+    html += '<div class="sheet-head">' + escapeHtml(playerName(i)) + '</div>';
+  });
+  html += '</div><div></div></div>';
+
   state.rounds.forEach((round,roundIndex) => {
     const meta = roundMeta(round);
     const totals = cumulativeTotals(roundIndex);
-    const cells = visiblePlayers().map(i => {
+    const dealer = playerName(round.dealer);
+    const closer = round.closer === null ? '-' : playerName(round.closer);
+    const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
+
+    html += '<div class="score-round">';
+    html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
+    html += '<div class="round-meta"><strong>' + escapeHtml(penalty) + '</strong>';
+    html += 'Dealer: ' + escapeHtml(dealer) + '<br>';
+    html += 'Closed: ' + escapeHtml(closer) + '</div></div>';
+
+    html += '<div class="score-lines" style="--players:' + players.length + '">';
+    html += '<div class="sheet-label">Score</div>';
+    players.forEach(i => {
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
-      const details = [];
-      if(round.dealer === i) details.push('dealer');
-      if(round.closer === i) details.push('closed');
-      if(meta.penalty && round.closer === i) details.push('raw ' + signed(raw) + ' doubled');
-      else if(raw !== adjusted) details.push('raw ' + signed(raw));
-      return '<div class="history-player" style="border-top:3px solid ' + COLORS[i] + '">' +
-        '<div class="history-name">' + escapeHtml(playerName(i)) + '</div>' +
-        '<span class="history-score ' + scoreClass(adjusted) + '">' + signed(adjusted) + '</span>' +
-        '<span class="history-cum">Total ' + format(totals[i]) + '</span>' +
-        (details.length ? '<span class="history-detail">' + escapeHtml(details.join(' / ')) + '</span>' : '') +
-        '</div>';
-    }).join('');
-    const closer = round.closer === null ? '' : playerName(round.closer);
-    const dealer = playerName(round.dealer);
-    const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
-    html += '<article class="history-round">' +
-      '<div class="history-round-head">' +
-        '<div><div class="history-round-title">Round ' + (roundIndex + 1) + '</div>' +
-        '<div class="history-round-meta">Dealer ' + escapeHtml(dealer) + ' / Closed by ' + escapeHtml(closer) + ' / ' + escapeHtml(penalty) + '</div></div>' +
-        '<div class="history-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button>' +
-        '<button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>' +
-      '</div>' +
-      '<div class="history-score-grid">' + cells + '</div>' +
-    '</article>';
+      const flags = [];
+      if(round.dealer === i) flags.push('D');
+      if(round.closer === i) flags.push('C');
+      if(meta.penalty && round.closer === i) flags.push('x2');
+      const rawNote = adjusted !== raw ? ' title="Raw score ' + signed(raw) + '"' : '';
+      html += '<div class="sheet-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
+    });
+    html += '<div class="sheet-label">Total</div>';
+    players.forEach(i => {
+      html += '<div class="sheet-cell total ' + scoreClass(totals[i]) + '">' + format(totals[i]) + '</div>';
+    });
+    html += '</div>';
+    html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>';
+    html += '</div>';
   });
   html += '</div>';
   host.innerHTML = html;
