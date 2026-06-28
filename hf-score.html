@@ -108,6 +108,10 @@ thead th{position:sticky;top:0;z-index:2;background:var(--table-head);border-top
   .rules{grid-template-columns:repeat(2,1fr)}
   .house-rule-list{grid-template-columns:1fr}
 }
+@media(hover:none) and (pointer:coarse){
+  .score-strip{position:static;top:auto}
+  thead th{position:static}
+}
 @media print{
   html.dark-mode{color-scheme:light;--ink:#191816;--panel:#ffffff;--line:#c9c3b8;--soft:#f0eee9;--soft2:#e5e0d7;--page:#ffffff;--input:#ffffff;--table-head:#f8f6f1;--row-label-bg:#f8f6f1;--row-label-alt:#eeeae2;--table-label:#423d36;--total-bg:#f0eee9;--round-head:#191816;--round-head-line:#2b2926;--round-pill-bg:#2f2d2a;--round-pill-line:#55514a;--rule-bg:#ffffff;--house-text:#423d36;--toast-bg:#191816;--toast-ink:#ffffff}
   body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.house-rules,.footer{display:none}
