@@ -344,25 +344,27 @@ input[type=number]{text-align:right}
 }
 .score-round{
   display:grid;
-  grid-template-columns:108px minmax(0,1fr);
+  grid-template-columns:96px minmax(0,1fr);
   border-bottom:1px solid var(--line);
+  align-items:start;
 }
 .score-round:last-child{border-bottom:0}
 .round-info{
-  padding:6px 8px;
+  min-height:100%;
+  padding:5px 7px;
   border-right:1px solid var(--line);
   background:var(--soft);
 }
-.round-no{font-size:.95rem;font-weight:950;line-height:1}
-.round-meta{margin-top:3px;color:var(--muted);font-size:.68rem;line-height:1.2}
-.round-meta strong{display:block;color:var(--ink);font-size:.74rem}
+.round-no{font-size:.84rem;font-weight:950;line-height:1}
+.round-meta{margin-top:2px;color:var(--muted);font-size:.62rem;line-height:1.14}
+.round-meta strong{display:block;color:var(--ink);font-size:.66rem}
 .score-lines{
   display:grid;
   grid-template-columns:repeat(var(--players),minmax(44px,1fr));
 }
 .sheet-head,.sheet-cell{
-  min-height:25px;
-  padding:4px 6px;
+  min-height:24px;
+  padding:3px 6px;
   border-right:1px solid var(--line);
   border-bottom:1px solid var(--line);
 }
@@ -385,7 +387,9 @@ input[type=number]{text-align:right}
   justify-content:center;
   gap:3px;
   min-width:0;
+  height:52px;
   text-align:center;
+  font-size:1rem;
   font-weight:900;
 }
 .score-flags{
@@ -397,14 +401,14 @@ input[type=number]{text-align:right}
 }
 .sheet-actions{
   display:flex;
-  gap:6px;
+  gap:4px;
   align-items:center;
-  margin-top:4px;
+  margin-top:3px;
 }
 .sheet-actions .btn{
-  min-height:24px;
-  padding:2px 6px;
-  font-size:.7rem;
+  min-height:21px;
+  padding:1px 5px;
+  font-size:.64rem;
 }
 .empty{
   padding:34px 16px;
@@ -1025,7 +1029,7 @@ function renderHistory(){
     const meta = roundMeta(round);
     const dealer = playerName(round.dealer);
     const closer = round.closer === null ? '-' : playerName(round.closer);
-    const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
+    const penalty = meta.penalty ? 'x2 penalty' : 'Low ' + signed(meta.lowest);
 
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
