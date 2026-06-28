@@ -186,59 +186,6 @@ input[type=number]{text-align:right}
 .rule{background:var(--panel);padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;margin-top:2px;color:var(--muted);font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
-.card-ribbon{
-  display:grid;
-  grid-template-columns:repeat(7,minmax(0,1fr));
-  gap:8px;
-}
-.mini-card{
-  position:relative;
-  min-height:72px;
-  border:1px solid var(--line);
-  border-radius:8px;
-  background:linear-gradient(150deg,var(--panel),var(--soft));
-  overflow:hidden;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  font-size:1.35rem;
-  font-weight:950;
-  box-shadow:0 1px 0 rgba(255,255,255,.45) inset;
-}
-.mini-card::before,.mini-card::after{
-  content:"";
-  position:absolute;
-  width:30px;
-  height:30px;
-  border:2px solid currentColor;
-  border-radius:50%;
-  opacity:.12;
-}
-.mini-card::before{top:8px;left:8px}
-.mini-card::after{right:8px;bottom:8px}
-.mini-card.low{color:var(--green)}
-.mini-card.neutral{color:var(--blue)}
-.mini-card.high{color:var(--red)}
-.grid-card{
-  padding:12px;
-  display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:6px;
-}
-.grid-tile{
-  min-height:36px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:var(--input);
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  color:var(--muted);
-  font-size:.75rem;
-  font-weight:900;
-}
-.grid-tile.open{background:var(--soft);color:var(--ink)}
-.grid-tile.clear{border-color:var(--green);color:var(--green)}
 .round-head{
   display:flex;
   justify-content:space-between;
@@ -368,36 +315,36 @@ input[type=number]{text-align:right}
   font-weight:900;
 }
 .winner.show{display:block}
-.history-wrap{
-  overflow:auto;
+.history-list{display:flex;flex-direction:column;gap:10px}
+.history-round{
+  overflow:hidden;
   border:1px solid var(--line);
   border-radius:8px;
+  background:var(--panel);
 }
-table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);min-width:760px}
-th,td{
-  padding:8px 9px;
-  border-right:1px solid var(--line);
+.history-round-head{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:10px;
+  align-items:center;
+  padding:10px 12px;
   border-bottom:1px solid var(--line);
-  text-align:left;
-  vertical-align:middle;
-}
-th:last-child,td:last-child{border-right:0}
-tr:last-child td{border-bottom:0}
-thead th{
-  position:sticky;
-  top:0;
-  z-index:2;
   background:var(--soft);
-  color:var(--ink);
-  font-size:.74rem;
-  letter-spacing:.06em;
-  text-transform:uppercase;
 }
-.round-cell{font-weight:950}
+.history-round-title{font-weight:950}
+.history-round-meta{margin-top:2px;color:var(--muted);font-size:.78rem;line-height:1.3}
+.history-score-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(124px,1fr));
+  gap:1px;
+  background:var(--line);
+}
+.history-player{min-width:0;background:var(--panel);padding:10px 12px}
+.history-name{color:var(--muted);font-size:.74rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .history-score{font-weight:950}
 .history-cum{display:block;margin-top:2px;color:var(--muted);font-size:.76rem;font-weight:800}
 .history-detail{display:block;margin-top:2px;color:var(--muted);font-size:.74rem;line-height:1.3}
-.history-actions{white-space:nowrap;text-align:center}
+.history-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
 .history-actions .btn{min-height:32px;padding:6px 9px}
 .empty{
   padding:34px 16px;
@@ -432,10 +379,10 @@ thead th{
 @media(max-width:720px){
   .wrap{padding:12px}
   .name-grid,.score-inputs,.standings,.summary,.rule-strip{grid-template-columns:1fr}
-  .card-ribbon{grid-template-columns:repeat(4,minmax(0,1fr))}
   .round-controls{grid-template-columns:1fr}
+  .history-round-head{grid-template-columns:1fr}
+  .history-actions{justify-content:flex-start}
   .round-head{align-items:flex-start;flex-direction:column}
-  .mini-card{min-height:56px}
 }
 @media print{
   html.dark-mode{
@@ -448,11 +395,10 @@ thead th{
   }
   body{background:#fff}
   .wrap{max-width:none;padding:0}
-  .toolbar,.settings-panel,.actions,.message,.history-actions,.toast,.visual-panel{display:none}
+  .toolbar,.settings-panel,.actions,.message,.history-actions,.toast{display:none}
   .layout{grid-template-columns:1fr}
   .panel{box-shadow:none}
-  .history-wrap{overflow:visible}
-  table{min-width:0;font-size:11px}
+  .history-score-grid{grid-template-columns:repeat(4,1fr)}
 }
 </style>
 <script>
@@ -509,18 +455,6 @@ try{
         <div class="name-grid" id="nameGrid"></div>
       </div>
 
-      <section class="panel section visual-panel" aria-label="Skyjo card values">
-        <div class="card-ribbon">
-          <div class="mini-card low">-2</div>
-          <div class="mini-card low">-1</div>
-          <div class="mini-card neutral">0</div>
-          <div class="mini-card neutral">3</div>
-          <div class="mini-card high">7</div>
-          <div class="mini-card high">10</div>
-          <div class="mini-card high">12</div>
-        </div>
-      </section>
-
       <form class="panel section" id="roundForm">
         <div class="round-head">
           <h2 id="roundTitle">Round</h2>
@@ -557,26 +491,12 @@ try{
       <div class="winner" id="winnerBox"></div>
       <div class="standings" id="standings"></div>
       <section class="rule-strip" aria-label="Skyjo scoring reference">
-        <div class="rule"><strong>Low</strong><span>Fewest points wins</span></div>
-        <div class="rule"><strong>x2</strong><span>Closer penalty</span></div>
-        <div class="rule"><strong>0</strong><span>Cleared columns</span></div>
+        <div class="rule"><strong>-2 to 12</strong><span>Card values</span></div>
+        <div class="rule"><strong>3</strong><span>Matched column clears</span></div>
+        <div class="rule"><strong>x2</strong><span>Closer must be low</span></div>
         <div class="rule"><strong>100</strong><span>Default target</span></div>
       </section>
       <div class="summary" id="summary"></div>
-      <section class="panel grid-card visual-panel" aria-label="Skyjo grid preview">
-        <div class="grid-tile open">-1</div>
-        <div class="grid-tile">?</div>
-        <div class="grid-tile open">4</div>
-        <div class="grid-tile clear">7</div>
-        <div class="grid-tile open">3</div>
-        <div class="grid-tile open">0</div>
-        <div class="grid-tile">?</div>
-        <div class="grid-tile clear">7</div>
-        <div class="grid-tile">?</div>
-        <div class="grid-tile open">12</div>
-        <div class="grid-tile open">-2</div>
-        <div class="grid-tile clear">7</div>
-      </section>
       <div class="panel section">
         <h2 class="section-title">Running Tally</h2>
         <div id="history"></div>
@@ -1006,8 +926,7 @@ function renderHistory(){
     return;
   }
 
-  const headers = visiblePlayers().map(i => '<th>' + escapeHtml(playerName(i)) + '</th>').join('');
-  let html = '<div class="history-wrap"><table><thead><tr><th>Round</th><th>Closer</th>' + headers + '<th>Actions</th></tr></thead><tbody>';
+  let html = '<div class="history-list">';
   state.rounds.forEach((round,roundIndex) => {
     const meta = roundMeta(round);
     const totals = cumulativeTotals(roundIndex);
@@ -1018,18 +937,26 @@ function renderHistory(){
       if(round.closer === i) details.push('closed');
       if(meta.penalty && round.closer === i) details.push('raw ' + signed(raw) + ' doubled');
       else if(raw !== adjusted) details.push('raw ' + signed(raw));
-      return '<td><span class="history-score ' + scoreClass(adjusted) + '">' + signed(adjusted) + '</span>' +
+      return '<div class="history-player" style="border-top:3px solid ' + COLORS[i] + '">' +
+        '<div class="history-name">' + escapeHtml(playerName(i)) + '</div>' +
+        '<span class="history-score ' + scoreClass(adjusted) + '">' + signed(adjusted) + '</span>' +
         '<span class="history-cum">Total ' + format(totals[i]) + '</span>' +
         (details.length ? '<span class="history-detail">' + escapeHtml(details.join(' / ')) + '</span>' : '') +
-        '</td>';
+        '</div>';
     }).join('');
     const closer = round.closer === null ? '' : playerName(round.closer);
-    const penalty = meta.penalty ? '<span class="history-detail">Penalty applied</span>' : '<span class="history-detail">Lowest ' + signed(meta.lowest) + '</span>';
-    html += '<tr><td class="round-cell">' + (roundIndex + 1) + '</td><td>' + escapeHtml(closer) + penalty + '</td>' + cells +
-      '<td class="history-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button> ' +
-      '<button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></td></tr>';
+    const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
+    html += '<article class="history-round">' +
+      '<div class="history-round-head">' +
+        '<div><div class="history-round-title">Round ' + (roundIndex + 1) + '</div>' +
+        '<div class="history-round-meta">Closed by ' + escapeHtml(closer) + ' / ' + escapeHtml(penalty) + '</div></div>' +
+        '<div class="history-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button>' +
+        '<button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>' +
+      '</div>' +
+      '<div class="history-score-grid">' + cells + '</div>' +
+    '</article>';
   });
-  html += '</tbody></table></div>';
+  html += '</div>';
   host.innerHTML = html;
   host.querySelectorAll('[data-edit]').forEach(button => {
     button.addEventListener('click', () => editRound(Number(button.dataset.edit)));
