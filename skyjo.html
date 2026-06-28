@@ -197,7 +197,7 @@ input[type=number]{text-align:right}
 .save-state{color:var(--muted);font-size:.8rem;white-space:nowrap}
 .round-controls{
   display:grid;
-  grid-template-columns:minmax(180px,1fr) minmax(180px,1fr);
+  grid-template-columns:repeat(3,minmax(150px,1fr));
   gap:10px;
   align-items:end;
 }
@@ -282,6 +282,11 @@ input[type=number]{text-align:right}
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:10px;
+  position:sticky;
+  top:12px;
+  z-index:6;
+  padding-bottom:4px;
+  background:var(--page);
 }
 .standing{
   border-left:5px solid var(--green);
@@ -315,7 +320,7 @@ input[type=number]{text-align:right}
   font-weight:900;
 }
 .winner.show{display:block}
-.history-list{display:flex;flex-direction:column;gap:10px}
+.history-list{display:flex;flex-direction:column;gap:8px}
 .history-round{
   overflow:hidden;
   border:1px solid var(--line);
@@ -325,27 +330,27 @@ input[type=number]{text-align:right}
 .history-round-head{
   display:grid;
   grid-template-columns:minmax(0,1fr) auto;
-  gap:10px;
+  gap:8px;
   align-items:center;
-  padding:10px 12px;
+  padding:8px 10px;
   border-bottom:1px solid var(--line);
   background:var(--soft);
 }
 .history-round-title{font-weight:950}
-.history-round-meta{margin-top:2px;color:var(--muted);font-size:.78rem;line-height:1.3}
+.history-round-meta{margin-top:1px;color:var(--muted);font-size:.76rem;line-height:1.25}
 .history-score-grid{
   display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(124px,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(92px,1fr));
   gap:1px;
   background:var(--line);
 }
-.history-player{min-width:0;background:var(--panel);padding:10px 12px}
-.history-name{color:var(--muted);font-size:.74rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.history-score{font-weight:950}
-.history-cum{display:block;margin-top:2px;color:var(--muted);font-size:.76rem;font-weight:800}
-.history-detail{display:block;margin-top:2px;color:var(--muted);font-size:.74rem;line-height:1.3}
+.history-player{min-width:0;background:var(--panel);padding:7px 9px}
+.history-name{color:var(--muted);font-size:.68rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.history-score{font-size:1.05rem;font-weight:950;line-height:1.1}
+.history-cum{display:block;margin-top:1px;color:var(--muted);font-size:.7rem;font-weight:800}
+.history-detail{display:block;margin-top:1px;color:var(--muted);font-size:.68rem;line-height:1.2}
 .history-actions{display:flex;gap:6px;justify-content:flex-end;white-space:nowrap}
-.history-actions .btn{min-height:32px;padding:6px 9px}
+.history-actions .btn{min-height:30px;padding:5px 8px}
 .empty{
   padding:34px 16px;
   text-align:center;
@@ -375,6 +380,7 @@ input[type=number]{text-align:right}
 @media(max-width:1040px){
   .top,.layout,.settings{grid-template-columns:1fr}
   .toolbar{justify-content:flex-start}
+  .standings{position:static;padding-bottom:0}
 }
 @media(max-width:720px){
   .wrap{padding:12px}
@@ -463,6 +469,10 @@ try{
 
         <div class="round-controls">
           <div class="field">
+            <label for="dealer">Dealer</label>
+            <select id="dealer"></select>
+          </div>
+          <div class="field">
             <label for="closer">Round Closed By</label>
             <select id="closer"></select>
           </div>
@@ -494,7 +504,7 @@ try{
         <div class="rule"><strong>-2 to 12</strong><span>Card values</span></div>
         <div class="rule"><strong>3</strong><span>Matched column clears</span></div>
         <div class="rule"><strong>x2</strong><span>Closer must be low</span></div>
-        <div class="rule"><strong>100</strong><span>Default target</span></div>
+        <div class="rule"><strong>100+</strong><span>Ends the game</span></div>
       </section>
       <div class="summary" id="summary"></div>
       <div class="panel section">
@@ -516,8 +526,9 @@ let state = loadState();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
 
-function emptyRound(){
+function emptyRound(dealer){
   return {
+    dealer: clampPlayer(dealer ?? 0),
     closer: null,
     rawScores: Array(MAX_PLAYERS).fill(null)
   };
@@ -533,7 +544,7 @@ function defaultState(){
     players: Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i + 1)),
     rounds: [],
     editingIndex: null,
-    draft: emptyRound()
+    draft: emptyRound(0)
   };
 }
 
@@ -602,18 +613,24 @@ function normalizeState(next){
   next.targetScore = Math.max(1, numberOr(next.targetScore, 100));
   next.safeTies = next.safeTies !== false;
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(next.players?.[i] || base.players[i]));
-  next.rounds = Array.isArray(next.rounds) ? next.rounds.map(normalizeRound) : [];
+  next.rounds = Array.isArray(next.rounds) ? next.rounds.map((round,i) => normalizeRound(round, i % next.playerCount)) : [];
+  next.rounds.forEach(round => {
+    round.dealer = clampPlayer(round.dealer, next.playerCount);
+    if(round.closer !== null) round.closer = clampPlayer(round.closer, next.playerCount);
+  });
   next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
   if(next.editingIndex !== null && (next.editingIndex < 0 || next.editingIndex >= next.rounds.length)){
     next.editingIndex = null;
   }
-  next.draft = normalizeRound(next.draft || emptyRound());
+  next.draft = normalizeRound(next.draft || emptyRound(nextDealerFrom(next.rounds, next.playerCount)), nextDealerFrom(next.rounds, next.playerCount));
+  next.draft.dealer = clampPlayer(next.draft.dealer, next.playerCount);
   if(next.draft.closer !== null) next.draft.closer = clamp(next.draft.closer, 0, next.playerCount - 1);
   return next;
 }
 
-function normalizeRound(round){
-  const next = emptyRound();
+function normalizeRound(round, dealerFallback){
+  const next = emptyRound(dealerFallback);
+  next.dealer = clampPlayer(round?.dealer ?? dealerFallback ?? 0);
   next.closer = round?.closer === null || round?.closer === undefined ? null : clamp(numberOr(round.closer, 0), 0, MAX_PLAYERS - 1);
   next.rawScores = Array.from({length:MAX_PLAYERS},(_,i)=>nullableScore(round?.rawScores?.[i]));
   return next;
@@ -621,6 +638,11 @@ function normalizeRound(round){
 
 function visiblePlayers(){
   return Array.from({length:state.playerCount},(_,i)=>i);
+}
+
+function clampPlayer(value, count){
+  const limit = count || MAX_PLAYERS;
+  return clamp(numberOr(value, 0), 0, limit - 1);
 }
 
 function clamp(value, min, max){
@@ -649,6 +671,11 @@ function signed(value){
 
 function playerName(index){
   return state.players[index] || 'Player ' + (index + 1);
+}
+
+function nextDealerFrom(rounds, playerCount){
+  if(!rounds.length) return 0;
+  return (clampPlayer(rounds[rounds.length - 1].dealer, playerCount) + 1) % playerCount;
 }
 
 function roundMeta(round){
@@ -734,7 +761,7 @@ function renderNameGrid(){
     input.style.borderLeftColor = COLORS[i];
     input.addEventListener('input', () => {
       state.players[i] = input.value;
-      syncCloserSelect();
+      syncRoundSelects();
       renderScoreInputs();
       renderStandings();
       renderSummary();
@@ -752,19 +779,24 @@ function renderRoundForm(){
   document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
   document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Round' : 'Save Round';
   document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
-  syncCloserSelect();
+  syncRoundSelects();
   renderScoreInputs();
   setMessage('');
 }
 
-function syncCloserSelect(){
-  const select = document.getElementById('closer');
-  const value = state.draft.closer === null ? '' : String(clamp(state.draft.closer, 0, state.playerCount - 1));
-  select.innerHTML = '<option value="">Select closer</option>';
+function syncRoundSelects(){
+  const dealer = document.getElementById('dealer');
+  const closer = document.getElementById('closer');
+  const dealerValue = String(clampPlayer(state.draft.dealer, state.playerCount));
+  const closerValue = state.draft.closer === null ? '' : String(clampPlayer(state.draft.closer, state.playerCount));
+  dealer.innerHTML = '';
+  closer.innerHTML = '<option value="">Select closer</option>';
   visiblePlayers().forEach(i => {
-    select.add(new Option(playerName(i), String(i)));
+    dealer.add(new Option(playerName(i), String(i)));
+    closer.add(new Option(playerName(i), String(i)));
   });
-  select.value = value;
+  dealer.value = dealerValue;
+  closer.value = closerValue;
 }
 
 function renderScoreInputs(){
@@ -934,6 +966,7 @@ function renderHistory(){
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
       const details = [];
+      if(round.dealer === i) details.push('dealer');
       if(round.closer === i) details.push('closed');
       if(meta.penalty && round.closer === i) details.push('raw ' + signed(raw) + ' doubled');
       else if(raw !== adjusted) details.push('raw ' + signed(raw));
@@ -945,11 +978,12 @@ function renderHistory(){
         '</div>';
     }).join('');
     const closer = round.closer === null ? '' : playerName(round.closer);
+    const dealer = playerName(round.dealer);
     const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
     html += '<article class="history-round">' +
       '<div class="history-round-head">' +
         '<div><div class="history-round-title">Round ' + (roundIndex + 1) + '</div>' +
-        '<div class="history-round-meta">Closed by ' + escapeHtml(closer) + ' / ' + escapeHtml(penalty) + '</div></div>' +
+        '<div class="history-round-meta">Dealer ' + escapeHtml(dealer) + ' / Closed by ' + escapeHtml(closer) + ' / ' + escapeHtml(penalty) + '</div></div>' +
         '<div class="history-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button>' +
         '<button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>' +
       '</div>' +
@@ -996,9 +1030,8 @@ function setMessage(text){
   message.classList.toggle('show', !!text);
 }
 
-function clearDraft(){
-  state.draft = emptyRound();
-  if(state.playerCount === 1) state.draft.closer = 0;
+function clearDraft(dealer){
+  state.draft = emptyRound(dealer ?? nextDealerFrom(state.rounds, state.playerCount));
 }
 
 function editRound(index){
@@ -1019,6 +1052,8 @@ function deleteRound(index){
     clearDraft();
   }else if(state.editingIndex !== null && state.editingIndex > index){
     state.editingIndex -= 1;
+  }else if(state.editingIndex === null){
+    state.draft.dealer = nextDealerFrom(state.rounds, state.playerCount);
   }
   render();
   scheduleSave();
@@ -1040,7 +1075,7 @@ function submitRound(event){
     state.editingIndex = null;
     showToast('Round saved');
   }
-  clearDraft();
+  clearDraft(nextDealerFrom(state.rounds, state.playerCount));
   render();
   scheduleSave();
 }
@@ -1122,6 +1157,11 @@ document.getElementById('safeTies').addEventListener('change', event => {
   scheduleSave();
 });
 
+document.getElementById('dealer').addEventListener('change', event => {
+  state.draft.dealer = Number(event.target.value);
+  scheduleSave();
+});
+
 document.getElementById('closer').addEventListener('change', event => {
   state.draft.closer = event.target.value === '' ? null : Number(event.target.value);
   renderScoreInputs();
@@ -1132,6 +1172,11 @@ document.getElementById('playerCount').addEventListener('click', event => {
   const button = event.target.closest('button[data-count]');
   if(!button) return;
   state.playerCount = Number(button.dataset.count);
+  state.rounds.forEach(round => {
+    round.dealer = clampPlayer(round.dealer, state.playerCount);
+    if(round.closer !== null) round.closer = clampPlayer(round.closer, state.playerCount);
+  });
+  state.draft.dealer = state.editingIndex === null ? nextDealerFrom(state.rounds, state.playerCount) : clampPlayer(state.draft.dealer, state.playerCount);
   if(state.draft.closer !== null) state.draft.closer = clamp(state.draft.closer, 0, state.playerCount - 1);
   render();
   scheduleSave();
@@ -1140,7 +1185,7 @@ document.getElementById('playerCount').addEventListener('click', event => {
 document.getElementById('roundForm').addEventListener('submit', submitRound);
 
 document.getElementById('clearRound').addEventListener('click', () => {
-  clearDraft();
+  clearDraft(state.draft.dealer);
   renderRoundForm();
   scheduleSave();
 });
