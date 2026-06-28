@@ -396,7 +396,6 @@ input[type=number]{text-align:right}
   text-align:center;
   font-weight:900;
 }
-.sheet-cell.total{font-size:.94rem}
 .score-flags{
   color:var(--muted);
   font-size:.58rem;
@@ -1035,7 +1034,6 @@ function renderHistory(){
 
   state.rounds.forEach((round,roundIndex) => {
     const meta = roundMeta(round);
-    const totals = cumulativeTotals(roundIndex);
     const dealer = playerName(round.dealer);
     const closer = round.closer === null ? '-' : playerName(round.closer);
     const penalty = meta.penalty ? 'Penalty applied' : 'Lowest ' + signed(meta.lowest);
@@ -1047,7 +1045,7 @@ function renderHistory(){
     html += 'Closed: ' + escapeHtml(closer) + '</div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
-    html += '<div class="sheet-label">Score</div>';
+    html += '<div class="sheet-label">Points</div>';
     players.forEach(i => {
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
@@ -1055,10 +1053,6 @@ function renderHistory(){
       if(meta.penalty && round.closer === i) flags.push('x2');
       const rawNote = adjusted !== raw ? ' title="Raw score ' + signed(raw) + '"' : '';
       html += '<div class="sheet-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
-    });
-    html += '<div class="sheet-label">Total</div>';
-    players.forEach(i => {
-      html += '<div class="sheet-cell total ' + scoreClass(totals[i]) + '">' + format(totals[i]) + '</div>';
     });
     html += '</div>';
     html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>';
