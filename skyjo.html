@@ -177,15 +177,21 @@ input[type=number]{text-align:right}
 .rule-strip{
   display:grid;
   grid-template-columns:repeat(4,minmax(0,1fr));
-  gap:1px;
-  overflow:hidden;
+  gap:8px;
+  padding:10px;
   border:1px solid var(--line);
   border-radius:8px;
-  background:var(--line);
+  background:var(--soft);
 }
-.rule{background:var(--panel);padding:10px;text-align:center}
-.rule strong{display:block;font-size:1rem}
-.rule span{display:block;margin-top:2px;color:var(--muted);font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.rule{
+  background:var(--input);
+  border:1px dashed var(--line);
+  border-radius:6px;
+  padding:9px 10px;
+  text-align:center;
+}
+.rule strong{display:block;font-size:.95rem}
+.rule span{display:block;margin-top:2px;color:var(--muted);font-size:.68rem;font-weight:850;letter-spacing:.08em;text-transform:uppercase}
 .round-head{
   display:flex;
   justify-content:space-between;
@@ -303,12 +309,12 @@ input[type=number]{text-align:right}
   grid-template-columns:repeat(4,minmax(0,1fr));
   gap:1px;
   overflow:hidden;
-  border:1px solid var(--line);
+  border:1px solid var(--green);
   border-radius:8px;
-  background:var(--line);
+  background:var(--green);
 }
-.stat{background:var(--panel);padding:10px;text-align:center}
-.stat b{display:block;font-size:1.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat{background:var(--panel);padding:11px 10px;text-align:center}
+.stat b{display:block;font-size:1.18rem;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .stat span{display:block;margin-top:2px;color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
 .winner{
   display:none;
@@ -931,7 +937,7 @@ function renderSummary(){
   const stats = [
     [leaders || 'None','Leader'],
     [state.rounds.length,'Rounds'],
-    [bestRound ? signed(bestRound.value) : '0','Best Round'],
+    [bestRound ? playerName(bestRound.player) : 'None', bestRound ? 'Best Round ' + signed(bestRound.value) : 'Best Round'],
     [penalties + ' / ' + spread,'x2 / Spread']
   ];
   box.innerHTML = stats.map(stat => '<div class="stat"><b>' + escapeHtml(String(stat[0])) + '</b><span>' + escapeHtml(stat[1]) + '</span></div>').join('');
