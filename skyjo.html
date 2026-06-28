@@ -356,7 +356,7 @@ input[type=number]{text-align:right}
   background:var(--soft);
 }
 .round-no{font-size:.84rem;font-weight:950;line-height:1}
-.round-meta{margin-top:2px;color:var(--muted);font-size:.62rem;line-height:1.14}
+.round-meta{margin-top:2px;color:var(--muted);font-size:.62rem;line-height:1.12}
 .round-meta strong{display:block;color:var(--ink);font-size:.66rem}
 .score-lines{
   display:grid;
@@ -387,7 +387,7 @@ input[type=number]{text-align:right}
   justify-content:center;
   gap:3px;
   min-width:0;
-  height:52px;
+  height:36px;
   text-align:center;
   font-size:1rem;
   font-weight:900;
@@ -403,7 +403,7 @@ input[type=number]{text-align:right}
   display:flex;
   gap:4px;
   align-items:center;
-  margin-top:3px;
+  margin-top:4px;
 }
 .sheet-actions .btn{
   min-height:21px;
@@ -1027,15 +1027,11 @@ function renderHistory(){
 
   state.rounds.forEach((round,roundIndex) => {
     const meta = roundMeta(round);
-    const dealer = playerName(round.dealer);
-    const closer = round.closer === null ? '-' : playerName(round.closer);
     const penalty = meta.penalty ? 'x2 penalty' : 'Low ' + signed(meta.lowest);
 
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta"><strong>' + escapeHtml(penalty) + '</strong>';
-    html += 'Dealer: ' + escapeHtml(dealer) + '<br>';
-    html += 'Closed: ' + escapeHtml(closer) + '</div>';
+    html += '<div class="round-meta"><strong>' + escapeHtml(penalty) + '</strong></div>';
     html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
@@ -1043,6 +1039,8 @@ function renderHistory(){
       const raw = numberOr(round.rawScores[i], 0);
       const adjusted = meta.adjusted[i];
       const flags = [];
+      if(round.dealer === i) flags.push('D');
+      if(round.closer === i) flags.push('C');
       if(meta.penalty && round.closer === i) flags.push('x2');
       const rawNote = adjusted !== raw ? ' title="Raw score ' + signed(raw) + '"' : '';
       html += '<div class="sheet-cell ' + scoreClass(adjusted) + '"' + rawNote + '>' + signed(adjusted) + (flags.length ? '<span class="score-flags">' + flags.join(' ') + '</span>' : '') + '</div>';
