@@ -109,8 +109,11 @@ thead th{position:sticky;top:0;z-index:2;background:var(--table-head);border-top
   .house-rule-list{grid-template-columns:1fr}
 }
 @media(hover:none) and (pointer:coarse){
-  .score-strip{position:static;top:auto}
+  .score-strip{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 52px);z-index:10}
   thead th{position:static}
+}
+@media(hover:none) and (pointer:coarse) and (max-width:760px){
+  .score-strip{top:calc(env(safe-area-inset-top, 0px) + 12px)}
 }
 @media print{
   html.dark-mode{color-scheme:light;--ink:#191816;--panel:#ffffff;--line:#c9c3b8;--soft:#f0eee9;--soft2:#e5e0d7;--page:#ffffff;--input:#ffffff;--table-head:#f8f6f1;--row-label-bg:#f8f6f1;--row-label-alt:#eeeae2;--table-label:#423d36;--total-bg:#f0eee9;--round-head:#191816;--round-head-line:#2b2926;--round-pill-bg:#2f2d2a;--round-pill-line:#55514a;--rule-bg:#ffffff;--house-text:#423d36;--toast-bg:#191816;--toast-ink:#ffffff}
