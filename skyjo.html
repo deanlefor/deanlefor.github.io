@@ -1,0 +1,1244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skyjo Scorecard</title>
+<style>
+*{box-sizing:border-box}
+:root{
+  color-scheme:light;
+  --ink:#1e2220;
+  --muted:#69736d;
+  --page:#f3f0e9;
+  --panel:#fffdf8;
+  --input:#fff;
+  --line:#d1c8b7;
+  --soft:#eee8dc;
+  --soft2:#e4dccc;
+  --green:#2f684d;
+  --green-dark:#214c38;
+  --blue:#315f88;
+  --gold:#bd8c2f;
+  --red:#ad3f35;
+  --purple:#6c5584;
+  --teal:#2a8079;
+  --shadow:0 13px 34px rgba(38,32,22,.1);
+  --winner-bg:#fff6df;
+  --winner-line:rgba(189,140,47,.45);
+  --winner-ink:#725111;
+  --danger-bg:#fff0ee;
+  --danger-line:rgba(173,63,53,.28);
+  --toast-bg:#1e2220;
+  --toast-ink:#fff;
+  --on-accent:#fff;
+  --focus:rgba(47,104,77,.14);
+}
+html.dark-mode{
+  color-scheme:dark;
+  --ink:#f1eee7;
+  --muted:#c0b8aa;
+  --page:#15130f;
+  --panel:#22201c;
+  --input:#1b1a17;
+  --line:#5c554a;
+  --soft:#2b2821;
+  --soft2:#343024;
+  --green:#6ea98f;
+  --green-dark:#5b937a;
+  --blue:#82a7ca;
+  --gold:#d7a94a;
+  --red:#ef8177;
+  --purple:#b4a0cc;
+  --teal:#75b9b1;
+  --shadow:0 13px 34px rgba(0,0,0,.34);
+  --winner-bg:#332814;
+  --winner-line:rgba(215,169,74,.45);
+  --winner-ink:#f1d37d;
+  --danger-bg:#34201f;
+  --danger-line:rgba(239,129,119,.35);
+  --toast-bg:#f1eee7;
+  --toast-ink:#15130f;
+  --on-accent:#101510;
+  --focus:rgba(110,169,143,.22);
+}
+body{
+  margin:0;
+  min-height:100vh;
+  background:var(--page);
+  color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+button,input,select{font:inherit}
+button{cursor:pointer}
+.wrap{max-width:1360px;margin:0 auto;padding:18px}
+.top{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:14px;
+  align-items:end;
+  margin-bottom:14px;
+}
+.brand h1{
+  margin:0;
+  font-size:clamp(1.55rem,3vw,2.35rem);
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.brand p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.btn{
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--panel);
+  color:var(--ink);
+  padding:8px 12px;
+  font-weight:850;
+}
+.btn:hover{border-color:var(--muted)}
+.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-accent)}
+.btn.primary:hover{background:var(--green-dark)}
+.btn.warn{color:var(--red)}
+.btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
+.layout{
+  display:grid;
+  grid-template-columns:minmax(390px,.92fr) minmax(520px,1.12fr);
+  gap:14px;
+  align-items:start;
+}
+.stack{display:flex;flex-direction:column;gap:14px}
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:8px;
+  box-shadow:var(--shadow);
+}
+.section{padding:14px}
+.section-title{
+  margin:0 0 12px;
+  font-size:1rem;
+  font-weight:850;
+  letter-spacing:.02em;
+}
+.settings{
+  display:grid;
+  grid-template-columns:minmax(170px,1fr) auto minmax(120px,.44fr);
+  gap:10px;
+  align-items:end;
+}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+label,.label{
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:850;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+input,select{
+  width:100%;
+  min-height:38px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--input);
+  color:var(--ink);
+  padding:8px 10px;
+  outline:none;
+}
+input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--focus)}
+input[type=number]{text-align:right}
+.seg{
+  display:flex;
+  border:1px solid var(--line);
+  border-radius:7px;
+  overflow:hidden;
+  background:var(--input);
+}
+.seg button{
+  min-width:38px;
+  min-height:38px;
+  padding:7px 10px;
+  border:0;
+  border-right:1px solid var(--line);
+  background:var(--input);
+  color:var(--ink);
+  font-weight:850;
+}
+.seg button:last-child{border-right:0}
+.seg button.active{background:var(--green);color:var(--on-accent)}
+.divider{height:1px;background:var(--line);margin:14px 0}
+.name-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.name-grid input{border-left-width:5px}
+.rule-strip{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--line);
+}
+.rule{background:var(--panel);padding:10px;text-align:center}
+.rule strong{display:block;font-size:1rem}
+.rule span{display:block;margin-top:2px;color:var(--muted);font-size:.72rem;font-weight:800;letter-spacing:.06em;text-transform:uppercase}
+.card-ribbon{
+  display:grid;
+  grid-template-columns:repeat(7,minmax(0,1fr));
+  gap:8px;
+}
+.mini-card{
+  position:relative;
+  min-height:72px;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:linear-gradient(150deg,var(--panel),var(--soft));
+  overflow:hidden;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:1.35rem;
+  font-weight:950;
+  box-shadow:0 1px 0 rgba(255,255,255,.45) inset;
+}
+.mini-card::before,.mini-card::after{
+  content:"";
+  position:absolute;
+  width:30px;
+  height:30px;
+  border:2px solid currentColor;
+  border-radius:50%;
+  opacity:.12;
+}
+.mini-card::before{top:8px;left:8px}
+.mini-card::after{right:8px;bottom:8px}
+.mini-card.low{color:var(--green)}
+.mini-card.neutral{color:var(--blue)}
+.mini-card.high{color:var(--red)}
+.grid-card{
+  padding:12px;
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+}
+.grid-tile{
+  min-height:36px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--input);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  color:var(--muted);
+  font-size:.75rem;
+  font-weight:900;
+}
+.grid-tile.open{background:var(--soft);color:var(--ink)}
+.grid-tile.clear{border-color:var(--green);color:var(--green)}
+.round-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+}
+.round-head h2{margin:0;font-size:1.25rem}
+.save-state{color:var(--muted);font-size:.8rem;white-space:nowrap}
+.round-controls{
+  display:grid;
+  grid-template-columns:minmax(180px,1fr) minmax(180px,1fr);
+  gap:10px;
+  align-items:end;
+}
+.check{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  min-height:38px;
+  padding:8px 10px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--input);
+  font-weight:800;
+}
+.check input{width:18px;min-height:18px;accent-color:var(--green)}
+.score-inputs{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+}
+.player-entry{
+  border-left:5px solid var(--green);
+  padding:12px;
+}
+.entry-head{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  margin-bottom:10px;
+}
+.entry-name{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-weight:900;
+}
+.entry-badges{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}
+.badge{
+  min-height:24px;
+  display:inline-flex;
+  align-items:center;
+  padding:3px 7px;
+  border:1px solid var(--line);
+  border-radius:5px;
+  background:var(--soft);
+  color:var(--muted);
+  font-size:.72rem;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.badge.close{background:var(--winner-bg);border-color:var(--winner-line);color:var(--winner-ink)}
+.badge.penalty{background:var(--danger-bg);border-color:var(--danger-line);color:var(--red)}
+.entry-total{
+  display:flex;
+  justify-content:space-between;
+  gap:8px;
+  align-items:center;
+  margin-top:10px;
+  padding-top:10px;
+  border-top:1px solid var(--line);
+}
+.entry-total span{color:var(--muted);font-size:.76rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
+.entry-total b{font-size:1.32rem}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn.primary{flex:1 1 180px}
+.message{
+  display:none;
+  margin-top:10px;
+  padding:9px 10px;
+  border-radius:6px;
+  border:1px solid var(--danger-line);
+  background:var(--danger-bg);
+  color:var(--red);
+  font-size:.88rem;
+}
+.message.show{display:block}
+.standings{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;
+}
+.standing{
+  border-left:5px solid var(--green);
+  padding:12px;
+}
+.standing .rank{color:var(--muted);font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.standing .name{margin-top:3px;color:var(--muted);font-size:.84rem;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.standing .score{font-size:2rem;font-weight:950;line-height:1.05;margin-top:3px}
+.standing .sub{color:var(--muted);font-size:.76rem;margin-top:4px}
+.standing.leader{background:linear-gradient(180deg,var(--panel),var(--winner-bg));border-color:var(--gold)}
+.standing.at-risk{background:linear-gradient(180deg,var(--panel),var(--danger-bg))}
+.summary{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:1px;
+  overflow:hidden;
+  border:1px solid var(--line);
+  border-radius:8px;
+  background:var(--line);
+}
+.stat{background:var(--panel);padding:10px;text-align:center}
+.stat b{display:block;font-size:1.15rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.stat span{display:block;margin-top:2px;color:var(--muted);font-size:.72rem;font-weight:850;letter-spacing:.06em;text-transform:uppercase}
+.winner{
+  display:none;
+  border:1px solid var(--winner-line);
+  background:var(--winner-bg);
+  color:var(--winner-ink);
+  border-radius:8px;
+  padding:12px;
+  font-weight:900;
+}
+.winner.show{display:block}
+.history-wrap{
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:8px;
+}
+table{width:100%;border-collapse:separate;border-spacing:0;background:var(--panel);min-width:760px}
+th,td{
+  padding:8px 9px;
+  border-right:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+  text-align:left;
+  vertical-align:middle;
+}
+th:last-child,td:last-child{border-right:0}
+tr:last-child td{border-bottom:0}
+thead th{
+  position:sticky;
+  top:0;
+  z-index:2;
+  background:var(--soft);
+  color:var(--ink);
+  font-size:.74rem;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.round-cell{font-weight:950}
+.history-score{font-weight:950}
+.history-cum{display:block;margin-top:2px;color:var(--muted);font-size:.76rem;font-weight:800}
+.history-detail{display:block;margin-top:2px;color:var(--muted);font-size:.74rem;line-height:1.3}
+.history-actions{white-space:nowrap;text-align:center}
+.history-actions .btn{min-height:32px;padding:6px 9px}
+.empty{
+  padding:34px 16px;
+  text-align:center;
+  color:var(--muted);
+  border:1px dashed var(--line);
+  border-radius:8px;
+  background:rgba(255,255,255,.22);
+}
+.toast{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  background:var(--toast-bg);
+  color:var(--toast-ink);
+  padding:10px 14px;
+  border-radius:6px;
+  box-shadow:var(--shadow);
+  opacity:0;
+  pointer-events:none;
+  transition:opacity .16s;
+}
+.toast.show{opacity:1}
+.file-input{display:none}
+.positive{color:var(--green)}
+.negative{color:var(--red)}
+@media(max-width:1040px){
+  .top,.layout,.settings{grid-template-columns:1fr}
+  .toolbar{justify-content:flex-start}
+}
+@media(max-width:720px){
+  .wrap{padding:12px}
+  .name-grid,.score-inputs,.standings,.summary,.rule-strip{grid-template-columns:1fr}
+  .card-ribbon{grid-template-columns:repeat(4,minmax(0,1fr))}
+  .round-controls{grid-template-columns:1fr}
+  .round-head{align-items:flex-start;flex-direction:column}
+  .mini-card{min-height:56px}
+}
+@media print{
+  html.dark-mode{
+    color-scheme:light;
+    --ink:#1e2220;--muted:#69736d;--page:#fff;--panel:#fffdf8;--input:#fff;--line:#d1c8b7;
+    --soft:#eee8dc;--soft2:#e4dccc;--green:#2f684d;--green-dark:#214c38;--blue:#315f88;
+    --gold:#bd8c2f;--red:#ad3f35;--purple:#6c5584;--teal:#2a8079;--winner-bg:#fff6df;
+    --winner-line:rgba(189,140,47,.45);--winner-ink:#725111;--danger-bg:#fff0ee;
+    --danger-line:rgba(173,63,53,.28);--toast-bg:#1e2220;--toast-ink:#fff;--on-accent:#fff;
+  }
+  body{background:#fff}
+  .wrap{max-width:none;padding:0}
+  .toolbar,.settings-panel,.actions,.message,.history-actions,.toast,.visual-panel{display:none}
+  .layout{grid-template-columns:1fr}
+  .panel{box-shadow:none}
+  .history-wrap{overflow:visible}
+  table{min-width:0;font-size:11px}
+}
+</style>
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('skyjoScorecard.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <h1>Skyjo Scorecard</h1>
+      <p id="saveState">Loading...</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
+      <button class="btn" id="printBtn" type="button" title="Print scorecard">Print</button>
+      <button class="btn" id="exportBtn" type="button" title="Download a JSON backup">Export</button>
+      <button class="btn" id="importBtn" type="button" title="Restore a JSON backup">Import</button>
+      <button class="btn warn" id="resetBtn" type="button" title="Clear this game">New Game</button>
+      <input class="file-input" id="importFile" type="file" accept="application/json,.json">
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stack">
+      <div class="panel section settings-panel">
+        <div class="settings">
+          <div class="field">
+            <label for="gameTitle">Game Name</label>
+            <input id="gameTitle" type="text" maxlength="48">
+          </div>
+          <div class="field">
+            <span class="label">Players</span>
+            <div class="seg" id="playerCount" aria-label="Player count">
+              <button type="button" data-count="2">2</button>
+              <button type="button" data-count="3">3</button>
+              <button type="button" data-count="4">4</button>
+              <button type="button" data-count="5">5</button>
+              <button type="button" data-count="6">6</button>
+              <button type="button" data-count="7">7</button>
+              <button type="button" data-count="8">8</button>
+            </div>
+          </div>
+          <div class="field">
+            <label for="targetScore">Playing To</label>
+            <input id="targetScore" type="number" min="1" step="1">
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="name-grid" id="nameGrid"></div>
+      </div>
+
+      <section class="panel section visual-panel" aria-label="Skyjo card values">
+        <div class="card-ribbon">
+          <div class="mini-card low">-2</div>
+          <div class="mini-card low">-1</div>
+          <div class="mini-card neutral">0</div>
+          <div class="mini-card neutral">3</div>
+          <div class="mini-card high">7</div>
+          <div class="mini-card high">10</div>
+          <div class="mini-card high">12</div>
+        </div>
+      </section>
+
+      <form class="panel section" id="roundForm">
+        <div class="round-head">
+          <h2 id="roundTitle">Round</h2>
+          <span class="save-state" id="editState"></span>
+        </div>
+
+        <div class="round-controls">
+          <div class="field">
+            <label for="closer">Round Closed By</label>
+            <select id="closer"></select>
+          </div>
+          <div class="field">
+            <span class="label">Tie Handling</span>
+            <label class="check">
+              <input id="safeTies" type="checkbox">
+              Ties count as lowest
+            </label>
+          </div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="score-inputs" id="scoreInputs"></div>
+        <div class="message" id="formMessage"></div>
+
+        <div class="actions">
+          <button class="btn primary" id="submitRound" type="submit">Add Round</button>
+          <button class="btn ghost" id="cancelEdit" type="button">Cancel Edit</button>
+          <button class="btn ghost" id="clearRound" type="button">Clear Round</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="stack">
+      <div class="winner" id="winnerBox"></div>
+      <div class="standings" id="standings"></div>
+      <section class="rule-strip" aria-label="Skyjo scoring reference">
+        <div class="rule"><strong>Low</strong><span>Fewest points wins</span></div>
+        <div class="rule"><strong>x2</strong><span>Closer penalty</span></div>
+        <div class="rule"><strong>0</strong><span>Cleared columns</span></div>
+        <div class="rule"><strong>100</strong><span>Default target</span></div>
+      </section>
+      <div class="summary" id="summary"></div>
+      <section class="panel grid-card visual-panel" aria-label="Skyjo grid preview">
+        <div class="grid-tile open">-1</div>
+        <div class="grid-tile">?</div>
+        <div class="grid-tile open">4</div>
+        <div class="grid-tile clear">7</div>
+        <div class="grid-tile open">3</div>
+        <div class="grid-tile open">0</div>
+        <div class="grid-tile">?</div>
+        <div class="grid-tile clear">7</div>
+        <div class="grid-tile">?</div>
+        <div class="grid-tile open">12</div>
+        <div class="grid-tile open">-2</div>
+        <div class="grid-tile clear">7</div>
+      </section>
+      <div class="panel section">
+        <h2 class="section-title">Running Tally</h2>
+        <div id="history"></div>
+      </div>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const STORE_KEY = 'skyjoScorecard.v1';
+const THEME_KEY = 'skyjoScorecard.darkMode.v1';
+const MAX_PLAYERS = 8;
+const COLORS = ['#2f684d','#315f88','#bd8c2f','#ad3f35','#6c5584','#2a8079','#b46d30','#68727d'];
+
+let state = loadState();
+let darkMode = loadDarkMode();
+let saveTimer = 0;
+
+function emptyRound(){
+  return {
+    closer: null,
+    rawScores: Array(MAX_PLAYERS).fill(null)
+  };
+}
+
+function defaultState(){
+  return {
+    version: 1,
+    title: 'Game Night',
+    playerCount: 4,
+    targetScore: 100,
+    safeTies: true,
+    players: Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i + 1)),
+    rounds: [],
+    editingIndex: null,
+    draft: emptyRound()
+  };
+}
+
+function loadState(){
+  const saved = readJson(STORE_KEY);
+  return saved ? normalizeState(saved) : defaultState();
+}
+
+function readJson(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    return null;
+  }
+}
+
+function loadDarkMode(){
+  try{
+    return localStorage.getItem(THEME_KEY) === 'true';
+  }catch(error){
+    return false;
+  }
+}
+
+function saveDarkMode(){
+  try{
+    localStorage.setItem(THEME_KEY, darkMode ? 'true' : 'false');
+  }catch(error){}
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode', darkMode);
+  const button = document.getElementById('themeBtn');
+  if(!button) return;
+  button.classList.toggle('active', darkMode);
+  button.setAttribute('aria-pressed', String(darkMode));
+  button.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  button.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
+function saveNow(){
+  try{
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+  }catch(error){
+    setSaveState('Saved for this tab');
+  }
+}
+
+function scheduleSave(){
+  setSaveState('Saving...');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow, 120);
+}
+
+function setSaveState(text){
+  document.getElementById('saveState').textContent = text;
+}
+
+function normalizeState(next){
+  const base = defaultState();
+  next = {...base, ...next};
+  next.version = 1;
+  next.playerCount = clamp(numberOr(next.playerCount, 4), 2, MAX_PLAYERS);
+  next.targetScore = Math.max(1, numberOr(next.targetScore, 100));
+  next.safeTies = next.safeTies !== false;
+  next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(next.players?.[i] || base.players[i]));
+  next.rounds = Array.isArray(next.rounds) ? next.rounds.map(normalizeRound) : [];
+  next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
+  if(next.editingIndex !== null && (next.editingIndex < 0 || next.editingIndex >= next.rounds.length)){
+    next.editingIndex = null;
+  }
+  next.draft = normalizeRound(next.draft || emptyRound());
+  if(next.draft.closer !== null) next.draft.closer = clamp(next.draft.closer, 0, next.playerCount - 1);
+  return next;
+}
+
+function normalizeRound(round){
+  const next = emptyRound();
+  next.closer = round?.closer === null || round?.closer === undefined ? null : clamp(numberOr(round.closer, 0), 0, MAX_PLAYERS - 1);
+  next.rawScores = Array.from({length:MAX_PLAYERS},(_,i)=>nullableScore(round?.rawScores?.[i]));
+  return next;
+}
+
+function visiblePlayers(){
+  return Array.from({length:state.playerCount},(_,i)=>i);
+}
+
+function clamp(value, min, max){
+  return Math.min(max, Math.max(min, value));
+}
+
+function numberOr(value, fallback){
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function nullableScore(value){
+  if(value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.trunc(number) : null;
+}
+
+function format(value){
+  return numberOr(value, 0).toLocaleString();
+}
+
+function signed(value){
+  const number = numberOr(value, 0);
+  return number > 0 ? '+' + format(number) : format(number);
+}
+
+function playerName(index){
+  return state.players[index] || 'Player ' + (index + 1);
+}
+
+function roundMeta(round){
+  const visible = visiblePlayers();
+  const scores = visible.map(i => numberOr(round.rawScores[i], 0));
+  const lowest = scores.length ? Math.min(...scores) : 0;
+  const closer = round.closer;
+  const closerScore = closer === null ? null : numberOr(round.rawScores[closer], 0);
+  const closerIsLowest = closer !== null && closerScore === lowest;
+  const lowestCount = visible.filter(i => numberOr(round.rawScores[i], 0) === lowest).length;
+  const penalty = closer !== null && (state.safeTies ? closerScore > lowest : !closerIsLowest || lowestCount > 1);
+  const adjusted = Array(MAX_PLAYERS).fill(0);
+  visible.forEach(i => {
+    const raw = numberOr(round.rawScores[i], 0);
+    adjusted[i] = penalty && i === closer ? raw * 2 : raw;
+  });
+  return {lowest, penalty, adjusted};
+}
+
+function cumulativeTotals(throughIndex){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  const end = throughIndex === undefined ? state.rounds.length - 1 : throughIndex;
+  for(let r = 0; r <= end; r++){
+    const round = state.rounds[r];
+    if(!round) continue;
+    const meta = roundMeta(round);
+    visiblePlayers().forEach(i => totals[i] += meta.adjusted[i]);
+  }
+  return totals;
+}
+
+function gameOver(){
+  const totals = cumulativeTotals();
+  return visiblePlayers().some(i => totals[i] >= state.targetScore);
+}
+
+function leaderIndexes(){
+  const totals = cumulativeTotals();
+  const visible = visiblePlayers();
+  const low = Math.min(...visible.map(i => totals[i]));
+  return visible.filter(i => totals[i] === low);
+}
+
+function validateRound(round){
+  if(round.closer === null) return 'Select who closed the round.';
+  const missing = visiblePlayers().find(i => round.rawScores[i] === null);
+  if(missing !== undefined) return 'Enter a score for ' + playerName(missing) + '.';
+  return '';
+}
+
+function render(){
+  applyTheme();
+  document.getElementById('gameTitle').value = state.title;
+  document.getElementById('targetScore').value = state.targetScore;
+  document.getElementById('safeTies').checked = state.safeTies;
+  renderPlayerCount();
+  renderNameGrid();
+  renderRoundForm();
+  renderStandings();
+  renderSummary();
+  renderWinner();
+  renderHistory();
+}
+
+function renderPlayerCount(){
+  document.querySelectorAll('#playerCount button').forEach(button => {
+    button.classList.toggle('active', Number(button.dataset.count) === state.playerCount);
+  });
+}
+
+function renderNameGrid(){
+  const grid = document.getElementById('nameGrid');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i => {
+    const field = document.createElement('div');
+    field.className = 'field';
+    field.innerHTML = '<label for="playerName' + i + '">Name ' + (i + 1) + '</label>';
+    const input = document.createElement('input');
+    input.id = 'playerName' + i;
+    input.type = 'text';
+    input.maxLength = 24;
+    input.value = state.players[i];
+    input.style.borderLeftColor = COLORS[i];
+    input.addEventListener('input', () => {
+      state.players[i] = input.value;
+      syncCloserSelect();
+      renderScoreInputs();
+      renderStandings();
+      renderSummary();
+      renderWinner();
+      renderHistory();
+      scheduleSave();
+    });
+    field.appendChild(input);
+    grid.appendChild(field);
+  });
+}
+
+function renderRoundForm(){
+  document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Round ' + (state.rounds.length + 1) : 'Round ' + (state.editingIndex + 1);
+  document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
+  document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Round' : 'Save Round';
+  document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
+  syncCloserSelect();
+  renderScoreInputs();
+  setMessage('');
+}
+
+function syncCloserSelect(){
+  const select = document.getElementById('closer');
+  const value = state.draft.closer === null ? '' : String(clamp(state.draft.closer, 0, state.playerCount - 1));
+  select.innerHTML = '<option value="">Select closer</option>';
+  visiblePlayers().forEach(i => {
+    select.add(new Option(playerName(i), String(i)));
+  });
+  select.value = value;
+}
+
+function renderScoreInputs(){
+  const grid = document.getElementById('scoreInputs');
+  grid.innerHTML = '';
+  const meta = roundMeta(state.draft);
+  visiblePlayers().forEach(i => {
+    const card = document.createElement('div');
+    card.className = 'player-entry panel';
+    card.dataset.player = String(i);
+    card.style.borderLeftColor = COLORS[i];
+
+    const head = document.createElement('div');
+    head.className = 'entry-head';
+
+    const name = document.createElement('div');
+    name.className = 'entry-name';
+    name.textContent = playerName(i);
+    head.appendChild(name);
+
+    const badges = document.createElement('div');
+    badges.className = 'entry-badges';
+    if(state.draft.closer === i){
+      const closer = document.createElement('span');
+      closer.className = 'badge close';
+      closer.textContent = 'Closer';
+      badges.appendChild(closer);
+    }
+    if(meta.penalty && state.draft.closer === i){
+      const penalty = document.createElement('span');
+      penalty.className = 'badge penalty';
+      penalty.textContent = 'x2';
+      badges.appendChild(penalty);
+    }
+    head.appendChild(badges);
+    card.appendChild(head);
+
+    const field = document.createElement('div');
+    field.className = 'field';
+    field.innerHTML = '<label for="score' + i + '">Raw Score</label>';
+    const input = document.createElement('input');
+    input.id = 'score' + i;
+    input.type = 'number';
+    input.step = '1';
+    input.value = state.draft.rawScores[i] ?? '';
+    input.placeholder = '0';
+    input.setAttribute('aria-label', 'Raw score for ' + playerName(i));
+    input.addEventListener('input', () => {
+      state.draft.rawScores[i] = nullableScore(input.value);
+      updateDraftScoreDisplay();
+      scheduleSave();
+    });
+    field.appendChild(input);
+    card.appendChild(field);
+
+    const total = document.createElement('div');
+    total.className = 'entry-total';
+    total.innerHTML = '<span>Adjusted</span><b class="' + scoreClass(meta.adjusted[i]) + '">' + signed(meta.adjusted[i]) + '</b>';
+    card.appendChild(total);
+    grid.appendChild(card);
+  });
+}
+
+function updateDraftScoreDisplay(){
+  const meta = roundMeta(state.draft);
+  visiblePlayers().forEach(i => {
+    const card = document.querySelector('.player-entry[data-player="' + i + '"]');
+    if(!card) return;
+
+    const badges = card.querySelector('.entry-badges');
+    if(badges){
+      badges.innerHTML = '';
+      if(state.draft.closer === i){
+        const closer = document.createElement('span');
+        closer.className = 'badge close';
+        closer.textContent = 'Closer';
+        badges.appendChild(closer);
+      }
+      if(meta.penalty && state.draft.closer === i){
+        const penalty = document.createElement('span');
+        penalty.className = 'badge penalty';
+        penalty.textContent = 'x2';
+        badges.appendChild(penalty);
+      }
+    }
+
+    const total = card.querySelector('.entry-total b');
+    if(total){
+      total.className = scoreClass(meta.adjusted[i]);
+      total.textContent = signed(meta.adjusted[i]);
+    }
+  });
+}
+
+function renderStandings(){
+  const grid = document.getElementById('standings');
+  grid.innerHTML = '';
+  const totals = cumulativeTotals();
+  const leaders = leaderIndexes();
+  const ordered = visiblePlayers().slice().sort((a,b) => totals[a] - totals[b] || a - b);
+  ordered.forEach((i,index) => {
+    const card = document.createElement('div');
+    card.className = 'standing panel';
+    card.style.borderLeftColor = COLORS[i];
+    card.classList.toggle('leader', leaders.includes(i));
+    card.classList.toggle('at-risk', totals[i] >= state.targetScore);
+    const lastRound = state.rounds.length ? roundMeta(state.rounds[state.rounds.length - 1]).adjusted[i] : 0;
+    card.innerHTML =
+      '<div class="rank">' + ordinal(index + 1) + '</div>' +
+      '<div class="name">' + escapeHtml(playerName(i)) + '</div>' +
+      '<div class="score ' + scoreClass(totals[i]) + '">' + format(totals[i]) + '</div>' +
+      '<div class="sub">Last ' + signed(lastRound) + '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function renderSummary(){
+  const box = document.getElementById('summary');
+  const totals = cumulativeTotals();
+  const visible = visiblePlayers();
+  const leaders = leaderIndexes().map(playerName).join(', ');
+  const penalties = state.rounds.reduce((count,round) => count + (roundMeta(round).penalty ? 1 : 0), 0);
+  let bestRound = null;
+  state.rounds.forEach(round => {
+    const meta = roundMeta(round);
+    visible.forEach(i => {
+      const value = meta.adjusted[i];
+      if(bestRound === null || value < bestRound.value) bestRound = {player:i, value};
+    });
+  });
+  const spread = state.rounds.length ? Math.max(...visible.map(i => totals[i])) - Math.min(...visible.map(i => totals[i])) : 0;
+  const stats = [
+    [leaders || 'None','Leader'],
+    [state.rounds.length,'Rounds'],
+    [bestRound ? signed(bestRound.value) : '0','Best Round'],
+    [penalties + ' / ' + spread,'x2 / Spread']
+  ];
+  box.innerHTML = stats.map(stat => '<div class="stat"><b>' + escapeHtml(String(stat[0])) + '</b><span>' + escapeHtml(stat[1]) + '</span></div>').join('');
+}
+
+function renderWinner(){
+  const box = document.getElementById('winnerBox');
+  if(!state.rounds.length || !gameOver()){
+    box.classList.remove('show');
+    box.textContent = '';
+    return;
+  }
+  const winners = leaderIndexes().map(playerName).join(', ');
+  const totals = cumulativeTotals();
+  const low = Math.min(...visiblePlayers().map(i => totals[i]));
+  box.classList.add('show');
+  box.textContent = winners + ' wins at ' + format(low) + ' points.';
+}
+
+function renderHistory(){
+  const host = document.getElementById('history');
+  if(!state.rounds.length){
+    host.innerHTML = '<div class="empty">No rounds yet.</div>';
+    return;
+  }
+
+  const headers = visiblePlayers().map(i => '<th>' + escapeHtml(playerName(i)) + '</th>').join('');
+  let html = '<div class="history-wrap"><table><thead><tr><th>Round</th><th>Closer</th>' + headers + '<th>Actions</th></tr></thead><tbody>';
+  state.rounds.forEach((round,roundIndex) => {
+    const meta = roundMeta(round);
+    const totals = cumulativeTotals(roundIndex);
+    const cells = visiblePlayers().map(i => {
+      const raw = numberOr(round.rawScores[i], 0);
+      const adjusted = meta.adjusted[i];
+      const details = [];
+      if(round.closer === i) details.push('closed');
+      if(meta.penalty && round.closer === i) details.push('raw ' + signed(raw) + ' doubled');
+      else if(raw !== adjusted) details.push('raw ' + signed(raw));
+      return '<td><span class="history-score ' + scoreClass(adjusted) + '">' + signed(adjusted) + '</span>' +
+        '<span class="history-cum">Total ' + format(totals[i]) + '</span>' +
+        (details.length ? '<span class="history-detail">' + escapeHtml(details.join(' / ')) + '</span>' : '') +
+        '</td>';
+    }).join('');
+    const closer = round.closer === null ? '' : playerName(round.closer);
+    const penalty = meta.penalty ? '<span class="history-detail">Penalty applied</span>' : '<span class="history-detail">Lowest ' + signed(meta.lowest) + '</span>';
+    html += '<tr><td class="round-cell">' + (roundIndex + 1) + '</td><td>' + escapeHtml(closer) + penalty + '</td>' + cells +
+      '<td class="history-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button> ' +
+      '<button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></td></tr>';
+  });
+  html += '</tbody></table></div>';
+  host.innerHTML = html;
+  host.querySelectorAll('[data-edit]').forEach(button => {
+    button.addEventListener('click', () => editRound(Number(button.dataset.edit)));
+  });
+  host.querySelectorAll('[data-delete]').forEach(button => {
+    button.addEventListener('click', () => deleteRound(Number(button.dataset.delete)));
+  });
+}
+
+function scoreClass(value){
+  const number = numberOr(value, 0);
+  if(number < 0) return 'positive';
+  if(number > 0) return 'negative';
+  return '';
+}
+
+function ordinal(number){
+  if(number === 1) return '1st';
+  if(number === 2) return '2nd';
+  if(number === 3) return '3rd';
+  return number + 'th';
+}
+
+function escapeHtml(value){
+  return String(value).replace(/[&<>"']/g, character => ({
+    '&':'&amp;',
+    '<':'&lt;',
+    '>':'&gt;',
+    '"':'&quot;',
+    "'":'&#039;'
+  }[character]));
+}
+
+function setMessage(text){
+  const message = document.getElementById('formMessage');
+  message.textContent = text;
+  message.classList.toggle('show', !!text);
+}
+
+function clearDraft(){
+  state.draft = emptyRound();
+  if(state.playerCount === 1) state.draft.closer = 0;
+}
+
+function editRound(index){
+  const round = state.rounds[index];
+  if(!round) return;
+  state.editingIndex = index;
+  state.draft = normalizeRound(round);
+  render();
+  scheduleSave();
+  showToast('Editing round ' + (index + 1));
+}
+
+function deleteRound(index){
+  if(!window.confirm('Delete round ' + (index + 1) + '?')) return;
+  state.rounds.splice(index, 1);
+  if(state.editingIndex === index){
+    state.editingIndex = null;
+    clearDraft();
+  }else if(state.editingIndex !== null && state.editingIndex > index){
+    state.editingIndex -= 1;
+  }
+  render();
+  scheduleSave();
+}
+
+function submitRound(event){
+  event.preventDefault();
+  const error = validateRound(state.draft);
+  if(error){
+    setMessage(error);
+    return;
+  }
+  const round = normalizeRound(state.draft);
+  if(state.editingIndex === null){
+    state.rounds.push(round);
+    showToast('Round added');
+  }else{
+    state.rounds[state.editingIndex] = round;
+    state.editingIndex = null;
+    showToast('Round saved');
+  }
+  clearDraft();
+  render();
+  scheduleSave();
+}
+
+function exportState(){
+  const payload = JSON.stringify(state, null, 2);
+  const blob = new Blob([payload], {type:'application/json'});
+  const link = document.createElement('a');
+  const date = new Date().toISOString().slice(0,10);
+  const url = URL.createObjectURL(blob);
+  link.href = url;
+  link.download = 'skyjo-scorecard-' + date + '.json';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+function importState(file){
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = () => {
+    try{
+      const parsed = JSON.parse(String(reader.result || ''));
+      state = normalizeState(parsed);
+      render();
+      scheduleSave();
+      showToast('Imported scorecard');
+    }catch(error){
+      showToast('Import failed');
+    }
+  };
+  reader.readAsText(file);
+}
+
+function resetGame(){
+  if(!window.confirm('Start a new Skyjo scorecard?')) return;
+  const oldNames = state.players.slice();
+  const oldCount = state.playerCount;
+  const oldTarget = state.targetScore;
+  const oldSafeTies = state.safeTies;
+  state = defaultState();
+  state.players = oldNames;
+  state.playerCount = oldCount;
+  state.targetScore = oldTarget;
+  state.safeTies = oldSafeTies;
+  render();
+  scheduleSave();
+}
+
+function showToast(text){
+  const toast = document.getElementById('toast');
+  toast.textContent = text;
+  toast.classList.add('show');
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove('show'), 1600);
+}
+
+document.getElementById('gameTitle').addEventListener('input', event => {
+  state.title = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('targetScore').addEventListener('input', event => {
+  state.targetScore = Math.max(1, numberOr(event.target.value, 100));
+  renderStandings();
+  renderSummary();
+  renderWinner();
+  scheduleSave();
+});
+
+document.getElementById('safeTies').addEventListener('change', event => {
+  state.safeTies = event.target.checked;
+  renderScoreInputs();
+  renderStandings();
+  renderSummary();
+  renderWinner();
+  renderHistory();
+  scheduleSave();
+});
+
+document.getElementById('closer').addEventListener('change', event => {
+  state.draft.closer = event.target.value === '' ? null : Number(event.target.value);
+  renderScoreInputs();
+  scheduleSave();
+});
+
+document.getElementById('playerCount').addEventListener('click', event => {
+  const button = event.target.closest('button[data-count]');
+  if(!button) return;
+  state.playerCount = Number(button.dataset.count);
+  if(state.draft.closer !== null) state.draft.closer = clamp(state.draft.closer, 0, state.playerCount - 1);
+  render();
+  scheduleSave();
+});
+
+document.getElementById('roundForm').addEventListener('submit', submitRound);
+
+document.getElementById('clearRound').addEventListener('click', () => {
+  clearDraft();
+  renderRoundForm();
+  scheduleSave();
+});
+
+document.getElementById('cancelEdit').addEventListener('click', () => {
+  state.editingIndex = null;
+  clearDraft();
+  render();
+  scheduleSave();
+});
+
+document.getElementById('themeBtn').addEventListener('click', () => {
+  darkMode = !darkMode;
+  saveDarkMode();
+  applyTheme();
+});
+
+document.getElementById('printBtn').addEventListener('click', () => window.print());
+document.getElementById('exportBtn').addEventListener('click', exportState);
+document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
+document.getElementById('importFile').addEventListener('change', event => {
+  importState(event.target.files?.[0]);
+  event.target.value = '';
+});
+document.getElementById('resetBtn').addEventListener('click', resetGame);
+
+render();
+saveNow();
+</script>
+</body>
+</html>
