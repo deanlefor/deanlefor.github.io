@@ -4,11 +4,11 @@
 
 This repository is the durable continuation point for the Dual-FERS Retirement Planner. Do not recreate the application from the chat history. Read these files first:
 
-1. `docs/PROJECT_HISTORY.md`
+1. `project-docs/PROJECT_HISTORY.md`
 2. `README.md`
-3. `docs/PRODUCT_SPEC.md`
-4. `docs/CALCULATION_RULES.md`
-5. `docs/ROADMAP.md`
+3. `project-docs/PRODUCT_SPEC.md`
+4. `project-docs/CALCULATION_RULES.md`
+5. `project-docs/ROADMAP.md`
 6. `src/lib/calculator.ts`
 7. `src/App.tsx`
 8. `tests/calculator.test.ts`
@@ -40,7 +40,9 @@ The selected design is **Journey Timeline**:
 - Client-only static site suitable for GitHub Pages
 - Calculation engine isolated in `src/lib/calculator.ts`
 - Inputs stored in `localStorage`
-- GitHub Actions tests and deploys on `main`
+- Vite writes the browser-ready build to the repository-level
+  `fers-retirement/` directory
+- GitHub Pages publishes committed files from `main` at the repository root
 - No database, API, authentication, or server-side financial data
 
 ## Immediate next task
@@ -66,6 +68,11 @@ npm run test
 npm run build
 npm run check
 ```
+
+Before committing any completed calculator change, run `npm run check` and
+include the regenerated repository-level `fers-retirement/` directory in the
+same commit. The project owner publishes by pushing `main` through GitHub
+Desktop; do not add a custom deployment workflow.
 
 ## Guardrails
 

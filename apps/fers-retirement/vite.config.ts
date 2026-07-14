@@ -3,5 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  base: "/fers-retirement/",
+  base: "./",
+  build: {
+    outDir: "../../fers-retirement",
+    emptyOutDir: true,
+  },
 });

@@ -43,9 +43,10 @@ npm run check
 ## Deploy with the personal website
 
 This application lives under `apps/fers-retirement/` in the deanlefor.com
-repository. The repository-level Pages workflow tests and builds the calculator,
-then publishes its `dist` output at `/fers-retirement/` alongside the existing
-static website. Do not add a second calculator-only Pages workflow here.
+repository. `npm run check` tests the calculator and rebuilds the browser-ready
+site in the repository-level `fers-retirement/` directory. Commit both source
+changes and that generated directory, then push `main` through GitHub Desktop.
+GitHub Pages publishes the repository root without a custom Actions workflow.
 
 ## Privacy
 
@@ -53,11 +54,11 @@ The application has no database or application backend. Scenario inputs are stor
 
 ## Project documentation
 
-- [Governing project history and direction](docs/PROJECT_HISTORY.md)
-- [Product specification](docs/PRODUCT_SPEC.md)
-- [Calculation rules and limitations](docs/CALCULATION_RULES.md)
-- [Release roadmap](docs/ROADMAP.md)
-- [Codex handoff guide](docs/HANDOFF_TO_CODEX.md)
+- [Governing project history and direction](project-docs/PROJECT_HISTORY.md)
+- [Product specification](project-docs/PRODUCT_SPEC.md)
+- [Calculation rules and limitations](project-docs/CALCULATION_RULES.md)
+- [Release roadmap](project-docs/ROADMAP.md)
+- [Codex handoff guide](project-docs/HANDOFF_TO_CODEX.md)
 
 Search indexing is intentionally disabled while Release 0.1 remains an
 unreconciled working prototype.

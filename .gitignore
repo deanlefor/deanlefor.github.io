@@ -1,8 +1,6 @@
 .DS_Store
 .pnpm-store/
-_site/
 apps/fers-retirement/node_modules/
-apps/fers-retirement/dist/
 apps/fers-retirement/.vite/
 apps/fers-retirement/coverage/
 *.local

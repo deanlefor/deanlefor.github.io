@@ -8,7 +8,7 @@
 Treat this document as project context, not as a substitute for inspecting the repository. Before making changes:
 
 1. Read this document in full.
-2. Read `README.md`, `docs/PRODUCT_SPEC.md`, `docs/CALCULATION_RULES.md`, `docs/ROADMAP.md`, and `docs/HANDOFF_TO_CODEX.md`.
+2. Read `README.md`, `project-docs/PRODUCT_SPEC.md`, `project-docs/CALCULATION_RULES.md`, `project-docs/ROADMAP.md`, and `project-docs/HANDOFF_TO_CODEX.md`.
 3. Inspect `src/lib/calculator.ts`, `src/App.tsx`, and `tests/calculator.test.ts`.
 4. Run `npm run check` and preserve the passing baseline.
 5. Do not broaden the feature set until the Release 0.1 results have been reconciled against the project owner's independent calculations.
@@ -253,7 +253,9 @@ The portable repository uses:
 - React
 - TypeScript
 - A client-only static build
-- GitHub Pages deployment through GitHub Actions
+- A committed browser-ready build in the repository-level
+  `fers-retirement/` directory
+- GitHub Pages branch publishing from `main` at the repository root
 - Browser `localStorage` for scenario persistence
 - A calculation engine isolated in `src/lib/calculator.ts`
 - A primary interface in `src/App.tsx`
@@ -269,7 +271,8 @@ The portable Release 0.1 prototype currently:
 
 - Builds successfully as a static Vite application.
 - Passes calculation tests covering the 1.1% FERS multiplier, the effect of the legacy target on sustainable income, and Traditional/Roth allocation behavior.
-- Includes a GitHub Pages workflow.
+- Produces a committed browser-ready site at `/fers-retirement/` without a
+  custom GitHub Actions workflow.
 - Includes official-source links and a 2026 rule baseline.
 - Provides editable dual-person inputs and immediate recalculation.
 - Saves the scenario locally in the browser.
