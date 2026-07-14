@@ -15,4 +15,16 @@ tools for VT PAPA doctoral students:
 
 The original retro DOS-style terminal is still accessible at terminal.html.
 
-This site is built with HTML, CSS, and JavaScript, and hosted via GitHub Pages.
+The site is primarily built with HTML, CSS, and JavaScript. Larger applications
+live under `apps/`, are built independently, and are assembled with the static
+site for deployment through GitHub Pages.
+
+## Site structure
+
+- **Root HTML files** — The personal homepage, doctoral tracker, tracker guide,
+  and retro terminal.
+- **projects/** — Standalone recreational tools and scorecards.
+- **apps/fers-retirement/** — React and TypeScript source, tests, and
+  documentation for the Dual-FERS Retirement Planner.
+- **fers-retirement/** — Generated only in the deployment artifact; this is the
+  calculator's public URL path.

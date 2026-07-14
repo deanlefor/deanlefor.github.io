@@ -17,27 +17,32 @@
   </url>
 
   <url>
-    <loc>https://deanlefor.com/pinochle.html</loc>
+    <loc>https://deanlefor.com/projects/pinochle.html</loc>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://deanlefor.com/cards-score.html</loc>
+    <loc>https://deanlefor.com/projects/cards-score.html</loc>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://deanlefor.com/hf-score.html</loc>
+    <loc>https://deanlefor.com/projects/canasta.html</loc>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://deanlefor.com/skyjo.html</loc>
+    <loc>https://deanlefor.com/projects/hf-score.html</loc>
     <priority>0.6</priority>
   </url>
 
   <url>
-    <loc>https://deanlefor.com/run-tracker.html</loc>
+    <loc>https://deanlefor.com/projects/skyjo.html</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
+    <loc>https://deanlefor.com/projects/run-tracker.html</loc>
     <priority>0.6</priority>
   </url>
 
