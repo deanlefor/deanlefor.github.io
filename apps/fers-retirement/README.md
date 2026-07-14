@@ -4,6 +4,10 @@ A local-first web application for projecting retirement income for a household w
 
 This repository contains the portable version of the Release 0.1 prototype developed in ChatGPT Work. It is intentionally limited to regular FERS employees and is not an official benefit estimator.
 
+Development is currently gated on reconciling Release 0.1 outputs against the
+project owner's independent calculations. Read the project history and handoff
+guide before changing formulas or expanding scope.
+
 ## Current capabilities
 
 - Two federal employees with separate birth, service, retirement, Social Security, and planning dates
@@ -49,10 +53,14 @@ The application has no database or application backend. Scenario inputs are stor
 
 ## Project documentation
 
+- [Governing project history and direction](docs/PROJECT_HISTORY.md)
 - [Product specification](docs/PRODUCT_SPEC.md)
 - [Calculation rules and limitations](docs/CALCULATION_RULES.md)
 - [Release roadmap](docs/ROADMAP.md)
 - [Codex handoff guide](docs/HANDOFF_TO_CODEX.md)
+
+Search indexing is intentionally disabled while Release 0.1 remains an
+unreconciled working prototype.
 
 ## Official rule sources
 

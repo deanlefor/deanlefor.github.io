@@ -4,12 +4,14 @@
 
 This repository is the durable continuation point for the Dual-FERS Retirement Planner. Do not recreate the application from the chat history. Read these files first:
 
-1. `README.md`
-2. `docs/PRODUCT_SPEC.md`
-3. `docs/CALCULATION_RULES.md`
-4. `docs/ROADMAP.md`
-5. `src/lib/calculator.ts`
-6. `tests/calculator.test.ts`
+1. `docs/PROJECT_HISTORY.md`
+2. `README.md`
+3. `docs/PRODUCT_SPEC.md`
+4. `docs/CALCULATION_RULES.md`
+5. `docs/ROADMAP.md`
+6. `src/lib/calculator.ts`
+7. `src/App.tsx`
+8. `tests/calculator.test.ts`
 
 ## Project owner priorities
 
