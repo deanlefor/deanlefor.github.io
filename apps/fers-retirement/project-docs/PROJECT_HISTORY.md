@@ -1,6 +1,6 @@
 # Federal Retirement Calculator: Project History and Direction
 
-**Status date:** July 14, 2026  
+**Status date:** July 15, 2026
 **Purpose:** Preserve the product decisions, reasoning, roadmap, and current development state so a new Codex session can continue without reconstructing the originating conversation.
 
 ## Instructions for Codex
@@ -180,11 +180,14 @@ Each spouse enters:
 
 - A monthly SSA estimate at age 62, used to approximate the FERS annuity supplement.
 - A monthly benefit estimate at the chosen claiming age.
-- A benefit commencement date.
+- A claiming age in years and months, matching the SSA retirement calculator; the application derives the benefit commencement month from the birth date for projection use.
+- Whether the entered estimates are in today's dollars or future dollars at each applicable benefit date.
 
-Benefits are currently treated as today-dollar estimates. Later work must verify that the wording matches the values displayed in current SSA statements and must implement more complete spousal and survivor rules.
+Today's-dollar estimates enter the real-dollar projection directly. Future-dollar estimates are normalized to today's dollars using the household inflation assumption through the age-62 or benefit-commencement date. Later work must continue verifying that the wording matches current SSA materials and must implement more complete spousal and survivor rules.
 
 The simplified survivor phase uses a higher-benefit assumption rather than a full SSA survivor calculation. This is an explicit limitation.
+
+Legacy locally saved scenarios that stored a Social Security start date are migrated to the equivalent age-in-months input when loaded.
 
 ## 8. Sustainable-income and legacy decisions
 
@@ -240,6 +243,9 @@ The selected direction uses:
 - Ink navy, warm ivory, person-one blue, person-two sage, and amber accents
 - A prominent serif treatment for the monthly-income result
 - Progressive-disclosure input panels
+- Topic-first input sections with the two people compared side by side inside each topic
+- Results separated by investments, FERS, Social Security, and portfolio use
+- One dollar basis per primary result comparison, with alternate-basis values disclosed separately
 - Clear distinctions between today's dollars and future dollars
 - Accessible focus states and reduced-motion support
 
@@ -275,6 +281,17 @@ The portable Release 0.1 prototype currently:
   custom GitHub Actions workflow.
 - Includes official-source links and a 2026 rule baseline.
 - Provides editable dual-person inputs and immediate recalculation.
+- Organizes inputs by retirement topic while retaining the two-person comparison.
+- Separates detailed results by investments, FERS, Social Security, and portfolio use.
+- Uses today's dollars for the primary investment comparison and places future-dollar balances in a separate disclosure.
+- Shows a live current-year TSP formula beside each contribution strategy, separating the employee contribution, Agency Automatic 1%, agency match, and total deposits.
+- Groups birth date, retirement SCD, and planned retirement in Personal information and shows the resulting retirement age and eligibility service beside those dates.
+- Separates eligibility service from annuity-computation service so unused sick leave increases the annuity calculation without establishing retirement eligibility.
+- Uses today's dollars for the primary FERS annuity comparison and places the future-dollar annuity formula and amounts in a separate disclosure.
+- Uses the same live boxed-formula pattern for FERS as for TSP, including projected high-3, annuity service, multiplier, survivor reduction, and payable annuity.
+- Accepts Social Security estimates in either today's or future dollars and normalizes future-dollar entries for the real-dollar projection.
+- Shows the inflation factors and arithmetic when future-dollar Social Security benefits are converted to today's dollars.
+- Shows how fixed income and portfolio withdrawals combine into sustainable monthly household income and explains the monthly ending-portfolio test.
 - Saves the scenario locally in the browser.
 - Displays a Journey Timeline and major household income phases.
 
@@ -295,6 +312,7 @@ Primary sources should continue to govern implementation:
 - [TSP contribution types](https://www.tsp.gov/making-contributions/contribution-types/)
 - [TSP annual-limit guidance](https://www.tsp.gov/publications/tspfs07.pdf)
 - [IRS 2026 retirement-plan limits](https://www.irs.gov/newsroom/401k-limit-increases-to-24500-for-2026-ira-limit-increases-to-7500)
+- [SSA personalized benefit estimates](https://www.ssa.gov/prepare/get-benefits-estimate)
 
 When adding Social Security calculations, use current official SSA sources rather than secondary summaries.
 
@@ -314,7 +332,7 @@ The following items are intentionally unresolved or approximate:
 
 ### Social Security
 
-- Confirm whether the SSA input is expressed in today's dollars in every supported workflow.
+- Verify the today/future-dollar input explanations against the estimate formats shown in current SSA workflows.
 - Add more exact claiming-month, spousal, survivor, and earnings-test logic in a later release.
 
 ### Survivor modeling

@@ -15,14 +15,21 @@ guide before changing formulas or expanding scope.
 - Traditional and Roth TSP balances and employee allocations
 - Fixed, percentage, or projected-maximum TSP contributions
 - Agency Automatic (1%) and matching contributions
+- Live current-year TSP formula separating employee, automatic, matching, and total deposits
 - Separate pre-retirement returns for each employee
 - FERS 1.0% and 1.1% general formulas
+- Live FERS formula separating projected high-3, computation service, multiplier, survivor reduction, and payable annuity
 - Sick-leave service credit approximation
 - Full, partial, and no survivor-annuity elections
 - Basic FERS annuity supplement estimate
-- User-entered Social Security estimates and claiming dates
+- User-entered Social Security estimates, claiming ages in years and months, calculated start months, and today/future-dollar basis
 - Inflation, post-retirement return, survivor spending, and ending-portfolio assumptions
 - Estimated sustainable gross monthly income in today's dollars
+- Topic-first inputs with two-person comparison inside each retirement topic
+- Retirement SCD, birth date, and retirement date grouped with live retirement-age and eligibility-service feedback
+- Results separated into investments, FERS, Social Security, and portfolio use
+- Expandable calculation disclosures for future-dollar conversions and the sustainable-income solution
+- Investment results use today's dollars as the primary comparison, with future-dollar balances disclosed separately
 - Browser-only scenario storage
 
 ## Run locally
@@ -70,6 +77,7 @@ unreconciled working prototype.
 - [OPM types of retirement and annuity supplement](https://www.opm.gov/retirement-center/fers-information/types-of-retirement/)
 - [OPM FERS survivor information](https://www.opm.gov/retirement-center/fers-information/survivors/)
 - [TSP contribution types](https://www.tsp.gov/making-contributions/contribution-types/)
+- [SSA personalized benefit estimates](https://www.ssa.gov/prepare/get-benefits-estimate)
 - [IRS 2026 retirement-plan limits](https://www.irs.gov/newsroom/401k-limit-increases-to-24500-for-2026-ira-limit-increases-to-7500)
 
 ## Important warning

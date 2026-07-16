@@ -1,5 +1,6 @@
 export type SurvivorElection = "full" | "partial" | "none";
 export type ContributionMode = "maximum" | "annual" | "percent";
+export type SocialSecurityDollarBasis = "today" | "future";
 
 export interface PersonInput {
   name: string;
@@ -18,9 +19,10 @@ export interface PersonInput {
   contributionPercent: number;
   rothContributionPercent: number;
   preRetirementReturn: number;
+  socialSecurityDollarBasis: SocialSecurityDollarBasis;
   socialSecurityAt62: number;
   socialSecurityMonthly: number;
-  socialSecurityStartDate: string;
+  socialSecurityClaimingAgeMonths: number;
   survivorElection: SurvivorElection;
   planningAge: number;
 }
@@ -42,15 +44,29 @@ export interface PersonResult {
   name: string;
   currentAge: number;
   retirementAge: number;
+  yearsToRetirement: number;
+  currentAnnualEmployeeContribution: number;
+  currentAnnualAgencyAutomaticContribution: number;
+  currentAnnualAgencyMatchingContribution: number;
+  currentAnnualAgencyContribution: number;
+  currentAnnualTotalTspContribution: number;
+  eligibilityServiceYears: number;
   serviceYears: number;
   projectedHigh3: number;
   fersMultiplier: number;
   unreducedAnnualFers: number;
+  unreducedAnnualFersToday: number;
   annualFers: number;
   monthlyFersAtRetirement: number;
+  monthlyFersAtRetirementToday: number;
   monthlySupplementAtRetirement: number;
+  socialSecurityAt62Today: number;
+  socialSecurityMonthlyToday: number;
+  socialSecurityClaimingAgeMonths: number;
   projectedTraditionalTsp: number;
   projectedRothTsp: number;
+  projectedTraditionalTspToday: number;
+  projectedRothTspToday: number;
   eligibleImmediateRetirement: boolean;
   eligibilityMessage: string;
   retirementDate: string;
@@ -67,6 +83,7 @@ export interface ProjectionResult {
   projectedTraditionalAtBothRetired: number;
   projectedRothAtBothRetired: number;
   projectedOtherAtBothRetired: number;
+  projectedOtherAtBothRetiredToday: number;
   sustainableGrossMonthlyIncome: number;
   portfolioDrawAtBothRetired: number;
   fixedIncomeAtBothRetired: number;
@@ -84,6 +101,8 @@ const BASE_RULE_YEAR = 2026;
 const BASE_ELECTIVE_DEFERRAL = 24_500;
 const BASE_CATCH_UP = 8_000;
 const BASE_AGE_60_TO_63_CATCH_UP = 11_250;
+const MIN_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS = 62 * 12;
+const MAX_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS = 70 * 12;
 
 function dateUtc(value: string): Date {
   const [year, month, day] = value.split("-").map(Number);
@@ -104,6 +123,18 @@ function addYears(date: Date, count: number): Date {
   const copy = new Date(date);
   copy.setUTCFullYear(copy.getUTCFullYear() + count);
   return copy;
+}
+
+function normalizedSocialSecurityClaimingAgeMonths(value: number): number {
+  const months = Number.isFinite(value) ? Math.round(value) : MIN_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS;
+  return Math.min(MAX_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS, Math.max(MIN_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS, months));
+}
+
+function socialSecurityStartDate(person: PersonInput): Date {
+  const birth = dateUtc(person.birthDate);
+  const claimingAgeMonths = normalizedSocialSecurityClaimingAgeMonths(person.socialSecurityClaimingAgeMonths);
+  const monthIndex = birth.getUTCFullYear() * 12 + birth.getUTCMonth() + claimingAgeMonths;
+  return new Date(Date.UTC(Math.floor(monthIndex / 12), monthIndex % 12, 1));
 }
 
 function monthsBetween(start: Date, end: Date): number {
@@ -185,12 +216,25 @@ function annualEmployeeContribution(person: PersonInput, year: number, salary: n
   return Math.min(limit, person.annualContribution);
 }
 
-function agencyAnnualContribution(salary: number, employeeContribution: number): number {
-  const contributionRate = salary > 0 ? employeeContribution / salary : 0;
+interface AgencyContributionBreakdown {
+  automatic: number;
+  matching: number;
+  total: number;
+}
+
+function agencyContributionBreakdown(salary: number, employeeContribution: number): AgencyContributionBreakdown {
+  const eligibleSalary = money(salary);
+  const contributionRate = eligibleSalary > 0 ? money(employeeContribution) / eligibleSalary : 0;
   const firstThree = Math.min(contributionRate, 0.03);
   const nextTwo = Math.min(Math.max(contributionRate - 0.03, 0), 0.02);
   const matchRate = firstThree + nextTwo * 0.5;
-  return salary * (0.01 + matchRate);
+  const automatic = eligibleSalary * 0.01;
+  const matching = eligibleSalary * matchRate;
+  return { automatic, matching, total: automatic + matching };
+}
+
+function agencyAnnualContribution(salary: number, employeeContribution: number): number {
+  return agencyContributionBreakdown(salary, employeeContribution).total;
 }
 
 function salaryAt(person: PersonInput, asOf: Date, date: Date): number {
@@ -222,8 +266,10 @@ function createPersonResult(person: PersonInput, household: HouseholdInput): Per
   const retirement = dateUtc(person.retirementDate);
   const currentAge = yearsBetween(birth, asOf);
   const retirementAge = yearsBetween(birth, retirement);
+  const yearsToRetirement = yearsBetween(asOf, retirement);
   const serviceMonths = monthsBetween(service, retirement);
   const sickMonths = Math.floor((money(person.sickLeaveHours) * 12) / SICK_LEAVE_HOURS_PER_YEAR);
+  const eligibilityServiceYears = serviceMonths / 12;
   const serviceYears = (serviceMonths + sickMonths) / 12;
   const high3 = person.projectedHigh3Override > 0
     ? person.projectedHigh3Override
@@ -231,28 +277,66 @@ function createPersonResult(person: PersonInput, household: HouseholdInput): Per
   const multiplier = retirementAge >= 62 && serviceYears >= 20 ? 0.011 : 0.01;
   const unreduced = high3 * multiplier * serviceYears;
   const reduced = unreduced * (1 - survivorReduction(person.survivorElection));
-  const eligibility = immediateEligibility(retirementAge, serviceYears, birth.getUTCFullYear());
+  const eligibility = immediateEligibility(retirementAge, eligibilityServiceYears, birth.getUTCFullYear());
+  const benefitStart = socialSecurityStartDate(person);
+  const socialSecurityAt62Today = socialSecurityInTodayDollars(
+    person,
+    household,
+    person.socialSecurityAt62,
+    addYears(birth, 62),
+  );
+  const socialSecurityMonthlyToday = socialSecurityInTodayDollars(
+    person,
+    household,
+    person.socialSecurityMonthly,
+    benefitStart,
+  );
   const supplement = retirementAge < 62 && eligibility.eligible
-    ? person.socialSecurityAt62 * Math.min(serviceYears, 40) / 40
+    ? socialSecurityAt62Today * Math.min(eligibilityServiceYears, 40) / 40
     : 0;
+  const retirementInflationFactor = inflationFactor(household, retirement);
+  const currentAnnualEmployeeContribution = annualEmployeeContribution(
+    person,
+    asOf.getUTCFullYear(),
+    person.currentSalary,
+    household.contributionLimitGrowth,
+  );
+  const currentAgencyContributions = agencyContributionBreakdown(
+    person.currentSalary,
+    currentAnnualEmployeeContribution,
+  );
 
   return {
     name: person.name,
     currentAge,
     retirementAge,
+    yearsToRetirement,
+    currentAnnualEmployeeContribution,
+    currentAnnualAgencyAutomaticContribution: currentAgencyContributions.automatic,
+    currentAnnualAgencyMatchingContribution: currentAgencyContributions.matching,
+    currentAnnualAgencyContribution: currentAgencyContributions.total,
+    currentAnnualTotalTspContribution: currentAnnualEmployeeContribution + currentAgencyContributions.total,
+    eligibilityServiceYears,
     serviceYears,
     projectedHigh3: high3,
     fersMultiplier: multiplier,
     unreducedAnnualFers: unreduced,
+    unreducedAnnualFersToday: unreduced / retirementInflationFactor,
     annualFers: reduced,
     monthlyFersAtRetirement: reduced / 12,
+    monthlyFersAtRetirementToday: reduced / 12 / retirementInflationFactor,
     monthlySupplementAtRetirement: supplement,
+    socialSecurityAt62Today,
+    socialSecurityMonthlyToday,
+    socialSecurityClaimingAgeMonths: normalizedSocialSecurityClaimingAgeMonths(person.socialSecurityClaimingAgeMonths),
     projectedTraditionalTsp: 0,
     projectedRothTsp: 0,
+    projectedTraditionalTspToday: 0,
+    projectedRothTspToday: 0,
     eligibleImmediateRetirement: eligibility.eligible,
     eligibilityMessage: eligibility.message,
     retirementDate: person.retirementDate,
-    socialSecurityStartDate: person.socialSecurityStartDate,
+    socialSecurityStartDate: isoDate(benefitStart),
     planningDate: isoDate(addYears(birth, person.planningAge)),
   };
 }
@@ -300,6 +384,16 @@ function accumulateToBothRetired(household: HouseholdInput): AccountState {
 
 function inflationFactor(household: HouseholdInput, date: Date): number {
   return Math.pow(1 + household.inflation / 100, yearsBetween(dateUtc(household.asOfDate), date));
+}
+
+function socialSecurityInTodayDollars(
+  person: PersonInput,
+  household: HouseholdInput,
+  amount: number,
+  benefitDate: Date,
+): number {
+  if (person.socialSecurityDollarBasis !== "future") return money(amount);
+  return money(amount) / inflationFactor(household, benefitDate);
 }
 
 function realFersMonthly(
@@ -351,9 +445,9 @@ function fixedIncomeAt(
   });
 
   const activeSocialSecurity: number[] = [];
-  household.people.forEach((person, index) => {
-    if (date >= dateUtc(person.socialSecurityStartDate)) {
-      activeSocialSecurity.push(alive[index] ? person.socialSecurityMonthly : 0);
+  household.people.forEach((_person, index) => {
+    if (date >= dateUtc(people[index].socialSecurityStartDate)) {
+      activeSocialSecurity.push(alive[index] ? people[index].socialSecurityMonthlyToday : 0);
     } else {
       activeSocialSecurity.push(0);
     }
@@ -413,12 +507,18 @@ export function calculateProjection(household: HouseholdInput): ProjectionResult
   const traditional = accumulated.traditional[0] + accumulated.traditional[1];
   const roth = accumulated.roth[0] + accumulated.roth[1];
   const portfolioNominal = traditional + roth + accumulated.other;
-  const portfolioReal = portfolioNominal / inflationFactor(household, bothRetired);
+  const bothRetiredInflationFactor = inflationFactor(household, bothRetired);
+  const portfolioReal = portfolioNominal / bothRetiredInflationFactor;
+  const otherReal = accumulated.other / bothRetiredInflationFactor;
 
   people[0].projectedTraditionalTsp = accumulated.traditional[0];
   people[0].projectedRothTsp = accumulated.roth[0];
   people[1].projectedTraditionalTsp = accumulated.traditional[1];
   people[1].projectedRothTsp = accumulated.roth[1];
+  people[0].projectedTraditionalTspToday = accumulated.traditional[0] / bothRetiredInflationFactor;
+  people[0].projectedRothTspToday = accumulated.roth[0] / bothRetiredInflationFactor;
+  people[1].projectedTraditionalTspToday = accumulated.traditional[1] / bothRetiredInflationFactor;
+  people[1].projectedRothTspToday = accumulated.roth[1] / bothRetiredInflationFactor;
 
   const zeroIncomeEnding = simulateDrawdown(household, people, portfolioReal, 0);
   const legacyFeasible = zeroIncomeEnding >= household.legacyTarget;
@@ -434,7 +534,7 @@ export function calculateProjection(household: HouseholdInput): ProjectionResult
   }
   const endingPortfolio = simulateDrawdown(household, people, portfolioReal, low);
   const fixedAtRetirement = fixedIncomeAt(household, people, bothRetired);
-  const bothSs = household.people
+  const bothSs = people
     .map((person) => dateUtc(person.socialSecurityStartDate))
     .reduce((latest, date) => date > latest ? date : latest);
   const fixedAfterSs = fixedIncomeAt(household, people, bothSs);
@@ -454,6 +554,7 @@ export function calculateProjection(household: HouseholdInput): ProjectionResult
     projectedTraditionalAtBothRetired: traditional,
     projectedRothAtBothRetired: roth,
     projectedOtherAtBothRetired: accumulated.other,
+    projectedOtherAtBothRetiredToday: otherReal,
     sustainableGrossMonthlyIncome: low,
     portfolioDrawAtBothRetired: Math.max(0, low - fixedAtRetirement),
     fixedIncomeAtBothRetired: fixedAtRetirement,

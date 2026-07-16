@@ -31,7 +31,9 @@ The selected design is **Journey Timeline**:
 - Ink navy `#13283F`, warm ivory `#F7F4ED`, person-one blue `#3F6F8F`, person-two sage `#6F927D`, amber `#C9922F`
 - Household timeline is the main explanatory device
 - Strong serif treatment for the primary income number
-- Progressive-disclosure input panels
+- Topic-first progressive-disclosure panels, with Person 1 and Person 2 side by side inside each topic
+- Source-separated results for investments, FERS, Social Security, and portfolio use
+- Never mix today's-dollar and future-dollar values in the same primary comparison; disclose alternate-basis values separately
 - Avoid fintech hype, government seals, and decorative lifestyle photography
 
 ## Architecture

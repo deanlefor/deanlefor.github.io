@@ -10,10 +10,12 @@ Current prototype:
 - Regular FERS annuity
 - Basic annuity supplement
 - Manual Social Security estimates and claiming dates
+- Per-person today/future-dollar basis for Social Security estimates
 - Survivor election and simplified survivor phase
 - Sustainable gross monthly income
 - Adjustable real legacy target
 - Local browser storage
+- Topic-first inputs and source-separated results
 
 Before calling 0.1 complete:
 
@@ -22,7 +24,7 @@ Before calling 0.1 complete:
 - Improve validation for impossible or unsupported dates
 - Decide how to represent current and projected high-3 more precisely
 - Confirm sick-leave treatment against OPM examples
-- Review supplement approximation and Social Security input wording
+- Review supplement approximation and verify the Social Security dollar-basis explanations against current SSA materials
 - Add export/import of a scenario file
 
 ## Release 0.2: FERS Precision and Eligibility
