@@ -5,6 +5,7 @@ import {
   calculateProjection,
   currentTspLimitFor,
   formatAge,
+  isValidIsoDate,
   type ContributionMode,
   type HouseholdInput,
   type PersonInput,
@@ -116,6 +117,10 @@ function normalizeClaimingAgeMonths(value: unknown, fallback: number) {
   return Math.min(MAX_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS, Math.max(MIN_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS, numeric));
 }
 
+function normalizeStoredDate(value: unknown, fallback: string): string {
+  return typeof value === "string" && isValidIsoDate(value) ? value : fallback;
+}
+
 function monthIndex(value: string): number | null {
   const [year, month] = value.split("-").map(Number);
   if (!Number.isFinite(year) || !Number.isFinite(month) || month < 1 || month > 12) return null;
@@ -125,7 +130,7 @@ function monthIndex(value: string): number | null {
 function normalizeStoredPerson(stored: LegacyPersonInput | undefined, fallback: PersonInput): PersonInput {
   const legacy = stored ?? {};
   const { socialSecurityStartDate, ...storedWithoutLegacyDate } = legacy;
-  const birthDate = typeof storedWithoutLegacyDate.birthDate === "string" ? storedWithoutLegacyDate.birthDate : fallback.birthDate;
+  const birthDate = normalizeStoredDate(storedWithoutLegacyDate.birthDate, fallback.birthDate);
   const birthMonth = monthIndex(birthDate);
   const startMonth = typeof socialSecurityStartDate === "string" ? monthIndex(socialSecurityStartDate) : null;
   const legacyClaimingAgeMonths = birthMonth !== null && startMonth !== null
@@ -135,6 +140,9 @@ function normalizeStoredPerson(stored: LegacyPersonInput | undefined, fallback: 
   return {
     ...fallback,
     ...storedWithoutLegacyDate,
+    birthDate,
+    serviceDate: normalizeStoredDate(storedWithoutLegacyDate.serviceDate, fallback.serviceDate),
+    retirementDate: normalizeStoredDate(storedWithoutLegacyDate.retirementDate, fallback.retirementDate),
     socialSecurityDollarBasis: normalizeSocialSecurityBasis(storedWithoutLegacyDate.socialSecurityDollarBasis),
     socialSecurityClaimingAgeMonths: normalizeClaimingAgeMonths(
       storedWithoutLegacyDate.socialSecurityClaimingAgeMonths,
@@ -153,6 +161,7 @@ function normalizeStoredHousehold(value: unknown): HouseholdInput {
   return {
     ...sampleHousehold,
     ...stored,
+    asOfDate: normalizeStoredDate(stored.asOfDate, sampleHousehold.asOfDate),
     people: [
       normalizeStoredPerson(personOne, sampleHousehold.people[0]),
       normalizeStoredPerson(personTwo, sampleHousehold.people[1]),
@@ -258,11 +267,31 @@ function NumberField({
 
 function DateField({ label, value, onChange, info }: { label: string; value: string; onChange: (value: string) => void; info?: string }) {
   const inputId = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const restoreValidValue = () => {
+    if (inputRef.current) inputRef.current.value = value;
+    queueMicrotask(() => {
+      if (inputRef.current && !isValidIsoDate(inputRef.current.value)) inputRef.current.value = value;
+    });
+  };
 
   return (
     <div className="field">
       <FieldLabel htmlFor={inputId} label={label} info={info} />
-      <input id={inputId} type="date" value={value} onChange={(event) => onChange(event.target.value)} />
+      <input
+        ref={inputRef}
+        id={inputId}
+        type="date"
+        value={value}
+        onInput={(event) => {
+          if (!isValidIsoDate(event.currentTarget.value)) restoreValidValue();
+        }}
+        onChange={(event) => {
+          const nextValue = event.currentTarget.value;
+          if (isValidIsoDate(nextValue)) onChange(nextValue);
+          else restoreValidValue();
+        }}
+      />
     </div>
   );
 }

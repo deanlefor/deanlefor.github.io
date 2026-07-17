@@ -1,6 +1,11 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateProjection, type HouseholdInput, type PersonInput } from "../src/lib/calculator.ts";
+import {
+  calculateProjection,
+  isValidIsoDate,
+  type HouseholdInput,
+  type PersonInput,
+} from "../src/lib/calculator.ts";
 
 function person(overrides: Partial<PersonInput> = {}): PersonInput {
   return {
@@ -45,6 +50,23 @@ function household(overrides: Partial<HouseholdInput> = {}): HouseholdInput {
     ...overrides,
   };
 }
+
+test("rejects incomplete and impossible calendar dates", () => {
+  assert.equal(isValidIsoDate("2042-10-31"), true);
+  assert.equal(isValidIsoDate("2042-11-31"), false);
+  assert.equal(isValidIsoDate("2028-02-29"), true);
+  assert.equal(isValidIsoDate("2027-02-29"), false);
+  assert.equal(isValidIsoDate(""), false);
+});
+
+test("fails fast with a descriptive error if an invalid date reaches the engine", () => {
+  assert.throws(
+    () => calculateProjection(household({
+      people: [person(), person({ name: "Two", retirementDate: "" })],
+    })),
+    /Invalid calendar date: empty value/,
+  );
+});
 
 test("applies the FERS 1.1% multiplier at age 62 with at least 20 years", () => {
   const input = household();

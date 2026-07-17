@@ -104,9 +104,29 @@ const BASE_AGE_60_TO_63_CATCH_UP = 11_250;
 const MIN_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS = 62 * 12;
 const MAX_SOCIAL_SECURITY_CLAIMING_AGE_MONTHS = 70 * 12;
 
+export function isValidIsoDate(value: string): boolean {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value);
+  if (!match) return false;
+
+  const [, yearText, monthText, dayText] = match;
+  const year = Number(yearText);
+  const month = Number(monthText);
+  const day = Number(dayText);
+  if (month < 1 || month > 12 || day < 1 || day > 31) return false;
+
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date.getUTCFullYear() === year
+    && date.getUTCMonth() === month - 1
+    && date.getUTCDate() === day;
+}
+
 function dateUtc(value: string): Date {
+  if (!isValidIsoDate(value)) throw new RangeError(`Invalid calendar date: ${value || "empty value"}`);
   const [year, month, day] = value.split("-").map(Number);
-  return new Date(Date.UTC(year, month - 1, day));
+  const date = new Date(0);
+  date.setUTCFullYear(year, month - 1, day);
+  return date;
 }
 
 function isoDate(date: Date): string {
