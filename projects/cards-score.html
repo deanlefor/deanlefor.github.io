@@ -126,6 +126,8 @@ button{cursor:pointer}
   gap:12px;
   align-items:end;
 }
+.win-config.unlimited{grid-template-columns:1fr}
+.limit-field.is-hidden{display:none}
 .field{display:flex;flex-direction:column;gap:5px;min-width:0}
 label,.label{
   color:var(--muted);
@@ -173,9 +175,9 @@ input[type=number]{text-align:right}
 .player-seg button{min-width:38px;padding:7px 0}
 .win-seg{
   display:grid;
-  grid-template-columns:repeat(4,minmax(0,1fr));
+  grid-template-columns:repeat(5,minmax(0,1fr));
 }
-.win-seg button{min-width:0;white-space:normal;line-height:1.15}
+.win-seg button{min-width:0;padding:7px 6px;font-size:.8rem;white-space:normal;line-height:1.15}
 .btn{
   min-height:38px;
   border:1px solid var(--line);
@@ -605,7 +607,7 @@ try{
               <button type="button" data-count="8">8</button>
             </div>
           </div>
-          <div class="win-config">
+          <div class="win-config" id="winConfig">
             <div class="field win-field">
               <span class="label">Win Condition</span>
               <div class="seg win-seg" id="winCondition" aria-label="Win condition">
@@ -613,9 +615,10 @@ try{
                 <button type="button" data-win-condition="score-low">Score: Low</button>
                 <button type="button" data-win-condition="rounds-high">Rounds: High</button>
                 <button type="button" data-win-condition="rounds-low">Rounds: Low</button>
+                <button type="button" data-win-condition="unlimited" title="No score or round limit">Unlimited</button>
               </div>
             </div>
-            <div class="field limit-field">
+            <div class="field limit-field" id="limitField">
               <label for="limitValue" id="limitValueLabel">Round Limit</label>
               <input id="limitValue" type="number" min="1" step="1">
             </div>
@@ -724,7 +727,7 @@ function emptyDraft(){
 
 function defaultState(){
   return {
-    version:3,
+    version:4,
     title:'Game Night',
     playerCount:DEFAULT_PLAYER_COUNT,
     startingDealer:0,
@@ -773,14 +776,16 @@ function applyTheme(){
 
 function normalizeState(source){
   const base = defaultState();
-  const next = source && typeof source === 'object' ? {...base, ...source, version:3} : base;
+  const next = source && typeof source === 'object' ? {...base, ...source, version:4} : base;
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
   next.startingDealer = clampNumber(source?.startingDealer, 0, next.playerCount - 1, 0);
   const condition = normalizeWinCondition(source);
-  next.limitType = condition.startsWith('score') ? 'score' : 'rounds';
+  next.limitType = condition === 'unlimited' ? 'unlimited' : (condition.startsWith('score') ? 'score' : 'rounds');
   next.limitValue = normalizeLimitValue(source, next.limitType);
-  next.winnerMode = condition.endsWith('low') ? 'low' : 'high';
+  next.winnerMode = condition === 'unlimited'
+    ? ((source?.winnerMode || source?.scoreMode) === 'low' ? 'low' : 'high')
+    : (condition.endsWith('low') ? 'low' : 'high');
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(source?.players?.[i] || base.players[i]).slice(0,24));
   next.rounds = Array.isArray(source?.rounds) ? source.rounds.map(normalizeRound) : [];
   next.editingIndex = Number.isInteger(next.editingIndex) ? next.editingIndex : null;
@@ -793,6 +798,7 @@ function normalizeState(source){
 
 function normalizeWinCondition(source){
   if(source?.winCondition) return validWinCondition(source.winCondition);
+  if(source?.limitType === 'unlimited') return 'unlimited';
   const limitType = source?.limitType
     ? (source.limitType === 'score' ? 'score' : 'rounds')
     : (source?.targetScore ? 'score' : 'rounds');
@@ -801,7 +807,7 @@ function normalizeWinCondition(source){
 }
 
 function validWinCondition(value){
-  return ['score-high','score-low','rounds-high','rounds-low'].includes(value) ? value : 'rounds-high';
+  return ['score-high','score-low','rounds-high','rounds-low','unlimited'].includes(value) ? value : 'rounds-high';
 }
 
 function normalizeDraft(source){
@@ -909,6 +915,7 @@ function activeWinnerMode(){
 
 function targetReached(){
   if(!state.rounds.length) return [];
+  if(state.limitType === 'unlimited') return [];
   if(state.limitType === 'rounds'){
     return state.rounds.length >= state.limitValue ? leaders() : [];
   }
@@ -964,24 +971,29 @@ function renderWinCondition(){
     button.classList.toggle('active', isActive);
     button.setAttribute('aria-pressed', String(isActive));
   });
+  const unlimited = state.limitType === 'unlimited';
+  document.getElementById('winConfig').classList.toggle('unlimited', unlimited);
+  document.getElementById('limitField').classList.toggle('is-hidden', unlimited);
   document.getElementById('limitValueLabel').textContent = state.limitType === 'score' ? 'Score Limit' : 'Round Limit';
 }
 
 function winCondition(){
-  return state.limitType + '-' + state.winnerMode;
+  return state.limitType === 'unlimited' ? 'unlimited' : state.limitType + '-' + state.winnerMode;
 }
 
 function setWinCondition(value){
   value = validWinCondition(value);
   const oldLimitType = state.limitType;
-  if(value.startsWith('score')){
+  if(value === 'unlimited'){
+    state.limitType = 'unlimited';
+  }else if(value.startsWith('score')){
     state.limitType = 'score';
     state.winnerMode = value.endsWith('low') ? 'low' : 'high';
   }else{
     state.limitType = 'rounds';
     state.winnerMode = value === 'rounds-low' ? 'low' : 'high';
   }
-  if(oldLimitType !== state.limitType){
+  if(oldLimitType !== state.limitType && state.limitType !== 'unlimited'){
     state.limitValue = state.limitType === 'score' ? DEFAULT_SCORE_LIMIT : DEFAULT_ROUND_LIMIT;
   }
 }
@@ -1177,6 +1189,7 @@ function winnerText(list){
 }
 
 function limitText(){
+  if(state.limitType === 'unlimited') return 'Unlimited play';
   if(state.limitType === 'rounds') return 'Round ' + state.rounds.length + ' of ' + format(state.limitValue);
   return 'Score limit ' + format(state.limitValue) + ', ' + activeWinnerMode() + ' wins';
 }
