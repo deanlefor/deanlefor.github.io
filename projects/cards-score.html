@@ -406,16 +406,18 @@ input[type=number]{text-align:right}
 .score-round:last-child{border-bottom:0}
 .round-info{
   display:flex;
-  align-items:center;
-  gap:7px;
+  flex-direction:column;
+  align-items:flex-start;
+  justify-content:center;
+  gap:1px;
   min-width:0;
-  padding:5px 8px;
+  padding:3px 8px;
   border-right:1px solid var(--line);
   background:var(--round-info-bg);
 }
-.round-no{font-size:.86rem;font-weight:900;line-height:1;white-space:nowrap}
-.round-meta{min-width:0;overflow:hidden;color:var(--muted);font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}
-.round-meta strong{color:var(--ink);font-size:.7rem}
+.round-no{font-size:.8rem;font-weight:900;line-height:1;white-space:nowrap}
+.round-meta{width:100%;min-width:0;overflow:hidden;color:var(--muted);font-size:.62rem;line-height:1;text-overflow:ellipsis;white-space:nowrap}
+.round-meta strong{color:var(--ink);font-size:.64rem}
 .score-lines{
   display:grid;
   grid-template-columns:repeat(var(--players),minmax(0,1fr));
@@ -1127,7 +1129,7 @@ function renderHistory(){
   state.rounds.forEach((round, roundIndex)=>{
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta">D: <strong>' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong></div></div>';
+    html += '<div class="round-meta">Dealer: <strong>' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong></div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
     players.forEach(i=>{
