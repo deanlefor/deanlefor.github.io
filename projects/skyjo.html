@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Skyjo Scorecard</title>
+<link rel="stylesheet" href="score-stats.css">
 <style>
 *{box-sizing:border-box}
 :root{
@@ -572,20 +573,25 @@ try{
         <div id="history"></div>
       </div>
       <div class="panel section history-panel">
-        <div class="history-title-row">
-          <div>
-            <h2 class="section-title">Game History</h2>
-            <span class="history-count" id="gameHistoryCount">0 saved games</span>
+        <h2 class="section-title">All-Time Stats</h2>
+        <div id="gameStats"></div>
+        <details class="match-records">
+          <summary><span>Manage saved matches</span><span class="history-count" id="gameHistoryCount">0 saved matches</span></summary>
+          <div class="match-records-body">
+            <div class="match-records-toolbar">
+              <span>Restore or delete individual match records.</span>
+              <button class="btn warn history-clear" id="clearHistoryBtn" type="button">Clear Saved Data</button>
+            </div>
+            <div id="gameHistory"></div>
           </div>
-          <button class="btn warn history-clear" id="clearHistoryBtn" type="button">Clear History</button>
-        </div>
-        <div id="gameHistory"></div>
+        </details>
       </div>
     </section>
   </main>
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="score-stats.js"></script>
 <script>
 const STORE_KEY = 'skyjoScorecard.v1';
 const THEME_KEY = 'skyjoScorecard.darkMode.v1';
@@ -1135,7 +1141,18 @@ function renderHistory(){
 function renderGameArchive(){
   const host = document.getElementById('gameHistory');
   const count = gameArchive.length;
-  document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved game' : ' saved games');
+  const statRecords = gameArchive.map(entry=>{
+    const game = entry.state;
+    const totals = cumulativeTotalsForGame(game);
+    return {
+      completedAt:entry.completedAt,
+      direction:'low',
+      participants:Array.from({length:game.playerCount},(_,index)=>({name:gamePlayerName(game,index),score:totals[index]})),
+      winnerIndexes:leadersForGame(game,totals)
+    };
+  });
+  ScoreStats.render(document.getElementById('gameStats'),statRecords);
+  document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
   document.getElementById('clearHistoryBtn').disabled = count === 0;
   if(!count){
     host.innerHTML = '<div class="empty">Finished games will appear here.</div>';

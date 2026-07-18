@@ -1,0 +1,119 @@
+.stats-highlight-grid{
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:7px;
+}
+.stats-highlight{
+  min-width:0;
+  padding:9px 10px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--soft);
+}
+.stats-label{
+  color:var(--muted);
+  font-size:.64rem;
+  font-weight:900;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.stats-value{
+  margin-top:3px;
+  overflow:hidden;
+  color:var(--ink);
+  font-size:1rem;
+  font-weight:950;
+  line-height:1.12;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.stats-meta{
+  margin-top:2px;
+  overflow:hidden;
+  color:var(--muted);
+  font-size:.67rem;
+  font-weight:750;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.stats-leaderboard-title{
+  margin:11px 0 6px;
+  color:var(--muted);
+  font-size:.68rem;
+  font-weight:900;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+}
+.stats-table-wrap{
+  overflow:auto;
+  border:1px solid var(--line);
+  border-radius:7px;
+}
+.stats-table{min-width:610px;background:var(--panel)}
+.stats-row{
+  display:grid;
+  grid-template-columns:minmax(132px,1.35fr) repeat(6,minmax(58px,.68fr));
+  border-bottom:1px solid var(--line);
+}
+.stats-row:last-child{border-bottom:0}
+.stats-row > *{
+  min-width:0;
+  padding:6px 7px;
+  border-right:1px solid var(--line);
+  text-align:center;
+}
+.stats-row > *:last-child{border-right:0}
+.stats-row-head{background:var(--soft);color:var(--muted);font-size:.62rem;font-weight:950;letter-spacing:.06em;text-transform:uppercase}
+.stats-player{overflow:hidden;font-size:.76rem;font-weight:900;text-align:left!important;text-overflow:ellipsis;white-space:nowrap}
+.stats-number{font-size:.74rem;font-weight:850}
+.stats-number small{display:block;color:var(--muted);font-size:.58rem;font-weight:750;line-height:1.1}
+.match-records{
+  margin-top:10px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--panel);
+  overflow:hidden;
+}
+.match-records > summary{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  min-height:40px;
+  padding:7px 9px;
+  cursor:pointer;
+  font-size:.76rem;
+  font-weight:900;
+  list-style:none;
+}
+.match-records > summary::-webkit-details-marker{display:none}
+.match-records > summary::before{content:"+";color:var(--muted);font-size:1rem}
+.match-records[open] > summary::before{content:"−"}
+.match-records[open] > summary{border-bottom:1px solid var(--line);background:var(--soft)}
+.match-records > summary .history-count{margin-left:auto;text-align:right}
+.match-records-body{padding:8px}
+.match-records-toolbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px;color:var(--muted);font-size:.68rem}
+.game-history-list{display:grid;gap:7px}
+.archived-game{overflow:hidden;border:1px solid var(--line);border-radius:7px;background:var(--panel)}
+.archived-game > summary{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:42px;padding:7px 9px;cursor:pointer;list-style:none}
+.archived-game > summary::-webkit-details-marker{display:none}
+.archive-heading{display:flex;min-width:0;flex-direction:column;gap:2px}
+.archive-title{overflow:hidden;font-size:.76rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.archive-meta{color:var(--muted);font-size:.64rem;font-weight:700}
+.archive-result{flex:0 0 auto;color:var(--ink);font-size:.7rem;font-weight:850;text-align:right}
+.archive-body{padding:8px;border-top:1px solid var(--line);background:var(--soft)}
+.archive-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:6px}
+.archive-total{display:flex;justify-content:space-between;gap:7px;padding:6px 7px;border:1px solid var(--line);border-radius:6px;background:var(--panel);font-size:.7rem}
+.archive-total span{overflow:hidden;color:var(--muted);font-weight:750;text-overflow:ellipsis;white-space:nowrap}
+.archive-total strong{font-weight:900}
+.archive-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:7px}
+@media(max-width:720px){
+  .stats-highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:420px){
+  .stats-highlight-grid{grid-template-columns:1fr 1fr}
+  .stats-value{font-size:.9rem}
+}
+@media print{
+  .match-records{display:none}
+}
