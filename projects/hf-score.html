@@ -43,10 +43,10 @@ button{cursor:pointer}
 .seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
 .seg button:last-child{border-right:0}
 .seg button.active{background:var(--green);color:var(--on-accent)}
-.settings .seg button{min-height:36px;padding:7px 12px}
+.settings .seg button{flex:1;min-width:0;min-height:36px;padding:7px 12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 .settings{margin-bottom:14px;padding:12px}
-.settings-main{display:grid;grid-template-columns:minmax(190px,.8fr) minmax(300px,1.2fr) minmax(190px,.8fr) minmax(360px,1.5fr);gap:8px;align-items:end}
+.settings-main{display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,1fr) minmax(190px,.7fr) minmax(360px,1.4fr);gap:8px;align-items:end}
 .field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 .field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
 label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
@@ -260,7 +260,8 @@ const SECTION_META = {
   cumulative:{label:'Cumulative Total', type:'computed'}
 };
 const ROWS = ['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','bookTotal','cardTotal','roundTotal','cumulative'];
-const PLAYER_ENTRY_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks'];
+const ROUND_EVENT_KEYS = ['perfectDeal','goingOut'];
+const PLAYER_SCORE_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks','cardTotal'];
 const COUNT_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks'];
 
 let state = loadState();
@@ -411,8 +412,7 @@ function playerRound(roundIndex, playerIndex){
 
 function bookTotal(roundIndex, playerIndex){
   const row = playerRound(roundIndex, playerIndex);
-  const wildPoints = state.gameMode === 'teams' ? n(row.wildBooks)*1500 : 0;
-  return wildPoints + n(row.cleanBooks)*700 + n(row.dirtyBooks)*300;
+  return n(row.wildBooks)*1500 + n(row.cleanBooks)*700 + n(row.dirtyBooks)*300;
 }
 
 function sectionValue(roundIndex, playerIndex, key){
@@ -420,7 +420,7 @@ function sectionValue(roundIndex, playerIndex, key){
   if(key === 'perfectDeal') return row.perfectDeal ? 100 : 0;
   if(key === 'goingOut') return row.goingOut ? 100 : 0;
   if(key === 'red3') return n(row.red3) ? n(row.red3)*100 : 0;
-  if(key === 'wildBooks') return state.gameMode === 'teams' && n(row.wildBooks) ? n(row.wildBooks)*1500 : 0;
+  if(key === 'wildBooks') return n(row.wildBooks) ? n(row.wildBooks)*1500 : 0;
   if(key === 'cleanBooks') return n(row.cleanBooks) ? n(row.cleanBooks)*700 : 0;
   if(key === 'dirtyBooks') return n(row.dirtyBooks) ? n(row.dirtyBooks)*300 : 0;
   if(key === 'bookTotal') return bookTotal(roundIndex, playerIndex);
@@ -434,15 +434,7 @@ function roundTotal(roundIndex, playerIndex){
 }
 
 function scoringKeys(){
-  return ['perfectDeal','goingOut','red3',...(state.gameMode === 'teams' ? ['wildBooks'] : []),'cleanBooks','dirtyBooks','cardTotal'];
-}
-
-function rowsForMode(){
-  return state.gameMode === 'teams' ? ROWS : ROWS.filter(key=>key !== 'wildBooks');
-}
-
-function entryKeysForMode(){
-  return state.gameMode === 'teams' ? PLAYER_ENTRY_KEYS : PLAYER_ENTRY_KEYS.filter(key=>key !== 'wildBooks');
+  return ['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','cardTotal'];
 }
 
 function cumulative(roundIndex, playerIndex){
@@ -480,11 +472,11 @@ function renderGameMode(){
     button.setAttribute('aria-pressed',String(isActive));
   });
   const isTeams = state.gameMode === 'teams';
-  document.getElementById('wildBookRule').hidden = !isTeams;
+  document.getElementById('wildBookRule').hidden = false;
   document.getElementById('nameGridLabel').textContent = isTeams ? 'Team Names' : 'Player Names';
   document.getElementById('modeHint').textContent = isTeams
-    ? 'Teams mode uses one score column per team and includes Wild Books.'
-    : 'Singles mode uses one score column per player and excludes Wild Books.';
+    ? 'Teams mode uses one score column per team.'
+    : 'Singles mode uses one score column per player.';
   document.getElementById('rulesModeNote').textContent = `${isTeams ? 'Team' : 'Singles'} scoring uses four rounds with meld requirements of 60, 90, 120, and 150 points.`;
   document.getElementById('scoreTable').setAttribute('aria-label',`${isTeams ? 'Team' : 'Singles'} Hand and Foot round scores`);
 }
@@ -556,7 +548,7 @@ function renderTable(){
     html += '<tr class="player-repeat"><th class="row-label">Section</th>';
     players.forEach(i=>html += `<th>${escapeHtml(displayColumnName(i))}</th>`);
     html += '</tr>';
-    rowsForMode().forEach(key=>{
+    ROWS.forEach(key=>{
       const meta = SECTION_META[key];
       const rowClass = key === 'roundTotal' ? 'total-row' : key === 'cumulative' ? 'cum-row' : '';
       html += `<tr class="${rowClass}"><th class="row-label">${meta.label}</th>`;
@@ -606,10 +598,12 @@ function scoreTabSequence(){
   const order = [];
   const players = visiblePlayers();
   for(let round=0; round<ROUND_COUNT; round++){
-    players.forEach(player=>{
-      entryKeysForMode().forEach(key=>pushScoreInput(order, round, player, key));
+    ROUND_EVENT_KEYS.forEach(key=>{
+      players.forEach(player=>pushScoreInput(order, round, player, key));
     });
-    players.forEach(player=>pushScoreInput(order, round, player, 'cardTotal'));
+    players.forEach(player=>{
+      PLAYER_SCORE_KEYS.forEach(key=>pushScoreInput(order, round, player, key));
+    });
   }
   return order;
 }
