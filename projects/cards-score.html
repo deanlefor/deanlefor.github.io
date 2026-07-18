@@ -467,6 +467,40 @@ input[type=number]{text-align:right}
   color:var(--leader-ink);
 }
 .status-box.show{display:block}
+.history-title-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  margin-bottom:10px;
+}
+.history-title-row .section-title{margin:0}
+.history-count{display:block;margin-top:2px;color:var(--muted);font-size:.72rem}
+.history-clear{min-height:30px;padding:5px 8px;font-size:.72rem}
+.game-history-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow:auto;padding:2px}
+.archived-game{border:1px solid var(--line);border-radius:7px;background:var(--sheet-bg);overflow:hidden}
+.archived-game summary{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:10px;
+  min-height:44px;
+  padding:7px 9px;
+  cursor:pointer;
+  list-style:none;
+}
+.archived-game summary::-webkit-details-marker{display:none}
+.archived-game[open] summary{border-bottom:1px solid var(--line);background:var(--sheet-head-bg)}
+.archive-heading{min-width:0}
+.archive-title{display:block;overflow:hidden;font-size:.84rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.archive-meta{display:block;margin-top:2px;color:var(--muted);font-size:.68rem}
+.archive-result{max-width:240px;overflow:hidden;color:var(--green);font-size:.76rem;font-weight:900;text-align:right;text-overflow:ellipsis;white-space:nowrap}
+.archive-body{padding:8px 9px}
+.archive-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
+.archive-total{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--round-info-bg);font-size:.72rem}
+.archive-total span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.archive-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
+.archive-actions .btn{min-height:30px;padding:5px 8px;font-size:.72rem}
 .file-input{display:none}
 .footer{
   display:flex;
@@ -509,6 +543,8 @@ input[type=number]{text-align:right}
   .sheet-actions{grid-column:2;grid-row:1;justify-content:flex-end;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
   .round-head{align-items:flex-start;flex-direction:column}
   .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .archived-game summary{grid-template-columns:1fr;gap:3px}
+  .archive-result{max-width:none;text-align:left}
 }
 @media(max-width:420px){
   .players-title-row{align-items:stretch;flex-direction:column;gap:8px}
@@ -550,7 +586,7 @@ input[type=number]{text-align:right}
   }
   body{background:#fff}
   .wrap{max-width:none;padding:0}
-  .toolbar,.settings-panel,.round-form,.message,.sheet-actions,.toast{display:none}
+  .toolbar,.settings-panel,.round-form,.history-panel,.message,.sheet-actions,.toast{display:none}
   .panel{box-shadow:none}
   .layout{grid-template-columns:1fr}
   .score-strip{position:static;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));margin-bottom:12px;padding:0;background:transparent;border-bottom:0}
@@ -574,8 +610,9 @@ try{
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
       <button class="btn" id="printBtn" type="button">Print</button>
-      <button class="btn" id="exportBtn" type="button">Export</button>
+      <button class="btn" id="exportBtn" type="button">Backup</button>
       <button class="btn" id="importBtn" type="button">Import</button>
+      <button class="btn primary" id="finishBtn" type="button">Finish Game</button>
       <button class="btn warn" id="resetBtn" type="button">New Game</button>
       <input class="file-input" id="importFile" type="file" accept="application/json,.json">
     </div>
@@ -691,6 +728,16 @@ try{
         <h2 class="section-title">Running Tally</h2>
         <div id="history"></div>
       </div>
+      <div class="panel section history-panel">
+        <div class="history-title-row">
+          <div>
+            <h2 class="section-title">Game History</h2>
+            <span class="history-count" id="gameHistoryCount">0 saved games</span>
+          </div>
+          <button class="btn warn history-clear" id="clearHistoryBtn" type="button">Clear History</button>
+        </div>
+        <div id="gameHistory"></div>
+      </div>
     </section>
   </main>
 
@@ -704,6 +751,9 @@ try{
 <script>
 const STORE_KEY = 'cardsScorecard.v1';
 const THEME_KEY = 'cardsScorecard.darkMode.v1';
+const HISTORY_KEY = 'cardsScorecard.history.v1';
+const BACKUP_VERSION = 1;
+const MAX_ARCHIVED_GAMES = 250;
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const DEFAULT_PLAYER_COUNT = 4;
@@ -712,6 +762,7 @@ const DEFAULT_SCORE_LIMIT = 500;
 const COLORS = ['#2f684d','#2f5f8c','#b8892f','#a33b32','#6a4c93','#2a8c82','#b4682f','#5c6670'];
 
 let state = loadState();
+let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
 
@@ -743,6 +794,24 @@ function loadState(){
     return normalizeState(raw ? JSON.parse(raw) : defaultState());
   }catch(error){
     return defaultState();
+  }
+}
+
+function loadGameArchive(){
+  try{
+    const raw = localStorage.getItem(HISTORY_KEY);
+    return normalizeGameArchive(raw ? JSON.parse(raw) : []);
+  }catch(error){
+    return [];
+  }
+}
+
+function saveGameArchive(){
+  try{
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(gameArchive));
+    return true;
+  }catch(error){
+    return false;
   }
 }
 
@@ -790,6 +859,28 @@ function normalizeState(source){
   }
   next.draft = normalizeDraft(source?.draft);
   return next;
+}
+
+function normalizeGameArchive(source){
+  if(!Array.isArray(source)) return [];
+  return source
+    .map((entry,index)=>normalizeArchivedGame(entry,index))
+    .filter(Boolean)
+    .slice(0,MAX_ARCHIVED_GAMES);
+}
+
+function normalizeArchivedGame(source,index){
+  if(!source || typeof source !== 'object') return null;
+  const gameSource = source.state || source.game || source.scorecard;
+  if(!gameSource || typeof gameSource !== 'object') return null;
+  const archivedState = normalizeState(gameSource);
+  if(!archivedState.rounds.length) return null;
+  archivedState.editingIndex = null;
+  archivedState.draft = emptyDraft();
+  const date = new Date(source.completedAt || source.date || Date.now());
+  const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
+  return {id, completedAt, state:archivedState};
 }
 
 function normalizeWinCondition(source){
@@ -895,6 +986,28 @@ function cumulativeTotals(throughIndex){
   return totals;
 }
 
+function totalsForGame(game){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  game.rounds.forEach(round=>{
+    const scores = roundScores(round);
+    for(let i=0; i<game.playerCount; i++) totals[i] += scores[i];
+  });
+  return totals;
+}
+
+function leadersForGame(game,totals){
+  const players = Array.from({length:game.playerCount},(_,i)=>i);
+  if(!players.length) return [];
+  const best = game.winnerMode === 'low'
+    ? Math.min(...players.map(i=>totals[i]))
+    : Math.max(...players.map(i=>totals[i]));
+  return players.filter(i=>totals[i] === best);
+}
+
+function gamePlayerName(game,index){
+  return game.players[index] || 'Player ' + (index + 1);
+}
+
 function leaders(){
   const players = visiblePlayers();
   const totals = cumulativeTotals();
@@ -950,6 +1063,8 @@ function render(){
   renderRoundForm();
   renderHistory();
   renderStatus();
+  renderGameArchive();
+  document.getElementById('finishBtn').disabled = !state.rounds.length;
   document.getElementById('roundCount').textContent = state.rounds.length + (state.rounds.length === 1 ? ' round' : ' rounds');
 }
 
@@ -1145,6 +1260,56 @@ function renderHistory(){
   target.innerHTML = html;
 }
 
+function renderGameArchive(){
+  const target = document.getElementById('gameHistory');
+  const count = gameArchive.length;
+  document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved game' : ' saved games');
+  document.getElementById('clearHistoryBtn').disabled = count === 0;
+  if(!count){
+    target.innerHTML = '<div class="empty">Finished games will appear here.</div>';
+    return;
+  }
+
+  let html = '<div class="game-history-list">';
+  gameArchive.forEach(entry=>{
+    const game = entry.state;
+    const totals = totalsForGame(game);
+    const leaderIndexes = leadersForGame(game,totals);
+    const leaderNames = leaderIndexes.map(i=>gamePlayerName(game,i)).join(', ');
+    const resultLabel = game.limitType === 'unlimited' ? 'Final leader' : 'Winner';
+    const resultScore = leaderIndexes.length ? format(totals[leaderIndexes[0]]) : '0';
+    const roundsLabel = game.rounds.length + (game.rounds.length === 1 ? ' round' : ' rounds');
+    const playersLabel = game.playerCount + (game.playerCount === 1 ? ' player' : ' players');
+    const entryId = escapeHtml(entry.id);
+    html += '<details class="archived-game">';
+    html += '<summary><span class="archive-heading"><span class="archive-title">' + escapeHtml(game.title) + '</span>';
+    html += '<span class="archive-meta">' + escapeHtml(formatArchivedDate(entry.completedAt)) + ' · ' + roundsLabel + ' · ' + playersLabel + '</span></span>';
+    html += '<span class="archive-result">' + resultLabel + ': ' + escapeHtml(leaderNames) + ' · ' + resultScore + '</span></summary>';
+    html += '<div class="archive-body"><div class="archive-totals">';
+    for(let i=0; i<game.playerCount; i++){
+      html += '<div class="archive-total"><span>' + escapeHtml(gamePlayerName(game,i)) + '</span><strong>' + format(totals[i]) + '</strong></div>';
+    }
+    html += '</div><div class="archive-actions">';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
+    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '</div></div></details>';
+  });
+  html += '</div>';
+  target.innerHTML = html;
+}
+
+function formatArchivedDate(value){
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return 'Unknown date';
+  return date.toLocaleString([], {
+    month:'short',
+    day:'numeric',
+    year:'numeric',
+    hour:'numeric',
+    minute:'2-digit'
+  });
+}
+
 function renderStatus(){
   const box = document.getElementById('statusBox');
   const reached = targetReached();
@@ -1266,28 +1431,124 @@ function cancelEdit(){
   scheduleSave();
 }
 
+function createArchivedGame(){
+  const archivedState = normalizeState(state);
+  archivedState.editingIndex = null;
+  archivedState.draft = emptyDraft();
+  return {
+    id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
+    completedAt:new Date().toISOString(),
+    state:archivedState
+  };
+}
+
+function finishGame(){
+  if(!state.rounds.length){
+    toast('Add at least one round first');
+    return;
+  }
+  if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [createArchivedGame(), ...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be saved');
+    return;
+  }
+  state = defaultState();
+  render();
+  saveNow();
+  toast('Game saved to history');
+}
+
+function restoreArchivedGame(id){
+  const entry = gameArchive.find(game=>game.id === id);
+  if(!entry) return;
+  if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  state = normalizeState(entry.state);
+  state.editingIndex = null;
+  state.draft = emptyDraft();
+  render();
+  saveNow();
+  toast('Archived game restored');
+}
+
+function deleteArchivedGame(id){
+  const index = gameArchive.findIndex(game=>game.id === id);
+  if(index === -1) return;
+  if(!confirm('Delete this game from history?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = gameArchive.filter(game=>game.id !== id);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  toast('Archived game deleted');
+}
+
+function clearGameArchive(){
+  if(!gameArchive.length) return;
+  if(!confirm('Delete all archived games? Export a backup first if you may need them later.')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [];
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  toast('Game history cleared');
+}
+
 function exportData(){
-  const blob = new Blob([JSON.stringify(state, null, 2)], {type:'application/json'});
+  const backup = {
+    kind:'cards-scorecard-backup',
+    version:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    current:state,
+    history:gameArchive,
+    preferences:{darkMode}
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   const stamp = new Date().toISOString().slice(0,10);
   link.href = url;
-  link.download = 'cards-scorecard-' + stamp + '.json';
+  link.download = 'cards-scorecard-backup-' + stamp + '.json';
+  document.body.appendChild(link);
   link.click();
-  URL.revokeObjectURL(url);
-  toast('Backup exported');
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
+  toast('Full backup exported');
 }
 
 function importData(file){
   const reader = new FileReader();
   reader.onload = ()=>{
     try{
-      state = normalizeState(JSON.parse(reader.result));
+      const imported = JSON.parse(reader.result);
+      const isFullBackup = imported && typeof imported === 'object' && imported.current && Array.isArray(imported.history);
+      if(isFullBackup){
+        if(!confirm('Import this full backup? The current scorecard and game history will be replaced.')) return;
+        state = normalizeState(imported.current);
+        gameArchive = normalizeGameArchive(imported.history);
+        if(imported.preferences && typeof imported.preferences.darkMode === 'boolean'){
+          darkMode = imported.preferences.darkMode;
+          saveDarkMode();
+        }
+        if(!saveGameArchive()) toast('Game history could not be saved in this browser');
+      }else{
+        if(!confirm('Import this scorecard? The current scorecard will be replaced.')) return;
+        state = normalizeState(imported);
+      }
       render();
       saveNow();
-      toast('Backup imported');
+      toast(isFullBackup ? 'Full backup imported' : 'Scorecard imported');
     }catch(error){
       setMessage('That backup could not be imported.');
+      toast('Backup import failed');
     }
   };
   reader.readAsText(file);
@@ -1362,13 +1623,14 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
 document.getElementById('exportBtn').addEventListener('click',exportData);
 document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
+document.getElementById('finishBtn').addEventListener('click',finishGame);
 document.getElementById('importFile').addEventListener('change',event=>{
   const file = event.target.files[0];
   if(file) importData(file);
   event.target.value = '';
 });
 document.getElementById('resetBtn').addEventListener('click',()=>{
-  if(!confirm('Start a new cards scorecard?')) return;
+  if(!confirm('Start a new scorecard without adding this game to history?')) return;
   state = defaultState();
   render();
   saveNow();
@@ -1383,6 +1645,16 @@ document.getElementById('history').addEventListener('click',event=>{
     deleteRound(Number(deleteButton.dataset.delete));
   }
 });
+document.getElementById('gameHistory').addEventListener('click',event=>{
+  const restoreButton = event.target.closest('button[data-restore-game]');
+  const deleteButton = event.target.closest('button[data-delete-game]');
+  if(restoreButton){
+    restoreArchivedGame(restoreButton.dataset.restoreGame);
+  }else if(deleteButton){
+    deleteArchivedGame(deleteButton.dataset.deleteGame);
+  }
+});
+document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
 
 render();
 saveNow();
