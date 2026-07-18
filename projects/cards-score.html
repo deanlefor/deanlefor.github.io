@@ -593,6 +593,7 @@ input[type=number]{text-align:right}
   .score-strip{position:static;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));margin-bottom:12px;padding:0;background:transparent;border-bottom:0}
 }
 </style>
+<link rel="stylesheet" href="tracker-shell.css">
 <script>
 try{
   if(window.localStorage && window.localStorage.getItem('cardsScorecard.darkMode.v1') === 'true'){
@@ -605,8 +606,9 @@ try{
 <div class="wrap" id="app">
   <header class="top">
     <div class="brand">
+      <a class="tracker-home" href="../index.html#projects">← Card Game Trackers</a>
       <h1>Cards Scorecard</h1>
-      <p id="saveState">Loading...</p>
+      <p>Flexible scoring for 2–8 players, with rotating dealer and game records. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>

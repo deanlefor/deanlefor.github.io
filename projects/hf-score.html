@@ -163,6 +163,7 @@ thead .row-label{z-index:4}
   input{border:0;padding:0}.round-points{border:0;background:transparent;padding:0}
 }
 </style>
+<link rel="stylesheet" href="tracker-shell.css">
 <script>
 try{
   if(window.localStorage && window.localStorage.getItem('handFootRemasteredScorecard.darkMode.v1') === 'true'){
@@ -175,8 +176,9 @@ try{
 <div class="wrap">
   <header class="top">
     <div class="brand">
+      <a class="tracker-home" href="../index.html#projects">← Card Game Trackers</a>
       <h1>Hand &amp; Foot Remastered</h1>
-      <p>Four-round scorecard with browser storage, computed bonuses, card totals, and cumulative standings.</p>
+      <p>Four-round scoring with computed bonuses, card totals, and cumulative standings. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Saved</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -271,7 +273,7 @@ try{
       <span id="rulesModeNote"></span>
       <span class="disclaimer">Unofficial scorecard for personal use. Hand &amp; Foot Remastered is owned by its respective rights holders. This tool is not affiliated with, endorsed by, or sponsored by Gray Dog Games.</span>
     </div>
-    <span id="saveState" role="status" aria-live="polite">Saved</span>
+    <span>Local browser storage</span>
   </div>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>

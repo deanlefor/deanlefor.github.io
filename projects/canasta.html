@@ -284,19 +284,29 @@ thead th{
   .history-wrap{overflow:visible}
 }
 </style>
+<link rel="stylesheet" href="tracker-shell.css">
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('canastaScorecard.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
 </head>
 <body>
 <div class="wrap" id="app">
   <header class="top">
     <div class="brand">
+      <a class="tracker-home" href="../index.html#projects">← Card Game Trackers</a>
       <h1>Canasta Scorecard</h1>
-      <p id="saveState">Loading...</p>
+      <p>Round-by-round scoring for 2–4 players or teams. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
       <button class="btn" id="printBtn" type="button">Print</button>
-      <button class="btn primary" id="finishGameBtn" type="button">Finish Game</button>
       <button class="btn" id="exportBtn" type="button">Backup</button>
       <button class="btn" id="importBtn" type="button">Import</button>
+      <button class="btn primary" id="finishGameBtn" type="button">Finish Game</button>
       <button class="btn warn" id="resetBtn" type="button">New Game</button>
       <input class="file-input" id="importFile" type="file" accept="application/json,.json">
     </div>
@@ -376,6 +386,7 @@ thead th{
 <script src="score-stats.js"></script>
 <script>
 const STORE_KEY = 'canastaScorecard.v1';
+const THEME_KEY = 'canastaScorecard.darkMode.v1';
 const HISTORY_KEY = 'canastaScorecard.history.v1';
 const BACKUP_VERSION = 1;
 const MAX_ARCHIVED_GAMES = 250;
@@ -384,6 +395,7 @@ const COLORS = ['#2d684d','#315e87','#b98a2f','#a33b32'];
 
 let state = loadState();
 let gameArchive = loadGameArchive();
+let darkMode = loadDarkMode();
 let saveTimer = 0;
 
 function emptyTeamRound(){
@@ -428,6 +440,30 @@ function readJson(key){
   }catch(error){
     return null;
   }
+}
+
+function loadDarkMode(){
+  try{
+    return localStorage.getItem(THEME_KEY) === 'true';
+  }catch(error){
+    return false;
+  }
+}
+
+function saveDarkMode(){
+  try{
+    localStorage.setItem(THEME_KEY,darkMode ? 'true' : 'false');
+  }catch(error){}
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode',darkMode);
+  const button = document.getElementById('themeBtn');
+  if(!button) return;
+  button.classList.toggle('active',darkMode);
+  button.setAttribute('aria-pressed',String(darkMode));
+  button.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  button.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
 function loadGameArchive(){
@@ -604,6 +640,7 @@ function winnerInfo(){
 }
 
 function render(){
+  applyTheme();
   document.getElementById('app').className = 'wrap team-count-' + state.teamCount;
   document.getElementById('gameTitle').value = state.title;
   document.getElementById('targetScore').value = state.targetScore;
@@ -1044,6 +1081,12 @@ document.getElementById('teamCount').addEventListener('click', event => {
 document.getElementById('roundForm').addEventListener('submit', submitDraft);
 document.getElementById('clearRound').addEventListener('click', clearDraft);
 document.getElementById('cancelEdit').addEventListener('click', cancelEdit);
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  applyTheme();
+  saveDarkMode();
+  toast(darkMode ? 'Dark mode on' : 'Dark mode off');
+});
 document.getElementById('printBtn').addEventListener('click', () => window.print());
 document.getElementById('finishGameBtn').addEventListener('click', archiveCurrentGame);
 
@@ -1061,7 +1104,8 @@ document.getElementById('exportBtn').addEventListener('click', () => {
     version:BACKUP_VERSION,
     exportedAt:new Date().toISOString(),
     current:state,
-    history:gameArchive
+    history:gameArchive,
+    preferences:{darkMode}
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
   const url = URL.createObjectURL(blob);
@@ -1091,6 +1135,10 @@ document.getElementById('importFile').addEventListener('change', event => {
         if(!confirm('Import this full backup? The current scorecard and saved matches will be replaced.')) return;
         state = normalizeState(current);
         gameArchive = history.map(normalizeArchivedGame).filter(Boolean).slice(0,MAX_ARCHIVED_GAMES);
+        if(data.preferences && typeof data.preferences.darkMode === 'boolean'){
+          darkMode = data.preferences.darkMode;
+          saveDarkMode();
+        }
         if(!saveGameArchive()) toast('Saved matches could not be stored in this browser');
       }else{
         if(!confirm('Import this scorecard? The current scorecard will be replaced.')) return;

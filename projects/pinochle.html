@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Pinochle Score Keeper</title>
+<title>Pinochle Scorecard</title>
 <link rel="stylesheet" href="score-stats.css">
 <style>
 *{box-sizing:border-box}
@@ -460,6 +460,7 @@ input[type=number]{text-align:right}
   .layout{grid-template-columns:1fr}
 }
 </style>
+<link rel="stylesheet" href="tracker-shell.css">
 <script>
 try{
   if(window.localStorage && window.localStorage.getItem('pinochleScorekeeper.darkMode.v1') === 'true'){
@@ -472,8 +473,9 @@ try{
 <div class="wrap" id="app">
   <header class="top">
     <div class="brand">
-      <h1>Pinochle Score Keeper</h1>
-      <p id="saveState">Loading...</p>
+      <a class="tracker-home" href="../index.html#projects">← Card Game Trackers</a>
+      <h1>Pinochle Scorecard</h1>
+      <p>Bid, meld, trick, and cumulative scoring for 2–3 players or teams. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
