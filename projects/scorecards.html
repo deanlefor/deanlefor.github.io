@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Card Game Tracker Library</title>
+<meta name="description" content="Choose from five browser-based card game scorecards for Pinochle, Canasta, Hand and Foot, Skyjo, and flexible house-rule games.">
+<link rel="stylesheet" href="tracker-shell.css">
+<style>
+body{min-height:100vh}
+.library-wrap{max-width:1120px}
+.library-top{align-items:center;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.library-intro{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:20px;
+  align-items:center;
+  margin-bottom:14px;
+  padding:18px;
+  overflow:hidden;
+  position:relative;
+}
+.intro-copy{max-width:680px}
+.eyebrow{margin:0 0 5px;color:var(--green);font-size:.68rem;font-weight:900;letter-spacing:.09em;text-transform:uppercase}
+.intro-copy h2{margin:0;font-size:clamp(1.25rem,2vw,1.65rem);font-weight:950;line-height:1.15}
+.intro-copy p{margin:7px 0 0;color:var(--muted);font-size:.86rem;line-height:1.55}
+.suit-group{display:grid;grid-template-columns:repeat(2,42px);gap:4px;color:var(--green);font-family:Georgia,serif;font-size:2.15rem;line-height:1;text-align:center;opacity:.88}
+.suit-group span:nth-child(2),.suit-group span:nth-child(3){color:var(--red)}
+.library-heading{display:flex;align-items:end;justify-content:space-between;gap:12px;margin:20px 0 9px}
+.library-heading h2{margin:0;font-size:1rem;font-weight:900}
+.library-heading span{color:var(--muted);font-size:.72rem;font-weight:750}
+.tracker-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.tracker-card{
+  --accent:var(--green);
+  display:grid;
+  grid-template-columns:48px minmax(0,1fr) auto;
+  gap:12px;
+  align-items:center;
+  min-height:144px;
+  padding:15px;
+  border:1px solid var(--line);
+  border-left:5px solid var(--accent);
+  border-radius:9px;
+  background:var(--panel);
+  box-shadow:var(--shadow);
+  color:var(--ink);
+  text-decoration:none;
+  transition:transform .16s ease,border-color .16s ease,box-shadow .16s ease;
+}
+.tracker-card:hover{transform:translateY(-2px);border-color:var(--accent);box-shadow:0 14px 30px rgba(38,32,22,.13)}
+html.dark-mode .tracker-card:hover{box-shadow:0 16px 34px rgba(0,0,0,.38)}
+.tracker-card:focus-visible{outline:3px solid var(--focus);outline-offset:3px}
+.tracker-card:nth-child(2){--accent:var(--blue)}
+.tracker-card:nth-child(3){--accent:var(--gold)}
+.tracker-card:nth-child(4){--accent:var(--purple)}
+.tracker-card:nth-child(5){--accent:var(--red);grid-column:1 / -1}
+.tracker-symbol{
+  display:grid;
+  place-items:center;
+  width:46px;
+  height:58px;
+  border:1px solid color-mix(in srgb,var(--accent) 46%,var(--line));
+  border-radius:7px;
+  background:color-mix(in srgb,var(--accent) 9%,var(--panel));
+  color:var(--accent);
+  font-family:Georgia,serif;
+  font-size:1.65rem;
+  font-weight:700;
+}
+.tracker-copy{min-width:0}
+.tracker-name{display:block;margin:0;font-size:1rem;font-weight:950;line-height:1.15}
+.tracker-description{display:block;margin:5px 0 8px;color:var(--muted);font-size:.77rem;line-height:1.42}
+.tracker-tags{display:flex;gap:5px;flex-wrap:wrap}
+.tracker-tag{padding:3px 6px;border:1px solid var(--line);border-radius:999px;background:var(--soft);color:var(--muted);font-size:.61rem;font-weight:850;letter-spacing:.025em}
+.history-tag{border-color:color-mix(in srgb,var(--accent) 42%,var(--line));background:color-mix(in srgb,var(--accent) 8%,var(--panel));color:var(--accent)}
+.tracker-arrow{color:var(--accent);font-size:1.3rem;font-weight:900;transition:transform .16s ease}
+.tracker-card:hover .tracker-arrow{transform:translateX(3px)}
+.privacy-note{display:flex;align-items:flex-start;gap:10px;margin-top:14px;padding:12px 13px}
+.privacy-mark{display:grid;place-items:center;flex:0 0 auto;width:25px;height:25px;border-radius:50%;background:var(--soft);color:var(--green);font-size:.72rem;font-weight:950}
+.privacy-note strong{display:block;font-size:.76rem}
+.privacy-note p{margin:2px 0 0;color:var(--muted);font-size:.7rem;line-height:1.45}
+.library-footer{display:flex;justify-content:space-between;gap:12px;margin:18px 0 4px;color:var(--muted);font-size:.68rem}
+.library-footer a{color:var(--green);font-weight:850;text-decoration:none}
+.library-footer a:hover{text-decoration:underline;text-underline-offset:3px}
+@media(max-width:760px){
+  .library-intro{grid-template-columns:1fr}
+  .suit-group{display:none}
+  .tracker-grid{grid-template-columns:1fr}
+  .tracker-card:nth-child(5){grid-column:auto}
+}
+@media(max-width:460px){
+  .tracker-card{grid-template-columns:40px minmax(0,1fr);min-height:0;padding:13px}
+  .tracker-symbol{width:38px;height:49px;font-size:1.4rem}
+  .tracker-arrow{display:none}
+  .library-heading{align-items:start;flex-direction:column;gap:2px}
+  .library-footer{flex-direction:column}
+}
+</style>
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('trackerLibrary.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
+</head>
+<body>
+<div class="wrap library-wrap">
+  <header class="top library-top">
+    <div class="brand">
+      <a class="tracker-home" href="../index.html#projects">← Dean Lefor</a>
+      <h1>Card Game Trackers</h1>
+      <p>Choose a scorecard. Each game keeps its own rules, saved matches, statistics, and backups.</p>
+    </div>
+    <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel library-intro" aria-labelledby="libraryIntroTitle">
+      <div class="intro-copy">
+        <p class="eyebrow">One collection · Five scorecards</p>
+        <h2 id="libraryIntroTitle">Pick the game you are playing</h2>
+        <p>The library is the shared starting point. The trackers remain separate underneath, so each one can keep the controls and calculations that fit its game.</p>
+      </div>
+      <div class="suit-group" aria-hidden="true"><span>♠</span><span>♥</span><span>♦</span><span>♣</span></div>
+    </section>
+
+    <div class="library-heading">
+      <h2>Tracker Library</h2>
+      <span>All scorecards save automatically in this browser</span>
+    </div>
+
+    <section class="tracker-grid" aria-label="Available card game trackers">
+      <a class="tracker-card" href="cards-score.html" data-history-key="cardsScorecard.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">♣</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Flexible Cards Scorecard</span>
+          <span class="tracker-description">A configurable scorekeeper for house rules, trick-taking, shedding, and other card games.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–8 players</span><span class="tracker-tag">High or low wins</span><span class="tracker-tag">Unlimited mode</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="tracker-card" href="pinochle.html" data-history-key="pinochleScorekeeper.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">♠</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Pinochle Scorecard</span>
+          <span class="tracker-description">Track the bid, bidder, trump, meld, tricks, and running score for every hand.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–3 players or teams</span><span class="tracker-tag">Bid &amp; meld</span><span class="tracker-tag">Rotating dealer</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="tracker-card" href="canasta.html" data-history-key="canastaScorecard.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">♦</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Canasta Scorecard</span>
+          <span class="tracker-description">Score red threes, natural, mixed, and wild canastas, card points, and going out bonuses.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–4 players or teams</span><span class="tracker-tag">Canasta bonuses</span><span class="tracker-tag">Meld requirements</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="tracker-card" href="hf-score.html" data-history-key="handFootRemasteredScorecard.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">♥</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Hand &amp; Foot Scorecard</span>
+          <span class="tracker-description">A four-round score sheet for books, red threes, going out bonuses, and card totals.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–8 players or teams</span><span class="tracker-tag">Four rounds</span><span class="tracker-tag">Computed bonuses</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
+
+      <a class="tracker-card" href="skyjo.html" data-history-key="skyjoScorecard.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">★</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Skyjo Scorecard</span>
+          <span class="tracker-description">Follow raw scores, the closer, double-score penalties, and the lowest cumulative total.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–8 players</span><span class="tracker-tag">Lowest score wins</span><span class="tracker-tag">Closer penalties</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
+    </section>
+
+    <aside class="panel privacy-note">
+      <span class="privacy-mark" aria-hidden="true">✓</span>
+      <div>
+        <strong>Your existing game data stays where it is.</strong>
+        <p>The library only helps you choose a tracker. It does not combine, move, or alter any saved games, statistics, calculations, or backup files.</p>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="library-footer">
+    <span>Five independent scorecards · One shared collection</span>
+    <a href="../index.html#projects">Back to deanlefor.com</a>
+  </footer>
+</div>
+
+<script>
+const THEME_KEY = 'trackerLibrary.darkMode.v1';
+let darkMode = false;
+try{ darkMode = localStorage.getItem(THEME_KEY) === 'true'; }catch(error){}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode',darkMode);
+  const button = document.getElementById('themeBtn');
+  button.classList.toggle('active',darkMode);
+  button.setAttribute('aria-pressed',String(darkMode));
+  button.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  button.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
+function renderHistoryCounts(){
+  document.querySelectorAll('[data-history-key]').forEach(card=>{
+    let count = 0;
+    try{
+      const saved = JSON.parse(localStorage.getItem(card.dataset.historyKey) || '[]');
+      count = Array.isArray(saved) ? saved.length : 0;
+    }catch(error){}
+    const label = card.querySelector('[data-history-count]');
+    label.textContent = count + (count === 1 ? ' saved match' : ' saved matches');
+  });
+}
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  try{ localStorage.setItem(THEME_KEY,darkMode ? 'true' : 'false'); }catch(error){}
+  applyTheme();
+});
+
+applyTheme();
+renderHistoryCounts();
+</script>
+</body>
+</html>

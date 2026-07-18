@@ -17,6 +17,11 @@
   </url>
 
   <url>
+    <loc>https://deanlefor.com/projects/scorecards.html</loc>
+    <priority>0.7</priority>
+  </url>
+
+  <url>
     <loc>https://deanlefor.com/projects/pinochle.html</loc>
     <priority>0.6</priority>
   </url>
