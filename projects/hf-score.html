@@ -788,8 +788,9 @@ function scoreTabSequence(){
       players.forEach(player=>pushScoreInput(order, round, player, key));
     });
     players.forEach(player=>{
-      PLAYER_SCORE_KEYS.forEach(key=>pushScoreInput(order, round, player, key));
+      COUNT_KEYS.forEach(key=>pushScoreInput(order, round, player, key));
     });
+    players.forEach(player=>pushScoreInput(order, round, player, 'cardTotal'));
   }
   return order;
 }
