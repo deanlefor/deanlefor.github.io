@@ -36,8 +36,9 @@ button{cursor:pointer}
 .toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
 .btn,.seg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;min-height:40px;box-shadow:0 1px 0 var(--button-inset) inset}
 .btn:hover,.seg button:hover{border-color:var(--button-hover)}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}
+.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--panel)}
 .btn.danger{color:var(--red)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
 .seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
 .seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
@@ -106,6 +107,27 @@ thead .row-label{z-index:4}
 .house-rule-list{margin:0;padding:14px 34px 14px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:var(--house-text);font-size:.9rem;line-height:1.35}
 .house-rule-list li{break-inside:avoid}
 .house-rule-list strong{font-weight:800}
+.history-panel{margin-top:14px;padding:12px}
+.history-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.history-title{margin:0;font-size:1rem;font-weight:900}
+.history-count{display:block;margin-top:2px;color:var(--muted);font-size:.72rem}
+.history-clear{min-height:30px;padding:5px 8px;font-size:.72rem}
+.history-empty{padding:24px 14px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:7px;background:var(--table-head)}
+.game-history-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow:auto;padding:2px}
+.archived-game{border:1px solid var(--line);border-radius:7px;background:var(--panel);overflow:hidden}
+.archived-game summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-height:44px;padding:7px 9px;cursor:pointer;list-style:none}
+.archived-game summary::-webkit-details-marker{display:none}
+.archived-game[open] summary{border-bottom:1px solid var(--line);background:var(--table-head)}
+.archive-heading{min-width:0}
+.archive-title{display:block;overflow:hidden;font-size:.84rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.archive-meta{display:block;margin-top:2px;color:var(--muted);font-size:.68rem}
+.archive-result{max-width:300px;overflow:hidden;color:var(--green);font-size:.76rem;font-weight:900;text-align:right;text-overflow:ellipsis;white-space:nowrap}
+.archive-body{padding:8px 9px}
+.archive-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:6px}
+.archive-total{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--row-label-bg);font-size:.72rem}
+.archive-total span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.archive-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
+.archive-actions .btn{min-height:30px;padding:5px 8px;font-size:.72rem}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
 .footer-notes{display:flex;flex-direction:column;gap:4px;line-height:1.35}
 .disclaimer{font-size:.74rem}
@@ -122,6 +144,8 @@ thead .row-label{z-index:4}
   .name-grid,.score-strip{grid-template-columns:repeat(2,1fr)}
   .rules{grid-template-columns:repeat(2,1fr)}
   .house-rule-list{grid-template-columns:1fr}
+  .archived-game summary{grid-template-columns:1fr;gap:3px}
+  .archive-result{max-width:none;text-align:left}
 }
 @media(hover:none) and (pointer:coarse){
   .score-strip{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 52px);z-index:10}
@@ -132,7 +156,7 @@ thead .row-label{z-index:4}
 }
 @media print{
   html.dark-mode{color-scheme:light;--ink:#191816;--panel:#ffffff;--line:#c9c3b8;--soft:#f0eee9;--soft2:#e5e0d7;--page:#ffffff;--input:#ffffff;--table-head:#f8f6f1;--row-label-bg:#f8f6f1;--row-label-alt:#eeeae2;--table-label:#423d36;--total-bg:#f0eee9;--round-head:#191816;--round-head-line:#2b2926;--round-pill-bg:#2f2d2a;--round-pill-line:#55514a;--rule-bg:#ffffff;--house-text:#423d36;--toast-bg:#191816;--toast-ink:#ffffff}
-  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.house-rules,.footer{display:none}
+  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.settings,.rules,.house-rules,.history-panel,.footer{display:none}
   .panel{box-shadow:none;border:0}.score-strip{grid-template-columns:repeat(auto-fit,minmax(100px,1fr))}
   .sheet{overflow:visible}table{min-width:0!important;font-size:10px}.row-label{position:static;width:120px;box-shadow:none}
   input{border:0;padding:0}.round-points{border:0;background:transparent;padding:0}
@@ -156,9 +180,10 @@ try{
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
       <button class="btn" id="printBtn" title="Print scorecard">Print</button>
-      <button class="btn" id="exportBtn" title="Download a JSON backup">Export</button>
+      <button class="btn" id="exportBtn" title="Download a full JSON backup">Backup</button>
       <button class="btn" id="importBtn" title="Restore a JSON backup">Import</button>
-      <button class="btn danger" id="resetBtn" title="Clear this scorecard">Reset</button>
+      <button class="btn primary" id="finishBtn" type="button" title="Save this game to history">Finish Game</button>
+      <button class="btn danger" id="resetBtn" title="Start a new scorecard">New Game</button>
       <input type="file" id="importFile" accept="application/json,.json" style="display:none">
     </div>
   </header>
@@ -193,7 +218,7 @@ try{
         <div class="name-grid" id="nameGrid"></div>
       </div>
     </div>
-    <p class="hint"><span id="modeHint"></span> Scores save automatically in this browser. Use Export before clearing browser data or moving to another device.</p>
+    <p class="hint"><span id="modeHint"></span> Scores save automatically in this browser. Use Backup before clearing browser data or moving to another device.</p>
   </section>
 
   <section class="score-strip" id="scoreStrip"></section>
@@ -225,6 +250,17 @@ try{
     <table id="scoreTable" aria-label="Hand and Foot round scores"></table>
   </main>
 
+  <section class="panel history-panel">
+    <div class="history-title-row">
+      <div>
+        <h2 class="history-title">Game History</h2>
+        <span class="history-count" id="gameHistoryCount">0 saved games</span>
+      </div>
+      <button class="btn danger history-clear" id="clearHistoryBtn" type="button">Clear History</button>
+    </div>
+    <div id="gameHistory"></div>
+  </section>
+
   <div class="footer">
     <div class="footer-notes">
       <span id="rulesModeNote"></span>
@@ -238,6 +274,9 @@ try{
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
+const HISTORY_KEY = 'handFootRemasteredScorecard.history.v1';
+const BACKUP_VERSION = 1;
+const MAX_ARCHIVED_GAMES = 250;
 const ROUND_COUNT = 4;
 const SCHEMA_VERSION = 3;
 const BLACK3_MIGRATION_SCHEMA_VERSION = 2;
@@ -265,6 +304,7 @@ const PLAYER_SCORE_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks','cardTot
 const COUNT_KEYS = ['red3','wildBooks','cleanBooks','dirtyBooks'];
 
 let state = loadState();
+let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
 
@@ -294,6 +334,19 @@ function loadState(){
   }catch(error){
     return defaultState();
   }
+}
+
+function loadGameArchive(){
+  try{
+    const saved = JSON.parse(storageGet(HISTORY_KEY));
+    return normalizeGameArchive(saved || []);
+  }catch(error){
+    return [];
+  }
+}
+
+function saveGameArchive(){
+  return storageSet(HISTORY_KEY,JSON.stringify(gameArchive));
 }
 
 function storageGet(key){
@@ -350,6 +403,26 @@ function normalizeState(saved){
   next.requirements = [...DEFAULT_REQUIREMENTS];
   next.scores = Array.from({length:ROUND_COUNT},(_,r)=>Array.from({length:MAX_PLAYERS},(_,p)=>normalizeRound(source.scores?.[r]?.[p],savedSchema)));
   return next;
+}
+
+function normalizeGameArchive(source){
+  if(!Array.isArray(source)) return [];
+  return source
+    .map((entry,index)=>normalizeArchivedGame(entry,index))
+    .filter(Boolean)
+    .slice(0,MAX_ARCHIVED_GAMES);
+}
+
+function normalizeArchivedGame(source,index){
+  if(!source || typeof source !== 'object') return null;
+  const gameSource = source.state || source.game || source.scorecard;
+  if(!gameSource || typeof gameSource !== 'object') return null;
+  const archivedState = normalizeState(gameSource);
+  if(!gameHasScores(archivedState)) return null;
+  const date = new Date(source.completedAt || source.date || Date.now());
+  const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  const id = String(source.id || `game-${completedAt}-${index}`).slice(0,120);
+  return {id,completedAt,state:archivedState};
 }
 
 function normalizeGameMode(value, savedSchema, scores){
@@ -443,6 +516,52 @@ function cumulative(roundIndex, playerIndex){
   return total;
 }
 
+function rowTotal(row){
+  return (row.perfectDeal ? 100 : 0) +
+    (row.goingOut ? 100 : 0) +
+    n(row.red3) * 100 +
+    n(row.wildBooks) * 1500 +
+    n(row.cleanBooks) * 700 +
+    n(row.dirtyBooks) * 300 +
+    n(row.cardTotal);
+}
+
+function totalsForGame(game){
+  return Array.from({length:game.playerCount},(_,player)=>{
+    let total = 0;
+    for(let round=0;round<ROUND_COUNT;round++) total += rowTotal(game.scores[round][player]);
+    return total;
+  });
+}
+
+function rowHasScore(row){
+  return row.perfectDeal || row.goingOut ||
+    scoringKeys().some(key=>!ROUND_EVENT_KEYS.includes(key) && n(row[key]) !== 0);
+}
+
+function gameHasScores(game = state){
+  for(let round=0;round<ROUND_COUNT;round++){
+    for(let player=0;player<game.playerCount;player++){
+      if(rowHasScore(game.scores[round][player])) return true;
+    }
+  }
+  return false;
+}
+
+function playedRoundCount(game){
+  let count = 0;
+  for(let round=0;round<ROUND_COUNT;round++){
+    const used = Array.from({length:game.playerCount},(_,player)=>game.scores[round][player])
+      .some(rowHasScore);
+    if(used) count += 1;
+  }
+  return count;
+}
+
+function gameColumnName(game,index){
+  return game.players[index] || `${game.gameMode === 'teams' ? 'Team' : 'Player'} ${index+1}`;
+}
+
 function visiblePlayers(){
   return Array.from({length:state.playerCount},(_,i)=>i);
 }
@@ -463,6 +582,8 @@ function render(){
   renderNames();
   renderScoreStrip();
   renderTable();
+  renderGameArchive();
+  document.getElementById('finishBtn').disabled = !gameHasScores();
 }
 
 function renderGameMode(){
@@ -564,6 +685,51 @@ function renderTable(){
   wireTable();
 }
 
+function renderGameArchive(){
+  const target = document.getElementById('gameHistory');
+  const count = gameArchive.length;
+  document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved game' : ' saved games');
+  document.getElementById('clearHistoryBtn').disabled = count === 0;
+  if(!count){
+    target.innerHTML = '<div class="history-empty">Finished games will appear here.</div>';
+    return;
+  }
+
+  let html = '<div class="game-history-list">';
+  gameArchive.forEach(entry=>{
+    const game = entry.state;
+    const totals = totalsForGame(game);
+    const best = Math.max(...totals);
+    const leaders = totals.map((total,index)=>({total,index})).filter(item=>item.total === best);
+    const leaderNames = leaders.map(item=>gameColumnName(game,item.index)).join(', ');
+    const rounds = playedRoundCount(game);
+    const resultLabel = rounds === ROUND_COUNT ? (leaders.length === 1 ? 'Winner' : 'Winners') : (leaders.length === 1 ? 'Final leader' : 'Final leaders');
+    const roundLabel = rounds + (rounds === 1 ? ' played round' : ' played rounds');
+    const modeLabel = game.gameMode === 'teams' ? 'Teams' : 'Singles';
+    const entryId = escapeHtml(entry.id);
+    html += '<details class="archived-game">';
+    html += '<summary><span class="archive-heading"><span class="archive-title">' + escapeHtml(game.title) + '</span>';
+    html += '<span class="archive-meta">' + escapeHtml(formatArchivedDate(entry.completedAt)) + ' · ' + roundLabel + ' · ' + modeLabel + '</span></span>';
+    html += '<span class="archive-result">' + resultLabel + ': ' + escapeHtml(leaderNames) + ' · ' + fmt(best) + '</span></summary>';
+    html += '<div class="archive-body"><div class="archive-totals">';
+    totals.forEach((total,index)=>{
+      html += '<div class="archive-total"><span>' + escapeHtml(gameColumnName(game,index)) + '</span><strong>' + fmt(total) + '</strong></div>';
+    });
+    html += '</div><div class="archive-actions">';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
+    html += '<button class="btn danger" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '</div></div></details>';
+  });
+  html += '</div>';
+  target.innerHTML = html;
+}
+
+function formatArchivedDate(value){
+  const date = new Date(value);
+  if(Number.isNaN(date.getTime())) return 'Unknown date';
+  return date.toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
+}
+
 function cellHtml(round, player, key){
   const row = playerRound(round,player);
   const meta = SECTION_META[key];
@@ -652,6 +818,7 @@ function handleScoreInput(event){
   }
   renderScoreStrip();
   refreshCalculations(round, player, key);
+  document.getElementById('finishBtn').disabled = !gameHasScores();
   scheduleSave();
 }
 
@@ -690,6 +857,124 @@ function toast(message){
   setTimeout(()=>node.classList.remove('show'),1700);
 }
 
+function createArchivedGame(){
+  return {
+    id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
+    completedAt:new Date().toISOString(),
+    state:normalizeState(state)
+  };
+}
+
+function finishGame(){
+  if(!gameHasScores()){
+    toast('Enter at least one score first');
+    return;
+  }
+  if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [createArchivedGame(),...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be saved');
+    return;
+  }
+  state = defaultState();
+  save();
+  render();
+  toast('Game saved to history');
+}
+
+function restoreArchivedGame(id){
+  const entry = gameArchive.find(game=>game.id === id);
+  if(!entry) return;
+  if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  state = normalizeState(entry.state);
+  save();
+  render();
+  toast('Archived game restored');
+}
+
+function deleteArchivedGame(id){
+  const index = gameArchive.findIndex(game=>game.id === id);
+  if(index === -1) return;
+  if(!confirm('Delete this game from history?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = gameArchive.filter(game=>game.id !== id);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  toast('Archived game deleted');
+}
+
+function clearGameArchive(){
+  if(!gameArchive.length) return;
+  if(!confirm('Delete all archived games? Export a backup first if you may need them later.')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [];
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  toast('Game history cleared');
+}
+
+function exportData(){
+  const backup = {
+    kind:'hand-foot-remastered-scorecard-backup',
+    version:BACKUP_VERSION,
+    exportedAt:new Date().toISOString(),
+    current:state,
+    history:gameArchive,
+    preferences:{darkMode}
+  };
+  const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  link.href = url;
+  link.download = `hand-foot-scorecard-backup-${stamp}.json`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(()=>URL.revokeObjectURL(url),0);
+  toast('Full backup exported');
+}
+
+function importData(file){
+  const reader = new FileReader();
+  reader.onload = ()=>{
+    try{
+      const imported = JSON.parse(reader.result);
+      const isFullBackup = imported && typeof imported === 'object' && imported.current && Array.isArray(imported.history);
+      if(isFullBackup){
+        if(!confirm('Import this full backup? The current scorecard and game history will be replaced.')) return;
+        state = normalizeState(imported.current);
+        gameArchive = normalizeGameArchive(imported.history);
+        if(imported.preferences && typeof imported.preferences.darkMode === 'boolean'){
+          darkMode = imported.preferences.darkMode;
+          saveDarkMode();
+        }
+        if(!saveGameArchive()) toast('Game history could not be saved in this browser');
+      }else{
+        if(!confirm('Import this scorecard? The current scorecard will be replaced.')) return;
+        state = normalizeState(imported);
+      }
+      save();
+      render();
+      toast(isFullBackup ? 'Full backup imported' : 'Scorecard imported');
+    }catch(error){
+      alert('That backup could not be imported.');
+      toast('Backup import failed');
+    }
+  };
+  reader.readAsText(file);
+}
+
 document.getElementById('gameTitle').addEventListener('input',event=>{
   state.title = event.target.value;
   scheduleSave();
@@ -723,44 +1008,36 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
 
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
 
+document.getElementById('finishBtn').addEventListener('click',finishGame);
+
 document.getElementById('resetBtn').addEventListener('click',()=>{
-  if(!confirm('Clear this Hand & Foot scorecard?')) return;
+  if(!confirm('Start a new Hand & Foot scorecard without adding this game to history?')) return;
   state = defaultState();
   save();
   render();
   toast('Scorecard reset');
 });
 
-document.getElementById('exportBtn').addEventListener('click',()=>{
-  const blob = new Blob([JSON.stringify(state,null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
-  link.href = url;
-  link.download = `hand-foot-scorecard-${stamp}.json`;
-  link.click();
-  URL.revokeObjectURL(url);
-  toast('Backup exported');
-});
+document.getElementById('exportBtn').addEventListener('click',exportData);
 
 document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
 document.getElementById('importFile').addEventListener('change',event=>{
   const file = event.target.files[0];
   if(!file) return;
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      state = normalizeState(JSON.parse(reader.result));
-      save();
-      render();
-      toast('Backup imported');
-    }catch(error){
-      alert('That backup could not be imported.');
-    }
-  };
-  reader.readAsText(file);
+  importData(file);
   event.target.value = '';
 });
+
+document.getElementById('gameHistory').addEventListener('click',event=>{
+  const restoreButton = event.target.closest('button[data-restore-game]');
+  const deleteButton = event.target.closest('button[data-delete-game]');
+  if(restoreButton){
+    restoreArchivedGame(restoreButton.dataset.restoreGame);
+  }else if(deleteButton){
+    deleteArchivedGame(deleteButton.dataset.deleteGame);
+  }
+});
+document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
 
 window.addEventListener('pagehide',save);
 document.addEventListener('visibilitychange',()=>{
