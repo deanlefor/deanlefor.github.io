@@ -389,41 +389,42 @@ input[type=number]{text-align:right}
 .score-sheet{overflow:hidden;border:1px solid var(--line);border-radius:8px;background:var(--sheet-bg)}
 .score-sheet-head{
   display:grid;
-  grid-template-columns:136px minmax(0,1fr) 122px;
+  grid-template-columns:150px minmax(0,1fr) 104px;
   background:var(--sheet-head-bg);
   border-bottom:1px solid var(--line);
 }
 .score-sheet-players{
   display:grid;
-  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+  grid-template-columns:repeat(var(--players),minmax(0,1fr));
 }
 .score-round{
   display:grid;
-  grid-template-columns:136px minmax(0,1fr) 122px;
+  grid-template-columns:150px minmax(0,1fr) 104px;
   border-bottom:1px solid var(--line);
   background:var(--sheet-bg);
 }
 .score-round:last-child{border-bottom:0}
 .round-info{
-  padding:8px;
+  display:flex;
+  align-items:center;
+  gap:7px;
+  min-width:0;
+  padding:5px 8px;
   border-right:1px solid var(--line);
   background:var(--round-info-bg);
 }
-.round-no{font-size:1rem;font-weight:900;line-height:1}
-.round-meta{margin-top:5px;color:var(--muted);font-size:.72rem;line-height:1.25}
-.round-meta strong{display:block;color:var(--ink);font-size:.8rem;margin-bottom:2px}
+.round-no{font-size:.86rem;font-weight:900;line-height:1;white-space:nowrap}
+.round-meta{min-width:0;overflow:hidden;color:var(--muted);font-size:.68rem;text-overflow:ellipsis;white-space:nowrap}
+.round-meta strong{color:var(--ink);font-size:.7rem}
 .score-lines{
   display:grid;
-  grid-template-columns:70px repeat(var(--players),minmax(0,1fr));
+  grid-template-columns:repeat(var(--players),minmax(0,1fr));
 }
-.sheet-head,.sheet-label,.sheet-cell{
+.sheet-head,.sheet-cell{
   min-height:28px;
-  padding:5px 7px;
+  padding:4px 6px;
   border-right:1px solid var(--line);
-  border-bottom:1px solid var(--line);
 }
-.score-sheet-players > *{border-bottom:0}
-.sheet-label.last-row,.sheet-cell.last-row{border-bottom:0}
 .sheet-head{
   color:var(--sheet-head-ink);
   background:var(--round-info-bg);
@@ -436,24 +437,16 @@ input[type=number]{text-align:right}
   text-transform:uppercase;
   white-space:nowrap;
 }
-.sheet-label{
-  color:var(--muted);
-  background:var(--round-info-bg);
-  font-size:.72rem;
-  font-weight:900;
-  letter-spacing:.06em;
-  text-transform:uppercase;
-}
-.sheet-cell{text-align:center;font-weight:800}
+.sheet-cell{display:grid;place-items:center;text-align:center;font-weight:800}
 .sheet-actions{
   display:flex;
   align-items:center;
   justify-content:center;
-  gap:6px;
-  padding:6px;
-  flex-wrap:wrap;
+  gap:4px;
+  padding:4px;
+  flex-wrap:nowrap;
 }
-.sheet-actions .btn{min-height:30px;padding:5px 9px}
+.sheet-actions .btn{min-height:28px;padding:3px 6px;font-size:.72rem}
 .empty{
   padding:34px 16px;
   text-align:center;
@@ -506,10 +499,12 @@ input[type=number]{text-align:right}
 @media(max-width:640px){
   .wrap{padding:12px}
   .name-grid{grid-template-columns:1fr}
-  .score-sheet-head,.score-round{grid-template-columns:1fr}
+  .score-sheet-head{grid-template-columns:1fr}
+  .score-round{grid-template-columns:minmax(0,1fr) auto}
   .score-sheet-head > div:first-child,.score-sheet-head > div:last-child{display:none}
-  .round-info{border-right:0;border-bottom:1px solid var(--line)}
-  .sheet-actions{justify-content:flex-end;border-top:1px solid var(--line)}
+  .round-info{grid-column:1;grid-row:1;border-right:0;border-bottom:1px solid var(--line)}
+  .score-lines{grid-column:1 / -1;grid-row:2}
+  .sheet-actions{grid-column:2;grid-row:1;justify-content:flex-end;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
   .round-head{align-items:flex-start;flex-direction:column}
   .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
@@ -1123,7 +1118,7 @@ function renderHistory(){
 
   const players = visiblePlayers();
   let html = '<div class="score-sheet">';
-  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '"><div></div>';
+  html += '<div class="score-sheet-head"><div></div><div class="score-sheet-players" style="--players:' + players.length + '">';
   players.forEach(i=>{
     html += '<div class="sheet-head">' + escapeHtml(playerName(i)) + '</div>';
   });
@@ -1132,14 +1127,12 @@ function renderHistory(){
   state.rounds.forEach((round, roundIndex)=>{
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta"><strong>Dealer: ' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong>';
-    html += 'Round points</div></div>';
+    html += '<div class="round-meta">D: <strong>' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong></div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
-    html += '<div class="sheet-label last-row">Points</div>';
     players.forEach(i=>{
       const value = roundScores(round)[i];
-      html += '<div class="sheet-cell last-row ' + scoreClass(value) + '">' + signed(value) + '</div>';
+      html += '<div class="sheet-cell ' + scoreClass(value) + '">' + signed(value) + '</div>';
     });
     html += '</div>';
     html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>';
