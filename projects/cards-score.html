@@ -193,6 +193,10 @@ input[type=number]{text-align:right}
 .theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
 .btn:disabled{opacity:.45;cursor:not-allowed}
 .divider{height:1px;background:var(--line);margin:14px 0}
+.players-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
+.players-title-row .section-title{margin:0}
+.dealer-field{flex:0 1 170px}
+.dealer-field select{min-height:34px;padding:6px 8px}
 .name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .player-name input{border-left-width:5px;border-left-style:solid}
 .hint{margin:10px 0 0;color:var(--muted);font-size:.78rem;line-height:1.35}
@@ -265,11 +269,28 @@ input[type=number]{text-align:right}
   border-bottom:1px solid var(--line);
 }
 .score-card{
+  position:relative;
   padding:12px;
   border-left:5px solid var(--green);
   min-width:0;
 }
 .score-card.leader{background:var(--leader-bg);border-color:var(--leader-line);border-left-width:5px}
+.score-card.dealer{box-shadow:0 0 0 2px var(--gold),var(--shadow)}
+.score-card.dealer .score-name{padding-right:54px}
+.dealer-badge{
+  position:absolute;
+  top:8px;
+  right:8px;
+  padding:3px 6px;
+  border-radius:999px;
+  background:var(--gold);
+  color:var(--on-accent);
+  font-size:.62rem;
+  font-weight:900;
+  letter-spacing:.06em;
+  line-height:1;
+  text-transform:uppercase;
+}
 .score-name{color:var(--muted);font-weight:800;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .score-total{font-size:2rem;font-weight:900;line-height:1.05;margin-top:4px}
 .score-sub{color:var(--muted);font-size:.78rem;margin-top:3px}
@@ -285,32 +306,69 @@ input[type=number]{text-align:right}
 .save-state{font-size:.8rem;color:var(--muted);white-space:nowrap}
 .score-inputs{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
-  gap:10px;
+  grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
+  gap:8px;
+}
+.score-field label{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.score-field.dealer label{position:relative;padding-right:19px;color:var(--gold)}
+.score-field.dealer label::after{
+  content:"D";
+  position:absolute;
+  right:0;
+  top:50%;
+  width:15px;
+  height:15px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--gold);
+  color:var(--on-accent);
+  font-size:.58rem;
+  transform:translateY(-50%);
 }
 .score-field input{
-  min-height:46px;
-  font-size:1.18rem;
+  min-height:42px;
+  font-size:1.08rem;
   font-weight:900;
   text-align:center;
   border-left-width:5px;
   border-left-style:solid;
 }
+.score-field.dealer input{outline:2px solid var(--gold);outline-offset:-2px}
 .round-preview{
   display:grid;
-  grid-template-columns:repeat(2,minmax(0,1fr));
+  grid-template-columns:repeat(auto-fit,minmax(96px,1fr));
   gap:8px;
 }
 .preview-card{
+  position:relative;
   border:1px solid var(--line);
   border-radius:7px;
   background:var(--sheet-bg);
-  padding:10px;
+  padding:7px 6px;
   text-align:center;
   min-width:0;
 }
-.preview-card .name{font-size:.82rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.preview-card .total{font-size:1.45rem;font-weight:900;margin-top:3px}
+.preview-card.dealer{outline:2px solid var(--gold);outline-offset:-2px}
+.preview-card.dealer .name{padding:0 16px}
+.preview-card.dealer::after{
+  content:"D";
+  position:absolute;
+  top:5px;
+  right:5px;
+  width:15px;
+  height:15px;
+  display:grid;
+  place-items:center;
+  border-radius:50%;
+  background:var(--gold);
+  color:var(--on-accent);
+  font-size:.58rem;
+  font-weight:900;
+}
+.preview-card .name{font-size:.76rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.preview-card .total{font-size:1.3rem;font-weight:900;margin-top:1px}
+.preview-card .score-sub{font-size:.7rem;margin-top:1px}
 .positive{color:var(--green)}
 .negative{color:var(--red)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
@@ -446,13 +504,18 @@ input[type=number]{text-align:right}
 }
 @media(max-width:640px){
   .wrap{padding:12px}
-  .name-grid,.score-inputs,.round-preview{grid-template-columns:1fr}
+  .name-grid{grid-template-columns:1fr}
   .score-sheet-head,.score-round{grid-template-columns:1fr}
   .score-sheet-head > div:first-child,.score-sheet-head > div:last-child{display:none}
   .round-info{border-right:0;border-bottom:1px solid var(--line)}
   .sheet-actions{justify-content:flex-end;border-top:1px solid var(--line)}
   .round-head{align-items:flex-start;flex-direction:column}
   .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:420px){
+  .players-title-row{align-items:stretch;flex-direction:column;gap:8px}
+  .dealer-field{flex-basis:auto}
+  .score-inputs,.round-preview{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(hover:none) and (pointer:coarse){
   .score-strip{top:calc(env(safe-area-inset-top, 0px) + 52px);z-index:10}
@@ -559,7 +622,13 @@ try{
           </div>
         </div>
         <div class="divider"></div>
-        <h2 class="section-title">Players</h2>
+        <div class="players-title-row">
+          <h2 class="section-title">Players</h2>
+          <div class="field dealer-field">
+            <label for="startingDealer">Starting Dealer</label>
+            <select id="startingDealer"></select>
+          </div>
+        </div>
         <div class="name-grid" id="nameGrid"></div>
         <p class="hint">Enter each round's points and the scorecard will keep the running total. Scores save automatically in this browser.</p>
       </div>
@@ -655,9 +724,10 @@ function emptyDraft(){
 
 function defaultState(){
   return {
-    version:2,
+    version:3,
     title:'Game Night',
     playerCount:DEFAULT_PLAYER_COUNT,
+    startingDealer:0,
     limitType:'rounds',
     limitValue:DEFAULT_ROUND_LIMIT,
     winnerMode:'high',
@@ -703,9 +773,10 @@ function applyTheme(){
 
 function normalizeState(source){
   const base = defaultState();
-  const next = source && typeof source === 'object' ? {...base, ...source, version:2} : base;
+  const next = source && typeof source === 'object' ? {...base, ...source, version:3} : base;
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
+  next.startingDealer = clampNumber(source?.startingDealer, 0, next.playerCount - 1, 0);
   const condition = normalizeWinCondition(source);
   next.limitType = condition.startsWith('score') ? 'score' : 'rounds';
   next.limitValue = normalizeLimitValue(source, next.limitType);
@@ -788,6 +859,15 @@ function playerName(index){
   return state.players[index] || 'Player ' + (index + 1);
 }
 
+function dealerForRound(roundIndex){
+  return (state.startingDealer + roundIndex) % state.playerCount;
+}
+
+function currentDealer(){
+  const roundIndex = state.editingIndex === null ? state.rounds.length : state.editingIndex;
+  return dealerForRound(roundIndex);
+}
+
 function format(value){
   const number = numberOr(value, 0);
   if(Object.is(number, -0)) return '0';
@@ -862,6 +942,7 @@ function render(){
   renderPlayerCount();
   renderWinCondition();
   renderNames();
+  renderDealerSelect();
   renderScoreStrip();
   renderRoundForm();
   renderHistory();
@@ -921,9 +1002,9 @@ function renderNames(){
     input.style.borderLeftColor = COLORS[i];
     input.addEventListener('input',()=>{
       state.players[i] = input.value;
+      renderDealerSelect();
       renderScoreStrip();
-      renderScoreInputs();
-      renderPreview();
+      renderRoundForm();
       renderHistory();
       renderStatus();
       scheduleSave();
@@ -933,20 +1014,35 @@ function renderNames(){
   });
 }
 
+function renderDealerSelect(){
+  const select = document.getElementById('startingDealer');
+  select.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const option = document.createElement('option');
+    option.value = String(i);
+    option.textContent = playerName(i);
+    option.selected = i === state.startingDealer;
+    select.appendChild(option);
+  });
+}
+
 function renderScoreStrip(){
   const strip = document.getElementById('scoreStrip');
   strip.innerHTML = '';
   const totals = cumulativeTotals();
   const leaderSet = new Set(leaders());
+  const dealer = currentDealer();
   visiblePlayers().forEach(i=>{
     const card = document.createElement('div');
     card.className = 'score-card panel';
     card.classList.toggle('leader', leaderSet.has(i) && state.rounds.length > 0);
+    card.classList.toggle('dealer', i === dealer);
     card.style.borderLeftColor = COLORS[i];
     const last = state.rounds.length ? roundScores(state.rounds[state.rounds.length - 1])[i] : 0;
     const label = targetReached().length ? 'Winner' : 'Leader';
     const status = leaderSet.has(i) && state.rounds.length > 0 ? label : (state.rounds.length ? 'Last round ' + signed(last) : 'Ready');
-    card.innerHTML = '<div class="score-name">' + escapeHtml(playerName(i)) + '</div>' +
+    card.innerHTML = (i === dealer ? '<span class="dealer-badge">Dealer</span>' : '') +
+      '<div class="score-name">' + escapeHtml(playerName(i)) + '</div>' +
       '<div class="score-total">' + format(totals[i]) + '</div>' +
       '<div class="score-sub">' + escapeHtml(status) + '</div>';
     strip.appendChild(card);
@@ -955,7 +1051,7 @@ function renderScoreStrip(){
 
 function renderRoundForm(){
   document.getElementById('roundTitle').textContent = state.editingIndex === null ? 'Round ' + (state.rounds.length + 1) : 'Round ' + (state.editingIndex + 1);
-  document.getElementById('editState').textContent = state.editingIndex === null ? '' : 'Editing';
+  document.getElementById('editState').textContent = (state.editingIndex === null ? '' : 'Editing · ') + 'Dealer: ' + playerName(currentDealer());
   document.getElementById('submitRound').textContent = state.editingIndex === null ? 'Add Round' : 'Save Round';
   document.getElementById('cancelEdit').style.display = state.editingIndex === null ? 'none' : '';
   renderScoreInputs();
@@ -966,9 +1062,11 @@ function renderRoundForm(){
 function renderScoreInputs(){
   const grid = document.getElementById('scoreInputs');
   grid.innerHTML = '';
+  const dealer = currentDealer();
   visiblePlayers().forEach(i=>{
     const field = document.createElement('div');
     field.className = 'field score-field';
+    field.classList.toggle('dealer', i === dealer);
     field.innerHTML = '<label for="score' + i + '">' + escapeHtml(playerName(i)) + '</label>';
     const input = document.createElement('input');
     input.id = 'score' + i;
@@ -992,10 +1090,12 @@ function renderScoreInputs(){
 function renderPreview(){
   const grid = document.getElementById('previewGrid');
   grid.innerHTML = '';
+  const dealer = currentDealer();
   visiblePlayers().forEach(i=>{
     const value = numberOr(state.draft.scores[i], 0);
     const card = document.createElement('div');
     card.className = 'preview-card';
+    card.classList.toggle('dealer', i === dealer);
     card.innerHTML = '<div class="name">' + escapeHtml(playerName(i)) + '</div>' +
       '<div class="total ' + scoreClass(value) + '">' + signed(value) + '</div>' +
       '<div class="score-sub">This round</div>';
@@ -1022,7 +1122,7 @@ function renderHistory(){
     const runningTotals = cumulativeTotals(roundIndex);
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
-    html += '<div class="round-meta"><strong>Score entry</strong>';
+    html += '<div class="round-meta"><strong>Dealer: ' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong>';
     html += 'Running total</div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
@@ -1233,6 +1333,13 @@ document.getElementById('playerCount').addEventListener('click',event=>{
   const button = event.target.closest('button[data-count]');
   if(!button) return;
   state.playerCount = Number(button.dataset.count);
+  if(state.startingDealer >= state.playerCount) state.startingDealer = 0;
+  render();
+  scheduleSave();
+});
+
+document.getElementById('startingDealer').addEventListener('change',event=>{
+  state.startingDealer = clampNumber(event.target.value, 0, state.playerCount - 1, 0);
   render();
   scheduleSave();
 });
