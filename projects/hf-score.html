@@ -95,9 +95,15 @@ thead .row-label{z-index:4}
 .rule{background:var(--rule-bg);padding:10px;text-align:center}
 .rule strong{display:block;font-size:1rem}
 .rule span{display:block;color:var(--muted);font-size:.72rem;text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
-.house-rules{margin:14px 0;padding:14px}
-.house-rules h2{margin:0 0 10px;font-size:1rem}
-.house-rule-list{margin:0;padding-left:20px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:var(--house-text);font-size:.9rem;line-height:1.35}
+.house-rules{margin:14px 0;padding:0;overflow:hidden}
+.house-rules summary{display:flex;align-items:center;justify-content:space-between;gap:12px;min-height:46px;padding:12px 14px;cursor:pointer;font-weight:900;list-style:none}
+.house-rules summary::-webkit-details-marker{display:none}
+.house-rules-title{font-size:1rem}
+.house-rules-sub{color:var(--muted);font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
+.house-rules summary::after{content:"+";width:24px;height:24px;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;color:var(--muted);flex:0 0 auto}
+.house-rules[open] summary{border-bottom:1px solid var(--line)}
+.house-rules[open] summary::after{content:"-"}
+.house-rule-list{margin:0;padding:14px 34px 14px;display:grid;grid-template-columns:repeat(2,minmax(220px,1fr));gap:8px 22px;color:var(--house-text);font-size:.9rem;line-height:1.35}
 .house-rule-list li{break-inside:avoid}
 .house-rule-list strong{font-weight:800}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
@@ -200,8 +206,11 @@ try{
     <div class="rule"><strong>100</strong><span>Perfect Deal</span></div>
   </section>
 
-  <section class="house-rules panel" aria-labelledby="houseRulesHeading">
-    <h2 id="houseRulesHeading">House Rules</h2>
+  <details class="house-rules panel" aria-labelledby="houseRulesHeading">
+    <summary>
+      <span class="house-rules-title" id="houseRulesHeading">House Rules</span>
+      <span class="house-rules-sub">Game variations</span>
+    </summary>
     <ul class="house-rule-list">
       <li>If you get stuck with negative cards in your hand, they remain negative.</li>
       <li>You can have more than one book of the same number.</li>
@@ -210,7 +219,7 @@ try{
       <li><strong>Foot Pain:</strong> all players, including the person who played the card, skip the next round if they are in their foot.</li>
       <li>If you have 5 cards of one number in your meld and a sixth in your hand, you can pick up a seventh from the discard pile. If you have 6 cards melded, you cannot pick up the seventh.</li>
     </ul>
-  </section>
+  </details>
 
   <main class="sheet panel">
     <table id="scoreTable" aria-label="Hand and Foot round scores"></table>
