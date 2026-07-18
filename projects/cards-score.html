@@ -445,7 +445,6 @@ input[type=number]{text-align:right}
   text-transform:uppercase;
 }
 .sheet-cell{text-align:center;font-weight:800}
-.sheet-cell.total{font-size:1rem;font-weight:900}
 .sheet-actions{
   display:flex;
   align-items:center;
@@ -1131,21 +1130,16 @@ function renderHistory(){
   html += '</div><div></div></div>';
 
   state.rounds.forEach((round, roundIndex)=>{
-    const runningTotals = cumulativeTotals(roundIndex);
     html += '<div class="score-round">';
     html += '<div class="round-info"><div class="round-no">Round ' + (roundIndex + 1) + '</div>';
     html += '<div class="round-meta"><strong>Dealer: ' + escapeHtml(playerName(dealerForRound(roundIndex))) + '</strong>';
-    html += 'Running total</div></div>';
+    html += 'Round points</div></div>';
 
     html += '<div class="score-lines" style="--players:' + players.length + '">';
-    html += '<div class="sheet-label">Round</div>';
+    html += '<div class="sheet-label last-row">Points</div>';
     players.forEach(i=>{
       const value = roundScores(round)[i];
-      html += '<div class="sheet-cell ' + scoreClass(value) + '">' + signed(value) + '</div>';
-    });
-    html += '<div class="sheet-label last-row">Total</div>';
-    players.forEach(i=>{
-      html += '<div class="sheet-cell total last-row ' + scoreClass(runningTotals[i]) + '">' + format(runningTotals[i]) + '</div>';
+      html += '<div class="sheet-cell last-row ' + scoreClass(value) + '">' + signed(value) + '</div>';
     });
     html += '</div>';
     html += '<div class="sheet-actions"><button class="btn" type="button" data-edit="' + roundIndex + '">Edit</button><button class="btn warn" type="button" data-delete="' + roundIndex + '">Delete</button></div>';
