@@ -12,6 +12,12 @@
     return Number.isFinite(parsed) ? parsed : 0;
   }
 
+  function optionalNumber(value){
+    if(value === null || value === undefined || value === '') return null;
+    var parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+
   function format(value){
     var parsed = number(value);
     return Number.isInteger(parsed)
@@ -29,7 +35,8 @@
         return {
           index:index,
           name:String(participant && participant.name || 'Player ' + (index + 1)),
-          score:number(participant && participant.score)
+          score:number(participant && participant.score),
+          meld:optionalNumber(participant && participant.meld)
         };
       }) : [];
       var winners = Array.isArray(record && record.winnerIndexes)
@@ -49,6 +56,7 @@
     var people = new Map();
     var highest = null;
     var lowest = null;
+    var largestMeld = null;
     var largestMargin = null;
 
     records.forEach(function(record){
@@ -80,6 +88,9 @@
 
         if(!highest || participant.score > highest.score) highest = {name:participant.name,score:participant.score};
         if(!lowest || participant.score < lowest.score) lowest = {name:participant.name,score:participant.score};
+        if(participant.meld !== null && (!largestMeld || participant.meld > largestMeld.score)){
+          largestMeld = {name:participant.name,score:participant.meld};
+        }
       });
 
       var ordered = record.participants.slice().sort(function(a,b){
@@ -109,6 +120,7 @@
       leaderboard:leaderboard,
       highest:highest,
       lowest:lowest,
+      largestMeld:largestMeld,
       largestMargin:largestMargin,
       mostWins:mostWins,
       mostWinners:mostWinners,
@@ -123,7 +135,7 @@
       '<div class="stats-meta" title="' + escapeHtml(meta) + '">' + escapeHtml(meta) + '</div></div>';
   }
 
-  function render(host,records){
+  function render(host,records,options){
     if(!host) return;
     var normalized = normalizeRecords(records);
     if(!normalized.length){
@@ -138,7 +150,11 @@
     html += highlight('Saved matches',format(stats.games),'Stored in this browser');
     html += highlight('Most wins',mostNames,format(stats.mostWins) + (stats.mostWins === 1 ? ' win' : ' wins'));
     html += highlight('Highest score',format(stats.highest.score),stats.highest.name);
-    html += highlight('Lowest score',format(stats.lowest.score),stats.lowest.name);
+    if(options && options.showLargestMeld){
+      html += highlight('Largest meld',stats.largestMeld ? format(stats.largestMeld.score) : '—',stats.largestMeld ? stats.largestMeld.name : 'No meld recorded');
+    }else{
+      html += highlight('Lowest score',format(stats.lowest.score),stats.lowest.name);
+    }
     html += highlight('Largest win',format(stats.largestMargin ? stats.largestMargin.margin : 0),stats.largestMargin ? stats.largestMargin.names : '—');
     html += highlight('Hot streak',format(stats.hotStreak),hotNames || 'No active streak');
     html += '</div><div class="stats-leaderboard-title">Player standings</div>';

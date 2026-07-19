@@ -908,6 +908,16 @@ function totalsForGame(game){
   return cumulativeTotalsForGame(game);
 }
 
+function largestMeldForPlayer(game,index){
+  return game.rounds.reduce((largest,round)=>{
+    const meld = round.meld[index];
+    if(meld === null || meld === undefined || meld === '') return largest;
+    const score = Number(meld);
+    if(!Number.isFinite(score)) return largest;
+    return largest === null || score > largest ? score : largest;
+  },null);
+}
+
 function gamePlayerName(game,index){
   return game.players[index] || 'Player ' + (index + 1);
 }
@@ -1190,11 +1200,15 @@ function renderGameArchive(){
     return {
       completedAt:entry.completedAt,
       direction:'high',
-      participants:Array.from({length:game.playerCount},(_,index)=>({name:gamePlayerName(game,index),score:totals[index]})),
+      participants:Array.from({length:game.playerCount},(_,index)=>({
+        name:gamePlayerName(game,index),
+        score:totals[index],
+        meld:largestMeldForPlayer(game,index)
+      })),
       winnerIndexes:leadersForGame(game,totals)
     };
   });
-  ScoreStats.render(document.getElementById('gameStats'),statRecords);
+  ScoreStats.render(document.getElementById('gameStats'),statRecords,{showLargestMeld:true});
   document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
   document.getElementById('clearHistoryBtn').disabled = count === 0;
   if(!count){
