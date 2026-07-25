@@ -110,7 +110,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="../index.html#projects">← Dean Lefor</a>
       <h1>Card Game Trackers</h1>
-      <p>Choose a scorecard. Each game keeps its own rules, saved matches, statistics, and backups.</p>
+      <p>Choose a scorecard. Each game keeps its own rules and saved matches, with one shared backup for the full collection.</p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -188,7 +188,7 @@ try{
       <span class="privacy-mark" aria-hidden="true">✓</span>
       <div>
         <strong>Your existing game data stays where it is.</strong>
-        <p>The library only helps you choose a tracker. It does not combine, move, or alter any saved games, statistics, calculations, or backup files.</p>
+        <p>The shared backup copies all five scorecards into one local JSON download. It never removes the browser records after export or sends game data over the network.</p>
       </div>
     </aside>
   </main>
@@ -199,6 +199,7 @@ try{
   </footer>
 </div>
 
+<script src="game-backup.js"></script>
 <script>
 const THEME_KEY = 'trackerLibrary.darkMode.v1';
 let darkMode = false;

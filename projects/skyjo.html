@@ -594,11 +594,11 @@ try{
 <div class="toast" id="toast"></div>
 
 <script src="score-stats.js"></script>
+<script src="game-backup.js"></script>
 <script>
 const STORE_KEY = 'skyjoScorecard.v1';
 const THEME_KEY = 'skyjoScorecard.darkMode.v1';
 const HISTORY_KEY = 'skyjoScorecard.history.v1';
-const BACKUP_VERSION = 1;
 const MAX_ARCHIVED_GAMES = 250;
 const MAX_PLAYERS = 8;
 const COLORS = ['#2f684d','#315f88','#bd8c2f','#ad3f35','#6c5584','#2a8079','#b46d30','#68727d'];
@@ -1357,59 +1357,6 @@ function clearGameArchive(){
   showToast('Game history cleared');
 }
 
-function exportState(){
-  const backup = {
-    kind:'skyjo-scorecard-backup',
-    version:BACKUP_VERSION,
-    exportedAt:new Date().toISOString(),
-    current:state,
-    history:gameArchive,
-    preferences:{darkMode}
-  };
-  const payload = JSON.stringify(backup, null, 2);
-  const blob = new Blob([payload], {type:'application/json'});
-  const link = document.createElement('a');
-  const date = new Date().toISOString().slice(0,10);
-  const url = URL.createObjectURL(blob);
-  link.href = url;
-  link.download = 'skyjo-scorecard-backup-' + date + '.json';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),0);
-  showToast('Full backup exported');
-}
-
-function importState(file){
-  if(!file) return;
-  const reader = new FileReader();
-  reader.onload = () => {
-    try{
-      const imported = JSON.parse(String(reader.result || ''));
-      const isFullBackup = imported && typeof imported === 'object' && imported.current && Array.isArray(imported.history);
-      if(isFullBackup){
-        if(!window.confirm('Import this full backup? The current scorecard and game history will be replaced.')) return;
-        state = normalizeState(imported.current);
-        gameArchive = normalizeGameArchive(imported.history);
-        if(imported.preferences && typeof imported.preferences.darkMode === 'boolean'){
-          darkMode = imported.preferences.darkMode;
-          saveDarkMode();
-        }
-        if(!saveGameArchive()) showToast('Game history could not be saved in this browser');
-      }else{
-        if(!window.confirm('Import this scorecard? The current scorecard will be replaced.')) return;
-        state = normalizeState(imported);
-      }
-      render();
-      saveNow();
-      showToast(isFullBackup ? 'Full backup imported' : 'Scorecard imported');
-    }catch(error){
-      showToast('Import failed');
-    }
-  };
-  reader.readAsText(file);
-}
-
 function resetGame(){
   if(!window.confirm('Start a new Skyjo scorecard without adding this game to history?')) return;
   state = newGameStateFromCurrent();
@@ -1496,13 +1443,7 @@ document.getElementById('themeBtn').addEventListener('click', () => {
 });
 
 document.getElementById('printBtn').addEventListener('click', () => window.print());
-document.getElementById('exportBtn').addEventListener('click', exportState);
-document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
 document.getElementById('finishBtn').addEventListener('click', finishGame);
-document.getElementById('importFile').addEventListener('change', event => {
-  importState(event.target.files?.[0]);
-  event.target.value = '';
-});
 document.getElementById('resetBtn').addEventListener('click', resetGame);
 document.getElementById('gameHistory').addEventListener('click', event => {
   const restoreButton = event.target.closest('button[data-restore-game]');
@@ -1514,6 +1455,13 @@ document.getElementById('gameHistory').addEventListener('click', event => {
   }
 });
 document.getElementById('clearHistoryBtn').addEventListener('click', clearGameArchive);
+
+SiteGamesBackup.registerPage('skyjo',{
+  beforeExport(){
+    clearTimeout(saveTimer);
+    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+  }
+});
 
 render();
 saveNow();

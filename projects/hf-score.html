@@ -279,11 +279,11 @@ try{
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
 <script src="score-stats.js"></script>
+<script src="game-backup.js"></script>
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
 const HISTORY_KEY = 'handFootRemasteredScorecard.history.v1';
-const BACKUP_VERSION = 1;
 const MAX_ARCHIVED_GAMES = 250;
 const ROUND_COUNT = 4;
 const SCHEMA_VERSION = 3;
@@ -944,58 +944,6 @@ function clearGameArchive(){
   toast('Game history cleared');
 }
 
-function exportData(){
-  const backup = {
-    kind:'hand-foot-remastered-scorecard-backup',
-    version:BACKUP_VERSION,
-    exportedAt:new Date().toISOString(),
-    current:state,
-    history:gameArchive,
-    preferences:{darkMode}
-  };
-  const blob = new Blob([JSON.stringify(backup,null,2)],{type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
-  link.href = url;
-  link.download = `hand-foot-scorecard-backup-${stamp}.json`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),0);
-  toast('Full backup exported');
-}
-
-function importData(file){
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      const imported = JSON.parse(reader.result);
-      const isFullBackup = imported && typeof imported === 'object' && imported.current && Array.isArray(imported.history);
-      if(isFullBackup){
-        if(!confirm('Import this full backup? The current scorecard and game history will be replaced.')) return;
-        state = normalizeState(imported.current);
-        gameArchive = normalizeGameArchive(imported.history);
-        if(imported.preferences && typeof imported.preferences.darkMode === 'boolean'){
-          darkMode = imported.preferences.darkMode;
-          saveDarkMode();
-        }
-        if(!saveGameArchive()) toast('Game history could not be saved in this browser');
-      }else{
-        if(!confirm('Import this scorecard? The current scorecard will be replaced.')) return;
-        state = normalizeState(imported);
-      }
-      save();
-      render();
-      toast(isFullBackup ? 'Full backup imported' : 'Scorecard imported');
-    }catch(error){
-      alert('That backup could not be imported.');
-      toast('Backup import failed');
-    }
-  };
-  reader.readAsText(file);
-}
-
 document.getElementById('gameTitle').addEventListener('input',event=>{
   state.title = event.target.value;
   scheduleSave();
@@ -1039,16 +987,6 @@ document.getElementById('resetBtn').addEventListener('click',()=>{
   toast('Scorecard reset');
 });
 
-document.getElementById('exportBtn').addEventListener('click',exportData);
-
-document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
-document.getElementById('importFile').addEventListener('change',event=>{
-  const file = event.target.files[0];
-  if(!file) return;
-  importData(file);
-  event.target.value = '';
-});
-
 document.getElementById('gameHistory').addEventListener('click',event=>{
   const restoreButton = event.target.closest('button[data-restore-game]');
   const deleteButton = event.target.closest('button[data-delete-game]');
@@ -1063,6 +1001,15 @@ document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArc
 window.addEventListener('pagehide',save);
 document.addEventListener('visibilitychange',()=>{
   if(document.visibilityState === 'hidden') save();
+});
+
+SiteGamesBackup.registerPage('handAndFoot',{
+  beforeExport(){
+    clearTimeout(saveTimer);
+    if(!storageSet(STORE_KEY,JSON.stringify(state))){
+      throw new Error('The current Hand & Foot scorecard could not be saved before backup.');
+    }
+  }
 });
 
 render();

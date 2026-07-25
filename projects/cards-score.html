@@ -756,11 +756,11 @@ try{
 <div class="toast" id="toast"></div>
 
 <script src="score-stats.js"></script>
+<script src="game-backup.js"></script>
 <script>
 const STORE_KEY = 'cardsScorecard.v1';
 const THEME_KEY = 'cardsScorecard.darkMode.v1';
 const HISTORY_KEY = 'cardsScorecard.history.v1';
-const BACKUP_VERSION = 1;
 const MAX_ARCHIVED_GAMES = 250;
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
@@ -1521,58 +1521,6 @@ function clearGameArchive(){
   toast('Game history cleared');
 }
 
-function exportData(){
-  const backup = {
-    kind:'cards-scorecard-backup',
-    version:BACKUP_VERSION,
-    exportedAt:new Date().toISOString(),
-    current:state,
-    history:gameArchive,
-    preferences:{darkMode}
-  };
-  const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
-  link.href = url;
-  link.download = 'cards-scorecard-backup-' + stamp + '.json';
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  setTimeout(()=>URL.revokeObjectURL(url),0);
-  toast('Full backup exported');
-}
-
-function importData(file){
-  const reader = new FileReader();
-  reader.onload = ()=>{
-    try{
-      const imported = JSON.parse(reader.result);
-      const isFullBackup = imported && typeof imported === 'object' && imported.current && Array.isArray(imported.history);
-      if(isFullBackup){
-        if(!confirm('Import this full backup? The current scorecard and game history will be replaced.')) return;
-        state = normalizeState(imported.current);
-        gameArchive = normalizeGameArchive(imported.history);
-        if(imported.preferences && typeof imported.preferences.darkMode === 'boolean'){
-          darkMode = imported.preferences.darkMode;
-          saveDarkMode();
-        }
-        if(!saveGameArchive()) toast('Game history could not be saved in this browser');
-      }else{
-        if(!confirm('Import this scorecard? The current scorecard will be replaced.')) return;
-        state = normalizeState(imported);
-      }
-      render();
-      saveNow();
-      toast(isFullBackup ? 'Full backup imported' : 'Scorecard imported');
-    }catch(error){
-      setMessage('That backup could not be imported.');
-      toast('Backup import failed');
-    }
-  };
-  reader.readAsText(file);
-}
-
 function escapeHtml(value){
   return String(value).replace(/[&<>"']/g, char => ({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
@@ -1640,14 +1588,7 @@ document.getElementById('themeBtn').addEventListener('click',()=>{
   toast(darkMode ? 'Dark mode on' : 'Dark mode off');
 });
 document.getElementById('printBtn').addEventListener('click',()=>window.print());
-document.getElementById('exportBtn').addEventListener('click',exportData);
-document.getElementById('importBtn').addEventListener('click',()=>document.getElementById('importFile').click());
 document.getElementById('finishBtn').addEventListener('click',finishGame);
-document.getElementById('importFile').addEventListener('change',event=>{
-  const file = event.target.files[0];
-  if(file) importData(file);
-  event.target.value = '';
-});
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new scorecard without adding this game to history?')) return;
   state = defaultState();
@@ -1674,6 +1615,13 @@ document.getElementById('gameHistory').addEventListener('click',event=>{
   }
 });
 document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
+
+SiteGamesBackup.registerPage('flexibleCards',{
+  beforeExport(){
+    clearTimeout(saveTimer);
+    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+  }
+});
 
 render();
 saveNow();
