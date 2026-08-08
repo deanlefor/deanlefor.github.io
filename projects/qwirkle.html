@@ -212,7 +212,9 @@ function readJson(key){
 
 function loadState(){
   const saved = readJson(STORE_KEY);
-  return saved ? normalizeState(saved) : defaultState();
+  if(!saved) return defaultState();
+  const next = normalizeState(saved);
+  return SiteScorecards.upgradeLegacyDefaultTitle(next,hasAnyScore(next));
 }
 
 function loadGameArchive(){

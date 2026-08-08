@@ -288,7 +288,8 @@ function defaultState(){
 function loadState(){
   try{
     const saved = JSON.parse(storageGet(STORE_KEY));
-    return normalizeState(saved || defaultState());
+    const next = normalizeState(saved || defaultState());
+    return SiteScorecards.upgradeLegacyDefaultTitle(next,gameHasScores(next));
   }catch(error){
     return defaultState();
   }

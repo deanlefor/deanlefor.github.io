@@ -502,7 +502,10 @@ function defaultState(){
 
 function loadState(){
   const saved = readJson(STORE_KEY);
-  return saved ? normalizeState(saved) : defaultState();
+  if(!saved) return defaultState();
+  const next = normalizeState(saved);
+  const hasProgress = next.rounds.length > 0 || next.draft.rawScores.some(score=>score !== null);
+  return SiteScorecards.upgradeLegacyDefaultTitle(next,hasProgress);
 }
 
 function readJson(key){

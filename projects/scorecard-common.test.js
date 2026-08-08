@@ -35,6 +35,21 @@ test('new scorecard titles use a friendly local calendar date',() => {
   assert.match(common.defaultGameTitle(),/\S/);
 });
 
+test('untouched legacy default titles upgrade without changing real games or custom names',() => {
+  const date = new Date(2026,7,8,12,0,0);
+  const untouched = {title:'Game Night',rounds:[]};
+  assert.equal(common.upgradeLegacyDefaultTitle(untouched,false,date,'en-US'),untouched);
+  assert.equal(untouched.title,'Saturday, August 8, 2026');
+
+  const started = {title:'Game Night',rounds:[{}]};
+  common.upgradeLegacyDefaultTitle(started,true,date,'en-US');
+  assert.equal(started.title,'Game Night');
+
+  const custom = {title:'Family Final',rounds:[]};
+  common.upgradeLegacyDefaultTitle(custom,false,date,'en-US');
+  assert.equal(custom.title,'Family Final');
+});
+
 test('shared count synchronization selects exactly one matching button',() => {
   const buttons = [2,3,4,5].map(fakeButton);
   const container = {querySelectorAll(){ return buttons; }};
@@ -93,6 +108,7 @@ test('all six scorekeepers use the shared runtime instead of duplicating helpers
     assert.equal((html.match(/<script src="scorecard-common\.js"><\/script>/g) || []).length,1);
     assert.match(html,/SiteScorecards\.syncCountButtons\(/);
     assert.match(html,/title:\s*SiteScorecards\.defaultGameTitle\(\)/);
+    assert.match(html,/SiteScorecards\.upgradeLegacyDefaultTitle\(/);
     assert.doesNotMatch(html,/function escapeHtml\(/);
     assert.doesNotMatch(html,/function formatArchivedDate\(/);
     assert.doesNotMatch(html,/function (?:toast|showToast)\(/);

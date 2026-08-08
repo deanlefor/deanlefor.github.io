@@ -327,7 +327,9 @@ function defaultState(){
 
 function loadState(){
   const saved = readJson(STORE_KEY);
-  return saved ? normalizeState(saved) : defaultState();
+  if(!saved) return defaultState();
+  const next = normalizeState(saved);
+  return SiteScorecards.upgradeLegacyDefaultTitle(next,next.rounds.length > 0);
 }
 
 function readJson(key){

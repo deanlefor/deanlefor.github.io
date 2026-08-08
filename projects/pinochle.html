@@ -504,10 +504,16 @@ function defaultState(){
 
 function loadState(){
   const saved = readJson(STORE_KEY);
-  if(saved) return normalizeState(saved);
+  if(saved){
+    const next = normalizeState(saved);
+    return SiteScorecards.upgradeLegacyDefaultTitle(next,next.rounds.length > 0);
+  }
 
   const legacy = readJson(LEGACY_KEY);
-  if(legacy) return normalizeState(migrateLegacy(legacy));
+  if(legacy){
+    const next = normalizeState(migrateLegacy(legacy));
+    return SiteScorecards.upgradeLegacyDefaultTitle(next,next.rounds.length > 0);
+  }
 
   return defaultState();
 }

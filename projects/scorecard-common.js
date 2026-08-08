@@ -38,6 +38,13 @@
     });
   }
 
+  function upgradeLegacyDefaultTitle(state,hasProgress,value,locale){
+    if(!state || typeof state !== 'object' || hasProgress) return state;
+    if(String(state.title == null ? '' : state.title).trim() !== 'Game Night') return state;
+    state.title = defaultGameTitle(value,locale);
+    return state;
+  }
+
   function documentFor(options){
     if(options && options.document) return options.document;
     return global && global.document ? global.document : null;
@@ -99,7 +106,8 @@
     formatDate:formatDate,
     retainForNewGame:retainForNewGame,
     syncCountButtons:syncCountButtons,
-    toast:toast
+    toast:toast,
+    upgradeLegacyDefaultTitle:upgradeLegacyDefaultTitle
   });
 
   if(global) global.SiteScorecards = api;

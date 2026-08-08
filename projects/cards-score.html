@@ -657,7 +657,9 @@ function defaultState(){
 function loadState(){
   try{
     const raw = localStorage.getItem(STORE_KEY);
-    return normalizeState(raw ? JSON.parse(raw) : defaultState());
+    const next = normalizeState(raw ? JSON.parse(raw) : defaultState());
+    const hasProgress = next.rounds.length > 0 || next.draft.scores.some(score=>score !== null);
+    return SiteScorecards.upgradeLegacyDefaultTitle(next,hasProgress);
   }catch(error){
     return defaultState();
   }
