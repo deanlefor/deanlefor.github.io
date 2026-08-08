@@ -329,7 +329,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Pinochle Scorecard</h1>
-      <p>Bid, meld, trick, and cumulative scoring for 2–3 players or teams. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Rules: Single-deck Pinochle · 1/10 scoring · 25 trick points. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -356,6 +356,7 @@ try{
               <button type="button" data-count="2">2</button>
               <button type="button" data-count="3">3</button>
             </div>
+            <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
           </div>
           <div class="field">
             <label for="targetScore">Playing To</label>
@@ -458,6 +459,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="pinochle-rules.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -468,7 +470,7 @@ const LEGACY_KEY = 'pinochleGame';
 const HISTORY_KEY = 'pinochleScorekeeper.history.v1';
 const MAX_ARCHIVED_GAMES = 250;
 const MAX_PLAYERS = 3;
-const TRICK_TOTAL = 25;
+const TRICK_TOTAL = PinochleRules.TRICK_TOTAL;
 const COLORS = ['#2f684d','#2f5f8c','#b8892f'];
 
 let state = loadState();
@@ -476,6 +478,8 @@ let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
 let autoTrickIndex = null;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function emptyRound(dealer){
   return {
@@ -492,6 +496,9 @@ function emptyRound(dealer){
 function defaultState(){
   return {
     version: 2,
+    schemaVersion:PinochleRules.SCHEMA_VERSION,
+    rulesetVersion:PinochleRules.RULESET_VERSION,
+    archiveEditId:null,
     title: SiteScorecards.defaultGameTitle(),
     playerCount: 3,
     targetScore: 150,
@@ -570,12 +577,20 @@ function applyTheme(){
 }
 
 function saveNow(){
+  clearTimeout(saveTimer);
+  saveTimer = 0;
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+    return true;
   }catch(error){
     setSaveState('Saved for this tab');
+    return false;
   }
+}
+
+function flushPendingState(){
+  return saveTimer ? saveNow() : true;
 }
 
 function scheduleSave(){
@@ -618,6 +633,9 @@ function normalizeState(next){
   const base = defaultState();
   next = {...base, ...next};
   next.version = 2;
+  next.schemaVersion = PinochleRules.SCHEMA_VERSION;
+  next.rulesetVersion = PinochleRules.RULESET_VERSION;
+  next.archiveEditId = typeof next.archiveEditId === 'string' ? next.archiveEditId.slice(0,120) : null;
   next.playerCount = Math.min(MAX_PLAYERS, Math.max(2, numberOr(next.playerCount, 3)));
   next.targetScore = Math.max(1, numberOr(next.targetScore ?? next.winningScore, 150));
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(next.players?.[i] || base.players[i]));
@@ -647,6 +665,7 @@ function normalizeArchivedGame(source,index){
   if(!archivedState.rounds.length) return null;
   archivedState.editingIndex = null;
   archivedState.draft = emptyRound(nextDealerFrom(archivedState.rounds, archivedState.playerCount));
+  archivedState.archiveEditId = null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
   const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
@@ -663,15 +682,7 @@ function normalizeForPlayerCount(model){
 }
 
 function normalizeRound(round){
-  const next = emptyRound(round?.dealer ?? 0);
-  next.bidder = round?.bidder === null || round?.bidder === undefined ? null : clampPlayer(round.bidder);
-  next.bid = nullableNumber(round?.bid);
-  next.trump = String(round?.trump || '');
-  next.thrown = !!round?.thrown || !!round?.handThrown;
-  next.meld = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(round?.meld?.[i]));
-  next.tricks = Array.from({length:MAX_PLAYERS},(_,i)=>nullableNumber(round?.tricks?.[i]));
-  if(next.thrown) next.tricks = Array(MAX_PLAYERS).fill(null);
-  return next;
+  return PinochleRules.normalizeRound(round);
 }
 
 function visiblePlayers(){
@@ -717,42 +728,11 @@ function currentTotals(round){
 }
 
 function totalsForRound(round, playerCount){
-  const totals = Array(MAX_PLAYERS).fill(0);
-  const bid = numberOr(round.bid, 0);
-  const bidder = round.bidder;
-  const visible = playerIndexes(playerCount);
-
-  if(round.thrown){
-    visible.forEach(i => {
-      totals[i] = i === bidder ? -bid : numberOr(round.meld[i], 0);
-    });
-    return totals;
-  }
-
-  const shutout = visible.find(i => numberOr(round.tricks[i], 0) === TRICK_TOTAL);
-  const bidMade = isBidMade(round);
-
-  visible.forEach(i => {
-    const meld = numberOr(round.meld[i], 0);
-    const tricks = numberOr(round.tricks[i], 0);
-    if(!bidMade && i === bidder){
-      totals[i] = -bid;
-    }else if(shutout !== undefined){
-      totals[i] = i === shutout ? meld + tricks : tricks;
-    }else if(tricks === 0){
-      totals[i] = 0;
-    }else{
-      totals[i] = meld + tricks;
-    }
-  });
-  return totals;
+  return PinochleRules.totalsForRound(round,playerCount);
 }
 
 function isBidMade(round){
-  if(round.thrown || round.bidder === null) return false;
-  const tricks = numberOr(round.tricks[round.bidder], 0);
-  if(tricks <= 0) return false;
-  return numberOr(round.meld[round.bidder], 0) + tricks >= numberOr(round.bid, 0);
+  return PinochleRules.isBidMade(round);
 }
 
 function cumulativeTotals(throughIndex){
@@ -760,13 +740,7 @@ function cumulativeTotals(throughIndex){
 }
 
 function cumulativeTotalsForGame(game, throughIndex){
-  const totals = Array(MAX_PLAYERS).fill(0);
-  const end = throughIndex === undefined ? game.rounds.length - 1 : throughIndex;
-  for(let r=0; r<=end; r++){
-    const roundTotals = totalsForRound(game.rounds[r], game.playerCount);
-    playerIndexes(game.playerCount).forEach(i => totals[i] += roundTotals[i]);
-  }
-  return totals;
+  return PinochleRules.cumulativeTotals(game,throughIndex);
 }
 
 function totalsForGame(game){
@@ -788,30 +762,17 @@ function gamePlayerName(game,index){
 }
 
 function leadersForGame(game,totals){
-  if(!game.rounds.length) return [];
-  const visibleTotals = playerIndexes(game.playerCount).map(i=>totals[i]);
-  const best = Math.max(...visibleTotals);
-  return playerIndexes(game.playerCount).filter(i=>totals[i] === best);
+  const winners = PinochleRules.winnerIndexes(game,totals);
+  return winners.length ? winners : PinochleRules.leaders(game,totals);
 }
 
-function winnerIndex(){
+function winnerIndexes(){
   const totals = cumulativeTotals();
-  return visiblePlayers().find(i => totals[i] >= state.targetScore);
+  return PinochleRules.winnerIndexes(state,totals);
 }
 
 function validateRound(round){
-  if(round.bidder === null) return 'Select a bidder.';
-  if(!numberOr(round.bid, 0)) return 'Enter the bid.';
-  if(round.thrown) return '';
-
-  const visible = visiblePlayers();
-  const missing = visible.some(i => round.tricks[i] === null);
-  if(missing) return 'Enter trick points for each player/team.';
-
-  const sum = visible.reduce((total,i)=>total + numberOr(round.tricks[i], 0), 0);
-  if(sum !== TRICK_TOTAL) return 'Trick points must total ' + TRICK_TOTAL + '. Current total is ' + sum + '.';
-
-  return '';
+  return PinochleRules.validateRound(round,state.playerCount);
 }
 
 function render(){
@@ -829,7 +790,16 @@ function render(){
 }
 
 function renderPlayerCount(){
-  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount,{
+    locked:hasProgress(),
+    message:'#playerCountLock'
+  });
+}
+
+function hasProgress(){
+  return state.rounds.length > 0 || state.draft.bid !== null || state.draft.bidder !== null ||
+    state.draft.thrown || state.draft.meld.some(value=>value !== null) ||
+    state.draft.tricks.some(value=>value !== null);
 }
 
 function renderNameGrid(){
@@ -906,7 +876,7 @@ function renderScoreMatrix(){
   });
 
   appendScoreRow(grid, 'Meld', 'meld');
-  appendScoreRow(grid, 'Tricks', 'tricks');
+  appendScoreRow(grid, 'Trick Points', 'tricks');
 }
 
 function appendScoreRow(grid, label, key){
@@ -992,14 +962,15 @@ function renderPreview(){
 }
 
 function renderWinner(){
-  const winner = winnerIndex();
+  const winners = winnerIndexes();
   const box = document.getElementById('winnerBox');
-  if(winner === undefined){
+  if(!winners.length){
     box.classList.remove('show');
     box.textContent = '';
   }else{
     box.classList.add('show');
-    box.textContent = (state.players[winner] || 'Player ' + (winner + 1)) + ' has reached ' + state.targetScore + '.';
+    const names = winners.map(index=>state.players[index] || 'Player ' + (index + 1)).join(', ');
+    box.textContent = names + (winners.length === 1 ? ' wins' : ' tie') + ' after reaching ' + state.targetScore + '.';
   }
 }
 
@@ -1038,7 +1009,7 @@ function renderHistory(){
       const shownMeld = (round.thrown || bidderSet) && i === round.bidder ? -numberOr(round.bid, 0) : numberOr(round.meld[i], 0);
       html += '<div class="sheet-cell ' + (shownMeld < 0 ? 'negative' : '') + '">' + (shownMeld < 0 ? signed(shownMeld) : format(shownMeld)) + '</div>';
     });
-    html += '<div class="sheet-label">Tricks</div>';
+    html += '<div class="sheet-label">Trick Points</div>';
     players.forEach(i=>{
       const shownTricks = (round.thrown || (bidderSet && i === round.bidder)) ? '-' : format(round.tricks[i] || 0);
       html += '<div class="sheet-cell">' + shownTricks + '</div>';
@@ -1102,8 +1073,8 @@ function renderGameArchive(){
       html += '<div class="archive-total"><span>' + escapeHtml(gamePlayerName(game,i)) + '</span><strong>' + format(totals[i]) + '</strong></div>';
     }
     html += '</div><div class="archive-actions">';
-    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
-    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button>';
+    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button>';
     html += '</div></div></details>';
   });
   html += '</div>';
@@ -1156,6 +1127,7 @@ function createArchivedGame(){
   const archivedState = normalizeState(state);
   archivedState.editingIndex = null;
   archivedState.draft = emptyRound(nextDealerFrom(archivedState.rounds, archivedState.playerCount));
+  archivedState.archiveEditId = null;
   return {
     id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
     completedAt:new Date().toISOString(),
@@ -1177,37 +1149,49 @@ function finishGame(){
     render();
     saveNow();
   }
-  if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish and archive this game, then start a new scorecard?';
+  if(!confirm(prompt)) return;
   const previousArchive = gameArchive;
-  gameArchive = [createArchivedGame(), ...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(gameArchive,createArchivedGame(),editingArchiveId,MAX_ARCHIVED_GAMES);
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     toast('Game history could not be saved');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   autoTrickIndex = null;
   render();
   saveNow();
-  toast('Game saved to history');
+  toast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to history');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
   if(!entry) return;
-  if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  if(!confirm('Edit this saved match? The current scorecard will be replaced, but the archive will not change until you finish the game.')) return;
   state = normalizeState(entry.state);
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   state.editingIndex = null;
   state.draft = emptyRound(nextDealerFrom(state.rounds, state.playerCount));
   autoTrickIndex = null;
   render();
   saveNow();
-  toast('Archived game restored');
+  toast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const index = gameArchive.findIndex(game=>game.id === id);
   if(index === -1) return;
+  if(id === editingArchiveId){
+    toast('Finish or start a new game before deleting this match');
+    return;
+  }
   if(!confirm('Delete this game from history?')) return;
   const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(game=>game.id !== id);
@@ -1230,6 +1214,9 @@ function clearGameArchive(){
     toast('Game history could not be updated');
     return;
   }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  saveNow();
   renderGameArchive();
   toast('Game history cleared');
 }
@@ -1248,6 +1235,10 @@ document.getElementById('targetScore').addEventListener('input',event=>{
 document.getElementById('playerCount').addEventListener('click',event=>{
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(hasProgress()){
+    toast('Start a new game to change the player count');
+    return;
+  }
   state.playerCount = Number(button.dataset.count);
   normalizeForPlayerCount(state);
   if(state.editingIndex === null) state.draft.dealer = nextDealerFrom(state.rounds, state.playerCount);
@@ -1305,6 +1296,7 @@ document.getElementById('finishBtn').addEventListener('click',finishGame);
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new Pinochle game without adding this game to history?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   autoTrickIndex = null;
   render();
@@ -1337,13 +1329,13 @@ document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArc
 
 SiteGamesBackup.registerPage('pinochle',{
   beforeExport(){
-    clearTimeout(saveTimer);
-    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    if(!saveNow()) throw new Error('The current Pinochle scorecard could not be saved before backup.');
   }
 });
 
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-saveNow();
+setSaveState('Loaded');
 </script>
 </body>
 </html>

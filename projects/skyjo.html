@@ -347,7 +347,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Skyjo Scorecard</h1>
-      <p>Low-score tracking with closer penalties and running totals. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Rules: Standard Skyjo · optional safe-ties house rule. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -379,6 +379,7 @@ try{
               <button type="button" data-count="7">7</button>
               <button type="button" data-count="8">8</button>
             </div>
+            <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
           </div>
           <div class="field">
             <label for="targetScore">Playing To</label>
@@ -408,7 +409,7 @@ try{
             <span class="label">Tie Handling</span>
             <label class="check">
               <input id="safeTies" type="checkbox">
-              Ties count as lowest
+              Safe ties (house rule)
             </label>
           </div>
         </div>
@@ -462,6 +463,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="skyjo-rules.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -477,6 +479,8 @@ let state = loadState();
 let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function emptyRound(dealer){
   return {
@@ -488,11 +492,14 @@ function emptyRound(dealer){
 
 function defaultState(){
   return {
-    version: 1,
+    version:2,
+    schemaVersion:SkyjoRules.SCHEMA_VERSION,
+    rulesetVersion:SkyjoRules.OFFICIAL_RULESET_VERSION,
+    archiveEditId:null,
     title: SiteScorecards.defaultGameTitle(),
     playerCount: 4,
     targetScore: 100,
-    safeTies: true,
+    safeTies:false,
     players: Array.from({length:MAX_PLAYERS},(_,i)=>'Player ' + (i + 1)),
     rounds: [],
     editingIndex: null,
@@ -560,12 +567,20 @@ function applyTheme(){
 }
 
 function saveNow(){
+  clearTimeout(saveTimer);
+  saveTimer = 0;
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+    return true;
   }catch(error){
     setSaveState('Saved for this tab');
+    return false;
   }
+}
+
+function flushPendingState(){
+  return saveTimer ? saveNow() : true;
 }
 
 function scheduleSave(){
@@ -579,12 +594,17 @@ function setSaveState(text){
 }
 
 function normalizeState(next){
+  const source = next && typeof next === 'object' ? next : {};
+  const ruleSettings = SkyjoRules.normalizeRuleSettings(source);
   const base = defaultState();
-  next = {...base, ...next};
-  next.version = 1;
+  next = {...base,...source};
+  next.version = 2;
+  next.schemaVersion = ruleSettings.schemaVersion;
+  next.rulesetVersion = ruleSettings.rulesetVersion;
+  next.archiveEditId = typeof source.archiveEditId === 'string' ? source.archiveEditId.slice(0,120) : null;
   next.playerCount = clamp(numberOr(next.playerCount, 4), 2, MAX_PLAYERS);
   next.targetScore = Math.max(1, numberOr(next.targetScore, 100));
-  next.safeTies = next.safeTies !== false;
+  next.safeTies = ruleSettings.safeTies;
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>String(next.players?.[i] || base.players[i]));
   next.rounds = Array.isArray(next.rounds) ? next.rounds.map((round,i) => normalizeRound(round, i % next.playerCount)) : [];
   next.rounds.forEach(round => {
@@ -617,6 +637,7 @@ function normalizeArchivedGame(source,index){
   if(!archivedState.rounds.length) return null;
   archivedState.editingIndex = null;
   archivedState.draft = emptyRound(nextDealerFrom(archivedState.rounds, archivedState.playerCount));
+  archivedState.archiveEditId = null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
   const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
@@ -682,20 +703,7 @@ function roundMeta(round){
 }
 
 function roundMetaForGame(game,round){
-  const visible = playerIndexes(game.playerCount);
-  const scores = visible.map(i => numberOr(round.rawScores[i], 0));
-  const lowest = scores.length ? Math.min(...scores) : 0;
-  const closer = round.closer;
-  const closerScore = closer === null ? null : numberOr(round.rawScores[closer], 0);
-  const closerIsLowest = closer !== null && closerScore === lowest;
-  const lowestCount = visible.filter(i => numberOr(round.rawScores[i], 0) === lowest).length;
-  const penalty = closer !== null && (game.safeTies ? closerScore > lowest : !closerIsLowest || lowestCount > 1);
-  const adjusted = Array(MAX_PLAYERS).fill(0);
-  visible.forEach(i => {
-    const raw = numberOr(round.rawScores[i], 0);
-    adjusted[i] = penalty && i === closer ? raw * 2 : raw;
-  });
-  return {lowest, penalty, adjusted};
+  return SkyjoRules.roundMeta(game,round);
 }
 
 function cumulativeTotals(throughIndex){
@@ -703,15 +711,7 @@ function cumulativeTotals(throughIndex){
 }
 
 function cumulativeTotalsForGame(game,throughIndex){
-  const totals = Array(MAX_PLAYERS).fill(0);
-  const end = throughIndex === undefined ? game.rounds.length - 1 : throughIndex;
-  for(let r = 0; r <= end; r++){
-    const round = game.rounds[r];
-    if(!round) continue;
-    const meta = roundMetaForGame(game,round);
-    playerIndexes(game.playerCount).forEach(i => totals[i] += meta.adjusted[i]);
-  }
-  return totals;
+  return SkyjoRules.cumulativeTotals(game,throughIndex);
 }
 
 function gamePlayerName(game,index){
@@ -719,20 +719,15 @@ function gamePlayerName(game,index){
 }
 
 function leadersForGame(game,totals){
-  const low = Math.min(...playerIndexes(game.playerCount).map(i=>totals[i]));
-  return playerIndexes(game.playerCount).filter(i=>totals[i] === low);
+  return SkyjoRules.leaderIndexes(game,totals);
 }
 
 function gameOver(){
-  const totals = cumulativeTotals();
-  return visiblePlayers().some(i => totals[i] >= state.targetScore);
+  return SkyjoRules.gameOver(state,cumulativeTotals());
 }
 
 function leaderIndexes(){
-  const totals = cumulativeTotals();
-  const visible = visiblePlayers();
-  const low = Math.min(...visible.map(i => totals[i]));
-  return visible.filter(i => totals[i] === low);
+  return SkyjoRules.leaderIndexes(state,cumulativeTotals());
 }
 
 function validateRound(round){
@@ -747,6 +742,10 @@ function render(){
   document.getElementById('gameTitle').value = state.title;
   document.getElementById('targetScore').value = state.targetScore;
   document.getElementById('safeTies').checked = state.safeTies;
+  document.getElementById('safeTies').disabled = state.rounds.length > 0;
+  document.getElementById('safeTies').title = state.rounds.length
+    ? 'Start a new game to change tie handling.'
+    : 'House rule: a closer tied for lowest is not doubled.';
   renderPlayerCount();
   renderNameGrid();
   renderRoundForm();
@@ -759,7 +758,14 @@ function render(){
 }
 
 function renderPlayerCount(){
-  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount,{
+    locked:hasProgress(),
+    message:'#playerCountLock'
+  });
+}
+
+function hasProgress(){
+  return state.rounds.length > 0 || state.draft.rawScores.some(score=>score !== null);
 }
 
 function renderNameGrid(){
@@ -1053,8 +1059,8 @@ function renderGameArchive(){
       html += '<div class="archive-total"><span>' + escapeHtml(gamePlayerName(game,i)) + '</span><strong>' + format(totals[i]) + '</strong></div>';
     }
     html += '</div><div class="archive-actions">';
-    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
-    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button>';
+    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button>';
     html += '</div></div></details>';
   });
   html += '</div>';
@@ -1128,6 +1134,7 @@ function createArchivedGame(){
   const archivedState = normalizeState(state);
   archivedState.editingIndex = null;
   archivedState.draft = emptyRound(nextDealerFrom(archivedState.rounds,archivedState.playerCount));
+  archivedState.archiveEditId = null;
   return {
     id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
     completedAt:new Date().toISOString(),
@@ -1155,35 +1162,47 @@ function finishGame(){
     render();
     saveNow();
   }
-  if(!window.confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish and archive this game, then start a new scorecard?';
+  if(!window.confirm(prompt)) return;
   const previousArchive = gameArchive;
-  gameArchive = [createArchivedGame(),...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(gameArchive,createArchivedGame(),editingArchiveId,MAX_ARCHIVED_GAMES);
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     showToast('Game history could not be saved');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
-  showToast('Game saved to history');
+  showToast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to history');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
   if(!entry) return;
-  if(!window.confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  if(!window.confirm('Edit this saved match? The current scorecard will be replaced, but the archive will not change until you finish the game.')) return;
   state = normalizeState(entry.state);
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   state.editingIndex = null;
   state.draft = emptyRound(nextDealerFrom(state.rounds,state.playerCount));
   render();
   saveNow();
-  showToast('Archived game restored');
+  showToast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const index = gameArchive.findIndex(game=>game.id === id);
   if(index === -1) return;
+  if(id === editingArchiveId){
+    showToast('Finish or start a new game before deleting this match');
+    return;
+  }
   if(!window.confirm('Delete this game from history?')) return;
   const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(game=>game.id !== id);
@@ -1206,12 +1225,16 @@ function clearGameArchive(){
     showToast('Game history could not be updated');
     return;
   }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  saveNow();
   renderGameArchive();
   showToast('Game history cleared');
 }
 
 function resetGame(){
   if(!window.confirm('Start a new Skyjo scorecard without adding this game to history?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
@@ -1232,7 +1255,13 @@ document.getElementById('targetScore').addEventListener('input', event => {
 });
 
 document.getElementById('safeTies').addEventListener('change', event => {
+  if(state.rounds.length){
+    event.target.checked = state.safeTies;
+    showToast('Start a new game to change tie handling');
+    return;
+  }
   state.safeTies = event.target.checked;
+  state.rulesetVersion = SkyjoRules.OFFICIAL_RULESET_VERSION;
   renderScoreInputs();
   renderStandings();
   renderSummary();
@@ -1255,6 +1284,10 @@ document.getElementById('closer').addEventListener('change', event => {
 document.getElementById('playerCount').addEventListener('click', event => {
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(hasProgress()){
+    showToast('Start a new game to change the player count');
+    return;
+  }
   state.playerCount = Number(button.dataset.count);
   state.rounds.forEach(round => {
     round.dealer = clampPlayer(round.dealer, state.playerCount);
@@ -1303,13 +1336,13 @@ document.getElementById('clearHistoryBtn').addEventListener('click', clearGameAr
 
 SiteGamesBackup.registerPage('skyjo',{
   beforeExport(){
-    clearTimeout(saveTimer);
-    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    if(!saveNow()) throw new Error('The current Skyjo scorecard could not be saved before backup.');
   }
 });
 
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-saveNow();
+setSaveState('Loaded');
 </script>
 </body>
 </html>

@@ -70,7 +70,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Qwirkle Scorecard</h1>
-      <p>Fast turn-by-turn scoring for the original tile game. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Rules: Official Qwirkle scoring · +6 for the player who goes out. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -98,6 +98,7 @@ try{
               <button type="button" data-count="3">3</button>
               <button type="button" data-count="4">4</button>
             </div>
+            <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
           </div>
         </div>
         <div class="divider"></div>
@@ -167,6 +168,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="qwirkle-rules.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -175,23 +177,28 @@ const STORE_KEY = 'qwirkleScorecard.v1';
 const HISTORY_KEY = 'qwirkleScorecard.history.v1';
 const THEME_KEY = 'qwirkleScorecard.darkMode.v1';
 const MAX_ARCHIVED_GAMES = 250;
-const MAX_PLAYERS = 4;
-const INITIAL_ROWS = 15;
+const MAX_PLAYERS = QwirkleRules.MAX_PLAYERS;
+const INITIAL_ROWS = QwirkleRules.INITIAL_ROWS;
 const ROW_INCREMENT = 5;
-const END_BONUS = 6;
+const END_BONUS = QwirkleRules.END_BONUS;
 const COLORS = ['#2f684d','#315f88','#bd8c2f','#ad3f35'];
 
 let state = loadState();
 let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function emptyRow(){
-  return {scores:Array(MAX_PLAYERS).fill(null)};
+  return QwirkleRules.emptyRow();
 }
 
 function defaultState(){
   return {
+    schemaVersion:QwirkleRules.SCHEMA_VERSION,
+    rulesetVersion:QwirkleRules.RULESET_VERSION,
+    archiveEditId:null,
     version:1,
     title:SiteScorecards.defaultGameTitle(),
     playerCount:4,
@@ -254,12 +261,20 @@ function applyTheme(){
 }
 
 function saveNow(){
+  clearTimeout(saveTimer);
+  saveTimer = 0;
   try{
     localStorage.setItem(STORE_KEY,JSON.stringify(state));
     setSaveState('Saved ' + new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
+    return true;
   }catch(error){
     setSaveState('Saved for this tab');
+    return false;
   }
+}
+
+function flushPendingState(){
+  return saveTimer ? saveNow() : true;
 }
 
 function scheduleSave(){
@@ -282,29 +297,15 @@ function numberOr(value,fallback){
 }
 
 function nullableScore(value){
-  if(value === '' || value === null || value === undefined) return null;
-  const number = Number(value);
-  return Number.isFinite(number) ? Math.max(0,Math.trunc(number)) : null;
+  return QwirkleRules.nullableScore(value);
 }
 
 function normalizeRow(row){
-  const source = Array.isArray(row) ? row : row?.scores;
-  return {scores:Array.from({length:MAX_PLAYERS},(_,index)=>nullableScore(source?.[index]))};
+  return QwirkleRules.normalizeRow(row);
 }
 
 function normalizeState(source){
-  const base = defaultState();
-  const next = source && typeof source === 'object' ? {...base,...source} : base;
-  next.version = 1;
-  next.title = String(next.title || base.title).slice(0,48);
-  next.playerCount = clamp(Math.trunc(numberOr(next.playerCount,4)),2,MAX_PLAYERS);
-  next.players = Array.from({length:MAX_PLAYERS},(_,index)=>String(next.players?.[index] || base.players[index]).slice(0,24));
-  const rows = Array.isArray(next.rows) ? next.rows.map(normalizeRow) : [];
-  while(rows.length < INITIAL_ROWS) rows.push(emptyRow());
-  next.rows = rows;
-  const finisher = Number(next.finishingPlayer);
-  next.finishingPlayer = Number.isInteger(finisher) && finisher >= 0 && finisher < next.playerCount ? finisher : null;
-  return next;
+  return QwirkleRules.normalizeState(source,{defaultTitle:SiteScorecards.defaultGameTitle()});
 }
 
 function normalizeGameArchive(source){
@@ -318,6 +319,7 @@ function normalizeArchivedGame(source,index){
   if(!gameSource || typeof gameSource !== 'object') return null;
   const archivedState = normalizeState(gameSource);
   if(!hasAnyScore(archivedState)) return null;
+  archivedState.archiveEditId = null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
   const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
@@ -333,31 +335,23 @@ function playerName(index,game = state){
 }
 
 function hasAnyScore(game = state){
-  return game.rows.some(row=>visiblePlayers(game).some(index=>row.scores[index] !== null));
+  return QwirkleRules.hasAnyScore(game);
+}
+
+function participantCountLocked(){
+  return state.rows.some(row=>row.scores.some(score=>score !== null));
 }
 
 function usedRowCount(game = state){
-  let used = 0;
-  game.rows.forEach((row,rowIndex)=>{
-    if(visiblePlayers(game).some(index=>row.scores[index] !== null)) used = rowIndex + 1;
-  });
-  return used;
+  return QwirkleRules.usedRowCount(game);
 }
 
 function totalsForGame(game = state){
-  const totals = Array(MAX_PLAYERS).fill(0);
-  game.rows.forEach(row=>{
-    visiblePlayers(game).forEach(index=>{totals[index] += numberOr(row.scores[index],0);});
-  });
-  if(game.finishingPlayer !== null && game.finishingPlayer < game.playerCount){
-    totals[game.finishingPlayer] += END_BONUS;
-  }
-  return totals;
+  return QwirkleRules.totalsForGame(game);
 }
 
 function leaderIndexesForGame(game,totals = totalsForGame(game)){
-  const high = Math.max(...visiblePlayers(game).map(index=>totals[index]));
-  return visiblePlayers(game).filter(index=>totals[index] === high);
+  return QwirkleRules.leaderIndexes(game,totals);
 }
 
 function format(value){
@@ -383,7 +377,10 @@ function render(){
 }
 
 function renderPlayerCount(){
-  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount,{
+    locked:participantCountLocked(),
+    message:'#playerCountLock'
+  });
 }
 
 function renderNameGrid(){
@@ -549,17 +546,19 @@ function renderGameArchive(){
       const bonus = game.finishingPlayer === index ? ' <small>(+6 out)</small>' : '';
       html += '<div class="archive-total"><span>' + escapeHtml(playerName(index,game)) + bonus + '</span><strong>' + format(totals[index]) + '</strong></div>';
     });
-    html += '</div><div class="archive-actions"><button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button><button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button></div></div></details>';
+    html += '</div><div class="archive-actions"><button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button><button class="btn warn" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button></div></div></details>';
   });
   html += '</div>';
   host.innerHTML = html;
 }
 
 function createArchivedGame(){
+  const archivedState = normalizeState(state);
+  archivedState.archiveEditId = null;
   return {
     id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
     completedAt:new Date().toISOString(),
-    state:normalizeState(state)
+    state:archivedState
   };
 }
 
@@ -581,33 +580,46 @@ function finishGame(){
   if(nameReview.changed){render();saveNow();}
   const totals = totalsForGame();
   const winners = leaderIndexesForGame(state,totals).map(index=>playerName(index)).join(', ');
-  if(!window.confirm('Finish this game with ' + winners + ' winning, save it to history, and start a new scorecard?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish this game with ' + winners + ' winning, save it to history, and start a new scorecard?';
+  if(!window.confirm(prompt)) return;
   const previousArchive = gameArchive;
-  gameArchive = [createArchivedGame(),...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(gameArchive,createArchivedGame(),editingArchiveId,MAX_ARCHIVED_GAMES);
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     showToast('Game history could not be saved');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
-  showToast('Game saved to history');
+  showToast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to history');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
   if(!entry) return;
-  if(!window.confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  if(!window.confirm('Edit this saved match? The current scorecard will be replaced, but the archive will not change until you finish the game.')) return;
   state = normalizeState(entry.state);
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   render();
   saveNow();
-  showToast('Archived game restored');
+  showToast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
-  if(!entry || !window.confirm('Delete this game from history?')) return;
+  if(!entry) return;
+  if(id === editingArchiveId){
+    showToast('Finish or start a new game before deleting this match');
+    return;
+  }
+  if(!window.confirm('Delete this game from history?')) return;
   const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(game=>game.id !== id);
   if(!saveGameArchive()){
@@ -628,12 +640,16 @@ function clearGameArchive(){
     showToast('Game history could not be updated');
     return;
   }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  saveNow();
   renderGameArchive();
   showToast('Game history cleared');
 }
 
 function resetGame(){
   if(!window.confirm('Start a new Qwirkle scorecard without adding this game to history?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
@@ -648,6 +664,10 @@ document.getElementById('gameTitle').addEventListener('input',event=>{
 document.getElementById('playerCount').addEventListener('click',event=>{
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(participantCountLocked()){
+    showToast('Start a new game to change the player count');
+    return;
+  }
   state.playerCount = Number(button.dataset.count);
   if(state.finishingPlayer !== null && state.finishingPlayer >= state.playerCount) state.finishingPlayer = null;
   render();
@@ -684,11 +704,15 @@ document.getElementById('printBtn').addEventListener('click',()=>window.print())
 document.getElementById('finishBtn').addEventListener('click',finishGame);
 document.getElementById('resetBtn').addEventListener('click',resetGame);
 document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
-window.addEventListener('beforeunload',saveNow);
 
-SiteGamesBackup.registerPage('qwirkle',{beforeExport:saveNow});
+SiteGamesBackup.registerPage('qwirkle',{
+  beforeExport(){
+    if(!saveNow()) throw new Error('The current Qwirkle scorecard could not be saved before backup.');
+  }
+});
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-saveNow();
+setSaveState('Loaded');
 </script>
 </body>
 </html>

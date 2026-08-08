@@ -232,6 +232,12 @@ input[type=number]{text-align:right}
   box-shadow:0 0 5px currentColor;
   content:"";
 }
+.count-lock-note{
+  margin:.55rem 0 0;
+  color:var(--muted);
+  font-size:.82rem;
+  line-height:1.35;
+}
 .divider{height:1px;margin:14px 0;background:var(--line)}
 .actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
 .actions .btn.primary{flex:1 1 180px}

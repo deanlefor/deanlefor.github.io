@@ -15,6 +15,8 @@ They intentionally use plain HTML, CSS, JavaScript, and browser `localStorage`. 
 
 Previously saved scores are part of the product, not disposable implementation detail. A shared-style cleanup or refactor is not complete unless existing current games, finished-game histories, totals, winners, settings, and legacy records still load with the same meaning.
 
+`SCORECARD-RULES.md` is the human-readable rules contract for the six scorekeepers. Update it and the relevant executable rule tests whenever a scoring interpretation changes.
+
 - Do not change an existing storage key, schema version, score formula, winner rule, state-normalization rule, or archive shape as part of an unrelated refactor.
 - Do not clear browser storage or rewrite saved data during page load.
 - Preserve raw stored values in backup files so legacy strings and malformed-but-recoverable records can be restored exactly.
@@ -37,6 +39,15 @@ Use these files instead of copying their behavior into a scorekeeper:
 | `player-names.js` | Same-origin name suggestions, spelling normalization, and near-match review |
 
 The game-specific page should retain only its rules, score calculations, state normalization, round-entry UI, and game-specific layout.
+
+## Game-specific rule modules
+
+Shared infrastructure may be generalized; game scoring remains isolated in game-specific testable modules. Each scorekeeper loads its own small browser-compatible/CommonJS-compatible rules file so the browser page and Node tests execute the same calculations.
+
+- Do not create a universal game or scoring engine.
+- Keep scoring constants, validation, totals, end conditions, and winner selection in the module for the game that owns those semantics.
+- Keep genuinely shared concerns such as archive replacement, lifecycle flushing, participant-count UI state, backup, names, and presentation in the established shared files.
+- Similar-looking formulas in different games may intentionally remain separate.
 
 ## Required page assets
 
@@ -166,3 +177,7 @@ Names are discovered at runtime from existing same-origin scorecard data. No par
 ### 2026-08-08: common presentation and small runtime helpers
 
 Generic archive styles, toast styles, participant-count highlighting, escaping, date formatting, and count synchronization are shared. Scoring rules and state schemas remain page-specific because combining them would add coupling without eliminating meaningful complexity.
+
+### 2026-08-08: isolated executable rules contracts
+
+Each game keeps a dedicated rules module that can be loaded directly by both its static HTML page and Node's built-in test runner. Shared infrastructure may be generalized, but game scoring is not combined across scorekeepers. The maintained human baseline is `SCORECARD-RULES.md`.

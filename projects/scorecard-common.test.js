@@ -17,6 +17,7 @@ function fakeButton(count){
       toggle(name,enabled){ enabled ? classes.add(name) : classes.delete(name); },
       contains(name){ return classes.has(name); }
     },
+    disabled:false,
     setAttribute(name,value){ attributes[name] = value; },
     getAttribute(name){ return attributes[name]; }
   };
@@ -61,6 +62,20 @@ test('shared count synchronization selects exactly one matching button',() => {
   });
 });
 
+test('shared count synchronization locks every participant button after progress',() => {
+  const buttons = [2,3,4].map(fakeButton);
+  const attributes = {};
+  const note = {hidden:true};
+  const container = {
+    querySelectorAll(){ return buttons; },
+    setAttribute(name,value){ attributes[name] = value; }
+  };
+  common.syncCountButtons(container,3,{locked:true,message:note});
+  assert.equal(attributes['aria-disabled'],'true');
+  assert.equal(note.hidden,false);
+  buttons.forEach(button=>assert.equal(button.disabled,true));
+});
+
 test('new games retain selected local fields without sharing participant arrays',() => {
   const current = {
     players:['Player One','Player Two'],
@@ -87,6 +102,8 @@ test('shared toast handles missing markup and replaces an existing timer',async 
   const classes = new Set();
   const node = {
     textContent:'',
+    attributes:{},
+    setAttribute(name,value){ this.attributes[name] = value; },
     classList:{
       add(name){ classes.add(name); },
       remove(name){ classes.delete(name); }
@@ -96,10 +113,59 @@ test('shared toast handles missing markup and replaces an existing timer',async 
   assert.equal(common.toast('First',{document,duration:20}),true);
   assert.equal(common.toast('Second',{document,duration:1}),true);
   assert.equal(node.textContent,'Second');
+  assert.deepEqual(node.attributes,{role:'status','aria-live':'polite','aria-atomic':'true'});
   assert.equal(classes.has('show'),true);
   await new Promise(resolve => setTimeout(resolve,5));
   assert.equal(classes.has('show'),false);
   assert.equal(common.toast('Ignored',{document:{getElementById(){ return null; }}}),false);
+});
+
+test('archive upsert replaces an edited match without changing its id or completion date',() => {
+  const original = {id:'saved-1',completedAt:'2025-01-01T00:00:00.000Z',state:{score:10}};
+  const other = {id:'saved-2',completedAt:'2025-02-01T00:00:00.000Z',state:{score:20}};
+  const edited = {id:'new-id',completedAt:'2026-01-01T00:00:00.000Z',state:{score:99}};
+  const result = common.upsertArchiveEntry([original,other],edited,'saved-1',250);
+  assert.equal(result.replaced,true);
+  assert.equal(result.archive.length,2);
+  assert.deepEqual(result.archive[0],{
+    id:'saved-1',completedAt:'2025-01-01T00:00:00.000Z',state:{score:99}
+  });
+});
+
+test('archive upsert prepends a new match when no archive edit is active',() => {
+  const result = common.upsertArchiveEntry(
+    [{id:'saved-1',completedAt:'2025-01-01T00:00:00.000Z'}],
+    {id:'new-id',completedAt:'2026-01-01T00:00:00.000Z'},
+    null,
+    250
+  );
+  assert.equal(result.replaced,false);
+  assert.equal(result.archive.length,2);
+  assert.equal(result.archive[0].id,'new-id');
+});
+
+test('lifecycle binding flushes pending state on page hide and hidden visibility',() => {
+  const windowListeners = {};
+  const documentListeners = {};
+  const fakeWindow = {
+    addEventListener(name,listener){ windowListeners[name] = listener; },
+    removeEventListener(name){ delete windowListeners[name]; }
+  };
+  const fakeDocument = {
+    visibilityState:'visible',
+    addEventListener(name,listener){ documentListeners[name] = listener; },
+    removeEventListener(name){ delete documentListeners[name]; }
+  };
+  let flushes = 0;
+  const dispose = common.bindLifecycleFlush(()=>{flushes += 1;},{window:fakeWindow,document:fakeDocument});
+  windowListeners.pagehide();
+  documentListeners.visibilitychange();
+  fakeDocument.visibilityState = 'hidden';
+  documentListeners.visibilitychange();
+  assert.equal(flushes,2);
+  dispose();
+  assert.deepEqual(windowListeners,{});
+  assert.deepEqual(documentListeners,{});
 });
 
 test('all six scorekeepers use the shared runtime instead of duplicating helpers',() => {
@@ -128,4 +194,5 @@ test('the shared architecture and new-scorekeeper checklist are documented',() =
   assert.match(guide,/New scorekeeper checklist/);
   assert.match(guide,/Decision record/);
   assert.match(readme,/projects\/SCORECARD-DEVELOPMENT\.md/);
+  assert.match(readme,/projects\/SCORECARD-RULES\.md/);
 });

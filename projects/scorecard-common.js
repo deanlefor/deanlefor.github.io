@@ -56,6 +56,9 @@
     if(!document) return false;
     var node = document.getElementById(options.id || 'toast');
     if(!node) return false;
+    node.setAttribute('role','status');
+    node.setAttribute('aria-live','polite');
+    node.setAttribute('aria-atomic','true');
     var duration = Number(options.duration);
     if(!Number.isFinite(duration) || duration < 0) duration = 1700;
     if(toastTimers){
@@ -80,13 +83,76 @@
     if(!container || typeof container.querySelectorAll !== 'function') return 0;
     var selected = Number(value);
     var activeCount = 0;
+    var locked = !!(options && options.locked);
     Array.prototype.forEach.call(container.querySelectorAll('button[data-count]'),function(button){
       var isActive = Number(button.dataset.count) === selected;
       button.classList.toggle('active',isActive);
       button.setAttribute('aria-pressed',String(isActive));
+      button.disabled = locked;
       if(isActive) activeCount += 1;
     });
+    if(typeof container.setAttribute === 'function'){
+      container.setAttribute('aria-disabled',String(locked));
+    }
+    if(options && options.message){
+      var message = typeof options.message === 'string'
+        ? (document ? document.querySelector(options.message) : null)
+        : options.message;
+      if(message) message.hidden = !locked;
+    }
     return activeCount;
+  }
+
+  function upsertArchiveEntry(archive,entry,editingId,limit){
+    var next = Array.isArray(archive) ? archive.slice() : [];
+    var maximum = Number(limit);
+    if(!Number.isInteger(maximum) || maximum < 1) maximum = next.length + 1;
+    var sourceId = editingId == null ? '' : String(editingId);
+    var index = sourceId
+      ? next.findIndex(function(item){ return item && String(item.id) === sourceId; })
+      : -1;
+    var savedEntry = entry;
+    if(index >= 0){
+      savedEntry = Object.assign({},entry,{
+        id:next[index].id,
+        completedAt:next[index].completedAt
+      });
+      next[index] = savedEntry;
+    }else{
+      next.unshift(savedEntry);
+    }
+    return {
+      archive:next.slice(0,maximum),
+      entry:savedEntry,
+      replaced:index >= 0
+    };
+  }
+
+  function bindLifecycleFlush(flush,options){
+    if(typeof flush !== 'function') return function(){};
+    options = options || {};
+    var windowTarget = options.window || global;
+    var documentTarget = options.document || (windowTarget && windowTarget.document);
+    function run(){
+      try{ return flush(); }catch(error){ return false; }
+    }
+    function onVisibilityChange(){
+      if(documentTarget && documentTarget.visibilityState === 'hidden') run();
+    }
+    if(windowTarget && typeof windowTarget.addEventListener === 'function'){
+      windowTarget.addEventListener('pagehide',run);
+    }
+    if(documentTarget && typeof documentTarget.addEventListener === 'function'){
+      documentTarget.addEventListener('visibilitychange',onVisibilityChange);
+    }
+    return function(){
+      if(windowTarget && typeof windowTarget.removeEventListener === 'function'){
+        windowTarget.removeEventListener('pagehide',run);
+      }
+      if(documentTarget && typeof documentTarget.removeEventListener === 'function'){
+        documentTarget.removeEventListener('visibilitychange',onVisibilityChange);
+      }
+    };
   }
 
   function retainForNewGame(freshState,currentState,fields){
@@ -101,12 +167,14 @@
   }
 
   var api = Object.freeze({
+    bindLifecycleFlush:bindLifecycleFlush,
     defaultGameTitle:defaultGameTitle,
     escapeHtml:escapeHtml,
     formatDate:formatDate,
     retainForNewGame:retainForNewGame,
     syncCountButtons:syncCountButtons,
     toast:toast,
+    upsertArchiveEntry:upsertArchiveEntry,
     upgradeLegacyDefaultTitle:upgradeLegacyDefaultTitle
   });
 

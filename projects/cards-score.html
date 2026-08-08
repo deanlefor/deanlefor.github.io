@@ -434,7 +434,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Cards Scorecard</h1>
-      <p>Flexible scoring for 2–8 players, with rotating dealer and game records. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Rules: User-configurable scoring · high, low, limited, or unlimited play. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -468,6 +468,7 @@ try{
               <button type="button" data-count="7">7</button>
               <button type="button" data-count="8">8</button>
             </div>
+            <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
           </div>
           <div class="field game-title-field" id="gameTitleField">
             <label for="gameTitle">Game Name</label>
@@ -565,6 +566,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="cards-score-rules.js"></script>
 <script src="cards-score-presets.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
@@ -586,6 +588,8 @@ let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
 let selectedStatsPreset = state.gamePreset;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function emptyDraft(){
   return {
@@ -596,6 +600,9 @@ function emptyDraft(){
 function defaultState(){
   return {
     version:4,
+    schemaVersion:CardsScoreRules.SCHEMA_VERSION,
+    rulesetVersion:CardsScoreRules.RULESET_VERSION,
+    archiveEditId:null,
     gamePreset:'generic',
     title:SiteScorecards.defaultGameTitle(),
     playerCount:DEFAULT_PLAYER_COUNT,
@@ -666,6 +673,9 @@ function applyTheme(){
 function normalizeState(source){
   const base = defaultState();
   const next = source && typeof source === 'object' ? {...base, ...source, version:4} : base;
+  next.schemaVersion = CardsScoreRules.SCHEMA_VERSION;
+  next.rulesetVersion = CardsScoreRules.RULESET_VERSION;
+  next.archiveEditId = typeof source?.archiveEditId === 'string' ? source.archiveEditId.slice(0,120) : null;
   next.gamePreset = CardsScorePresets.normalizeId(source?.gamePreset);
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
@@ -702,6 +712,7 @@ function normalizeArchivedGame(source,index){
   if(!archivedState.rounds.length) return null;
   archivedState.editingIndex = null;
   archivedState.draft = emptyDraft();
+  archivedState.archiveEditId = null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
   const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
@@ -812,21 +823,13 @@ function cumulativeTotals(throughIndex){
 }
 
 function totalsForGame(game){
-  const totals = Array(MAX_PLAYERS).fill(0);
-  game.rounds.forEach(round=>{
-    const scores = roundScores(round);
-    for(let i=0; i<game.playerCount; i++) totals[i] += scores[i];
-  });
+  const totals = CardsScoreRules.totalsForGame(game);
+  while(totals.length < MAX_PLAYERS) totals.push(0);
   return totals;
 }
 
 function leadersForGame(game,totals){
-  const players = Array.from({length:game.playerCount},(_,i)=>i);
-  if(!players.length) return [];
-  const best = game.winnerMode === 'low'
-    ? Math.min(...players.map(i=>totals[i]))
-    : Math.max(...players.map(i=>totals[i]));
-  return players.filter(i=>totals[i] === best);
+  return CardsScoreRules.leaderIndexes(game,totals);
 }
 
 function gamePlayerName(game,index){
@@ -848,22 +851,24 @@ function activeWinnerMode(){
 }
 
 function targetReached(){
-  if(!state.rounds.length) return [];
-  if(state.limitType === 'unlimited') return [];
-  if(state.limitType === 'rounds'){
-    return state.rounds.length >= state.limitValue ? leaders() : [];
-  }
-  const totals = cumulativeTotals();
-  return visiblePlayers().some(i => totals[i] >= state.limitValue) ? leaders() : [];
+  return CardsScoreRules.winnerIndexes(state,cumulativeTotals());
 }
 
 function saveNow(){
+  clearTimeout(saveTimer);
+  saveTimer = 0;
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+    return true;
   }catch(error){
     setSaveState('Saved for this tab');
+    return false;
   }
+}
+
+function flushPendingState(){
+  return saveTimer ? saveNow() : true;
 }
 
 function scheduleSave(){
@@ -912,7 +917,14 @@ function renderGamePreset(){
 }
 
 function renderPlayerCount(){
-  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount,{
+    locked:hasProgress(),
+    message:'#playerCountLock'
+  });
+}
+
+function hasProgress(){
+  return state.rounds.length > 0 || state.draft.scores.some(score=>score !== null);
 }
 
 function renderWinCondition(){
@@ -1143,8 +1155,8 @@ function renderGameArchive(){
       html += '<div class="archive-total"><span>' + escapeHtml(gamePlayerName(game,i)) + '</span><strong>' + format(totals[i]) + '</strong></div>';
     }
     html += '</div><div class="archive-actions">';
-    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
-    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button>';
+    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button>';
     html += '</div></div></details>';
   });
   html += '</div>';
@@ -1303,6 +1315,7 @@ function createArchivedGame(){
   const archivedState = normalizeState(state);
   archivedState.editingIndex = null;
   archivedState.draft = emptyDraft();
+  archivedState.archiveEditId = null;
   return {
     id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
     completedAt:new Date().toISOString(),
@@ -1326,36 +1339,53 @@ function finishGame(){
     render();
     saveNow();
   }
-  if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish and archive this game, then start a new scorecard?';
+  if(!confirm(prompt)) return;
   const previousArchive = gameArchive;
-  gameArchive = [createArchivedGame(), ...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(
+    gameArchive,
+    createArchivedGame(),
+    editingArchiveId,
+    MAX_ARCHIVED_GAMES
+  );
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     toast('Game history could not be saved');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
-  toast('Game saved to history');
+  toast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to history');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
   if(!entry) return;
-  if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  if(!confirm('Edit this saved match? The current scorecard will be replaced, but the archive will not change until you finish the game.')) return;
   state = normalizeState(entry.state);
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   selectedStatsPreset = state.gamePreset;
   state.editingIndex = null;
   state.draft = emptyDraft();
   render();
   saveNow();
-  toast('Archived game restored');
+  toast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const index = gameArchive.findIndex(game=>game.id === id);
   if(index === -1) return;
+  if(id === editingArchiveId){
+    toast('Finish or start a new game before deleting this match');
+    return;
+  }
   if(!confirm('Delete this game from history?')) return;
   const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(game=>game.id !== id);
@@ -1378,6 +1408,9 @@ function clearGameArchive(){
     toast('Game history could not be updated');
     return;
   }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  saveNow();
   renderGameArchive();
   toast('Game history cleared');
 }
@@ -1422,6 +1455,10 @@ document.getElementById('winCondition').addEventListener('click',event=>{
 document.getElementById('playerCount').addEventListener('click',event=>{
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(hasProgress()){
+    toast('Start a new game to change the player count');
+    return;
+  }
   state.playerCount = Number(button.dataset.count);
   if(state.startingDealer >= state.playerCount) state.startingDealer = 0;
   render();
@@ -1451,6 +1488,7 @@ document.getElementById('printBtn').addEventListener('click',()=>window.print())
 document.getElementById('finishBtn').addEventListener('click',finishGame);
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new scorecard without adding this game to history?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
@@ -1478,13 +1516,13 @@ document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArc
 
 SiteGamesBackup.registerPage('flexibleCards',{
   beforeExport(){
-    clearTimeout(saveTimer);
-    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    if(!saveNow()) throw new Error('The current Cards scorecard could not be saved before backup.');
   }
 });
 
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-saveNow();
+setSaveState('Loaded');
 </script>
 </body>
 </html>

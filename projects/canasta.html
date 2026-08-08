@@ -191,7 +191,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Canasta Scorecard</h1>
-      <p>Round-by-round scoring for 2–4 players or teams. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Rules: Classic-style Canasta · 1,000-point Wild Canasta variant. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -219,6 +219,7 @@ try{
               <button type="button" data-count="3">3</button>
               <button type="button" data-count="4">4</button>
             </div>
+            <p class="count-lock-note" id="teamCountLock" hidden>Start a new game to change the player count.</p>
           </div>
           <div class="field">
             <label for="targetScore">Playing To</label>
@@ -249,7 +250,7 @@ try{
       <section class="rules" aria-label="Scoring reference">
         <div class="rule"><strong>500</strong><span>Natural Canasta</span></div>
         <div class="rule"><strong>300</strong><span>Mixed Canasta</span></div>
-        <div class="rule"><strong>1000</strong><span>Wild Canasta</span></div>
+        <div class="rule"><strong>1000</strong><span>Wild Canasta · Variant</span></div>
         <div class="rule"><strong>5000</strong><span>Standard Game</span></div>
       </section>
       <div class="panel section">
@@ -279,6 +280,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="canasta-rules.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -294,6 +296,8 @@ let state = loadState();
 let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function emptyTeamRound(){
   return {
@@ -315,6 +319,9 @@ function emptyRound(){
 function defaultState(){
   return {
     version: 1,
+    schemaVersion:CanastaRules.SCHEMA_VERSION,
+    rulesetVersion:CanastaRules.RULESET_VERSION,
+    archiveEditId:null,
     title: SiteScorecards.defaultGameTitle(),
     teamCount: 2,
     targetScore: 5000,
@@ -377,6 +384,7 @@ function normalizeArchivedGame(entry,index){
     if(!game.rounds.length) return null;
     game.editingIndex = null;
     game.draft = emptyRound();
+    game.archiveEditId = null;
     const completedAt = new Date(entry?.completedAt || Date.now());
     return {
       id:String(entry?.id || `canasta-${completedAt.getTime()}-${index}`),
@@ -398,12 +406,20 @@ function saveGameArchive(){
 }
 
 function saveNow(){
+  clearTimeout(saveTimer);
+  saveTimer = 0;
   try{
     localStorage.setItem(STORE_KEY, JSON.stringify(state));
     setSaveState('Saved ' + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'}));
+    return true;
   }catch(error){
     setSaveState('Saved for this tab');
+    return false;
   }
+}
+
+function flushPendingState(){
+  return saveTimer ? saveNow() : true;
 }
 
 function scheduleSave(){
@@ -420,6 +436,9 @@ function normalizeState(next){
   const base = defaultState();
   next = {...base, ...next};
   next.version = 1;
+  next.schemaVersion = CanastaRules.SCHEMA_VERSION;
+  next.rulesetVersion = CanastaRules.RULESET_VERSION;
+  next.archiveEditId = typeof next.archiveEditId === 'string' ? next.archiveEditId.slice(0,120) : null;
   next.teamCount = Math.min(MAX_TEAMS, Math.max(2, numberOr(next.teamCount, 2)));
   next.targetScore = Math.max(1, numberOr(next.targetScore, 5000));
   next.teams = Array.from({length: MAX_TEAMS}, (_,i) => String(next.teams?.[i] || base.teams[i]));
@@ -437,18 +456,7 @@ function normalizeRound(round){
 }
 
 function normalizeTeamRound(team){
-  const base = emptyTeamRound();
-  return {
-    ...base,
-    red3: wholeNumber(team?.red3),
-    natural: wholeNumber(team?.natural),
-    mixed: wholeNumber(team?.mixed),
-    wild: wholeNumber(team?.wild),
-    cardPoints: numberOr(team?.cardPoints, 0),
-    goingOut: !!team?.goingOut,
-    concealed: !!team?.concealed,
-    noMeld: !!team?.noMeld
-  };
+  return CanastaRules.normalizeTeamRound(team);
 }
 
 function visibleTeams(){
@@ -474,24 +482,15 @@ function signed(value){
 }
 
 function red3Score(team){
-  const count = wholeNumber(team.red3);
-  if(!count) return 0;
-  const points = count >= 4 ? 800 : count * 100;
-  return team.noMeld ? -points : points;
+  return CanastaRules.red3Score(team);
 }
 
 function teamRoundTotal(team){
-  return red3Score(team) +
-    wholeNumber(team.natural) * 500 +
-    wholeNumber(team.mixed) * 300 +
-    wholeNumber(team.wild) * 1000 +
-    (team.goingOut ? 100 : 0) +
-    (team.goingOut && team.concealed ? 100 : 0) +
-    numberOr(team.cardPoints, 0);
+  return CanastaRules.teamRoundTotal(team);
 }
 
 function roundTotals(round){
-  return Array.from({length: MAX_TEAMS}, (_,i) => teamRoundTotal(round[i] || emptyTeamRound()));
+  return CanastaRules.roundTotals(round);
 }
 
 function cumulativeTotals(throughIndex){
@@ -499,15 +498,7 @@ function cumulativeTotals(throughIndex){
 }
 
 function cumulativeTotalsForGame(game,throughIndex){
-  const totals = Array(MAX_TEAMS).fill(0);
-  const end = throughIndex === undefined ? game.rounds.length - 1 : throughIndex;
-  for(let r = 0; r <= end; r++){
-    const round = game.rounds[r];
-    if(!round) continue;
-    const scores = roundTotals(round);
-    scores.forEach((score,i) => totals[i] += score);
-  }
-  return totals;
+  return CanastaRules.cumulativeTotals(game,throughIndex);
 }
 
 function gameTeamName(game,index){
@@ -515,27 +506,18 @@ function gameTeamName(game,index){
 }
 
 function leadersForGame(game,totals){
-  const indexes = Array.from({length:game.teamCount},(_,index)=>index);
-  const best = Math.max(...indexes.map(index=>totals[index]));
-  return indexes.filter(index=>totals[index] === best);
+  return CanastaRules.leaderIndexes(game,totals);
 }
 
 function meldRequirement(score){
-  if(score < 0) return 15;
-  if(score < 1500) return 50;
-  if(score < 3000) return 90;
-  return 120;
+  return CanastaRules.meldRequirement(score);
 }
 
 function winnerInfo(){
   const totals = cumulativeTotals();
-  const visible = visibleTeams();
-  const leaders = visible.filter(i => totals[i] >= state.targetScore);
+  const leaders = CanastaRules.winnerIndexes(state,totals);
   if(!leaders.length) return null;
-  leaders.sort((a,b) => totals[b] - totals[a]);
-  const best = totals[leaders[0]];
-  const tied = leaders.filter(i => totals[i] === best);
-  return {teams: tied, score: best};
+  return {teams:leaders,score:totals[leaders[0]]};
 }
 
 function render(){
@@ -554,7 +536,16 @@ function render(){
 }
 
 function renderTeamCount(){
-  SiteScorecards.syncCountButtons('#teamCount',state.teamCount);
+  SiteScorecards.syncCountButtons('#teamCount',state.teamCount,{
+    locked:hasProgress(),
+    message:'#teamCountLock'
+  });
+}
+
+function hasProgress(){
+  return state.rounds.length > 0 || state.draft.some(team=>
+    teamRoundTotal(team) !== 0 || team.goingOut || team.concealed || team.noMeld
+  );
 }
 
 function renderNames(){
@@ -795,8 +786,8 @@ function renderGameArchive(){
       html += '<div class="archive-total"><span>' + escapeHtml(gameTeamName(game,index)) + '</span><strong>' + format(totals[index]) + '</strong></div>';
     }
     html += '</div><div class="archive-actions">';
-    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
-    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button>';
+    html += '<button class="btn warn" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button>';
     html += '</div></div></details>';
   });
   html += '</div>';
@@ -817,10 +808,15 @@ function archiveCurrentGame(){
     render();
     saveNow();
   }
-  if(!confirm('Finish this game and add it to the all-time statistics?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish this game and add it to the all-time statistics?';
+  if(!confirm(prompt)) return;
   const snapshot = normalizeState(JSON.parse(JSON.stringify(state)));
   snapshot.editingIndex = null;
   snapshot.draft = emptyRound();
+  snapshot.archiveEditId = null;
   const now = new Date();
   const previousArchive = gameArchive;
   const archivedGame = {
@@ -828,45 +824,69 @@ function archiveCurrentGame(){
     completedAt:now.toISOString(),
     state:snapshot
   };
-  gameArchive = [archivedGame,...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(gameArchive,archivedGame,editingArchiveId,MAX_ARCHIVED_GAMES);
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     toast('Unable to save this game in the browser');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
-  toast('Game saved to all-time stats');
+  toast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to all-time stats');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(item=>item.id === id);
   if(!entry) return;
-  const warning = state.rounds.length ? 'Replace the current game with this saved match?' : 'Restore this saved match?';
+  const warning = state.rounds.length
+    ? 'Edit this saved match and replace the current game? The archive will not change until you finish.'
+    : 'Edit this saved match? The archive will not change until you finish.';
   if(!confirm(warning)) return;
   state = normalizeState(JSON.parse(JSON.stringify(entry.state)));
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   state.editingIndex = null;
   state.draft = emptyRound();
   render();
   saveNow();
   window.scrollTo({top:0,behavior:'smooth'});
-  toast('Saved match restored');
+  toast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const entry = gameArchive.find(item=>item.id === id);
-  if(!entry || !confirm('Delete this saved match? Its statistics will also be removed.')) return;
+  if(!entry) return;
+  if(id === editingArchiveId){
+    toast('Finish or start a new game before deleting this match');
+    return;
+  }
+  if(!confirm('Delete this saved match? Its statistics will also be removed.')) return;
+  const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(item=>item.id !== id);
-  saveGameArchive();
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Saved match data could not be updated');
+    return;
+  }
   renderGameArchive();
   toast('Saved match deleted');
 }
 
 function clearGameArchive(){
   if(!gameArchive.length || !confirm('Clear all saved Canasta matches and all-time statistics?')) return;
+  const previousArchive = gameArchive;
   gameArchive = [];
-  saveGameArchive();
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    toast('Saved match data could not be updated');
+    return;
+  }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  saveNow();
   renderGameArchive();
   toast('Saved match data cleared');
 }
@@ -958,6 +978,10 @@ document.getElementById('targetScore').addEventListener('input', event => {
 document.getElementById('teamCount').addEventListener('click', event => {
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(hasProgress()){
+    toast('Start a new game to change the player count');
+    return;
+  }
   state.teamCount = Number(button.dataset.count);
   render();
   scheduleSave();
@@ -977,6 +1001,7 @@ document.getElementById('finishGameBtn').addEventListener('click', archiveCurren
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   if(!confirm('Start a new Canasta scorecard without saving this game?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   render();
   saveNow();
@@ -996,13 +1021,13 @@ document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArc
 
 SiteGamesBackup.registerPage('canasta',{
   beforeExport(){
-    clearTimeout(saveTimer);
-    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    if(!saveNow()) throw new Error('The current Canasta scorecard could not be saved before backup.');
   }
 });
 
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-saveNow();
+setSaveState('Loaded');
 </script>
 </body>
 </html>

@@ -26,7 +26,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   and retro terminal.
 - **projects/** — Standalone recreational tools and scorecards. See
   **projects/SCORECARD-DEVELOPMENT.md** before adding or restructuring a
-  scorekeeper.
+  scorekeeper, and **projects/SCORECARD-RULES.md** for the maintained scoring
+  contracts and deliberate house rules.
 - **apps/fers-retirement/** — React and TypeScript source and tests for the
   Dual-FERS Retirement Planner, with governing documents under
   `project-docs/`.

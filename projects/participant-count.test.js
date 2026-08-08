@@ -26,7 +26,7 @@ test('every player or team count renderer marks exactly which button is selected
   pages.forEach(({file,control}) => {
     const html = fs.readFileSync(path.join(__dirname,file),'utf8');
     assert.match(html,new RegExp(`id="${control}"[^>]*aria-label="[^"]+"`));
-    assert.match(html,new RegExp(`SiteScorecards\\.syncCountButtons\\('#${control}',state\\.(?:playerCount|teamCount)\\)`));
+    assert.match(html,new RegExp(`SiteScorecards\\.syncCountButtons\\('#${control}',state\\.(?:playerCount|teamCount)(?:,\\{|\\))`));
     assert.match(html,new RegExp(`getElementById\\('${control}'\\)\\.addEventListener\\('click'`));
   });
 });

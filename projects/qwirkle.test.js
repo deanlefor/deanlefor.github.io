@@ -4,6 +4,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const test = require('node:test');
+const rules = require('./qwirkle-rules.js');
 
 const source = fs.readFileSync(path.join(__dirname,'qwirkle.html'),'utf8');
 
@@ -15,7 +16,7 @@ test('Qwirkle uses the official player range and has no target-score setting',()
 });
 
 test('the draft starts with 15 row-major turn entries and can extend by five',() => {
-  assert.match(source,/const INITIAL_ROWS = 15;/);
+  assert.equal(rules.INITIAL_ROWS,15);
   assert.match(source,/const ROW_INCREMENT = 5;/);
   assert.match(source,/state\.rows\.forEach\(\(row,rowIndex\)=>\{[\s\S]*?players\.forEach\(index=>\{/);
   assert.match(source,/<button class="btn" id="addRowsBtn" type="button">Add 5 Turns<\/button>/);
@@ -24,8 +25,12 @@ test('the draft starts with 15 row-major turn entries and can extend by five',()
 test('official scoring directions and bonuses are explicit',() => {
   assert.match(source,/Count every tile in each affected line/);
   assert.match(source,/A Qwirkle scores 6 \+ a 6-point bonus/);
-  assert.match(source,/const END_BONUS = 6;/);
-  assert.match(source,/totals\[game\.finishingPlayer\] \+= END_BONUS/);
+  assert.equal(rules.END_BONUS,6);
+  assert.deepEqual(rules.totalsForGame(rules.normalizeState({
+    playerCount:2,
+    rows:[{scores:[10,20,null,null]}],
+    finishingPlayer:0
+  })).slice(0,2),[16,20]);
   assert.match(source,/Highest total wins/);
   assert.match(source,/mindware\.orientaltrading\.com\/pdf\/instructions\/32016\.pdf/);
 });

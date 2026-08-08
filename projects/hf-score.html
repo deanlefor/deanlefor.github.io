@@ -130,7 +130,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Hand &amp; Foot Remastered</h1>
-      <p>Four-round scoring with computed bonuses, card totals, and cumulative standings. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Saved</span></p>
+      <p>Rules: Hand &amp; Foot singles · Wild Books are a 1,500-point house rule. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loaded</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -156,6 +156,7 @@ try{
           <button type="button" data-count="7">7</button>
           <button type="button" data-count="8">8</button>
         </div>
+        <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
       </div>
       <div class="field">
         <label for="gameTitle">Game Name</label>
@@ -172,7 +173,7 @@ try{
   <section class="score-strip" id="scoreStrip"></section>
 
   <section class="rules" aria-label="Scoring reference">
-    <div class="rule"><strong>1500</strong><span>Wild Book</span></div>
+    <div class="rule"><strong>1500</strong><span>Wild Book · House rule</span></div>
     <div class="rule"><strong>700</strong><span>Clean Book</span></div>
     <div class="rule"><strong>300</strong><span>Dirty Book</span></div>
     <div class="rule"><strong>100</strong><span>Going Out</span></div>
@@ -227,6 +228,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="hand-foot-rules.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -235,14 +237,14 @@ const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
 const HISTORY_KEY = 'handFootRemasteredScorecard.history.v1';
 const MAX_ARCHIVED_GAMES = 250;
-const ROUND_COUNT = 4;
-const SCHEMA_VERSION = 3;
-const BLACK3_MIGRATION_SCHEMA_VERSION = 2;
+const ROUND_COUNT = HandFootRules.ROUND_COUNT;
+const SCHEMA_VERSION = HandFootRules.SCHEMA_VERSION;
+const BLACK3_MIGRATION_SCHEMA_VERSION = HandFootRules.BLACK3_MIGRATION_SCHEMA_VERSION;
 const MIN_PLAYERS = 2;
 const MAX_PLAYERS = 8;
 const DEFAULT_PLAYER_COUNT = 4;
 const DEFAULT_GAME_MODE = 'singles';
-const DEFAULT_REQUIREMENTS = [60,90,120,150];
+const DEFAULT_REQUIREMENTS = [...HandFootRules.REQUIREMENTS];
 const PLAYER_COLORS = ['#2f6b55','#335f88','#c3922e','#a33b32','#6a4c93','#2a8c82','#b4682f','#5c6670'];
 const SECTION_META = {
   perfectDeal:{label:'Perfect Deal', type:'check', points:100},
@@ -265,6 +267,8 @@ let state = loadState();
 let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
+let editingArchiveId = gameArchive.some(entry=>entry.id === state.archiveEditId) ? state.archiveEditId : null;
+state.archiveEditId = editingArchiveId;
 
 function newRound(){
   return {
@@ -276,6 +280,8 @@ function newRound(){
 function defaultState(){
   return {
     schemaVersion:SCHEMA_VERSION,
+    rulesetVersion:HandFootRules.RULESET_VERSION,
+    archiveEditId:null,
     title:SiteScorecards.defaultGameTitle(),
     gameMode:DEFAULT_GAME_MODE,
     playerCount:DEFAULT_PLAYER_COUNT,
@@ -349,6 +355,8 @@ function normalizeState(saved,preserveLegacyMode = false){
   const source = saved && typeof saved === 'object' ? saved : {};
   const savedSchema = Number(source.schemaVersion) || 1;
   const next = {...base,...source,schemaVersion:SCHEMA_VERSION};
+  next.rulesetVersion = HandFootRules.RULESET_VERSION;
+  next.archiveEditId = typeof source.archiveEditId === 'string' ? source.archiveEditId.slice(0,120) : null;
   next.gameMode = preserveLegacyMode
     ? normalizeGameMode(source.gameMode,savedSchema,source.scores)
     : DEFAULT_GAME_MODE;
@@ -383,6 +391,7 @@ function normalizeArchivedGame(source,index){
   if(!gameSource || typeof gameSource !== 'object') return null;
   const archivedState = normalizeState(gameSource,true);
   if(!gameHasScores(archivedState)) return null;
+  archivedState.archiveEditId = null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
   const id = String(source.id || `game-${completedAt}-${index}`).slice(0,120);
@@ -390,27 +399,11 @@ function normalizeArchivedGame(source,index){
 }
 
 function normalizeGameMode(value, savedSchema, scores){
-  if(value === 'singles' || value === 'teams') return value;
-  if(savedSchema < SCHEMA_VERSION && Array.isArray(scores)){
-    const usedWildBooks = scores.some(round=>Array.isArray(round) && round.some(player=>n(player?.wildBooks) > 0));
-    if(usedWildBooks) return 'teams';
-  }
-  return DEFAULT_GAME_MODE;
+  return HandFootRules.normalizeGameMode(value,savedSchema,scores);
 }
 
 function normalizeRound(savedRound, savedSchema){
-  const source = savedRound && typeof savedRound === 'object' ? savedRound : {};
-  const round = newRound();
-  Object.keys(round).forEach(key=>{
-    if(Object.prototype.hasOwnProperty.call(source,key)){
-      if(key === 'perfectDeal' || key === 'goingOut') round[key] = source[key] === true || source[key] === 1 || source[key] === 'true';
-      else round[key] = COUNT_KEYS.includes(key) ? normalizeCount(source[key]) : n(source[key]);
-    }
-  });
-  if(savedSchema < BLACK3_MIGRATION_SCHEMA_VERSION && Object.prototype.hasOwnProperty.call(source,'black3')){
-    round.cardTotal = n(round.cardTotal) + n(source.black3) * -100;
-  }
-  return round;
+  return HandFootRules.normalizeRound(savedRound,savedSchema);
 }
 
 function save(){
@@ -419,6 +412,11 @@ function save(){
   const didPersist = storageSet(STORE_KEY,JSON.stringify(state));
   const saveState = document.getElementById('saveState');
   saveState.textContent = (didPersist ? 'Saved ' : 'Saved for this tab ') + new Date().toLocaleTimeString([], {hour:'numeric', minute:'2-digit'});
+  return didPersist;
+}
+
+function flushPendingState(){
+  return saveTimer ? save() : true;
 }
 
 function scheduleSave(){
@@ -428,13 +426,11 @@ function scheduleSave(){
 }
 
 function n(value){
-  const number = Number(value);
-  if(!Number.isFinite(number) || Object.is(number,-0)) return 0;
-  return number;
+  return HandFootRules.number(value);
 }
 
 function normalizeCount(value){
-  return Math.max(0,Math.trunc(n(value)));
+  return HandFootRules.count(value);
 }
 
 function fmt(value){
@@ -448,26 +444,20 @@ function playerRound(roundIndex, playerIndex){
 }
 
 function bookTotal(roundIndex, playerIndex){
-  const row = playerRound(roundIndex, playerIndex);
-  return n(row.wildBooks)*1500 + n(row.cleanBooks)*700 + n(row.dirtyBooks)*300;
+  return HandFootRules.bookTotal(playerRound(roundIndex,playerIndex));
 }
 
 function sectionValue(roundIndex, playerIndex, key){
-  const row = playerRound(roundIndex, playerIndex);
-  if(key === 'perfectDeal') return row.perfectDeal ? 100 : 0;
-  if(key === 'goingOut') return row.goingOut ? 100 : 0;
-  if(key === 'red3') return n(row.red3) ? n(row.red3)*100 : 0;
-  if(key === 'wildBooks') return n(row.wildBooks) ? n(row.wildBooks)*1500 : 0;
-  if(key === 'cleanBooks') return n(row.cleanBooks) ? n(row.cleanBooks)*700 : 0;
-  if(key === 'dirtyBooks') return n(row.dirtyBooks) ? n(row.dirtyBooks)*300 : 0;
+  const row = playerRound(roundIndex,playerIndex);
+  if(['perfectDeal','goingOut','red3','wildBooks','cleanBooks','dirtyBooks','cardTotal'].includes(key)){
+    return HandFootRules.sectionValue(row,key);
+  }
   if(key === 'bookTotal') return bookTotal(roundIndex, playerIndex);
-  if(key === 'cardTotal') return n(row.cardTotal);
   return 0;
 }
 
 function roundTotal(roundIndex, playerIndex){
-  return scoringKeys()
-    .reduce((sum,key)=>sum + sectionValue(roundIndex, playerIndex, key),0);
+  return HandFootRules.roundTotal(playerRound(roundIndex,playerIndex));
 }
 
 function scoringKeys(){
@@ -475,51 +465,31 @@ function scoringKeys(){
 }
 
 function cumulative(roundIndex, playerIndex){
-  let total = 0;
-  for(let r=0;r<=roundIndex;r++) total += roundTotal(r, playerIndex);
-  return total;
+  return HandFootRules.cumulative(state.scores,roundIndex,playerIndex);
 }
 
 function rowTotal(row){
-  return (row.perfectDeal ? 100 : 0) +
-    (row.goingOut ? 100 : 0) +
-    n(row.red3) * 100 +
-    n(row.wildBooks) * 1500 +
-    n(row.cleanBooks) * 700 +
-    n(row.dirtyBooks) * 300 +
-    n(row.cardTotal);
+  return HandFootRules.roundTotal(row);
 }
 
 function totalsForGame(game){
-  return Array.from({length:game.playerCount},(_,player)=>{
-    let total = 0;
-    for(let round=0;round<ROUND_COUNT;round++) total += rowTotal(game.scores[round][player]);
-    return total;
-  });
+  return HandFootRules.totalsForGame(game);
 }
 
 function rowHasScore(row){
-  return row.perfectDeal || row.goingOut ||
-    scoringKeys().some(key=>!ROUND_EVENT_KEYS.includes(key) && n(row[key]) !== 0);
+  return HandFootRules.rowHasScore(row);
 }
 
 function gameHasScores(game = state){
-  for(let round=0;round<ROUND_COUNT;round++){
-    for(let player=0;player<game.playerCount;player++){
-      if(rowHasScore(game.scores[round][player])) return true;
-    }
-  }
-  return false;
+  return HandFootRules.gameHasScores(game);
+}
+
+function participantCountLocked(){
+  return state.scores.some(round=>round.some(rowHasScore));
 }
 
 function playedRoundCount(game){
-  let count = 0;
-  for(let round=0;round<ROUND_COUNT;round++){
-    const used = Array.from({length:game.playerCount},(_,player)=>game.scores[round][player])
-      .some(rowHasScore);
-    if(used) count += 1;
-  }
-  return count;
+  return HandFootRules.playedRoundCount(game);
 }
 
 function gameColumnName(game,index){
@@ -550,7 +520,10 @@ function render(){
 }
 
 function renderPlayerCount(){
-  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount,{
+    locked:participantCountLocked(),
+    message:'#playerCountLock'
+  });
 }
 
 function renderNames(){
@@ -673,8 +646,8 @@ function renderGameArchive(){
       html += '<div class="archive-total"><span>' + escapeHtml(gameColumnName(game,index)) + '</span><strong>' + fmt(total) + '</strong></div>';
     });
     html += '</div><div class="archive-actions">';
-    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button>';
-    html += '<button class="btn danger" type="button" data-delete-game="' + entryId + '">Delete</button>';
+    html += '<button class="btn" type="button" data-restore-game="' + entryId + '">Edit Saved Match</button>';
+    html += '<button class="btn danger" type="button" data-delete-game="' + entryId + '"' + (entry.id === editingArchiveId ? ' disabled title="Finish or start a new game before deleting this match"' : '') + '>Delete</button>';
     html += '</div></div></details>';
   });
   html += '</div>';
@@ -797,10 +770,12 @@ function refreshCalculations(round, player, key){
 }
 
 function createArchivedGame(){
+  const archivedState = normalizeState(state,editingArchiveId !== null && state.gameMode === 'teams');
+  archivedState.archiveEditId = null;
   return {
     id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
     completedAt:new Date().toISOString(),
-    state:normalizeState(state)
+    state:archivedState
   };
 }
 
@@ -818,33 +793,45 @@ function finishGame(){
     render();
     save();
   }
-  if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
+  const editingSavedMatch = gameArchive.some(game=>game.id === editingArchiveId);
+  const prompt = editingSavedMatch
+    ? 'Save these changes to the original saved match, then start a new scorecard?'
+    : 'Finish and archive this game, then start a new scorecard?';
+  if(!confirm(prompt)) return;
   const previousArchive = gameArchive;
-  gameArchive = [createArchivedGame(),...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  const archiveUpdate = SiteScorecards.upsertArchiveEntry(gameArchive,createArchivedGame(),editingArchiveId,MAX_ARCHIVED_GAMES);
+  gameArchive = archiveUpdate.archive;
   if(!saveGameArchive()){
     gameArchive = previousArchive;
     toast('Game history could not be saved');
     return;
   }
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   save();
   render();
-  toast('Game saved to history');
+  toast(archiveUpdate.replaced ? 'Saved match updated' : 'Game saved to history');
 }
 
 function restoreArchivedGame(id){
   const entry = gameArchive.find(game=>game.id === id);
   if(!entry) return;
-  if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
-  state = normalizeState(entry.state);
+  if(!confirm('Edit this saved match? The current scorecard will be replaced, but the archive will not change until you finish the game.')) return;
+  state = normalizeState(entry.state,true);
+  editingArchiveId = entry.id;
+  state.archiveEditId = entry.id;
   save();
   render();
-  toast('Archived game restored');
+  toast('Editing saved match');
 }
 
 function deleteArchivedGame(id){
   const index = gameArchive.findIndex(game=>game.id === id);
   if(index === -1) return;
+  if(id === editingArchiveId){
+    toast('Finish or start a new game before deleting this match');
+    return;
+  }
   if(!confirm('Delete this game from history?')) return;
   const previousArchive = gameArchive;
   gameArchive = gameArchive.filter(game=>game.id !== id);
@@ -867,6 +854,9 @@ function clearGameArchive(){
     toast('Game history could not be updated');
     return;
   }
+  editingArchiveId = null;
+  state.archiveEditId = null;
+  save();
   renderGameArchive();
   toast('Game history cleared');
 }
@@ -879,6 +869,10 @@ document.getElementById('gameTitle').addEventListener('input',event=>{
 document.getElementById('playerCount').addEventListener('click',event=>{
   const button = event.target.closest('button[data-count]');
   if(!button) return;
+  if(participantCountLocked()){
+    toast('Start a new game to change the player count');
+    return;
+  }
   state.playerCount = Number(button.dataset.count);
   render();
   scheduleSave();
@@ -897,6 +891,7 @@ document.getElementById('finishBtn').addEventListener('click',finishGame);
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new Hand & Foot scorecard without adding this game to history?')) return;
+  editingArchiveId = null;
   state = newGameStateFromCurrent();
   save();
   render();
@@ -914,22 +909,16 @@ document.getElementById('gameHistory').addEventListener('click',event=>{
 });
 document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
 
-window.addEventListener('pagehide',save);
-document.addEventListener('visibilitychange',()=>{
-  if(document.visibilityState === 'hidden') save();
-});
-
 SiteGamesBackup.registerPage('handAndFoot',{
   beforeExport(){
-    clearTimeout(saveTimer);
-    if(!storageSet(STORE_KEY,JSON.stringify(state))){
+    if(!save()){
       throw new Error('The current Hand & Foot scorecard could not be saved before backup.');
     }
   }
 });
 
+SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
-save();
 </script>
 </body>
 </html>
