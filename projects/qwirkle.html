@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qwirkle Scorecard</title>
+<meta name="description" content="A fast, auto-saving Qwirkle scorecard for two to four players with turn-by-turn totals and official bonuses.">
+<link rel="stylesheet" href="score-stats.css">
+<style>
+.layout{grid-template-columns:minmax(300px,.72fr) minmax(570px,1.45fr)}
+.setup-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(130px,.55fr);gap:10px;align-items:end}
+.player-count-field{grid-column:1 / -1}
+.player-seg button{flex:1 1 0}
+.name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+.name-grid input{border-left:5px solid var(--green)}
+.rules-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+.rules-list li{display:grid;grid-template-columns:38px minmax(0,1fr);gap:9px;align-items:start}
+.rule-mark{display:grid;place-items:center;min-height:34px;border:1px solid var(--line);border-radius:7px;background:var(--soft);color:var(--green);font-weight:950}
+.rule-copy strong{display:block;font-size:.84rem}
+.rule-copy span{display:block;margin-top:2px;color:var(--muted);font-size:.74rem;line-height:1.4}
+.rules-source{display:inline-block;margin-top:10px;color:var(--green);font-size:.72rem;font-weight:850;text-decoration:none}
+.rules-source:hover{text-decoration:underline;text-underline-offset:3px}
+.quick-note{margin:0;color:var(--muted);font-size:.75rem;line-height:1.45}
+.standings{display:grid;grid-template-columns:repeat(var(--players),minmax(110px,1fr));gap:9px;position:sticky;top:8px;z-index:7;padding-bottom:3px;background:var(--page)}
+.standing{padding:11px;border-left:5px solid var(--green)}
+.standing.leader{border-color:var(--gold);background:color-mix(in srgb,var(--gold) 10%,var(--panel))}
+.standing-name{overflow:hidden;color:var(--muted);font-size:.77rem;font-weight:850;text-overflow:ellipsis;white-space:nowrap}
+.standing-score{margin-top:3px;font-size:1.85rem;font-weight:950;line-height:1}
+.standing-meta{margin-top:4px;color:var(--muted);font-size:.68rem}
+.sheet-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:11px}
+.sheet-head h2{margin:0;font-size:1rem}
+.sheet-head p{margin:3px 0 0;color:var(--muted);font-size:.72rem}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.score-table{width:100%;min-width:520px;border-collapse:separate;border-spacing:0;table-layout:fixed}
+.score-table th,.score-table td{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.score-table tr > :last-child{border-right:0}
+.score-table thead th{position:sticky;top:0;z-index:3;height:36px;padding:7px;background:var(--soft);color:var(--muted);font-size:.68rem;font-weight:950;letter-spacing:.055em;text-align:center;text-transform:uppercase}
+.score-table .turn-head,.score-table .turn-cell{position:sticky;left:0;width:68px;z-index:2;background:var(--soft)}
+.score-table .turn-head{z-index:4}
+.turn-cell{padding:6px 7px;color:var(--muted);font-size:.72rem;font-weight:900;text-align:center}
+.score-cell{padding:0;background:var(--input)}
+.score-cell input{min-height:42px;border:0;border-radius:0;background:transparent;font-size:1rem;font-weight:900;text-align:center}
+.score-cell input:focus{position:relative;z-index:1;box-shadow:inset 0 0 0 3px var(--focus)}
+.score-table tfoot th,.score-table tfoot td{position:sticky;bottom:0;z-index:2;padding:9px 7px;border-bottom:0;background:var(--soft);font-size:.86rem;font-weight:950;text-align:center}
+.score-table tfoot th{left:0;z-index:3;text-transform:uppercase}
+.end-panel{display:grid;grid-template-columns:minmax(190px,.75fr) minmax(0,1fr);gap:12px;align-items:end}
+.end-summary{min-height:38px;display:flex;align-items:center;padding:8px 10px;border:1px dashed var(--line);border-radius:7px;background:var(--soft);color:var(--muted);font-size:.76rem;line-height:1.35}
+.end-summary strong{color:var(--ink)}
+.winner{display:none;padding:12px;border:1px solid color-mix(in srgb,var(--gold) 44%,var(--line));border-radius:8px;background:color-mix(in srgb,var(--gold) 10%,var(--panel));color:color-mix(in srgb,var(--gold) 72%,var(--ink));font-weight:900}
+.winner.show{display:block}
+.empty{padding:28px 14px;text-align:center;border:1px dashed var(--line)}
+@media(max-width:1040px){.layout{grid-template-columns:1fr}.standings{position:static}}
+@media(max-width:680px){.setup-grid,.name-grid,.end-panel{grid-template-columns:1fr}.standings{grid-template-columns:repeat(2,minmax(0,1fr))}.sheet-head{flex-direction:column}.sheet-head .btn{width:100%}}
+@media print{
+  body{background:#fff}.wrap{max-width:none;padding:0}.toolbar,.game-backup-panel,.settings-panel,.rules-panel,.sheet-head .btn,.history-panel,.toast{display:none!important}.layout{grid-template-columns:1fr}.panel{box-shadow:none}.standings{position:static}.table-wrap{overflow:visible}.score-table{min-width:0}.score-cell input{padding:4px;min-height:30px}.winner{display:block}
+}
+</style>
+<link rel="stylesheet" href="tracker-shell.css">
+<script>
+try{
+  if(window.localStorage && window.localStorage.getItem('qwirkleScorecard.darkMode.v1') === 'true'){
+    document.documentElement.classList.add('dark-mode');
+  }
+}catch(error){}
+</script>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header class="top">
+    <div class="brand">
+      <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
+      <h1>Qwirkle Scorecard</h1>
+      <p>Fast turn-by-turn scoring for the original tile game. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+    </div>
+    <div class="toolbar">
+      <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
+      <button class="btn" id="printBtn" type="button" title="Print scorecard">Print</button>
+      <button class="btn" id="exportBtn" type="button" title="Download a full JSON backup">Backup</button>
+      <button class="btn" id="importBtn" type="button" title="Restore a JSON backup">Import</button>
+      <button class="btn primary" id="finishBtn" type="button" title="Save this game to history">Finish Game</button>
+      <button class="btn warn" id="resetBtn" type="button" title="Clear this game">New Game</button>
+      <input class="file-input" id="importFile" type="file" accept="application/json,.json">
+    </div>
+  </header>
+
+  <main class="layout">
+    <section class="stack">
+      <div class="panel section settings-panel">
+        <div class="setup-grid">
+          <div class="field">
+            <label for="gameTitle">Game Name</label>
+            <input id="gameTitle" type="text" maxlength="48">
+          </div>
+          <div class="field player-count-field">
+            <span class="label">Players</span>
+            <div class="seg player-seg" id="playerCount" aria-label="Player count">
+              <button type="button" data-count="2">2</button>
+              <button type="button" data-count="3">3</button>
+              <button type="button" data-count="4">4</button>
+            </div>
+          </div>
+        </div>
+        <div class="divider"></div>
+        <div class="name-grid" id="nameGrid"></div>
+      </div>
+
+      <section class="panel section rules-panel" aria-labelledby="scoringTitle">
+        <h2 class="section-title" id="scoringTitle">Scoring at a Glance</h2>
+        <ul class="rules-list">
+          <li><span class="rule-mark">1×</span><span class="rule-copy"><strong>Count every tile in each affected line</strong><span>Include tiles already on the board when you create or extend a line.</span></span></li>
+          <li><span class="rule-mark">＋</span><span class="rule-copy"><strong>Add intersecting lines</strong><span>A tile can score in both its horizontal and vertical line on the same turn.</span></span></li>
+          <li><span class="rule-mark">12</span><span class="rule-copy"><strong>A Qwirkle scores 6 + a 6-point bonus</strong><span>Complete six unique shapes of one color or six unique colors of one shape.</span></span></li>
+          <li><span class="rule-mark">+6</span><span class="rule-copy"><strong>First player out ends the game</strong><span>After the draw pile is empty, the first player to use every tile gets 6 bonus points. Highest total wins.</span></span></li>
+        </ul>
+        <a class="rules-source" href="https://www.mindware.orientaltrading.com/pdf/instructions/32016.pdf" target="_blank" rel="noreferrer">Read the official MindWare rules ↗</a>
+      </section>
+
+      <section class="panel section">
+        <h2 class="section-title">How to Use This Sheet</h2>
+        <p class="quick-note">Enter each player’s complete turn score, including any Qwirkle bonus. A tile exchange scores 0. Tab moves across the current turn row and then into the next row.</p>
+      </section>
+    </section>
+
+    <section class="stack">
+      <div class="standings" id="standings"></div>
+      <div class="winner" id="winnerBox" aria-live="polite"></div>
+
+      <section class="panel section">
+        <div class="sheet-head">
+          <div>
+            <h2>Turn Scores</h2>
+            <p>15 turn rows are ready now. Add more only if the game runs longer.</p>
+          </div>
+          <button class="btn" id="addRowsBtn" type="button">Add 5 Turns</button>
+        </div>
+        <div class="table-wrap" id="scoreTable"></div>
+      </section>
+
+      <section class="panel section end-panel" aria-labelledby="endGameTitle">
+        <div class="field">
+          <label for="finishingPlayer" id="endGameTitle">Player Who Went Out (+6)</label>
+          <select id="finishingPlayer"></select>
+        </div>
+        <div class="end-summary" id="endSummary">Choose the player who used their last tile after the draw pile was empty.</div>
+      </section>
+
+      <section class="panel section history-panel">
+        <h2 class="section-title">All-Time Stats</h2>
+        <div id="gameStats"></div>
+        <details class="match-records">
+          <summary><span>Manage saved matches</span><span class="history-count" id="gameHistoryCount">0 saved matches</span></summary>
+          <div class="match-records-body">
+            <div class="match-records-toolbar">
+              <span>Restore or delete individual match records.</span>
+              <button class="btn warn history-clear" id="clearHistoryBtn" type="button">Clear Saved Data</button>
+            </div>
+            <div id="gameHistory"></div>
+          </div>
+        </details>
+      </section>
+    </section>
+  </main>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="score-stats.js"></script>
+<script src="game-backup.js"></script>
+<script src="player-names.js"></script>
+<script src="scorecard-common.js"></script>
+<script>
+const escapeHtml = SiteScorecards.escapeHtml;
+const formatArchivedDate = SiteScorecards.formatDate;
+const showToast = SiteScorecards.toast;
+const STORE_KEY = 'qwirkleScorecard.v1';
+const HISTORY_KEY = 'qwirkleScorecard.history.v1';
+const THEME_KEY = 'qwirkleScorecard.darkMode.v1';
+const MAX_ARCHIVED_GAMES = 250;
+const MAX_PLAYERS = 4;
+const INITIAL_ROWS = 15;
+const ROW_INCREMENT = 5;
+const END_BONUS = 6;
+const COLORS = ['#2f684d','#315f88','#bd8c2f','#ad3f35'];
+
+let state = loadState();
+let gameArchive = loadGameArchive();
+let darkMode = loadDarkMode();
+let saveTimer = 0;
+
+function emptyRow(){
+  return {scores:Array(MAX_PLAYERS).fill(null)};
+}
+
+function defaultState(){
+  return {
+    version:1,
+    title:SiteScorecards.defaultGameTitle(),
+    playerCount:4,
+    players:Array.from({length:MAX_PLAYERS},(_,index)=>'Player ' + (index + 1)),
+    rows:Array.from({length:INITIAL_ROWS},emptyRow),
+    finishingPlayer:null
+  };
+}
+
+function readJson(key){
+  try{
+    const raw = localStorage.getItem(key);
+    return raw ? JSON.parse(raw) : null;
+  }catch(error){
+    return null;
+  }
+}
+
+function loadState(){
+  const saved = readJson(STORE_KEY);
+  return saved ? normalizeState(saved) : defaultState();
+}
+
+function loadGameArchive(){
+  try{
+    return normalizeGameArchive(readJson(HISTORY_KEY) || []);
+  }catch(error){
+    return [];
+  }
+}
+
+function saveGameArchive(){
+  try{
+    localStorage.setItem(HISTORY_KEY,JSON.stringify(gameArchive));
+    return true;
+  }catch(error){
+    return false;
+  }
+}
+
+function loadDarkMode(){
+  try{return localStorage.getItem(THEME_KEY) === 'true';}
+  catch(error){return false;}
+}
+
+function saveDarkMode(){
+  try{localStorage.setItem(THEME_KEY,darkMode ? 'true' : 'false');}
+  catch(error){}
+}
+
+function applyTheme(){
+  document.documentElement.classList.toggle('dark-mode',darkMode);
+  const button = document.getElementById('themeBtn');
+  button.classList.toggle('active',darkMode);
+  button.setAttribute('aria-pressed',String(darkMode));
+  button.textContent = darkMode ? 'Light Mode' : 'Dark Mode';
+  button.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
+}
+
+function saveNow(){
+  try{
+    localStorage.setItem(STORE_KEY,JSON.stringify(state));
+    setSaveState('Saved ' + new Date().toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}));
+  }catch(error){
+    setSaveState('Saved for this tab');
+  }
+}
+
+function scheduleSave(){
+  setSaveState('Saving...');
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(saveNow,120);
+}
+
+function setSaveState(text){
+  document.getElementById('saveState').textContent = text;
+}
+
+function clamp(value,min,max){
+  return Math.min(max,Math.max(min,value));
+}
+
+function numberOr(value,fallback){
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function nullableScore(value){
+  if(value === '' || value === null || value === undefined) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? Math.max(0,Math.trunc(number)) : null;
+}
+
+function normalizeRow(row){
+  const source = Array.isArray(row) ? row : row?.scores;
+  return {scores:Array.from({length:MAX_PLAYERS},(_,index)=>nullableScore(source?.[index]))};
+}
+
+function normalizeState(source){
+  const base = defaultState();
+  const next = source && typeof source === 'object' ? {...base,...source} : base;
+  next.version = 1;
+  next.title = String(next.title || base.title).slice(0,48);
+  next.playerCount = clamp(Math.trunc(numberOr(next.playerCount,4)),2,MAX_PLAYERS);
+  next.players = Array.from({length:MAX_PLAYERS},(_,index)=>String(next.players?.[index] || base.players[index]).slice(0,24));
+  const rows = Array.isArray(next.rows) ? next.rows.map(normalizeRow) : [];
+  while(rows.length < INITIAL_ROWS) rows.push(emptyRow());
+  next.rows = rows;
+  const finisher = Number(next.finishingPlayer);
+  next.finishingPlayer = Number.isInteger(finisher) && finisher >= 0 && finisher < next.playerCount ? finisher : null;
+  return next;
+}
+
+function normalizeGameArchive(source){
+  if(!Array.isArray(source)) return [];
+  return source.map((entry,index)=>normalizeArchivedGame(entry,index)).filter(Boolean).slice(0,MAX_ARCHIVED_GAMES);
+}
+
+function normalizeArchivedGame(source,index){
+  if(!source || typeof source !== 'object') return null;
+  const gameSource = source.state || source.game || source.scorecard;
+  if(!gameSource || typeof gameSource !== 'object') return null;
+  const archivedState = normalizeState(gameSource);
+  if(!hasAnyScore(archivedState)) return null;
+  const date = new Date(source.completedAt || source.date || Date.now());
+  const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
+  const id = String(source.id || ('game-' + completedAt + '-' + index)).slice(0,120);
+  return {id,completedAt,state:archivedState};
+}
+
+function visiblePlayers(game = state){
+  return Array.from({length:game.playerCount},(_,index)=>index);
+}
+
+function playerName(index,game = state){
+  return game.players[index] || 'Player ' + (index + 1);
+}
+
+function hasAnyScore(game = state){
+  return game.rows.some(row=>visiblePlayers(game).some(index=>row.scores[index] !== null));
+}
+
+function usedRowCount(game = state){
+  let used = 0;
+  game.rows.forEach((row,rowIndex)=>{
+    if(visiblePlayers(game).some(index=>row.scores[index] !== null)) used = rowIndex + 1;
+  });
+  return used;
+}
+
+function totalsForGame(game = state){
+  const totals = Array(MAX_PLAYERS).fill(0);
+  game.rows.forEach(row=>{
+    visiblePlayers(game).forEach(index=>{totals[index] += numberOr(row.scores[index],0);});
+  });
+  if(game.finishingPlayer !== null && game.finishingPlayer < game.playerCount){
+    totals[game.finishingPlayer] += END_BONUS;
+  }
+  return totals;
+}
+
+function leaderIndexesForGame(game,totals = totalsForGame(game)){
+  const high = Math.max(...visiblePlayers(game).map(index=>totals[index]));
+  return visiblePlayers(game).filter(index=>totals[index] === high);
+}
+
+function format(value){
+  return numberOr(value,0).toLocaleString();
+}
+
+function lastScore(index,game = state){
+  for(let rowIndex = game.rows.length - 1;rowIndex >= 0;rowIndex -= 1){
+    if(game.rows[rowIndex].scores[index] !== null) return game.rows[rowIndex].scores[index];
+  }
+  return null;
+}
+
+function render(){
+  applyTheme();
+  document.getElementById('gameTitle').value = state.title;
+  renderPlayerCount();
+  renderNameGrid();
+  renderScoreTable();
+  renderEndGame();
+  renderScoreSummary();
+  renderGameArchive();
+}
+
+function renderPlayerCount(){
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
+}
+
+function renderNameGrid(){
+  SitePlayerNames.refresh();
+  const grid = document.getElementById('nameGrid');
+  grid.innerHTML = '';
+  visiblePlayers().forEach(index=>{
+    const field = document.createElement('div');
+    field.className = 'field';
+    const label = document.createElement('label');
+    label.htmlFor = 'playerName' + index;
+    label.textContent = 'Player ' + (index + 1);
+    const input = document.createElement('input');
+    input.id = 'playerName' + index;
+    input.type = 'text';
+    input.maxLength = 24;
+    input.value = state.players[index];
+    input.style.borderLeftColor = COLORS[index];
+    input.addEventListener('input',()=>{
+      state.players[index] = input.value;
+      updatePlayerLabels();
+      renderScoreSummary();
+      scheduleSave();
+    });
+    SitePlayerNames.enhanceInput(input);
+    field.append(label,input);
+    grid.appendChild(field);
+  });
+}
+
+function renderScoreTable(){
+  const host = document.getElementById('scoreTable');
+  const players = visiblePlayers();
+  let html = '<table class="score-table" aria-label="Qwirkle turn scores"><thead><tr><th class="turn-head" scope="col">Turn</th>';
+  players.forEach(index=>{
+    html += '<th scope="col" data-player-label="' + index + '">' + escapeHtml(playerName(index)) + '</th>';
+  });
+  html += '</tr></thead><tbody>';
+  state.rows.forEach((row,rowIndex)=>{
+    html += '<tr><th class="turn-cell" scope="row">' + (rowIndex + 1) + '</th>';
+    players.forEach(index=>{
+      const value = row.scores[index];
+      html += '<td class="score-cell"><input type="number" min="0" step="1" inputmode="numeric" value="' + (value === null ? '' : value) + '" data-row="' + rowIndex + '" data-player="' + index + '" aria-label="Turn ' + (rowIndex + 1) + ' score for ' + escapeHtml(playerName(index)) + '"></td>';
+    });
+    html += '</tr>';
+  });
+  html += '</tbody><tfoot><tr><th scope="row">Total</th>';
+  players.forEach(index=>{html += '<td data-total="' + index + '">0</td>';});
+  html += '</tr></tfoot></table>';
+  host.innerHTML = html;
+  host.querySelectorAll('input[data-row]').forEach(input=>{
+    input.addEventListener('input',()=>{
+      const rowIndex = Number(input.dataset.row);
+      const playerIndex = Number(input.dataset.player);
+      const normalized = nullableScore(input.value);
+      state.rows[rowIndex].scores[playerIndex] = normalized;
+      if(normalized !== null && input.value !== String(normalized)) input.value = normalized;
+      renderScoreSummary();
+      scheduleSave();
+    });
+  });
+}
+
+function updatePlayerLabels(){
+  document.querySelectorAll('[data-player-label]').forEach(node=>{
+    node.textContent = playerName(Number(node.dataset.playerLabel));
+  });
+  document.querySelectorAll('input[data-player]').forEach(input=>{
+    const rowIndex = Number(input.dataset.row);
+    const playerIndex = Number(input.dataset.player);
+    input.setAttribute('aria-label','Turn ' + (rowIndex + 1) + ' score for ' + playerName(playerIndex));
+  });
+  const selected = state.finishingPlayer;
+  const select = document.getElementById('finishingPlayer');
+  if(select){
+    Array.from(select.options).forEach(option=>{
+      if(option.value !== '') option.textContent = playerName(Number(option.value));
+    });
+    select.value = selected === null ? '' : String(selected);
+  }
+}
+
+function renderEndGame(){
+  const select = document.getElementById('finishingPlayer');
+  select.innerHTML = '<option value="">Select when the game ends</option>';
+  visiblePlayers().forEach(index=>select.add(new Option(playerName(index),String(index))));
+  select.value = state.finishingPlayer === null ? '' : String(state.finishingPlayer);
+}
+
+function renderScoreSummary(){
+  const totals = totalsForGame();
+  const leaders = leaderIndexesForGame(state,totals);
+  const standings = document.getElementById('standings');
+  standings.style.setProperty('--players',String(state.playerCount));
+  standings.innerHTML = visiblePlayers().map(index=>{
+    const last = lastScore(index);
+    const endLabel = state.finishingPlayer === index ? ' · +6 out bonus' : '';
+    return '<div class="standing panel' + (leaders.includes(index) ? ' leader' : '') + '" style="border-left-color:' + COLORS[index] + '">' +
+      '<div class="standing-name">' + escapeHtml(playerName(index)) + '</div>' +
+      '<div class="standing-score">' + format(totals[index]) + '</div>' +
+      '<div class="standing-meta">' + (last === null ? 'No turns entered' : 'Last turn ' + format(last)) + endLabel + '</div></div>';
+  }).join('');
+  visiblePlayers().forEach(index=>{
+    const cell = document.querySelector('[data-total="' + index + '"]');
+    if(cell) cell.textContent = format(totals[index]);
+  });
+
+  const finishButton = document.getElementById('finishBtn');
+  finishButton.disabled = !hasAnyScore();
+  const endSummary = document.getElementById('endSummary');
+  if(state.finishingPlayer === null){
+    endSummary.textContent = 'Choose the player who used their last tile after the draw pile was empty.';
+  }else{
+    endSummary.innerHTML = '<strong>' + escapeHtml(playerName(state.finishingPlayer)) + '</strong>&nbsp; receives +6. Current total: ' + format(totals[state.finishingPlayer]) + '.';
+  }
+
+  const winnerBox = document.getElementById('winnerBox');
+  if(state.finishingPlayer === null || !hasAnyScore()){
+    winnerBox.classList.remove('show');
+    winnerBox.textContent = '';
+  }else{
+    const names = leaders.map(index=>playerName(index)).join(', ');
+    const high = totals[leaders[0]];
+    winnerBox.classList.add('show');
+    winnerBox.textContent = names + (leaders.length === 1 ? ' leads' : ' are tied') + ' with ' + format(high) + ' points.';
+  }
+}
+
+function renderGameArchive(){
+  const statRecords = gameArchive.map(entry=>{
+    const game = entry.state;
+    const totals = totalsForGame(game);
+    return {
+      completedAt:entry.completedAt,
+      direction:'high',
+      participants:visiblePlayers(game).map(index=>({name:playerName(index,game),score:totals[index]})),
+      winnerIndexes:leaderIndexesForGame(game,totals)
+    };
+  });
+  ScoreStats.render(document.getElementById('gameStats'),statRecords);
+  const host = document.getElementById('gameHistory');
+  const count = gameArchive.length;
+  document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
+  document.getElementById('clearHistoryBtn').disabled = count === 0;
+  if(!count){
+    host.innerHTML = '<div class="empty">Finished games will appear here.</div>';
+    return;
+  }
+  let html = '<div class="game-history-list">';
+  gameArchive.forEach(entry=>{
+    const game = entry.state;
+    const totals = totalsForGame(game);
+    const leaders = leaderIndexesForGame(game,totals);
+    const leaderNames = leaders.map(index=>playerName(index,game)).join(', ');
+    const resultLabel = leaders.length === 1 ? 'Winner' : 'Winners';
+    const turns = usedRowCount(game);
+    const entryId = escapeHtml(entry.id);
+    html += '<details class="archived-game"><summary><span class="archive-heading"><span class="archive-title">' + escapeHtml(game.title) + '</span>';
+    html += '<span class="archive-meta">' + escapeHtml(formatArchivedDate(entry.completedAt)) + ' · ' + turns + (turns === 1 ? ' turn' : ' turns') + ' · ' + game.playerCount + ' players</span></span>';
+    html += '<span class="archive-result">' + resultLabel + ': ' + escapeHtml(leaderNames) + ' · ' + format(totals[leaders[0]]) + '</span></summary>';
+    html += '<div class="archive-body"><div class="archive-totals">';
+    visiblePlayers(game).forEach(index=>{
+      const bonus = game.finishingPlayer === index ? ' <small>(+6 out)</small>' : '';
+      html += '<div class="archive-total"><span>' + escapeHtml(playerName(index,game)) + bonus + '</span><strong>' + format(totals[index]) + '</strong></div>';
+    });
+    html += '</div><div class="archive-actions"><button class="btn" type="button" data-restore-game="' + entryId + '">Restore Game</button><button class="btn warn" type="button" data-delete-game="' + entryId + '">Delete</button></div></div></details>';
+  });
+  html += '</div>';
+  host.innerHTML = html;
+}
+
+function createArchivedGame(){
+  return {
+    id:'game-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2,8),
+    completedAt:new Date().toISOString(),
+    state:normalizeState(state)
+  };
+}
+
+function newGameStateFromCurrent(){
+  return SiteScorecards.retainForNewGame(defaultState(),state,['players','playerCount']);
+}
+
+function finishGame(){
+  if(!hasAnyScore()){
+    showToast('Enter at least one turn score first');
+    return;
+  }
+  if(state.finishingPlayer === null){
+    document.getElementById('finishingPlayer').focus();
+    showToast('Select the player who went out');
+    return;
+  }
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{noun:'game'});
+  if(nameReview.changed){render();saveNow();}
+  const totals = totalsForGame();
+  const winners = leaderIndexesForGame(state,totals).map(index=>playerName(index)).join(', ');
+  if(!window.confirm('Finish this game with ' + winners + ' winning, save it to history, and start a new scorecard?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [createArchivedGame(),...gameArchive].slice(0,MAX_ARCHIVED_GAMES);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    showToast('Game history could not be saved');
+    return;
+  }
+  state = newGameStateFromCurrent();
+  render();
+  saveNow();
+  showToast('Game saved to history');
+}
+
+function restoreArchivedGame(id){
+  const entry = gameArchive.find(game=>game.id === id);
+  if(!entry) return;
+  if(!window.confirm('Restore this archived game? The current scorecard will be replaced.')) return;
+  state = normalizeState(entry.state);
+  render();
+  saveNow();
+  showToast('Archived game restored');
+}
+
+function deleteArchivedGame(id){
+  const entry = gameArchive.find(game=>game.id === id);
+  if(!entry || !window.confirm('Delete this game from history?')) return;
+  const previousArchive = gameArchive;
+  gameArchive = gameArchive.filter(game=>game.id !== id);
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    showToast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  showToast('Archived game deleted');
+}
+
+function clearGameArchive(){
+  if(!gameArchive.length || !window.confirm('Delete all archived Qwirkle games? Export a backup first if you may need them later.')) return;
+  const previousArchive = gameArchive;
+  gameArchive = [];
+  if(!saveGameArchive()){
+    gameArchive = previousArchive;
+    showToast('Game history could not be updated');
+    return;
+  }
+  renderGameArchive();
+  showToast('Game history cleared');
+}
+
+function resetGame(){
+  if(!window.confirm('Start a new Qwirkle scorecard without adding this game to history?')) return;
+  state = newGameStateFromCurrent();
+  render();
+  saveNow();
+  showToast('Scorecard reset');
+}
+
+document.getElementById('gameTitle').addEventListener('input',event=>{
+  state.title = event.target.value;
+  scheduleSave();
+});
+
+document.getElementById('playerCount').addEventListener('click',event=>{
+  const button = event.target.closest('button[data-count]');
+  if(!button) return;
+  state.playerCount = Number(button.dataset.count);
+  if(state.finishingPlayer !== null && state.finishingPlayer >= state.playerCount) state.finishingPlayer = null;
+  render();
+  scheduleSave();
+});
+
+document.getElementById('finishingPlayer').addEventListener('change',event=>{
+  state.finishingPlayer = event.target.value === '' ? null : Number(event.target.value);
+  renderScoreSummary();
+  scheduleSave();
+});
+
+document.getElementById('addRowsBtn').addEventListener('click',()=>{
+  for(let index=0;index<ROW_INCREMENT;index+=1) state.rows.push(emptyRow());
+  renderScoreTable();
+  renderScoreSummary();
+  scheduleSave();
+  showToast('Five turn rows added');
+});
+
+document.getElementById('gameHistory').addEventListener('click',event=>{
+  const restoreButton = event.target.closest('[data-restore-game]');
+  if(restoreButton){restoreArchivedGame(restoreButton.dataset.restoreGame);return;}
+  const deleteButton = event.target.closest('[data-delete-game]');
+  if(deleteButton) deleteArchivedGame(deleteButton.dataset.deleteGame);
+});
+
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  darkMode = !darkMode;
+  applyTheme();
+  saveDarkMode();
+});
+document.getElementById('printBtn').addEventListener('click',()=>window.print());
+document.getElementById('finishBtn').addEventListener('click',finishGame);
+document.getElementById('resetBtn').addEventListener('click',resetGame);
+document.getElementById('clearHistoryBtn').addEventListener('click',clearGameArchive);
+window.addEventListener('beforeunload',saveNow);
+
+SiteGamesBackup.registerPage('qwirkle',{beforeExport:saveNow});
+render();
+saveNow();
+</script>
+</body>
+</html>

@@ -276,7 +276,7 @@ function newRound(){
 function defaultState(){
   return {
     schemaVersion:SCHEMA_VERSION,
-    title:'Game Night',
+    title:SiteScorecards.defaultGameTitle(),
     gameMode:DEFAULT_GAME_MODE,
     playerCount:DEFAULT_PLAYER_COUNT,
     players:Array.from({length:MAX_PLAYERS},(_,i)=>defaultColumnName(i,DEFAULT_GAME_MODE)),
@@ -803,6 +803,10 @@ function createArchivedGame(){
   };
 }
 
+function newGameStateFromCurrent(){
+  return SiteScorecards.retainForNewGame(defaultState(),state,['players','playerCount']);
+}
+
 function finishGame(){
   if(!gameHasScores()){
     toast('Enter at least one score first');
@@ -821,7 +825,7 @@ function finishGame(){
     toast('Game history could not be saved');
     return;
   }
-  state = defaultState();
+  state = newGameStateFromCurrent();
   save();
   render();
   toast('Game saved to history');
@@ -892,7 +896,7 @@ document.getElementById('finishBtn').addEventListener('click',finishGame);
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new Hand & Foot scorecard without adding this game to history?')) return;
-  state = defaultState();
+  state = newGameStateFromCurrent();
   save();
   render();
   toast('Scorecard reset');

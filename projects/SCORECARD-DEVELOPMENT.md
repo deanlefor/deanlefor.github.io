@@ -1,12 +1,13 @@
 # Scorecard development guide
 
-This directory contains five static, same-origin scorekeepers:
+This directory contains six static, same-origin scorekeepers:
 
 1. Flexible Cards (`cards-score.html`)
 2. Pinochle (`pinochle.html`)
 3. Canasta (`canasta.html`)
 4. Hand & Foot (`hf-score.html`)
 5. Skyjo (`skyjo.html`)
+6. Qwirkle (`qwirkle.html`)
 
 They intentionally use plain HTML, CSS, JavaScript, and browser `localStorage`. Do not add a build system, framework, server, account system, remote database, analytics upload, or network transfer for game data unless the project requirements explicitly change.
 
@@ -117,6 +118,7 @@ A scorekeeper should provide:
 
 - keyboard-accessible player/team count buttons with `data-count` values;
 - player or team name fields enhanced by `SitePlayerNames`;
+- participant names and the selected count retained when Finish Game or New Game starts a fresh scorecard;
 - automatic device-local saving with graceful failure when storage is blocked;
 - finished-game history and `ScoreStats` records;
 - Backup, Import, Finish Game, and New Game controls;

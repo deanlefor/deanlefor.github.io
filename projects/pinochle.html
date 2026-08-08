@@ -492,7 +492,7 @@ function emptyRound(dealer){
 function defaultState(){
   return {
     version: 2,
-    title: 'Game Night',
+    title: SiteScorecards.defaultGameTitle(),
     playerCount: 3,
     targetScore: 150,
     players: ['Player 1','Player 2','Player 3'],
@@ -1157,6 +1157,10 @@ function createArchivedGame(){
   };
 }
 
+function newGameStateFromCurrent(){
+  return SiteScorecards.retainForNewGame(defaultState(),state,['players','playerCount']);
+}
+
 function finishGame(){
   if(!state.rounds.length){
     toast('Add at least one round first');
@@ -1175,7 +1179,7 @@ function finishGame(){
     toast('Game history could not be saved');
     return;
   }
-  state = defaultState();
+  state = newGameStateFromCurrent();
   autoTrickIndex = null;
   render();
   saveNow();
@@ -1295,7 +1299,7 @@ document.getElementById('finishBtn').addEventListener('click',finishGame);
 
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new Pinochle game without adding this game to history?')) return;
-  state = defaultState();
+  state = newGameStateFromCurrent();
   autoTrickIndex = null;
   render();
   saveNow();

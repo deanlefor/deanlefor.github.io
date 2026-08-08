@@ -6,7 +6,7 @@ const path = require('node:path');
 const test = require('node:test');
 
 const common = require('./scorecard-common.js');
-const pages = ['cards-score.html','pinochle.html','canasta.html','hf-score.html','skyjo.html'];
+const pages = ['cards-score.html','pinochle.html','canasta.html','hf-score.html','skyjo.html','qwirkle.html'];
 
 function fakeButton(count){
   const classes = new Set();
@@ -29,6 +29,12 @@ test('shared text helpers escape markup and format invalid dates safely',() => {
   assert.match(common.formatDate('2026-08-08T12:30:00Z','en-US'),/2026/);
 });
 
+test('new scorecard titles use a friendly local calendar date',() => {
+  const date = new Date(2026,7,8,12,0,0);
+  assert.equal(common.defaultGameTitle(date,'en-US'),'Saturday, August 8, 2026');
+  assert.match(common.defaultGameTitle(),/\S/);
+});
+
 test('shared count synchronization selects exactly one matching button',() => {
   const buttons = [2,3,4,5].map(fakeButton);
   const container = {querySelectorAll(){ return buttons; }};
@@ -38,6 +44,28 @@ test('shared count synchronization selects exactly one matching button',() => {
     assert.equal(button.classList.contains('active'),selected);
     assert.equal(button.getAttribute('aria-pressed'),String(selected));
   });
+});
+
+test('new games retain selected local fields without sharing participant arrays',() => {
+  const current = {
+    players:['Player One','Player Two'],
+    playerCount:2,
+    rounds:[{scores:[10,20]}]
+  };
+  const fresh = {
+    players:['Player 1','Player 2'],
+    playerCount:4,
+    rounds:[]
+  };
+  const next = common.retainForNewGame(fresh,current,['players','playerCount']);
+
+  assert.equal(next,fresh);
+  assert.deepEqual(next.players,current.players);
+  assert.notEqual(next.players,current.players);
+  assert.equal(next.playerCount,2);
+  assert.deepEqual(next.rounds,[]);
+  next.players[0] = 'Changed Later';
+  assert.equal(current.players[0],'Player One');
 });
 
 test('shared toast handles missing markup and replaces an existing timer',async () => {
@@ -59,11 +87,12 @@ test('shared toast handles missing markup and replaces an existing timer',async 
   assert.equal(common.toast('Ignored',{document:{getElementById(){ return null; }}}),false);
 });
 
-test('all five scorekeepers use the shared runtime instead of duplicating helpers',() => {
+test('all six scorekeepers use the shared runtime instead of duplicating helpers',() => {
   pages.forEach(file => {
     const html = fs.readFileSync(path.join(__dirname,file),'utf8');
     assert.equal((html.match(/<script src="scorecard-common\.js"><\/script>/g) || []).length,1);
     assert.match(html,/SiteScorecards\.syncCountButtons\(/);
+    assert.match(html,/title:\s*SiteScorecards\.defaultGameTitle\(\)/);
     assert.doesNotMatch(html,/function escapeHtml\(/);
     assert.doesNotMatch(html,/function formatArchivedDate\(/);
     assert.doesNotMatch(html,/function (?:toast|showToast)\(/);

@@ -489,7 +489,7 @@ function emptyRound(dealer){
 function defaultState(){
   return {
     version: 1,
-    title: 'Game Night',
+    title: SiteScorecards.defaultGameTitle(),
     playerCount: 4,
     targetScore: 100,
     safeTies: true,
@@ -1133,11 +1133,11 @@ function createArchivedGame(){
 }
 
 function newGameStateFromCurrent(){
-  const next = defaultState();
-  next.players = state.players.slice();
-  next.playerCount = state.playerCount;
-  next.targetScore = state.targetScore;
-  next.safeTies = state.safeTies;
+  const next = SiteScorecards.retainForNewGame(
+    defaultState(),
+    state,
+    ['players','playerCount','targetScore','safeTies']
+  );
   next.draft = emptyRound(0);
   return next;
 }

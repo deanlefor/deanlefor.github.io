@@ -315,7 +315,7 @@ function emptyRound(){
 function defaultState(){
   return {
     version: 1,
-    title: 'Game Night',
+    title: SiteScorecards.defaultGameTitle(),
     teamCount: 2,
     targetScore: 5000,
     teams: ['Team 1','Team 2','Team 3','Team 4'],
@@ -801,6 +801,10 @@ function renderGameArchive(){
   host.innerHTML = html;
 }
 
+function newGameStateFromCurrent(){
+  return SiteScorecards.retainForNewGame(defaultState(),state,['teams','teamCount']);
+}
+
 function archiveCurrentGame(){
   if(!state.rounds.length){
     toast('Add a round before finishing the game');
@@ -828,7 +832,7 @@ function archiveCurrentGame(){
     toast('Unable to save this game in the browser');
     return;
   }
-  state = defaultState();
+  state = newGameStateFromCurrent();
   render();
   saveNow();
   toast('Game saved to all-time stats');
@@ -971,7 +975,7 @@ document.getElementById('finishGameBtn').addEventListener('click', archiveCurren
 
 document.getElementById('resetBtn').addEventListener('click', () => {
   if(!confirm('Start a new Canasta scorecard without saving this game?')) return;
-  state = defaultState();
+  state = newGameStateFromCurrent();
   render();
   saveNow();
   toast('Scorecard reset');

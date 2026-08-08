@@ -47,6 +47,11 @@
   </url>
 
   <url>
+    <loc>https://deanlefor.com/projects/qwirkle.html</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
     <loc>https://deanlefor.com/projects/run-tracker.html</loc>
     <priority>0.6</priority>
   </url>

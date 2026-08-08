@@ -27,6 +27,17 @@
     });
   }
 
+  function defaultGameTitle(value,locale){
+    var date = value === undefined ? new Date() : new Date(value);
+    if(Number.isNaN(date.getTime())) date = new Date();
+    return date.toLocaleDateString(locale || [],{
+      weekday:'long',
+      month:'long',
+      day:'numeric',
+      year:'numeric'
+    });
+  }
+
   function documentFor(options){
     if(options && options.document) return options.document;
     return global && global.document ? global.document : null;
@@ -71,9 +82,22 @@
     return activeCount;
   }
 
+  function retainForNewGame(freshState,currentState,fields){
+    if(!freshState || typeof freshState !== 'object') return freshState;
+    if(!currentState || typeof currentState !== 'object' || !Array.isArray(fields)) return freshState;
+    fields.forEach(function(field){
+      if(!Object.prototype.hasOwnProperty.call(currentState,field)) return;
+      var value = currentState[field];
+      freshState[field] = Array.isArray(value) ? value.slice() : value;
+    });
+    return freshState;
+  }
+
   var api = Object.freeze({
+    defaultGameTitle:defaultGameTitle,
     escapeHtml:escapeHtml,
     formatDate:formatDate,
+    retainForNewGame:retainForNewGame,
     syncCountButtons:syncCountButtons,
     toast:toast
   });

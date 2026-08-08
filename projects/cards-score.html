@@ -641,7 +641,7 @@ function emptyDraft(){
 function defaultState(){
   return {
     version:4,
-    title:'Game Night',
+    title:SiteScorecards.defaultGameTitle(),
     playerCount:DEFAULT_PLAYER_COUNT,
     startingDealer:0,
     limitType:'rounds',
@@ -1305,6 +1305,10 @@ function createArchivedGame(){
   };
 }
 
+function newGameStateFromCurrent(){
+  return SiteScorecards.retainForNewGame(defaultState(),state,['players','playerCount']);
+}
+
 function finishGame(){
   if(!state.rounds.length){
     toast('Add at least one round first');
@@ -1323,7 +1327,7 @@ function finishGame(){
     toast('Game history could not be saved');
     return;
   }
-  state = defaultState();
+  state = newGameStateFromCurrent();
   render();
   saveNow();
   toast('Game saved to history');
@@ -1427,7 +1431,7 @@ document.getElementById('printBtn').addEventListener('click',()=>window.print())
 document.getElementById('finishBtn').addEventListener('click',finishGame);
 document.getElementById('resetBtn').addEventListener('click',()=>{
   if(!confirm('Start a new scorecard without adding this game to history?')) return;
-  state = defaultState();
+  state = newGameStateFromCurrent();
   render();
   saveNow();
   toast('Scorecard reset');

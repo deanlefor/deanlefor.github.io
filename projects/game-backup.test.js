@@ -76,11 +76,11 @@ function populatedStorage(){
   return new FakeStorage(entries);
 }
 
-test('registry contains exactly five scorekeepers and every audited key',() => {
-  assert.equal(games.length,5);
+test('registry contains exactly six scorekeepers and every audited key',() => {
+  assert.equal(games.length,6);
   assert.deepEqual(
     games.map(game => game.id),
-    ['flexibleCards','pinochle','canasta','handAndFoot','skyjo']
+    ['flexibleCards','pinochle','canasta','handAndFoot','skyjo','qwirkle']
   );
   assert.deepEqual(intendedGameKeys,[
     'cardsScorecard.v1',
@@ -98,7 +98,10 @@ test('registry contains exactly five scorekeepers and every audited key',() => {
     'handFootRemasteredScorecard.darkMode.v1',
     'skyjoScorecard.v1',
     'skyjoScorecard.history.v1',
-    'skyjoScorecard.darkMode.v1'
+    'skyjoScorecard.darkMode.v1',
+    'qwirkleScorecard.v1',
+    'qwirkleScorecard.history.v1',
+    'qwirkleScorecard.darkMode.v1'
   ]);
   assert.deepEqual(intendedPreferenceKeys,['trackerLibrary.darkMode.v1']);
 });
@@ -112,9 +115,9 @@ test('consolidated export captures every intended key without mutating storage',
   });
 
   assert.equal(backup.backupFormat,'game-history-backup');
-  assert.equal(backup.schemaVersion,1);
+  assert.equal(backup.schemaVersion,2);
   assert.equal(backup.siteOrigin,'https://deanlefor.com');
-  assert.equal(Object.keys(backup.games).length,5);
+  assert.equal(Object.keys(backup.games).length,6);
   assert.deepEqual(storage.snapshot(),before);
 
   const exportedKeys = [
@@ -229,6 +232,20 @@ test('unexpected or missing storage keys make a consolidated backup invalid',() 
   assert.throws(() => validateBackup(backup),/missing the expected storage key/);
 });
 
+test('schema-1 backups from before Qwirkle remain restorable without touching Qwirkle data',() => {
+  const backup = createBackupDocument(populatedStorage(),{
+    exportedAt:new Date('2026-07-25T12:00:00.000Z'),
+    siteOrigin:'https://deanlefor.com'
+  });
+  backup.schemaVersion = 1;
+  delete backup.games.qwirkle;
+
+  const plan = validateBackup(backup);
+  assert.equal(plan.sourceFormat,'consolidated');
+  assert.equal(plan.gameSummaries.length,5);
+  assert.equal(plan.operations.some(operation => operation.key.startsWith('qwirkleScorecard.')),false);
+});
+
 test('restore rolls back earlier writes if any storage operation fails',() => {
   const target = new FakeStorage({one:'original one',two:'original two',unrelated:'safe'});
   target.failNextSetFor = 'two';
@@ -318,7 +335,7 @@ test('the shared last-backup timestamp produces the same status on every page',(
   assert.equal(skyjoStatus.showReminder,false);
 });
 
-test('all six game-facing pages load the shared utility and each scorekeeper registers once',() => {
+test('all seven game-facing pages load the shared utility and each scorekeeper registers once',() => {
   const directory = __dirname;
   const pages = [
     'scorecards.html',
@@ -326,7 +343,8 @@ test('all six game-facing pages load the shared utility and each scorekeeper reg
     'pinochle.html',
     'canasta.html',
     'hf-score.html',
-    'skyjo.html'
+    'skyjo.html',
+    'qwirkle.html'
   ];
   pages.forEach(file => {
     const html = fs.readFileSync(path.join(directory,file),'utf8');
@@ -341,5 +359,5 @@ test('all six game-facing pages load the shared utility and each scorekeeper reg
     assert.ok(match,'Expected a shared-backup registration in ' + file);
     return match[1];
   });
-  assert.deepEqual(registered,['flexibleCards','pinochle','canasta','handAndFoot','skyjo']);
+  assert.deepEqual(registered,['flexibleCards','pinochle','canasta','handAndFoot','skyjo','qwirkle']);
 });

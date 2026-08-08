@@ -2,7 +2,8 @@
   'use strict';
 
   var BACKUP_FORMAT = 'game-history-backup';
-  var SCHEMA_VERSION = 1;
+  var SCHEMA_VERSION = 2;
+  var FIRST_SCHEMA_VERSION = 1;
   var THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
   var SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
   var META_KEYS = Object.freeze({
@@ -72,6 +73,19 @@
         Object.freeze({key:'skyjoScorecard.v1', role:'currentGame'}),
         Object.freeze({key:'skyjoScorecard.history.v1', role:'history'}),
         Object.freeze({key:'skyjoScorecard.darkMode.v1', role:'settings'})
+      ])
+    }),
+    Object.freeze({
+      id:'qwirkle',
+      label:'Qwirkle Scorecard',
+      page:'qwirkle.html',
+      nameField:'players',
+      legacyKind:'qwirkle-scorecard-backup',
+      introducedInSchema:2,
+      storageKeys:Object.freeze([
+        Object.freeze({key:'qwirkleScorecard.v1', role:'currentGame'}),
+        Object.freeze({key:'qwirkleScorecard.history.v1', role:'history'}),
+        Object.freeze({key:'qwirkleScorecard.darkMode.v1', role:'settings'})
       ])
     })
   ]);
@@ -376,7 +390,8 @@
   }
 
   function validateConsolidatedBackup(data){
-    if(Number(data.schemaVersion) !== SCHEMA_VERSION){
+    var backupSchemaVersion = Number(data.schemaVersion);
+    if(!Number.isInteger(backupSchemaVersion) || backupSchemaVersion < FIRST_SCHEMA_VERSION || backupSchemaVersion > SCHEMA_VERSION){
       throw new Error('Unsupported backup schema version "' + String(data.schemaVersion) +
         '". This site supports schema version ' + SCHEMA_VERSION + '.');
     }
@@ -386,7 +401,10 @@
     if(!plainObject(data.games)){
       throw new Error('The backup does not contain game data.');
     }
-    var expectedGameIds = GAMES.map(function(game){ return game.id; });
+    var schemaGames = GAMES.filter(function(game){
+      return Number(game.introducedInSchema || FIRST_SCHEMA_VERSION) <= backupSchemaVersion;
+    });
+    var expectedGameIds = schemaGames.map(function(game){ return game.id; });
     Object.keys(data.games).forEach(function(gameId){
       if(expectedGameIds.indexOf(gameId) === -1){
         throw new Error('The backup contains an unsupported game section: "' + gameId + '".');
@@ -394,7 +412,7 @@
     });
     var operations = [];
     var gameSummaries = [];
-    GAMES.forEach(function(game){
+    schemaGames.forEach(function(game){
       if(!own(data.games,game.id)){
         throw new Error('The backup is missing ' + game.label + '.');
       }
@@ -718,7 +736,7 @@
     summary.textContent = '';
     var heading = global.document.createElement('strong');
     heading.textContent = plan.sourceFormat === 'consolidated'
-      ? 'Ready to restore all five scorecards'
+      ? 'Ready to restore all ' + plan.gameSummaries.length + ' scorecards'
       : 'Ready to restore ' + plan.gameSummaries[0].label;
     var description = global.document.createElement('p');
     description.textContent = plan.setCount + ' stored ' +
@@ -785,7 +803,7 @@
     if(exportButton && !exportButton.dataset.gameBackupBound){
       exportButton.dataset.gameBackupBound = 'true';
       exportButton.textContent = 'Backup All';
-      exportButton.title = 'Download all five scorecards in one JSON backup';
+      exportButton.title = 'Download all ' + GAMES.length + ' scorecards in one JSON backup';
       exportButton.addEventListener('click',downloadAll);
     }
     if(importButton && !importButton.dataset.gameBackupBound){

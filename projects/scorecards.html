@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Card Game Tracker Library</title>
-<meta name="description" content="Choose from five browser-based card game scorecards for Pinochle, Canasta, Hand and Foot, Skyjo, and flexible house-rule games.">
+<title>Game Scorecard Library</title>
+<meta name="description" content="Choose from six browser-based scorecards for Qwirkle, Pinochle, Canasta, Hand and Foot, Skyjo, and flexible house-rule games.">
 <link rel="stylesheet" href="tracker-shell.css">
 <style>
 body{min-height:100vh}
@@ -53,7 +53,8 @@ html.dark-mode .tracker-card:hover{box-shadow:0 16px 34px rgba(0,0,0,.38)}
 .tracker-card:nth-child(2){--accent:var(--blue)}
 .tracker-card:nth-child(3){--accent:var(--gold)}
 .tracker-card:nth-child(4){--accent:var(--purple)}
-.tracker-card:nth-child(5){--accent:var(--red);grid-column:1 / -1}
+.tracker-card:nth-child(5){--accent:var(--red)}
+.tracker-card:nth-child(6){--accent:var(--teal)}
 .tracker-symbol{
   display:grid;
   place-items:center;
@@ -86,7 +87,6 @@ html.dark-mode .tracker-card:hover{box-shadow:0 16px 34px rgba(0,0,0,.38)}
   .library-intro{grid-template-columns:1fr}
   .suit-group{display:none}
   .tracker-grid{grid-template-columns:1fr}
-  .tracker-card:nth-child(5){grid-column:auto}
 }
 @media(max-width:460px){
   .tracker-card{grid-template-columns:40px minmax(0,1fr);min-height:0;padding:13px}
@@ -109,7 +109,7 @@ try{
   <header class="top library-top">
     <div class="brand">
       <a class="tracker-home" href="../index.html#projects">← Dean Lefor</a>
-      <h1>Card Game Trackers</h1>
+      <h1>Game Scorecards</h1>
       <p>Choose a scorecard. Each game keeps its own rules and saved matches, with one shared backup for the full collection.</p>
     </div>
     <div class="toolbar">
@@ -120,7 +120,7 @@ try{
   <main>
     <section class="panel library-intro" aria-labelledby="libraryIntroTitle">
       <div class="intro-copy">
-        <p class="eyebrow">One collection · Five scorecards</p>
+        <p class="eyebrow">One collection · Six scorecards</p>
         <h2 id="libraryIntroTitle">Pick the game you are playing</h2>
         <p>The library is the shared starting point. The trackers remain separate underneath, so each one can keep the controls and calculations that fit its game.</p>
       </div>
@@ -132,7 +132,7 @@ try{
       <span>All scorecards save automatically in this browser</span>
     </div>
 
-    <section class="tracker-grid" aria-label="Available card game trackers">
+    <section class="tracker-grid" aria-label="Available game scorecards">
       <a class="tracker-card" href="cards-score.html" data-history-key="cardsScorecard.history.v1">
         <span class="tracker-symbol" aria-hidden="true">♣</span>
         <span class="tracker-copy">
@@ -182,19 +182,29 @@ try{
         </span>
         <span class="tracker-arrow" aria-hidden="true">→</span>
       </a>
+
+      <a class="tracker-card" href="qwirkle.html" data-history-key="qwirkleScorecard.history.v1">
+        <span class="tracker-symbol" aria-hidden="true">✣</span>
+        <span class="tracker-copy">
+          <span class="tracker-name">Qwirkle Scorecard</span>
+          <span class="tracker-description">Tab through a simple turn grid while the scorecard keeps running totals and the official end bonus.</span>
+          <span class="tracker-tags"><span class="tracker-tag">2–4 players</span><span class="tracker-tag">15-turn grid</span><span class="tracker-tag">Highest score wins</span><span class="tracker-tag history-tag" data-history-count>0 saved matches</span></span>
+        </span>
+        <span class="tracker-arrow" aria-hidden="true">→</span>
+      </a>
     </section>
 
     <aside class="panel privacy-note">
       <span class="privacy-mark" aria-hidden="true">✓</span>
       <div>
         <strong>Your existing game data stays where it is.</strong>
-        <p>The shared backup copies all five scorecards into one local JSON download. It never removes the browser records after export or sends game data over the network.</p>
+        <p>The shared backup copies all six scorecards into one local JSON download. It never removes the browser records after export or sends game data over the network.</p>
       </div>
     </aside>
   </main>
 
   <footer class="library-footer">
-    <span>Five independent scorecards · One shared collection</span>
+    <span>Six independent scorecards · One shared collection</span>
     <a href="../index.html#projects">Back to deanlefor.com</a>
   </footer>
 </div>

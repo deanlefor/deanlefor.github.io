@@ -70,7 +70,7 @@ test('name cleanup and comparison are case, whitespace, and accent tolerant',() 
   assert.equal(isPlaceholder('Player Seven'),false);
 });
 
-test('the shared roster discovers active names across all five scorekeepers without writes',() => {
+test('the shared roster discovers active names across all six scorekeepers without writes',() => {
   const storage = rosterStorage();
   const before = storage.snapshot();
   const roster = collectRoster(storage,backupApi.registry);
@@ -145,8 +145,8 @@ test('blocked or malformed browser storage produces an empty roster without thro
   assert.deepEqual(collectRoster(null,backupApi.registry),[]);
 });
 
-test('all five scorekeepers load and use the shared player-name utility',() => {
-  const pages = ['cards-score.html','pinochle.html','canasta.html','skyjo.html','hf-score.html'];
+test('all six scorekeepers load and use the shared player-name utility',() => {
+  const pages = ['cards-score.html','pinochle.html','canasta.html','skyjo.html','hf-score.html','qwirkle.html'];
   pages.forEach(file => {
     const html = fs.readFileSync(path.join(__dirname,file),'utf8');
     assert.match(html,/<script src="player-names\.js"><\/script>/);

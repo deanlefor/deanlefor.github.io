@@ -10,10 +10,11 @@ const pages = [
   {file:'pinochle.html',control:'playerCount'},
   {file:'canasta.html',control:'teamCount'},
   {file:'hf-score.html',control:'playerCount'},
-  {file:'skyjo.html',control:'playerCount'}
+  {file:'skyjo.html',control:'playerCount'},
+  {file:'qwirkle.html',control:'playerCount'}
 ];
 
-test('all five scorekeepers load the shared scorecard shell',() => {
+test('all six scorekeepers load the shared scorecard shell',() => {
   pages.forEach(({file}) => {
     const html = fs.readFileSync(path.join(__dirname,file),'utf8');
     assert.match(html,/<link rel="stylesheet" href="tracker-shell\.css">/);
