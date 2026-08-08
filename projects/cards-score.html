@@ -85,6 +85,33 @@ html.dark-mode{
   gap:12px;
   align-items:end;
 }
+.game-title-field{grid-column:1 / -1}
+.preset-summary{
+  display:none;
+  grid-column:1 / -1;
+  min-height:38px;
+  align-items:center;
+  padding:9px 11px;
+  border:1px solid var(--line);
+  border-radius:7px;
+  background:var(--round-info-bg);
+  color:var(--muted);
+  font-size:.84rem;
+  font-weight:800;
+}
+.settings.preset-active .preset-summary{display:flex}
+.settings.preset-active .game-title-field,
+.settings.preset-active .win-config{display:none}
+.stats-heading{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.stats-heading .section-title{margin:0}
+.stats-preset-field{flex:0 1 230px}
+.stats-preset-field select{min-height:34px;padding:6px 8px}
 .win-config{
   display:grid;
   grid-column:1 / -1;
@@ -111,62 +138,6 @@ html.dark-mode{
 .name-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .player-name input{border-left-width:5px;border-left-style:solid}
 .hint{margin:10px 0 0;color:var(--muted);font-size:.78rem;line-height:1.35}
-.cheat-sheet{padding:0;overflow:hidden}
-.cheat-sheet summary{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-height:46px;
-  padding:12px 14px;
-  cursor:pointer;
-  font-weight:900;
-  list-style:none;
-}
-.cheat-sheet summary::-webkit-details-marker{display:none}
-.cheat-title{font-size:1rem}
-.cheat-sub{color:var(--muted);font-size:.74rem;font-weight:800;letter-spacing:.07em;text-transform:uppercase}
-.cheat-sheet summary::after{
-  content:"+";
-  width:24px;
-  height:24px;
-  display:grid;
-  place-items:center;
-  border:1px solid var(--line);
-  border-radius:6px;
-  color:var(--muted);
-  flex:0 0 auto;
-}
-.cheat-sheet[open] summary{border-bottom:1px solid var(--line)}
-.cheat-sheet[open] summary::after{content:"-"}
-.cheat-grid{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) 90px 82px;
-  padding:0 14px 14px;
-}
-.cheat-cell{
-  min-height:34px;
-  display:flex;
-  align-items:center;
-  border-bottom:1px solid var(--line);
-  font-size:.9rem;
-  font-weight:800;
-}
-.cheat-head{
-  color:var(--muted);
-  font-size:.72rem;
-  letter-spacing:.07em;
-  text-transform:uppercase;
-}
-.cheat-cell:nth-last-child(-n + 3){border-bottom:0}
-.cheat-value{justify-content:flex-end}
-.cheat-note{
-  margin:0;
-  padding:0 14px 14px;
-  color:var(--muted);
-  font-size:.78rem;
-  line-height:1.35;
-}
 .score-strip{
   display:grid;
   grid-template-columns:repeat(auto-fit,minmax(128px,1fr));
@@ -403,6 +374,8 @@ html.dark-mode{
 @media(max-width:420px){
   .players-title-row{align-items:stretch;flex-direction:column;gap:8px}
   .dealer-field{flex-basis:auto}
+  .stats-heading{align-items:stretch;flex-direction:column;gap:8px}
+  .stats-preset-field{flex-basis:auto}
   .score-inputs,.round-preview{grid-template-columns:repeat(2,minmax(0,1fr))}
 }
 @media(hover:none) and (pointer:coarse){
@@ -481,10 +454,10 @@ try{
       <div class="panel section settings-panel">
         <div class="settings">
           <div class="field">
-            <label for="gameTitle">Game Name</label>
-            <input id="gameTitle" type="text" maxlength="48">
+            <label for="gamePreset">Game</label>
+            <select id="gamePreset"></select>
           </div>
-          <div class="field">
+          <div class="field players-field">
             <span class="label">Players</span>
             <div class="seg player-seg" id="playerCount" aria-label="Player count">
               <button type="button" data-count="2">2</button>
@@ -495,6 +468,10 @@ try{
               <button type="button" data-count="7">7</button>
               <button type="button" data-count="8">8</button>
             </div>
+          </div>
+          <div class="field game-title-field" id="gameTitleField">
+            <label for="gameTitle">Game Name</label>
+            <input id="gameTitle" type="text" maxlength="48">
           </div>
           <div class="win-config" id="winConfig">
             <div class="field win-field">
@@ -512,6 +489,7 @@ try{
               <input id="limitValue" type="number" min="1" step="1">
             </div>
           </div>
+          <div class="preset-summary" id="presetSummary" role="status"></div>
         </div>
         <div class="divider"></div>
         <div class="players-title-row">
@@ -524,37 +502,6 @@ try{
         <div class="name-grid" id="nameGrid"></div>
         <p class="hint">Enter each round's points and the scorecard will keep the running total. Scores save automatically in this browser.</p>
       </div>
-
-      <details class="panel cheat-sheet">
-        <summary>
-          <span class="cheat-title">Cheat Sheet</span>
-          <span class="cheat-sub">Common rounds</span>
-        </summary>
-        <div class="cheat-grid" aria-label="Common card game settings">
-          <div class="cheat-cell cheat-head">Name</div>
-          <div class="cheat-cell cheat-head cheat-value">Rounds</div>
-          <div class="cheat-cell cheat-head cheat-value">Winner</div>
-          <div class="cheat-cell">Shanghai Rummy</div>
-          <div class="cheat-cell cheat-value">7</div>
-          <div class="cheat-cell cheat-value">Low</div>
-          <div class="cheat-cell">Golf</div>
-          <div class="cheat-cell cheat-value">9</div>
-          <div class="cheat-cell cheat-value">Low</div>
-          <div class="cheat-cell">Sevens</div>
-          <div class="cheat-cell cheat-value">7</div>
-          <div class="cheat-cell cheat-value">Low</div>
-          <div class="cheat-cell">Flip 7</div>
-          <div class="cheat-cell cheat-value">200 pts</div>
-          <div class="cheat-cell cheat-value">High</div>
-          <div class="cheat-cell">Chickenfoot</div>
-          <div class="cheat-cell cheat-value">10</div>
-          <div class="cheat-cell cheat-value">Low</div>
-          <div class="cheat-cell">Cắt Tê</div>
-          <div class="cheat-cell cheat-value">5 pts</div>
-          <div class="cheat-cell cheat-value">High</div>
-        </div>
-        <p class="cheat-note">For Cắt Tê, enter 1 for the player who wins a round and play to 5.</p>
-      </details>
 
       <form class="panel section round-form" id="roundForm">
         <div class="round-head">
@@ -585,7 +532,13 @@ try{
         <div id="history"></div>
       </div>
       <div class="panel section history-panel">
-        <h2 class="section-title">All-Time Stats</h2>
+        <div class="stats-heading">
+          <h2 class="section-title">All-Time Stats</h2>
+          <div class="field stats-preset-field">
+            <label for="statsPreset">Standings for</label>
+            <select id="statsPreset"></select>
+          </div>
+        </div>
         <div id="gameStats"></div>
         <details class="match-records">
           <summary><span>Manage saved matches</span><span class="history-count" id="gameHistoryCount">0 saved matches</span></summary>
@@ -612,6 +565,7 @@ try{
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
 <script src="scorecard-common.js"></script>
+<script src="cards-score-presets.js"></script>
 <script>
 const escapeHtml = SiteScorecards.escapeHtml;
 const formatArchivedDate = SiteScorecards.formatDate;
@@ -631,6 +585,7 @@ let state = loadState();
 let gameArchive = loadGameArchive();
 let darkMode = loadDarkMode();
 let saveTimer = 0;
+let selectedStatsPreset = state.gamePreset;
 
 function emptyDraft(){
   return {
@@ -641,6 +596,7 @@ function emptyDraft(){
 function defaultState(){
   return {
     version:4,
+    gamePreset:'generic',
     title:SiteScorecards.defaultGameTitle(),
     playerCount:DEFAULT_PLAYER_COUNT,
     startingDealer:0,
@@ -710,6 +666,7 @@ function applyTheme(){
 function normalizeState(source){
   const base = defaultState();
   const next = source && typeof source === 'object' ? {...base, ...source, version:4} : base;
+  next.gamePreset = CardsScorePresets.normalizeId(source?.gamePreset);
   next.title = String(next.title || base.title).slice(0,48);
   next.playerCount = clampNumber(next.playerCount, MIN_PLAYERS, MAX_PLAYERS, DEFAULT_PLAYER_COUNT);
   next.startingDealer = clampNumber(source?.startingDealer, 0, next.playerCount - 1, 0);
@@ -726,7 +683,7 @@ function normalizeState(source){
     next.editingIndex = null;
   }
   next.draft = normalizeDraft(source?.draft);
-  return next;
+  return CardsScorePresets.applyToState(next,next.gamePreset);
 }
 
 function normalizeGameArchive(source){
@@ -921,6 +878,7 @@ function setSaveState(text){
 
 function render(){
   applyTheme();
+  renderGamePreset();
   document.getElementById('gameTitle').value = state.title;
   document.getElementById('limitValue').value = state.limitValue;
   renderPlayerCount();
@@ -934,6 +892,23 @@ function render(){
   renderGameArchive();
   document.getElementById('finishBtn').disabled = !state.rounds.length;
   document.getElementById('roundCount').textContent = state.rounds.length + (state.rounds.length === 1 ? ' round' : ' rounds');
+}
+
+function renderGamePreset(){
+  const preset = CardsScorePresets.get(state.gamePreset);
+  const select = document.getElementById('gamePreset');
+  if(!select.options.length){
+    CardsScorePresets.presets.forEach(item=>{
+      const option = document.createElement('option');
+      option.value = item.id;
+      option.textContent = item.label;
+      select.appendChild(option);
+    });
+  }
+  select.value = preset.id;
+  const isPreset = !preset.configurable;
+  document.querySelector('.settings').classList.toggle('preset-active',isPreset);
+  document.getElementById('presetSummary').textContent = isPreset ? preset.summary : '';
 }
 
 function renderPlayerCount(){
@@ -1133,13 +1108,14 @@ function renderGameArchive(){
     const game = entry.state;
     const totals = totalsForGame(game);
     return {
+      presetId:CardsScorePresets.normalizeId(game.gamePreset),
       completedAt:entry.completedAt,
       direction:game.winnerMode === 'low' ? 'low' : 'high',
       participants:Array.from({length:game.playerCount},(_,index)=>({name:gamePlayerName(game,index),score:totals[index]})),
       winnerIndexes:leadersForGame(game,totals)
     };
   });
-  ScoreStats.render(document.getElementById('gameStats'),statRecords);
+  renderPresetStats(statRecords);
   document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
   document.getElementById('clearHistoryBtn').disabled = count === 0;
   if(!count){
@@ -1173,6 +1149,33 @@ function renderGameArchive(){
   });
   html += '</div>';
   target.innerHTML = html;
+}
+
+function renderPresetStats(records){
+  selectedStatsPreset = CardsScorePresets.normalizeId(selectedStatsPreset);
+  const counts = records.reduce((result,record)=>{
+    result[record.presetId] = (result[record.presetId] || 0) + 1;
+    return result;
+  },Object.create(null));
+  const select = document.getElementById('statsPreset');
+  select.innerHTML = '';
+  CardsScorePresets.presets.forEach(preset=>{
+    const count = counts[preset.id] || 0;
+    const option = document.createElement('option');
+    option.value = preset.id;
+    option.textContent = preset.label + ' · ' + count + (count === 1 ? ' match' : ' matches');
+    option.selected = preset.id === selectedStatsPreset;
+    select.appendChild(option);
+  });
+
+  const filteredRecords = CardsScorePresets.filterRecords(records,selectedStatsPreset);
+  const statsTarget = document.getElementById('gameStats');
+  if(filteredRecords.length){
+    ScoreStats.render(statsTarget,filteredRecords);
+  }else{
+    const preset = CardsScorePresets.get(selectedStatsPreset);
+    statsTarget.innerHTML = '<div class="empty">No finished games saved for ' + escapeHtml(preset.label) + ' yet.</div>';
+  }
 }
 
 function renderStatus(){
@@ -1308,7 +1311,9 @@ function createArchivedGame(){
 }
 
 function newGameStateFromCurrent(){
-  return SiteScorecards.retainForNewGame(defaultState(),state,['players','playerCount']);
+  return SiteScorecards.retainForNewGame(defaultState(),state,[
+    'players','playerCount','startingDealer','gamePreset','title','limitType','limitValue','winnerMode'
+  ]);
 }
 
 function finishGame(){
@@ -1340,6 +1345,7 @@ function restoreArchivedGame(id){
   if(!entry) return;
   if(!confirm('Restore this archived game? The current scorecard will be replaced.')) return;
   state = normalizeState(entry.state);
+  selectedStatsPreset = state.gamePreset;
   state.editingIndex = null;
   state.draft = emptyDraft();
   render();
@@ -1379,6 +1385,18 @@ function clearGameArchive(){
 document.getElementById('gameTitle').addEventListener('input',event=>{
   state.title = event.target.value;
   scheduleSave();
+});
+
+document.getElementById('gamePreset').addEventListener('change',event=>{
+  CardsScorePresets.applyToState(state,event.target.value);
+  selectedStatsPreset = state.gamePreset;
+  render();
+  scheduleSave();
+});
+
+document.getElementById('statsPreset').addEventListener('change',event=>{
+  selectedStatsPreset = CardsScorePresets.normalizeId(event.target.value);
+  renderGameArchive();
 });
 
 document.getElementById('limitValue').addEventListener('input',event=>{
