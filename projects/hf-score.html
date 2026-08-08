@@ -48,7 +48,7 @@ button{cursor:pointer}
 .settings .seg button{flex:1;min-width:0;min-height:36px;padding:7px 12px}
 .panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 .settings{margin-bottom:14px;padding:12px}
-.settings-main{display:grid;grid-template-columns:minmax(300px,1fr) minmax(300px,1fr) minmax(190px,.7fr) minmax(360px,1.4fr);gap:8px;align-items:end}
+.settings-main{display:grid;grid-template-columns:minmax(360px,1fr) minmax(190px,.55fr) minmax(420px,1.4fr);gap:8px;align-items:end}
 .field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
 .field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
 label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
@@ -194,15 +194,8 @@ try{
   <section class="settings panel">
     <div class="settings-main">
       <div class="field">
-        <span class="label">Scoring Mode</span>
-        <div class="seg" id="gameMode" aria-label="Scoring mode">
-          <button type="button" data-mode="singles">Singles</button>
-          <button type="button" data-mode="teams">Teams</button>
-        </div>
-      </div>
-      <div class="field">
-        <span class="label">Score Columns</span>
-        <div class="seg" id="playerCount" aria-label="Score column count">
+        <span class="label">Players</span>
+        <div class="seg" id="playerCount" aria-label="Player count">
           <button type="button" data-count="2">2</button>
           <button type="button" data-count="3">3</button>
           <button type="button" data-count="4">4</button>
@@ -217,17 +210,17 @@ try{
         <input id="gameTitle" type="text" maxlength="48">
       </div>
       <div class="field names-field">
-        <span class="label" id="nameGridLabel">Player Names</span>
+        <span class="label">Player Names</span>
         <div class="name-grid" id="nameGrid"></div>
       </div>
     </div>
-    <p class="hint"><span id="modeHint"></span> Scores save automatically in this browser. Use Backup before clearing browser data or moving to another device.</p>
+    <p class="hint">Scores are tracked separately for 2–8 individual players and save automatically in this browser. Use Backup before clearing browser data or moving to another device.</p>
   </section>
 
   <section class="score-strip" id="scoreStrip"></section>
 
   <section class="rules" aria-label="Scoring reference">
-    <div class="rule" id="wildBookRule"><strong>1500</strong><span>Wild Book</span></div>
+    <div class="rule"><strong>1500</strong><span>Wild Book</span></div>
     <div class="rule"><strong>700</strong><span>Clean Book</span></div>
     <div class="rule"><strong>300</strong><span>Dirty Book</span></div>
     <div class="rule"><strong>100</strong><span>Going Out</span></div>
@@ -270,7 +263,7 @@ try{
 
   <div class="footer">
     <div class="footer-notes">
-      <span id="rulesModeNote"></span>
+      <span>Individual scoring uses four rounds with meld requirements of 60, 90, 120, and 150 points.</span>
       <span class="disclaimer">Unofficial scorecard for personal use. Hand &amp; Foot Remastered is owned by its respective rights holders. This tool is not affiliated with, endorsed by, or sponsored by Gray Dog Games.</span>
     </div>
     <span>Local browser storage</span>
@@ -394,18 +387,23 @@ function applyTheme(){
   themeButton.title = darkMode ? 'Switch to light mode' : 'Switch to dark mode';
 }
 
-function normalizeState(saved){
+function normalizeState(saved,preserveLegacyMode = false){
   const base = defaultState();
   const source = saved && typeof saved === 'object' ? saved : {};
   const savedSchema = Number(source.schemaVersion) || 1;
   const next = {...base,...source,schemaVersion:SCHEMA_VERSION};
-  next.gameMode = normalizeGameMode(source.gameMode,savedSchema,source.scores);
+  next.gameMode = preserveLegacyMode
+    ? normalizeGameMode(source.gameMode,savedSchema,source.scores)
+    : DEFAULT_GAME_MODE;
   next.title = String(source.title ?? base.title).slice(0,48);
   next.playerCount = Math.min(MAX_PLAYERS,Math.max(MIN_PLAYERS,Math.trunc(Number(next.playerCount)) || DEFAULT_PLAYER_COUNT));
   next.players = Array.from({length:MAX_PLAYERS},(_,i)=>{
     let name = String(source.players?.[i] ?? defaultColumnName(i,next.gameMode)).slice(0,24);
     if(savedSchema < SCHEMA_VERSION && next.gameMode === 'teams' && name === defaultColumnName(i,'singles')){
       name = defaultColumnName(i,'teams');
+    }
+    if(!preserveLegacyMode && name === defaultColumnName(i,'teams')){
+      name = defaultColumnName(i,'singles');
     }
     return name;
   });
@@ -426,7 +424,7 @@ function normalizeArchivedGame(source,index){
   if(!source || typeof source !== 'object') return null;
   const gameSource = source.state || source.game || source.scorecard;
   if(!gameSource || typeof gameSource !== 'object') return null;
-  const archivedState = normalizeState(gameSource);
+  const archivedState = normalizeState(gameSource,true);
   if(!gameHasScores(archivedState)) return null;
   const date = new Date(source.completedAt || source.date || Date.now());
   const completedAt = Number.isNaN(date.getTime()) ? new Date().toISOString() : date.toISOString();
@@ -586,29 +584,12 @@ function displayColumnName(index){
 function render(){
   applyTheme();
   document.getElementById('gameTitle').value = state.title;
-  renderGameMode();
   renderPlayerCount();
   renderNames();
   renderScoreStrip();
   renderTable();
   renderGameArchive();
   document.getElementById('finishBtn').disabled = !gameHasScores();
-}
-
-function renderGameMode(){
-  document.querySelectorAll('#gameMode button').forEach(button=>{
-    const isActive = button.dataset.mode === state.gameMode;
-    button.classList.toggle('active',isActive);
-    button.setAttribute('aria-pressed',String(isActive));
-  });
-  const isTeams = state.gameMode === 'teams';
-  document.getElementById('wildBookRule').hidden = false;
-  document.getElementById('nameGridLabel').textContent = isTeams ? 'Team Names' : 'Player Names';
-  document.getElementById('modeHint').textContent = isTeams
-    ? 'Teams mode uses one score column per team.'
-    : 'Singles mode uses one score column per player.';
-  document.getElementById('rulesModeNote').textContent = `${isTeams ? 'Team' : 'Singles'} scoring uses four rounds with meld requirements of 60, 90, 120, and 150 points.`;
-  document.getElementById('scoreTable').setAttribute('aria-label',`${isTeams ? 'Team' : 'Singles'} Hand and Foot round scores`);
 }
 
 function renderPlayerCount(){
@@ -629,7 +610,7 @@ function renderNames(){
     input.maxLength = 24;
     input.value = state.players[i];
     input.placeholder = defaultColumnName(i);
-    input.setAttribute('aria-label',`${state.gameMode === 'teams' ? 'Team' : 'Player'} ${i+1} name`);
+    input.setAttribute('aria-label',`Player ${i+1} name`);
     input.style.borderLeft = '5px solid ' + PLAYER_COLORS[i];
     input.addEventListener('input',()=>{
       state.players[i] = input.value;
@@ -728,7 +709,7 @@ function renderGameArchive(){
     const rounds = playedRoundCount(game);
     const resultLabel = rounds === ROUND_COUNT ? (leaders.length === 1 ? 'Winner' : 'Winners') : (leaders.length === 1 ? 'Final leader' : 'Final leaders');
     const roundLabel = rounds + (rounds === 1 ? ' played round' : ' played rounds');
-    const modeLabel = game.gameMode === 'teams' ? 'Teams' : 'Singles';
+    const modeLabel = game.gameMode === 'teams' ? 'Legacy team record' : game.playerCount + ' players';
     const entryId = escapeHtml(entry.id);
     html += '<details class="archived-game">';
     html += '<summary><span class="archive-heading"><span class="archive-title">' + escapeHtml(game.title) + '</span>';
@@ -894,9 +875,7 @@ function finishGame(){
     toast('Enter at least one score first');
     return;
   }
-  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{
-    noun:state.gameMode === 'teams' ? 'team game' : 'game'
-  });
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{noun:'game'});
   if(nameReview.changed){
     render();
     save();
@@ -957,17 +936,6 @@ function clearGameArchive(){
 document.getElementById('gameTitle').addEventListener('input',event=>{
   state.title = event.target.value;
   scheduleSave();
-});
-
-document.getElementById('gameMode').addEventListener('click',event=>{
-  const button = event.target.closest('button[data-mode]');
-  if(!button || button.dataset.mode === state.gameMode) return;
-  const previousMode = state.gameMode;
-  state.gameMode = button.dataset.mode;
-  state.players = state.players.map((name,index)=>name === defaultColumnName(index,previousMode) ? defaultColumnName(index,state.gameMode) : name);
-  render();
-  save();
-  toast(state.gameMode === 'teams' ? 'Teams scoring on' : 'Singles scoring on');
 });
 
 document.getElementById('playerCount').addEventListener('click',event=>{
