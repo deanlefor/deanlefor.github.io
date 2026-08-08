@@ -80,7 +80,10 @@ html.dark-mode .tracker-card:hover{box-shadow:0 16px 34px rgba(0,0,0,.38)}
 .privacy-mark{display:grid;place-items:center;flex:0 0 auto;width:25px;height:25px;border-radius:50%;background:var(--soft);color:var(--green);font-size:.72rem;font-weight:950}
 .privacy-note strong{display:block;font-size:.76rem}
 .privacy-note p{margin:2px 0 0;color:var(--muted);font-size:.7rem;line-height:1.45}
-.library-footer{display:flex;justify-content:space-between;gap:12px;margin:18px 0 4px;color:var(--muted);font-size:.68rem}
+.library-footer{display:flex;justify-content:space-between;gap:18px;margin:18px 0 4px;color:var(--muted);font-size:.68rem}
+.library-footer-copy{max-width:800px}
+.library-footer-note{display:block;margin-bottom:4px;color:var(--ink);font-weight:850}
+.library-disclaimer{margin:0;line-height:1.5}
 .library-footer a{color:var(--green);font-weight:850;text-decoration:none}
 .library-footer a:hover{text-decoration:underline;text-underline-offset:3px}
 @media(max-width:760px){
@@ -204,7 +207,10 @@ try{
   </main>
 
   <footer class="library-footer">
-    <span>Six independent scorecards · One shared collection</span>
+    <div class="library-footer-copy">
+      <span class="library-footer-note">Unofficial scorekeeper</span>
+      <p class="library-disclaimer">Game names and trademarks are the property of their respective owners. This is an unofficial, noncommercial scorekeeper and is not affiliated with, sponsored by, or endorsed by any game publisher. Game names are used solely to identify the games being scored.</p>
+    </div>
     <a href="../index.html#projects">Back to deanlefor.com</a>
   </footer>
 </div>
