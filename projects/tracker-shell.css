@@ -62,13 +62,19 @@ html.dark-mode{
 
 html{background:var(--page)}
 body{
+  margin:0;
+  min-height:100vh;
   background:var(--page);
   color:var(--ink);
+  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   line-height:1.4;
 }
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
 ::selection{background:color-mix(in srgb,var(--green) 28%,transparent)}
-.wrap{width:100%;max-width:1360px;padding:18px}
+.wrap{width:100%;max-width:1360px;margin:0 auto;padding:18px}
 .top{
+  display:grid;
   grid-template-columns:minmax(0,1fr) auto;
   gap:18px;
   align-items:end;
@@ -129,6 +135,7 @@ body{
   align-items:center;
   justify-content:flex-end;
   gap:7px;
+  flex-wrap:wrap;
 }
 .btn,.seg button{
   min-height:38px;
@@ -155,12 +162,13 @@ body{
 .btn.warn,.btn.danger{color:var(--red)}
 .btn.warn:hover,.btn.danger:hover{border-color:var(--red)}
 .btn.ghost{background:transparent}
+.btn:disabled{opacity:.45;cursor:not-allowed}
 .theme-toggle.active{border-color:var(--green);background:var(--green);color:var(--on-accent)}
 
-.layout{gap:14px}
-.stack{gap:14px;min-width:0}
+.layout{display:grid;gap:14px;align-items:start}
+.stack{display:flex;min-width:0;flex-direction:column;gap:14px}
 .panel{
-  border-color:var(--line);
+  border:1px solid var(--line);
   border-radius:9px;
   background:var(--panel);
   box-shadow:var(--shadow);
@@ -173,6 +181,7 @@ body{
   font-weight:900;
   letter-spacing:.01em;
 }
+.field{display:flex;min-width:0;flex-direction:column;gap:5px}
 label,.label{
   color:var(--muted);
   font-size:.68rem;
@@ -181,22 +190,51 @@ label,.label{
   text-transform:uppercase;
 }
 input,select,textarea{
+  width:100%;
   min-height:38px;
-  border-color:var(--line);
+  padding:8px 10px;
+  border:1px solid var(--line);
   border-radius:7px;
   background:var(--input);
   color:var(--ink);
+  outline:none;
 }
+textarea{min-height:66px;resize:vertical}
 input:focus,select:focus,textarea:focus{
   border-color:var(--green);
   outline:none;
   box-shadow:0 0 0 3px var(--focus);
 }
-.seg{border-color:var(--line);border-radius:7px;background:var(--input)}
-.seg button{border:0;border-right:1px solid var(--line);border-radius:0;background:var(--input);box-shadow:none}
+input[type=number]{text-align:right}
+.seg{display:flex;overflow:hidden;border:1px solid var(--line);border-radius:7px;background:var(--input)}
+.seg button{min-width:44px;border:0;border-right:1px solid var(--line);border-radius:0;background:var(--input);box-shadow:none}
 .seg button:last-child{border-right:0}
 .seg button.active{background:var(--green);color:var(--on-accent)}
-.divider{background:var(--line)}
+#playerCount button,#teamCount button{
+  position:relative;
+  transition:background-color .15s ease,color .15s ease,box-shadow .15s ease;
+}
+#playerCount button[aria-pressed="true"],#teamCount button[aria-pressed="true"]{
+  background:var(--green);
+  color:var(--on-accent,#fff);
+  font-weight:900;
+  box-shadow:inset 0 0 0 3px rgba(255,255,255,.72),inset 0 -4px 0 rgba(0,0,0,.2);
+  text-shadow:0 1px 1px rgba(0,0,0,.3);
+}
+#playerCount button[aria-pressed="true"]::after,#teamCount button[aria-pressed="true"]::after{
+  position:absolute;
+  top:4px;
+  right:4px;
+  width:6px;
+  height:6px;
+  border-radius:50%;
+  background:currentColor;
+  box-shadow:0 0 5px currentColor;
+  content:"";
+}
+.divider{height:1px;margin:14px 0;background:var(--line)}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.actions .btn.primary{flex:1 1 180px}
 .score-card,.standing,.team-entry{border-radius:9px}
 .winner,.status-box{
   border-color:color-mix(in srgb,var(--gold) 42%,var(--line));
@@ -205,7 +243,34 @@ input:focus,select:focus,textarea:focus{
   color:color-mix(in srgb,var(--gold) 72%,var(--ink));
 }
 .empty,.history-empty{border-color:var(--line);border-radius:8px;background:var(--empty-bg);color:var(--muted)}
-.toast{border-radius:7px;background:var(--toast-bg);color:var(--toast-ink)}
+.toast{
+  position:fixed;
+  z-index:20;
+  bottom:18px;
+  left:50%;
+  padding:10px 14px;
+  border-radius:7px;
+  background:var(--toast-bg);
+  box-shadow:var(--shadow);
+  color:var(--toast-ink);
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(-50%);
+  transition:opacity .16s;
+}
+.toast.show{opacity:1}
+.file-input{display:none}
+.sr-only{
+  position:absolute!important;
+  width:1px!important;
+  height:1px!important;
+  padding:0!important;
+  margin:-1px!important;
+  overflow:hidden!important;
+  clip:rect(0,0,0,0)!important;
+  white-space:nowrap!important;
+  border:0!important;
+}
 .footer{color:var(--muted)}
 .stats-highlight,.stats-table-wrap,.match-records,.archived-game{border-radius:8px}
 
@@ -347,6 +412,14 @@ html.dark-mode .meld-needed{border-color:color-mix(in srgb,var(--gold) 45%,var(-
 }
 @media(max-width:420px){
   .toolbar{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(forced-colors:active){
+  #playerCount button[aria-pressed="true"],#teamCount button[aria-pressed="true"]{
+    background:Highlight;
+    color:HighlightText;
+    outline:3px solid Highlight;
+    outline-offset:-3px;
+  }
 }
 @media print{
   html.dark-mode{

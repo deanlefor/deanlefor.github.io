@@ -109,6 +109,9 @@
 .archive-actions{display:flex;justify-content:flex-end;gap:7px;margin-top:7px}
 @media(max-width:720px){
   .stats-highlight-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .archived-game > summary{align-items:flex-start;flex-direction:column;gap:3px}
+  .archive-result{text-align:left}
+  .match-records-toolbar{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:420px){
   .stats-highlight-grid{grid-template-columns:1fr 1fr}

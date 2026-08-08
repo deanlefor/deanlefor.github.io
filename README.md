@@ -24,7 +24,9 @@ their public URL paths so GitHub Pages can publish everything directly from the
 
 - **Root HTML files** — The personal homepage, doctoral tracker, tracker guide,
   and retro terminal.
-- **projects/** — Standalone recreational tools and scorecards.
+- **projects/** — Standalone recreational tools and scorecards. See
+  **projects/SCORECARD-DEVELOPMENT.md** before adding or restructuring a
+  scorekeeper.
 - **apps/fers-retirement/** — React and TypeScript source and tests for the
   Dual-FERS Retirement Planner, with governing documents under
   `project-docs/`.

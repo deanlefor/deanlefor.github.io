@@ -6,7 +6,6 @@
 <title>Hand &amp; Foot Remastered Scorecard</title>
 <link rel="stylesheet" href="score-stats.css">
 <style>
-*{box-sizing:border-box}
 :root{
   color-scheme:light;
   --ink:#191816;--paper:#fbfaf7;--panel:#ffffff;--line:#c9c3b8;
@@ -27,35 +26,12 @@ html.dark-mode{
   --total-bg:#302c24;--round-head:#080806;--round-head-line:#3d382f;--round-pill-bg:#1f1d19;--round-pill-line:#6a6257;
   --rule-bg:#22201c;--house-text:#e3dacd;--toast-bg:#f2eee6;--toast-ink:#15130f;--on-accent:#101510;
 }
-body{margin:0;background:var(--page);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.wrap{max-width:1380px;margin:0 auto;padding:18px}
-.top{display:grid;grid-template-columns:1fr auto;gap:16px;align-items:end;margin-bottom:14px}
-.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.03em;text-transform:uppercase}
-.brand p{margin:5px 0 0;color:var(--muted);font-size:.95rem}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.btn,.seg button{border:1px solid var(--line);background:var(--panel);color:var(--ink);border-radius:6px;padding:9px 12px;min-height:40px;box-shadow:0 1px 0 var(--button-inset) inset}
-.btn:hover,.seg button:hover{border-color:var(--button-hover)}
-.btn.primary{background:var(--ink);border-color:var(--ink);color:var(--panel)}
-.btn.danger{color:var(--red)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
-.seg{display:flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--panel)}
-.seg button{border:0;border-right:1px solid var(--line);border-radius:0;box-shadow:none;min-width:44px}
-.seg button:last-child{border-right:0}
-.seg button.active{background:var(--green);color:var(--on-accent)}
 .settings .seg button{flex:1;min-width:0;min-height:36px;padding:7px 12px}
-.panel{background:var(--panel);border:1px solid var(--line);border-radius:8px;box-shadow:var(--shadow)}
 .settings{margin-bottom:14px;padding:12px}
 .settings-main{display:grid;grid-template-columns:minmax(360px,1fr) minmax(190px,.55fr) minmax(420px,1.4fr);gap:8px;align-items:end}
 .field-row{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
-.field{display:flex;flex-direction:column;gap:5px;min-width:120px;flex:1}
-label,.label{font-size:.72rem;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.07em}
-input,select{border:1px solid var(--line);background:var(--input);border-radius:5px;min-height:36px;padding:7px 9px;color:var(--ink);width:100%}
-input:focus,select:focus{outline:2px solid rgba(47,107,85,.18);border-color:var(--green)}
+.field{min-width:120px;flex:1}
 input[aria-invalid=true]{border-color:var(--red);outline-color:color-mix(in srgb,var(--red) 24%,transparent)}
-input[type=number]{text-align:right}
 .name-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;min-width:0}
 .name-grid input{min-width:0}
 .score-strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin:0 -4px 14px;padding:8px 4px;position:sticky;top:0;z-index:5;background:var(--page);border-bottom:1px solid var(--line)}
@@ -109,32 +85,10 @@ thead .row-label{z-index:4}
 .house-rule-list li{break-inside:avoid}
 .house-rule-list strong{font-weight:800}
 .history-panel{margin-top:14px;padding:12px}
-.history-title-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
-.history-title{margin:0;font-size:1rem;font-weight:900}
-.history-count{display:block;margin-top:2px;color:var(--muted);font-size:.72rem}
-.history-clear{min-height:30px;padding:5px 8px;font-size:.72rem}
 .history-empty{padding:24px 14px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:7px;background:var(--table-head)}
-.game-history-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow:auto;padding:2px}
-.archived-game{border:1px solid var(--line);border-radius:7px;background:var(--panel);overflow:hidden}
-.archived-game summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:10px;min-height:44px;padding:7px 9px;cursor:pointer;list-style:none}
-.archived-game summary::-webkit-details-marker{display:none}
-.archived-game[open] summary{border-bottom:1px solid var(--line);background:var(--table-head)}
-.archive-heading{min-width:0}
-.archive-title{display:block;overflow:hidden;font-size:.84rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
-.archive-meta{display:block;margin-top:2px;color:var(--muted);font-size:.68rem}
-.archive-result{max-width:300px;overflow:hidden;color:var(--green);font-size:.76rem;font-weight:900;text-align:right;text-overflow:ellipsis;white-space:nowrap}
-.archive-body{padding:8px 9px}
-.archive-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:6px}
-.archive-total{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--row-label-bg);font-size:.72rem}
-.archive-total span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.archive-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
-.archive-actions .btn{min-height:30px;padding:5px 8px;font-size:.72rem}
 .footer{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;margin-top:12px;color:var(--muted);font-size:.8rem}
 .footer-notes{display:flex;flex-direction:column;gap:4px;line-height:1.35}
 .disclaimer{font-size:.74rem}
-.toast{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);background:var(--toast-bg);color:var(--toast-ink);padding:10px 14px;border-radius:6px;box-shadow:var(--shadow);opacity:0;pointer-events:none;transition:opacity .16s}
-.toast.show{opacity:1}
-.sr-only{position:absolute!important;width:1px!important;height:1px!important;padding:0!important;margin:-1px!important;overflow:hidden!important;clip:rect(0,0,0,0)!important;white-space:nowrap!important;border:0!important}
 @media(max-width:1100px){
   .settings-main{grid-template-columns:repeat(2,minmax(0,1fr))}
   .names-field{grid-column:1/-1}
@@ -145,8 +99,6 @@ thead .row-label{z-index:4}
   .name-grid,.score-strip{grid-template-columns:repeat(2,1fr)}
   .rules{grid-template-columns:repeat(2,1fr)}
   .house-rule-list{grid-template-columns:1fr}
-  .archived-game summary{grid-template-columns:1fr;gap:3px}
-  .archive-result{max-width:none;text-align:left}
 }
 @media(hover:none) and (pointer:coarse){
   .score-strip{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 52px);z-index:10}
@@ -274,7 +226,11 @@ try{
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
+<script src="scorecard-common.js"></script>
 <script>
+const escapeHtml = SiteScorecards.escapeHtml;
+const formatArchivedDate = SiteScorecards.formatDate;
+const toast = SiteScorecards.toast;
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
 const HISTORY_KEY = 'handFootRemasteredScorecard.history.v1';
@@ -593,11 +549,7 @@ function render(){
 }
 
 function renderPlayerCount(){
-  document.querySelectorAll('#playerCount button').forEach(button=>{
-    const isActive = Number(button.dataset.count) === state.playerCount;
-    button.classList.toggle('active',isActive);
-    button.setAttribute('aria-pressed',String(isActive));
-  });
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
 }
 
 function renderNames(){
@@ -728,12 +680,6 @@ function renderGameArchive(){
   target.innerHTML = html;
 }
 
-function formatArchivedDate(value){
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return 'Unknown date';
-  return date.toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
-}
-
 function cellHtml(round, player, key){
   const row = playerRound(round,player);
   const meta = SECTION_META[key];
@@ -847,19 +793,6 @@ function refreshCalculations(round, player, key){
     const cumulativeNode = document.querySelector(`[data-calc="cumulative"][data-r="${r}"][data-p="${player}"]`);
     if(cumulativeNode) setCalcText(cumulativeNode, cumulative(r, player));
   }
-}
-
-function escapeHtml(value){
-  return String(value).replace(/[&<>"']/g, char => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[char]));
-}
-
-function toast(message){
-  const node = document.getElementById('toast');
-  node.textContent = message;
-  node.classList.add('show');
-  setTimeout(()=>node.classList.remove('show'),1700);
 }
 
 function createArchivedGame(){

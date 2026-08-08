@@ -6,7 +6,6 @@
 <title>Canasta Scorecard</title>
 <link rel="stylesheet" href="score-stats.css">
 <style>
-*{box-sizing:border-box}
 :root{
   --ink:#1d211f;
   --muted:#68716c;
@@ -22,102 +21,13 @@
   --plum:#6d4f7d;
   --shadow:0 13px 34px rgba(38,32,22,.1);
 }
-body{
-  margin:0;
-  min-height:100vh;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-button,input,select{font:inherit}
-button{cursor:pointer}
-.wrap{max-width:1360px;margin:0 auto;padding:18px}
-.top{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:14px;
-  align-items:end;
-  margin-bottom:14px;
-}
-.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.02em;text-transform:uppercase}
-.brand p{margin:4px 0 0;color:var(--muted);font-size:.9rem}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
-.layout{display:grid;grid-template-columns:minmax(390px,.95fr) minmax(500px,1.1fr);gap:14px;align-items:start}
-.stack{display:flex;flex-direction:column;gap:14px}
-.panel{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:8px;
-  box-shadow:var(--shadow);
-}
-.section{padding:14px}
-.section-title{
-  margin:0 0 12px;
-  font-size:1rem;
-  font-weight:850;
-  letter-spacing:.02em;
-}
+.layout{grid-template-columns:minmax(390px,.95fr) minmax(500px,1.1fr)}
 .settings{
   display:grid;
   grid-template-columns:minmax(180px,1fr) auto minmax(140px,.45fr);
   gap:10px;
   align-items:end;
 }
-.field{display:flex;flex-direction:column;gap:5px;min-width:0}
-label,.label{
-  color:var(--muted);
-  font-size:.72rem;
-  font-weight:850;
-  letter-spacing:.07em;
-  text-transform:uppercase;
-}
-input,select{
-  width:100%;
-  min-height:38px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:#fff;
-  color:var(--ink);
-  padding:8px 10px;
-  outline:none;
-}
-input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(45,104,77,.12)}
-input[type=number]{text-align:right}
-.seg{
-  display:flex;
-  border:1px solid var(--line);
-  border-radius:7px;
-  overflow:hidden;
-  background:#fff;
-}
-.seg button{
-  min-width:44px;
-  min-height:38px;
-  padding:7px 12px;
-  border:0;
-  border-right:1px solid var(--line);
-  background:#fff;
-  color:var(--ink);
-  font-weight:850;
-}
-.seg button:last-child{border-right:0}
-.seg button.active{background:var(--green);color:#fff}
-.btn{
-  min-height:38px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:#fff;
-  color:var(--ink);
-  padding:8px 12px;
-  font-weight:850;
-}
-.btn:hover{border-color:#948873}
-.btn.primary{background:var(--green);border-color:var(--green);color:#fff}
-.btn.primary:hover{background:var(--green-dark)}
-.btn.warn{color:var(--red)}
-.btn.ghost{background:transparent}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.divider{height:1px;background:var(--line);margin:14px 0}
 .name-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .round-head{
   display:flex;
@@ -181,8 +91,6 @@ input[type=number]{text-align:right}
 .round-total b{font-size:1.35rem}
 .positive{color:var(--green)}
 .negative{color:var(--red)}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.actions .btn.primary{flex:1 1 180px}
 .standings{
   display:grid;
   grid-template-columns:repeat(2,minmax(0,1fr));
@@ -250,22 +158,6 @@ thead th{
   border-radius:8px;
   background:rgba(255,255,255,.45);
 }
-.file-input{display:none}
-.toast{
-  position:fixed;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  background:var(--ink);
-  color:#fff;
-  padding:10px 14px;
-  border-radius:6px;
-  box-shadow:var(--shadow);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .16s;
-}
-.toast.show{opacity:1}
 @media(max-width:930px){
   .top,.layout,.settings{grid-template-columns:1fr}
   .toolbar{justify-content:flex-start}
@@ -386,7 +278,11 @@ try{
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
+<script src="scorecard-common.js"></script>
 <script>
+const escapeHtml = SiteScorecards.escapeHtml;
+const formatArchivedDate = SiteScorecards.formatDate;
+const toast = SiteScorecards.toast;
 const STORE_KEY = 'canastaScorecard.v1';
 const THEME_KEY = 'canastaScorecard.darkMode.v1';
 const HISTORY_KEY = 'canastaScorecard.history.v1';
@@ -656,9 +552,7 @@ function render(){
 }
 
 function renderTeamCount(){
-  document.querySelectorAll('#teamCount button').forEach(button => {
-    button.classList.toggle('active', Number(button.dataset.count) === state.teamCount);
-  });
+  SiteScorecards.syncCountButtons('#teamCount',state.teamCount);
 }
 
 function renderNames(){
@@ -907,12 +801,6 @@ function renderGameArchive(){
   host.innerHTML = html;
 }
 
-function formatArchivedDate(value){
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return 'Unknown date';
-  return date.toLocaleString([], {month:'short',day:'numeric',year:'numeric',hour:'numeric',minute:'2-digit'});
-}
-
 function archiveCurrentGame(){
   if(!state.rounds.length){
     toast('Add a round before finishing the game');
@@ -1048,23 +936,6 @@ function teamName(index){
 
 function cloneRound(round){
   return normalizeRound(JSON.parse(JSON.stringify(round)));
-}
-
-function escapeHtml(value){
-  return String(value).replace(/[&<>"']/g, char => ({
-    '&':'&amp;',
-    '<':'&lt;',
-    '>':'&gt;',
-    '"':'&quot;',
-    "'":'&#39;'
-  }[char]));
-}
-
-function toast(message){
-  const node = document.getElementById('toast');
-  node.textContent = message;
-  node.classList.add('show');
-  setTimeout(() => node.classList.remove('show'), 1700);
 }
 
 document.getElementById('gameTitle').addEventListener('input', event => {

@@ -6,7 +6,6 @@
 <title>Cards Scorecard</title>
 <link rel="stylesheet" href="score-stats.css">
 <style>
-*{box-sizing:border-box}
 :root{
   color-scheme:light;
   --ink:#1f2420;
@@ -79,41 +78,7 @@ html.dark-mode{
   --toast-bg:#f2eee6;
   --toast-ink:#15130f;
 }
-body{
-  margin:0;
-  min-height:100vh;
-  background:var(--paper);
-  color:var(--ink);
-  font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-}
-button,input,select,textarea{font:inherit}
-button{cursor:pointer}
-.wrap{max-width:1360px;margin:0 auto;padding:18px}
-.top{
-  display:grid;
-  grid-template-columns:1fr auto;
-  gap:14px;
-  align-items:end;
-  margin-bottom:14px;
-}
-.brand h1{margin:0;font-size:clamp(1.55rem,3vw,2.35rem);letter-spacing:.02em}
-.brand p{margin:4px 0 0;color:var(--muted);font-size:.92rem}
-.toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
-.layout{display:grid;grid-template-columns:minmax(360px,.92fr) minmax(520px,1.18fr);gap:14px;align-items:start}
-.stack{display:flex;flex-direction:column;gap:14px;min-width:0}
-.panel{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:8px;
-  box-shadow:var(--shadow);
-}
-.section{padding:14px}
-.section-title{
-  margin:0 0 12px;
-  font-size:1rem;
-  font-weight:800;
-  letter-spacing:.02em;
-}
+.layout{grid-template-columns:minmax(360px,.92fr) minmax(520px,1.18fr)}
 .settings{
   display:grid;
   grid-template-columns:minmax(170px,1fr) minmax(250px,auto);
@@ -129,46 +94,6 @@ button{cursor:pointer}
 }
 .win-config.unlimited{grid-template-columns:1fr}
 .limit-field.is-hidden{display:none}
-.field{display:flex;flex-direction:column;gap:5px;min-width:0}
-label,.label{
-  color:var(--muted);
-  font-size:.72rem;
-  font-weight:800;
-  letter-spacing:.07em;
-  text-transform:uppercase;
-}
-input,select,textarea{
-  width:100%;
-  min-height:38px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:var(--input);
-  color:var(--ink);
-  padding:8px 10px;
-  outline:none;
-}
-textarea{min-height:66px;resize:vertical}
-input:focus,select:focus,textarea:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--focus)}
-input[type=number]{text-align:right}
-.seg{
-  display:flex;
-  border:1px solid var(--line);
-  border-radius:7px;
-  overflow:hidden;
-  background:var(--input);
-}
-.seg button{
-  min-width:42px;
-  min-height:38px;
-  padding:7px 11px;
-  border:0;
-  border-right:1px solid var(--line);
-  background:var(--input);
-  color:var(--ink);
-  font-weight:800;
-}
-.seg button:last-child{border-right:0}
-.seg button.active{background:var(--green);color:var(--on-accent)}
 .player-seg{
   display:grid;
   grid-template-columns:repeat(7,38px);
@@ -179,23 +104,6 @@ input[type=number]{text-align:right}
   grid-template-columns:repeat(5,minmax(0,1fr));
 }
 .win-seg button{min-width:0;padding:7px 6px;font-size:.8rem;white-space:normal;line-height:1.15}
-.btn{
-  min-height:38px;
-  border:1px solid var(--line);
-  border-radius:6px;
-  background:var(--button-bg);
-  color:var(--ink);
-  padding:8px 12px;
-  font-weight:800;
-}
-.btn:hover{border-color:var(--button-hover)}
-.btn.primary{background:var(--green);border-color:var(--green);color:var(--on-accent)}
-.btn.primary:hover{background:var(--green-dark)}
-.btn.warn{color:var(--red)}
-.btn.ghost{background:transparent}
-.theme-toggle.active{background:var(--green);border-color:var(--green);color:var(--on-accent)}
-.btn:disabled{opacity:.45;cursor:not-allowed}
-.divider{height:1px;background:var(--line);margin:14px 0}
 .players-title-row{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:12px}
 .players-title-row .section-title{margin:0}
 .dealer-field{flex:0 1 170px}
@@ -374,8 +282,6 @@ input[type=number]{text-align:right}
 .preview-card .score-sub{font-size:.7rem;margin-top:1px}
 .positive{color:var(--green)}
 .negative{color:var(--red)}
-.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
-.actions .btn.primary{flex:1 1 180px}
 .message{
   display:none;
   margin-top:10px;
@@ -468,41 +374,6 @@ input[type=number]{text-align:right}
   color:var(--leader-ink);
 }
 .status-box.show{display:block}
-.history-title-row{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:10px;
-  margin-bottom:10px;
-}
-.history-title-row .section-title{margin:0}
-.history-count{display:block;margin-top:2px;color:var(--muted);font-size:.72rem}
-.history-clear{min-height:30px;padding:5px 8px;font-size:.72rem}
-.game-history-list{display:flex;flex-direction:column;gap:7px;max-height:440px;overflow:auto;padding:2px}
-.archived-game{border:1px solid var(--line);border-radius:7px;background:var(--sheet-bg);overflow:hidden}
-.archived-game summary{
-  display:grid;
-  grid-template-columns:minmax(0,1fr) auto;
-  align-items:center;
-  gap:10px;
-  min-height:44px;
-  padding:7px 9px;
-  cursor:pointer;
-  list-style:none;
-}
-.archived-game summary::-webkit-details-marker{display:none}
-.archived-game[open] summary{border-bottom:1px solid var(--line);background:var(--sheet-head-bg)}
-.archive-heading{min-width:0}
-.archive-title{display:block;overflow:hidden;font-size:.84rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
-.archive-meta{display:block;margin-top:2px;color:var(--muted);font-size:.68rem}
-.archive-result{max-width:240px;overflow:hidden;color:var(--green);font-size:.76rem;font-weight:900;text-align:right;text-overflow:ellipsis;white-space:nowrap}
-.archive-body{padding:8px 9px}
-.archive-totals{display:grid;grid-template-columns:repeat(auto-fit,minmax(92px,1fr));gap:6px}
-.archive-total{display:flex;align-items:center;justify-content:space-between;gap:6px;padding:5px 7px;border:1px solid var(--line);border-radius:6px;background:var(--round-info-bg);font-size:.72rem}
-.archive-total span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.archive-actions{display:flex;justify-content:flex-end;gap:6px;margin-top:8px}
-.archive-actions .btn{min-height:30px;padding:5px 8px;font-size:.72rem}
-.file-input{display:none}
 .footer{
   display:flex;
   justify-content:space-between;
@@ -512,22 +383,6 @@ input[type=number]{text-align:right}
   color:var(--muted);
   font-size:.8rem;
 }
-.toast{
-  position:fixed;
-  left:50%;
-  bottom:18px;
-  transform:translateX(-50%);
-  background:var(--toast-bg);
-  color:var(--toast-ink);
-  padding:10px 14px;
-  border-radius:6px;
-  box-shadow:var(--shadow);
-  opacity:0;
-  pointer-events:none;
-  transition:opacity .16s;
-  z-index:20;
-}
-.toast.show{opacity:1}
 @media(max-width:980px){
   .top,.layout,.settings{grid-template-columns:1fr}
   .toolbar{justify-content:flex-start}
@@ -544,8 +399,6 @@ input[type=number]{text-align:right}
   .sheet-actions{grid-column:2;grid-row:1;justify-content:flex-end;border-bottom:1px solid var(--line);border-left:1px solid var(--line)}
   .round-head{align-items:flex-start;flex-direction:column}
   .score-strip{grid-template-columns:repeat(2,minmax(0,1fr))}
-  .archived-game summary{grid-template-columns:1fr;gap:3px}
-  .archive-result{max-width:none;text-align:left}
 }
 @media(max-width:420px){
   .players-title-row{align-items:stretch;flex-direction:column;gap:8px}
@@ -758,7 +611,11 @@ try{
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
 <script src="player-names.js"></script>
+<script src="scorecard-common.js"></script>
 <script>
+const escapeHtml = SiteScorecards.escapeHtml;
+const formatArchivedDate = SiteScorecards.formatDate;
+const toast = SiteScorecards.toast;
 const STORE_KEY = 'cardsScorecard.v1';
 const THEME_KEY = 'cardsScorecard.darkMode.v1';
 const HISTORY_KEY = 'cardsScorecard.history.v1';
@@ -1078,11 +935,7 @@ function render(){
 }
 
 function renderPlayerCount(){
-  document.querySelectorAll('#playerCount button').forEach(button=>{
-    const isActive = Number(button.dataset.count) === state.playerCount;
-    button.classList.toggle('active', isActive);
-    button.setAttribute('aria-pressed', String(isActive));
-  });
+  SiteScorecards.syncCountButtons('#playerCount',state.playerCount);
 }
 
 function renderWinCondition(){
@@ -1320,18 +1173,6 @@ function renderGameArchive(){
   target.innerHTML = html;
 }
 
-function formatArchivedDate(value){
-  const date = new Date(value);
-  if(Number.isNaN(date.getTime())) return 'Unknown date';
-  return date.toLocaleString([], {
-    month:'short',
-    day:'numeric',
-    year:'numeric',
-    hour:'numeric',
-    minute:'2-digit'
-  });
-}
-
 function renderStatus(){
   const box = document.getElementById('statusBox');
   const reached = targetReached();
@@ -1527,19 +1368,6 @@ function clearGameArchive(){
   }
   renderGameArchive();
   toast('Game history cleared');
-}
-
-function escapeHtml(value){
-  return String(value).replace(/[&<>"']/g, char => ({
-    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
-  }[char]));
-}
-
-function toast(message){
-  const node = document.getElementById('toast');
-  node.textContent = message;
-  node.classList.add('show');
-  setTimeout(()=>node.classList.remove('show'),1700);
 }
 
 document.getElementById('gameTitle').addEventListener('input',event=>{
