@@ -202,8 +202,7 @@ html.dark-mode{
   border-left:5px solid var(--green);
   padding:12px;
 }
-.standing .rank{color:var(--muted);font-size:.72rem;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-.standing .name{margin-top:3px;color:var(--muted);font-size:.84rem;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.standing .name{color:var(--muted);font-size:.84rem;font-weight:850;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .standing .score{font-size:2rem;font-weight:950;line-height:1.05;margin-top:3px}
 .standing .sub{color:var(--muted);font-size:.76rem;margin-top:4px}
 .standing.leader{background:linear-gradient(180deg,var(--panel),var(--winner-bg));border-color:var(--gold)}
@@ -348,7 +347,7 @@ try{
     <div class="brand">
       <a class="tracker-home" href="scorecards.html">← Tracker Library</a>
       <h1>Skyjo Scorecard</h1>
-      <p>Low-score tracking with closer penalties and automatic standings. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
+      <p>Low-score tracking with closer penalties and running totals. <span class="header-save-state" id="saveState" role="status" aria-live="polite">Loading...</span></p>
     </div>
     <div class="toolbar">
       <button class="btn theme-toggle" id="themeBtn" type="button" aria-pressed="false" title="Switch to dark mode">Dark Mode</button>
@@ -912,8 +911,7 @@ function renderStandings(){
   grid.innerHTML = '';
   const totals = cumulativeTotals();
   const leaders = leaderIndexes();
-  const ordered = visiblePlayers().slice().sort((a,b) => totals[a] - totals[b] || a - b);
-  ordered.forEach((i,index) => {
+  visiblePlayers().forEach(i => {
     const card = document.createElement('div');
     card.className = 'standing panel';
     card.style.borderLeftColor = COLORS[i];
@@ -921,7 +919,6 @@ function renderStandings(){
     card.classList.toggle('at-risk', totals[i] >= state.targetScore);
     const lastRound = state.rounds.length ? roundMeta(state.rounds[state.rounds.length - 1]).adjusted[i] : 0;
     card.innerHTML =
-      '<div class="rank">' + ordinal(index + 1) + '</div>' +
       '<div class="name">' + escapeHtml(playerName(i)) + '</div>' +
       '<div class="score ' + scoreClass(totals[i]) + '">' + format(totals[i]) + '</div>' +
       '<div class="sub">Last ' + signed(lastRound) + '</div>';
@@ -1066,13 +1063,6 @@ function scoreClass(value){
   if(number < 0) return 'positive';
   if(number > 0) return 'negative';
   return '';
-}
-
-function ordinal(number){
-  if(number === 1) return '1st';
-  if(number === 2) return '2nd';
-  if(number === 3) return '3rd';
-  return number + 'th';
 }
 
 function setMessage(text){
