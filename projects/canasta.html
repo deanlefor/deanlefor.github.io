@@ -385,6 +385,7 @@ try{
 
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
+<script src="player-names.js"></script>
 <script>
 const STORE_KEY = 'canastaScorecard.v1';
 const THEME_KEY = 'canastaScorecard.darkMode.v1';
@@ -661,6 +662,7 @@ function renderTeamCount(){
 }
 
 function renderNames(){
+  SitePlayerNames.refresh();
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
   for(let i = 0; i < MAX_TEAMS; i++){
@@ -679,6 +681,7 @@ function renderNames(){
       renderHistory();
       scheduleSave();
     });
+    SitePlayerNames.enhanceInput(input);
     grid.appendChild(input);
   }
 }
@@ -914,6 +917,11 @@ function archiveCurrentGame(){
   if(!state.rounds.length){
     toast('Add a round before finishing the game');
     return;
+  }
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.teams,state.teamCount,{noun:'game'});
+  if(nameReview.changed){
+    render();
+    saveNow();
   }
   if(!confirm('Finish this game and add it to the all-time statistics?')) return;
   const snapshot = normalizeState(JSON.parse(JSON.stringify(state)));

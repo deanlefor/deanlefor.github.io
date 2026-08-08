@@ -602,6 +602,7 @@ try{
 
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
+<script src="player-names.js"></script>
 <script>
 const STORE_KEY = 'pinochleScorekeeper.v2';
 const THEME_KEY = 'pinochleScorekeeper.darkMode.v1';
@@ -970,6 +971,7 @@ function renderPlayerCount(){
 }
 
 function renderNameGrid(){
+  SitePlayerNames.refresh();
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
   visiblePlayers().forEach(i=>{
@@ -990,6 +992,7 @@ function renderNameGrid(){
       renderPreview();
       scheduleSave();
     });
+    SitePlayerNames.enhanceInput(input);
     field.appendChild(input);
     grid.appendChild(field);
   });
@@ -1314,6 +1317,11 @@ function finishGame(){
   if(!state.rounds.length){
     toast('Add at least one round first');
     return;
+  }
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{noun:'game'});
+  if(nameReview.changed){
+    render();
+    saveNow();
   }
   if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
   const previousArchive = gameArchive;

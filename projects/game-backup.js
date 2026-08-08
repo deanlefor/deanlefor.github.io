@@ -17,6 +17,7 @@
       id:'flexibleCards',
       label:'Flexible Cards Scorecard',
       page:'cards-score.html',
+      nameField:'players',
       legacyKind:'cards-scorecard-backup',
       storageKeys:Object.freeze([
         Object.freeze({key:'cardsScorecard.v1', role:'currentGame'}),
@@ -28,6 +29,7 @@
       id:'pinochle',
       label:'Pinochle Scorecard',
       page:'pinochle.html',
+      nameField:'players',
       legacyKind:'pinochle-scorekeeper-backup',
       storageKeys:Object.freeze([
         Object.freeze({key:'pinochleScorekeeper.v2', role:'currentGame'}),
@@ -40,6 +42,7 @@
       id:'canasta',
       label:'Canasta Scorecard',
       page:'canasta.html',
+      nameField:'teams',
       legacyKind:'canasta-scorecard-backup',
       storageKeys:Object.freeze([
         Object.freeze({key:'canastaScorecard.v1', role:'currentGame'}),
@@ -51,6 +54,7 @@
       id:'handAndFoot',
       label:'Hand & Foot Scorecard',
       page:'hf-score.html',
+      nameField:'players',
       legacyKind:'hand-foot-remastered-scorecard-backup',
       storageKeys:Object.freeze([
         Object.freeze({key:'handFootRemasteredScorecard.v1', role:'currentGame'}),
@@ -62,6 +66,7 @@
       id:'skyjo',
       label:'Skyjo Scorecard',
       page:'skyjo.html',
+      nameField:'players',
       legacyKind:'skyjo-scorecard-backup',
       storageKeys:Object.freeze([
         Object.freeze({key:'skyjoScorecard.v1', role:'currentGame'}),

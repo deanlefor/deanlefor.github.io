@@ -280,6 +280,7 @@ try{
 
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
+<script src="player-names.js"></script>
 <script>
 const STORE_KEY = 'handFootRemasteredScorecard.v1';
 const THEME_KEY = 'handFootRemasteredScorecard.darkMode.v1';
@@ -619,6 +620,7 @@ function renderPlayerCount(){
 }
 
 function renderNames(){
+  SitePlayerNames.refresh();
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
   for(let i=0;i<state.playerCount;i++){
@@ -635,6 +637,7 @@ function renderNames(){
       renderTable();
       scheduleSave();
     });
+    SitePlayerNames.enhanceInput(input);
     grid.appendChild(input);
   }
 }
@@ -890,6 +893,13 @@ function finishGame(){
   if(!gameHasScores()){
     toast('Enter at least one score first');
     return;
+  }
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{
+    noun:state.gameMode === 'teams' ? 'team game' : 'game'
+  });
+  if(nameReview.changed){
+    render();
+    save();
   }
   if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
   const previousArchive = gameArchive;

@@ -757,6 +757,7 @@ try{
 
 <script src="score-stats.js"></script>
 <script src="game-backup.js"></script>
+<script src="player-names.js"></script>
 <script>
 const STORE_KEY = 'cardsScorecard.v1';
 const THEME_KEY = 'cardsScorecard.darkMode.v1';
@@ -1118,6 +1119,7 @@ function setWinCondition(value){
 }
 
 function renderNames(){
+  SitePlayerNames.refresh();
   const grid = document.getElementById('nameGrid');
   grid.innerHTML = '';
   visiblePlayers().forEach(i=>{
@@ -1140,6 +1142,7 @@ function renderNames(){
       renderStatus();
       scheduleSave();
     });
+    SitePlayerNames.enhanceInput(input);
     field.appendChild(input);
     grid.appendChild(field);
   });
@@ -1465,6 +1468,11 @@ function finishGame(){
   if(!state.rounds.length){
     toast('Add at least one round first');
     return;
+  }
+  const nameReview = SitePlayerNames.reviewNamesInPlace(state.players,state.playerCount,{noun:'game'});
+  if(nameReview.changed){
+    render();
+    saveNow();
   }
   if(!confirm('Finish and archive this game, then start a new scorecard?')) return;
   const previousArchive = gameArchive;
