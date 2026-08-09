@@ -55,6 +55,7 @@
   grid-template-columns:minmax(132px,1.35fr) repeat(6,minmax(58px,.68fr));
   border-bottom:1px solid var(--line);
 }
+.stats-row-with-outs{grid-template-columns:minmax(132px,1.35fr) repeat(7,minmax(58px,.68fr))}
 .stats-row:last-child{border-bottom:0}
 .stats-row > *{
   min-width:0;

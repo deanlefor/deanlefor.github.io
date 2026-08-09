@@ -14,3 +14,10 @@ test('Skyjo standings retain the original player order',() => {
   assert.doesNotMatch(standingsSource[1],/\.sort\s*\(/);
   assert.doesNotMatch(standingsSource[1],/class=["']rank["']/);
 });
+
+test('Skyjo all-time stats count closing or scoring zero as an out',() => {
+  assert.match(source,/function outsForGame\(game,index\)/);
+  assert.match(source,/round\.closer === index \|\| scoredZero/);
+  assert.match(source,/Number\(score\) === 0/);
+  assert.match(source,/outs:outsForGame\(game,index\)/);
+});

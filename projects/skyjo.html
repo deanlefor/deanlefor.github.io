@@ -718,6 +718,14 @@ function gamePlayerName(game,index){
   return game.players[index] || 'Player ' + (index + 1);
 }
 
+function outsForGame(game,index){
+  return game.rounds.reduce((total,round)=>{
+    const score = round.rawScores?.[index];
+    const scoredZero = score !== null && score !== undefined && score !== '' && Number(score) === 0;
+    return total + (round.closer === index || scoredZero ? 1 : 0);
+  },0);
+}
+
 function leadersForGame(game,totals){
   return SkyjoRules.leaderIndexes(game,totals);
 }
@@ -1026,7 +1034,11 @@ function renderGameArchive(){
     return {
       completedAt:entry.completedAt,
       direction:'low',
-      participants:Array.from({length:game.playerCount},(_,index)=>({name:gamePlayerName(game,index),score:totals[index]})),
+      participants:Array.from({length:game.playerCount},(_,index)=>({
+        name:gamePlayerName(game,index),
+        score:totals[index],
+        outs:outsForGame(game,index)
+      })),
       winnerIndexes:leadersForGame(game,totals)
     };
   });

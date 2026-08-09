@@ -836,6 +836,14 @@ function gamePlayerName(game,index){
   return game.players[index] || 'Player ' + (index + 1);
 }
 
+function outsForGame(game,index){
+  if(game.winnerMode !== 'low') return 0;
+  return game.rounds.reduce((total,round)=>{
+    const score = round?.scores?.[index];
+    return total + (score !== null && score !== undefined && score !== '' && Number(score) === 0 ? 1 : 0);
+  },0);
+}
+
 function leaders(){
   const players = visiblePlayers();
   const totals = cumulativeTotals();
@@ -1123,7 +1131,11 @@ function renderGameArchive(){
       presetId:CardsScorePresets.normalizeId(game.gamePreset),
       completedAt:entry.completedAt,
       direction:game.winnerMode === 'low' ? 'low' : 'high',
-      participants:Array.from({length:game.playerCount},(_,index)=>({name:gamePlayerName(game,index),score:totals[index]})),
+      participants:Array.from({length:game.playerCount},(_,index)=>({
+        name:gamePlayerName(game,index),
+        score:totals[index],
+        outs:outsForGame(game,index)
+      })),
       winnerIndexes:leadersForGame(game,totals)
     };
   });

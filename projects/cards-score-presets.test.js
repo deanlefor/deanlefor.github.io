@@ -83,3 +83,11 @@ test('all-time player standings are filtered by game preset',() => {
   assert.match(html,/CardsScorePresets\.filterRecords\(records,selectedStatsPreset\)/);
   assert.match(html,/getElementById\('statsPreset'\)\.addEventListener\('change'/);
 });
+
+test('low-score card standings count zero-score rounds as outs',() => {
+  const html = fs.readFileSync(path.join(__dirname,'cards-score.html'),'utf8');
+  assert.match(html,/function outsForGame\(game,index\)/);
+  assert.match(html,/game\.winnerMode !== 'low'/);
+  assert.match(html,/Number\(score\) === 0/);
+  assert.match(html,/outs:outsForGame\(game,index\)/);
+});

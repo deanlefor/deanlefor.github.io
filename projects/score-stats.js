@@ -36,7 +36,8 @@
           index:index,
           name:String(participant && participant.name || 'Player ' + (index + 1)),
           score:number(participant && participant.score),
-          meld:optionalNumber(participant && participant.meld)
+          meld:optionalNumber(participant && participant.meld),
+          outs:Math.max(0,Math.trunc(number(participant && participant.outs)))
         };
       }) : [];
       var winners = Array.isArray(record && record.winnerIndexes)
@@ -71,12 +72,14 @@
           games:0,
           wins:0,
           ties:0,
+          outs:0,
           scoreTotal:0,
           currentStreak:0
         };
         person.name = participant.name;
         person.games += 1;
         person.scoreTotal += participant.score;
+        if(record.direction === 'low') person.outs += participant.outs;
         if(winnerSet.has(participant.index)){
           person.wins += 1;
           if(tied) person.ties += 1;
@@ -144,6 +147,7 @@
     }
 
     var stats = calculate(normalized);
+    var showOuts = normalized.some(function(record){ return record.direction === 'low'; });
     var mostNames = stats.mostWinners.map(function(person){ return person.name; }).join(', ');
     var hotNames = stats.hotPlayers.map(function(person){ return person.name; }).join(', ');
     var html = '<div class="stats-highlight-grid">';
@@ -159,13 +163,16 @@
     html += highlight('Hot streak',format(stats.hotStreak),hotNames || 'No active streak');
     html += '</div><div class="stats-leaderboard-title">Player standings</div>';
     html += '<div class="stats-table-wrap"><div class="stats-table">';
-    html += '<div class="stats-row stats-row-head"><div>Player</div><div>Wins</div><div>Ties</div><div>Games</div><div>Win %</div><div>Avg</div><div>Streak</div></div>';
+    html += '<div class="stats-row stats-row-head' + (showOuts ? ' stats-row-with-outs' : '') + '"><div>Player</div><div>Wins</div><div>Ties</div>';
+    if(showOuts) html += '<div title="Rounds won by going out or scoring 0">Outs / 0s</div>';
+    html += '<div>Games</div><div>Win %</div><div>Avg</div><div>Streak</div></div>';
     stats.leaderboard.forEach(function(person){
       var winRate = person.games ? Math.round(person.wins / person.games * 100) : 0;
       var average = person.games ? person.scoreTotal / person.games : 0;
-      html += '<div class="stats-row"><div class="stats-player" title="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + '</div>';
+      html += '<div class="stats-row' + (showOuts ? ' stats-row-with-outs' : '') + '"><div class="stats-player" title="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + '</div>';
       html += '<div class="stats-number">' + format(person.wins) + '</div>';
       html += '<div class="stats-number">' + format(person.ties) + '</div>';
+      if(showOuts) html += '<div class="stats-number">' + format(person.outs) + '</div>';
       html += '<div class="stats-number">' + format(person.games) + '</div>';
       html += '<div class="stats-number">' + format(winRate) + '%</div>';
       html += '<div class="stats-number">' + format(average) + '</div>';
