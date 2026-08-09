@@ -11,6 +11,15 @@ test('Pinochle setup fields align from the top when the player-count note appear
   assert.match(source,/\.settings\{[\s\S]*?align-items:start;/);
 });
 
+test('Pinochle player-count lock guidance uses a compact accessible tooltip',() => {
+  assert.match(source,/class="count-lock-note count-lock-help"/);
+  assert.match(source,/aria-label="Player count locked"/);
+  assert.match(source,/aria-describedby="playerCountLockTooltip"/);
+  assert.match(source,/class="count-lock-tooltip"[^>]*role="tooltip">Start a new game to change the player count\.<\/span>/);
+  assert.match(source,/\.settings \.count-lock-help\[hidden\]\{display:none\}/);
+  assert.match(source,/\.count-lock-help:hover \.count-lock-tooltip,\.count-lock-help:focus-visible \.count-lock-tooltip/);
+});
+
 test('Pinochle keeps current scores above the running tally',() => {
   const scorePanel = source.indexOf('id="currentScoreGrid"');
   const runningTally = source.indexOf('>Running Tally<');

@@ -85,6 +85,54 @@ html.dark-mode{
   gap:10px;
   align-items:start;
 }
+.count-label-row{display:flex;align-items:center;gap:6px}
+.settings .count-lock-help{
+  position:relative;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  width:16px;
+  height:16px;
+  margin:0;
+  border:1px solid var(--line);
+  border-radius:50%;
+  background:var(--soft);
+  color:var(--muted);
+  cursor:help;
+  font-size:.64rem;
+  font-weight:950;
+  line-height:1;
+}
+.settings .count-lock-help[hidden]{display:none}
+.count-lock-tooltip{
+  position:absolute;
+  top:calc(100% + 7px);
+  left:50%;
+  z-index:8;
+  width:max-content;
+  max-width:220px;
+  padding:7px 9px;
+  border:1px solid var(--line);
+  border-radius:6px;
+  background:var(--toast-bg);
+  box-shadow:var(--shadow);
+  color:var(--toast-ink);
+  font-size:.72rem;
+  font-weight:750;
+  letter-spacing:0;
+  line-height:1.3;
+  opacity:0;
+  pointer-events:none;
+  text-align:left;
+  text-transform:none;
+  transform:translate(-50%,-3px);
+  transition:opacity .12s ease,transform .12s ease;
+  white-space:normal;
+}
+.count-lock-help:hover .count-lock-tooltip,.count-lock-help:focus-visible .count-lock-tooltip{
+  opacity:1;
+  transform:translate(-50%,0);
+}
 .round-head{
   display:flex;
   justify-content:space-between;
@@ -399,12 +447,17 @@ try{
             <input id="gameTitle" type="text" maxlength="48">
           </div>
           <div class="field">
-            <span class="label">Players/Teams</span>
+            <div class="count-label-row">
+              <span class="label">Players/Teams</span>
+              <span class="count-lock-note count-lock-help" id="playerCountLock" aria-label="Player count locked" aria-describedby="playerCountLockTooltip" tabindex="0" hidden>
+                <span aria-hidden="true">i</span>
+                <span class="count-lock-tooltip" id="playerCountLockTooltip" role="tooltip">Start a new game to change the player count.</span>
+              </span>
+            </div>
             <div class="seg" id="playerCount" aria-label="Players or teams">
               <button type="button" data-count="2">2</button>
               <button type="button" data-count="3">3</button>
             </div>
-            <p class="count-lock-note" id="playerCountLock" hidden>Start a new game to change the player count.</p>
           </div>
           <div class="field">
             <label for="targetScore">Playing To</label>
