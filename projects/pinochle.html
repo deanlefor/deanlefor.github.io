@@ -83,7 +83,7 @@ html.dark-mode{
   display:grid;
   grid-template-columns:minmax(180px,1fr) auto minmax(140px,.45fr);
   gap:10px;
-  align-items:end;
+  align-items:start;
 }
 .round-head{
   display:flex;
@@ -173,6 +173,51 @@ html.dark-mode{
 }
 .preview-card .name{font-size:.82rem;color:var(--muted);font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .preview-card .total{font-size:1.55rem;font-weight:900;margin-top:3px}
+.current-score-panel{
+  position:sticky;
+  top:12px;
+  z-index:3;
+}
+.current-score-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.current-score-head .section-title{margin:0}
+.current-score-round{color:var(--muted);font-size:.72rem;font-weight:850;text-align:right}
+.current-score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.player-count-2 .current-score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.current-score-card{
+  min-width:0;
+  padding:10px 11px 11px;
+  border:1px solid var(--line);
+  border-top:5px solid var(--player-color);
+  border-radius:8px;
+  background:var(--preview-bg);
+}
+.current-score-card.is-dealer{
+  border-color:var(--gold);
+  border-top-color:var(--player-color);
+  background:var(--winner-bg);
+  box-shadow:inset 0 0 0 2px var(--winner-line);
+}
+.current-score-card-top{display:flex;align-items:center;justify-content:space-between;gap:6px;min-height:22px}
+.current-score-name{overflow:hidden;color:var(--muted);font-size:.76rem;font-weight:900;text-overflow:ellipsis;white-space:nowrap}
+.dealer-badge{
+  flex:none;
+  padding:3px 6px;
+  border-radius:999px;
+  background:var(--gold);
+  color:var(--on-accent);
+  font-size:.58rem;
+  font-weight:950;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.current-score-total{display:block;margin-top:3px;font-size:2rem;font-weight:950;line-height:1}
+.current-score-caption{display:block;margin-top:4px;color:var(--muted);font-size:.64rem;font-weight:750}
 .positive{color:var(--green)}
 .negative{color:var(--red)}
 .winner{
@@ -268,6 +313,8 @@ html.dark-mode{
 @media(max-width:620px){
   .wrap{padding:12px}
   .form-grid,.score-grid,.player-count-2 .score-grid,.preview,.player-count-2 .preview{grid-template-columns:1fr}
+  .current-score-panel{position:static}
+  .current-score-grid,.player-count-2 .current-score-grid{grid-template-columns:1fr}
   .score-matrix{grid-template-columns:64px repeat(3,minmax(54px,1fr))}
   .player-count-2 .score-matrix{grid-template-columns:64px repeat(2,minmax(70px,1fr))}
   .score-sheet-head,.score-round{grid-template-columns:1fr}
@@ -310,6 +357,7 @@ html.dark-mode{
   body{background:#fff}
   .wrap{max-width:none;padding:0}
   .toolbar,.actions,.settings-panel,.message,.sheet-actions,.history-panel,.toast{display:none}
+  .current-score-panel{position:static}
   .panel{box-shadow:none}
   .layout{grid-template-columns:1fr}
 }
@@ -432,6 +480,13 @@ try{
 
     <section class="stack">
       <div class="winner" id="winnerBox"></div>
+      <div class="panel section current-score-panel" aria-labelledby="currentScoreTitle">
+        <div class="current-score-head">
+          <h2 class="section-title" id="currentScoreTitle">Current Score</h2>
+          <span class="current-score-round" id="currentScoreRound"></span>
+        </div>
+        <div class="current-score-grid" id="currentScoreGrid" aria-live="polite"></div>
+      </div>
       <div class="panel section">
         <h2 class="section-title">Running Tally</h2>
         <div id="history"></div>
@@ -783,6 +838,7 @@ function render(){
   renderPlayerCount();
   renderNameGrid();
   renderRoundForm();
+  renderCurrentScores();
   renderHistory();
   renderGameArchive();
   renderWinner();
@@ -820,6 +876,7 @@ function renderNameGrid(){
       state.players[i] = input.value;
       syncPlayerSelects();
       renderScoreMatrix();
+      renderCurrentScores();
       renderHistory();
       renderPreview();
       scheduleSave();
@@ -957,6 +1014,26 @@ function renderPreview(){
     card.className = 'preview-card';
     card.innerHTML = '<div class="name">' + escapeHtml(state.players[i] || 'Player ' + (i+1)) + '</div>' +
       '<div class="total ' + (value < 0 ? 'negative' : 'positive') + '">' + signed(value) + '</div>';
+    grid.appendChild(card);
+  });
+}
+
+function renderCurrentScores(){
+  const grid = document.getElementById('currentScoreGrid');
+  const totals = cumulativeTotals();
+  const dealer = clampPlayer(state.draft.dealer,state.playerCount);
+  const roundNumber = state.editingIndex === null ? state.rounds.length + 1 : state.editingIndex + 1;
+  document.getElementById('currentScoreRound').textContent = (state.editingIndex === null ? 'Upcoming' : 'Editing') + ' round ' + roundNumber + ' · dealer highlighted';
+  grid.innerHTML = '';
+  visiblePlayers().forEach(i=>{
+    const card = document.createElement('div');
+    const isDealer = i === dealer;
+    card.className = 'current-score-card' + (isDealer ? ' is-dealer' : '');
+    card.style.setProperty('--player-color',COLORS[i]);
+    card.innerHTML = '<div class="current-score-card-top"><span class="current-score-name" title="' + escapeHtml(state.players[i] || 'Player ' + (i+1)) + '">' + escapeHtml(state.players[i] || 'Player ' + (i+1)) + '</span>' +
+      (isDealer ? '<span class="dealer-badge">Dealer · R' + roundNumber + '</span>' : '') + '</div>' +
+      '<strong class="current-score-total ' + (totals[i] < 0 ? 'negative' : 'positive') + '">' + signed(totals[i]) + '</strong>' +
+      '<span class="current-score-caption">Current total</span>';
     grid.appendChild(card);
   });
 }
@@ -1249,6 +1326,7 @@ document.getElementById('playerCount').addEventListener('click',event=>{
 
 document.getElementById('dealer').addEventListener('change',event=>{
   state.draft.dealer = Number(event.target.value);
+  renderCurrentScores();
   scheduleSave();
 });
 
