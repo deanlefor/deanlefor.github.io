@@ -91,3 +91,28 @@ test('last-place standings derive counts from existing history and recalculate a
   ScoreStats.render(host,records.slice(1),{showLastPlace:true});
   assert.deepEqual(['Alex','Blair','Casey'].map(count),[1,0,0]);
 });
+
+test('record cards show the matching game date without a time when enabled',() => {
+  const ScoreStats = loadScoreStats();
+  const host = {};
+  const records = [
+    {completedAt:'2026-08-02T12:34:00.000Z',direction:'high',participants:[{name:'Alex',score:100},{name:'Blair',score:90}],winnerIndexes:[0]},
+    {completedAt:'2026-08-01T12:34:00.000Z',direction:'high',participants:[{name:'Alex',score:80},{name:'Blair',score:-10}],winnerIndexes:[0]}
+  ];
+  const date = index=>new Date(records[index].completedAt).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  const original = JSON.stringify(records);
+  ScoreStats.render(host,records,{showRecordDates:true,handRecords:[{name:'Alex',score:60,round:2,completedAt:records[0].completedAt}]});
+  function card(label){ return host.innerHTML.split('>' + label + '</div>')[1].split('</div></div>')[0]; }
+  assert.ok(card('Highest score').includes('Alex · ' + date(0)));
+  assert.ok(card('Lowest score').includes('Blair · ' + date(1)));
+  assert.ok(card('Largest win').includes('Alex · ' + date(1)));
+  assert.ok(card('Highest hand').includes('Alex · ' + date(0) + ' · Round 2'));
+  assert.ok(card('Lowest hand').includes('Alex · ' + date(0) + ' · Round 2'));
+  assert.doesNotMatch(host.innerHTML,/\d{1,2}:\d{2}/);
+  assert.equal(JSON.stringify(records),original);
+  ScoreStats.render(host,records);
+  assert.ok(!card('Highest score').includes(date(0)));
+  records[0].completedAt = 'invalid';
+  ScoreStats.render(host,records,{showRecordDates:true});
+  assert.match(card('Highest score'),/Unknown date/);
+});

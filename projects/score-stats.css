@@ -3,6 +3,7 @@
   grid-template-columns:repeat(3,minmax(0,1fr));
   gap:7px;
 }
+.stats-highlight-grid-with-hands{grid-template-columns:repeat(4,minmax(0,1fr))}
 .stats-highlight{
   min-width:0;
   padding:9px 10px;
@@ -11,7 +12,7 @@
   background:var(--soft);
 }
 .stats-hand-record .stats-highlight{height:100%;box-sizing:border-box}
-.stats-hand-record .stats-meta{white-space:normal;overflow-wrap:anywhere}
+.stats-highlight-grid-with-hands .stats-meta{white-space:normal;overflow-wrap:anywhere}
 .stats-label{
   color:var(--muted);
   font-size:.64rem;

@@ -92,10 +92,10 @@
         }
         people.set(key,person);
 
-        if(!highest || participant.score > highest.score) highest = {name:participant.name,score:participant.score};
-        if(!lowest || participant.score < lowest.score) lowest = {name:participant.name,score:participant.score};
+        if(!highest || participant.score > highest.score) highest = {name:participant.name,score:participant.score,completedAt:record.completedAt};
+        if(!lowest || participant.score < lowest.score) lowest = {name:participant.name,score:participant.score,completedAt:record.completedAt};
         if(participant.meld !== null && (!largestMeld || participant.meld > largestMeld.score)){
-          largestMeld = {name:participant.name,score:participant.meld};
+          largestMeld = {name:participant.name,score:participant.meld,completedAt:record.completedAt};
         }
       });
 
@@ -106,6 +106,7 @@
       if(!largestMargin || margin > largestMargin.margin){
         largestMargin = {
           margin:margin,
+          completedAt:record.completedAt,
           names:record.winners.map(function(index){ return record.participants[index].name; }).join(', ')
         };
       }
@@ -149,6 +150,15 @@
       .filter(function(index){ return index !== -1; });
   }
 
+  function recordDate(value){
+    var date = new Date(value);
+    return Number.isNaN(date.getTime()) ? 'Unknown date' : date.toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
+  }
+
+  function recordMeta(record,name,showDate){
+    return name + (showDate ? ' · ' + recordDate(record.completedAt) : '');
+  }
+
   function handHighlight(label,hands,direction){
     var best = null;
     var tied = 0;
@@ -160,7 +170,7 @@
         tied += 1;
       }
     });
-    var meta = best ? best.name + ' · ' + best.date + ' · Round ' + best.round : 'No individual hands recorded';
+    var meta = best ? best.name + ' · ' + recordDate(best.completedAt) + ' · Round ' + best.round : 'No individual hands recorded';
     if(tied) meta += ' · +' + tied + ' other tied ' + (tied === 1 ? 'hand' : 'hands');
     return '<div class="stats-hand-record">' + highlight(label,best ? format(best.score) : '—',meta) + '</div>';
   }
@@ -176,19 +186,20 @@
     var stats = calculate(normalized);
     var showOuts = normalized.some(function(record){ return record.direction === 'low'; });
     var showLastPlace = options && options.showLastPlace;
+    var showRecordDates = options && options.showRecordDates;
     var rowClass = (showOuts ? ' stats-row-with-outs' : '') + (showLastPlace ? ' stats-row-with-last-place' : '');
     var mostNames = stats.mostWinners.map(function(person){ return person.name; }).join(', ');
     var hotNames = stats.hotPlayers.map(function(person){ return person.name; }).join(', ');
-    var html = '<div class="stats-highlight-grid">';
+    var html = '<div class="stats-highlight-grid' + (options && Array.isArray(options.handRecords) ? ' stats-highlight-grid-with-hands' : '') + '">';
     html += highlight('Saved matches',format(stats.games),'Stored in this browser');
     html += highlight('Most wins',mostNames,format(stats.mostWins) + (stats.mostWins === 1 ? ' win' : ' wins'));
-    html += highlight('Highest score',format(stats.highest.score),stats.highest.name);
+    html += highlight('Highest score',format(stats.highest.score),recordMeta(stats.highest,stats.highest.name,showRecordDates));
     if(options && options.showLargestMeld){
-      html += highlight('Largest meld',stats.largestMeld ? format(stats.largestMeld.score) : '—',stats.largestMeld ? stats.largestMeld.name : 'No meld recorded');
+      html += highlight('Largest meld',stats.largestMeld ? format(stats.largestMeld.score) : '—',stats.largestMeld ? recordMeta(stats.largestMeld,stats.largestMeld.name,showRecordDates) : 'No meld recorded');
     }else{
-      html += highlight('Lowest score',format(stats.lowest.score),stats.lowest.name);
+      html += highlight('Lowest score',format(stats.lowest.score),recordMeta(stats.lowest,stats.lowest.name,showRecordDates));
     }
-    html += highlight('Largest win',format(stats.largestMargin ? stats.largestMargin.margin : 0),stats.largestMargin ? stats.largestMargin.names : '—');
+    html += highlight('Largest win',format(stats.largestMargin ? stats.largestMargin.margin : 0),stats.largestMargin ? recordMeta(stats.largestMargin,stats.largestMargin.names,showRecordDates) : '—');
     html += highlight('Hot streak',format(stats.hotStreak),hotNames || 'No active streak');
     if(options && Array.isArray(options.handRecords)){
       html += handHighlight('Highest hand',options.handRecords,'high');

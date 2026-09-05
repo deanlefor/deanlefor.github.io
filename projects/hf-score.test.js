@@ -36,7 +36,7 @@ test('legacy team archives remain identifiable without changing their stored rec
 test('saved Hand & Foot matches show last place and enable historical counts',() => {
   const elements = Object.fromEntries(['gameHistory','gameStats','gameHistoryCount','clearHistoryBtn'].map(id=>[id,{}]));
   const gameArchive = [[100,-20,-20],[5,5,5],[20,10,0]].map((totals,index)=>({
-    id:String(index),completedAt:'2026-08-01',
+    id:String(index),completedAt:'2026-08-01T12:00:00.000Z',
     state:{title:'Saved game',gameMode:'singles',playerCount:3,totals,scores:[],players:['Alex','B & C','<Casey>']}
   }));
   const original = JSON.stringify(gameArchive);
@@ -65,7 +65,7 @@ test('historical hand cards use full individual rounds, preserve zeroes, and ref
   const elements = Object.fromEntries(['gameHistory','gameStats','gameHistoryCount','clearHistoryBtn'].map(id=>[id,{}]));
   const row = values=>({...rules.emptyRound(),...values});
   const gameArchive = [{
-    id:'singles',completedAt:'2026-08-01',
+    id:'singles',completedAt:'2026-08-01T12:00:00.000Z',
     state:{title:'Saved game',gameMode:'singles',playerCount:2,players:['Alex','<Blair>'],scores:[
       [row({cleanBooks:1,dirtyBooks:1,wildBooks:1,perfectDeal:true,goingOut:true,red3:1,cardTotal:-50}),row({cardTotal:20}),row({cardTotal:99999})],
       [row({cardTotal:100}),row({})],
@@ -94,9 +94,9 @@ test('historical hand cards use full individual rounds, preserve zeroes, and ref
   }
   render();
   assert.match(card('Highest hand'),/>2,750<\/div>/);
-  assert.match(card('Highest hand'),/Alex · 2026-08-01 · Round 1/);
+  assert.match(card('Highest hand'),/Alex · Aug 1, 2026 · Round 1/);
   assert.match(card('Lowest hand'),/>0<\/div>/);
-  assert.match(card('Lowest hand'),/&lt;Blair&gt; · 2026-08-01 · Round 2/);
+  assert.match(card('Lowest hand'),/&lt;Blair&gt; · Aug 1, 2026 · Round 2/);
   assert.doesNotMatch(card('Lowest hand'),/other tied/);
   assert.equal(JSON.stringify(gameArchive),original);
   gameArchive[0].state.scores[1][1].cardTotal = -250;
