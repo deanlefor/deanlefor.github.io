@@ -10,6 +10,8 @@
   border-radius:7px;
   background:var(--soft);
 }
+.stats-hand-record .stats-highlight{height:100%;box-sizing:border-box}
+.stats-hand-record .stats-meta{white-space:normal;overflow-wrap:anywhere}
 .stats-label{
   color:var(--muted);
   font-size:.64rem;

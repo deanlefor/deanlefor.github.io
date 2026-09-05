@@ -149,6 +149,22 @@
       .filter(function(index){ return index !== -1; });
   }
 
+  function handHighlight(label,hands,direction){
+    var best = null;
+    var tied = 0;
+    hands.forEach(function(hand){
+      if(!best || (direction === 'high' ? hand.score > best.score : hand.score < best.score)){
+        best = hand;
+        tied = 0;
+      }else if(hand.score === best.score){
+        tied += 1;
+      }
+    });
+    var meta = best ? best.name + ' · ' + best.date + ' · Round ' + best.round : 'No individual hands recorded';
+    if(tied) meta += ' · +' + tied + ' other tied ' + (tied === 1 ? 'hand' : 'hands');
+    return '<div class="stats-hand-record">' + highlight(label,best ? format(best.score) : '—',meta) + '</div>';
+  }
+
   function render(host,records,options){
     if(!host) return;
     var normalized = normalizeRecords(records);
@@ -174,6 +190,10 @@
     }
     html += highlight('Largest win',format(stats.largestMargin ? stats.largestMargin.margin : 0),stats.largestMargin ? stats.largestMargin.names : '—');
     html += highlight('Hot streak',format(stats.hotStreak),hotNames || 'No active streak');
+    if(options && Array.isArray(options.handRecords)){
+      html += handHighlight('Highest hand',options.handRecords,'high');
+      html += handHighlight('Lowest hand',options.handRecords,'low');
+    }
     html += '</div><div class="stats-leaderboard-title">Player standings</div>';
     html += '<div class="stats-table-wrap"><div class="stats-table">';
     html += '<div class="stats-row stats-row-head' + rowClass + '"><div>Player</div><div>Wins</div><div>Ties</div>';
@@ -195,6 +215,7 @@
     });
     html += '</div></div>';
     if(showLastPlace) html += '<p class="stats-note">Last place counts ties for the worst total, excluding all-player ties. Includes all saved matches.</p>';
+    if(options && Array.isArray(options.handRecords)) html += '<p class="stats-note">Hand records use full round totals, including bonuses and deductions, from saved individual games. Zeroes count when the round has scoring activity; entirely blank rounds and legacy team games are excluded.</p>';
     host.innerHTML = html;
   }
 

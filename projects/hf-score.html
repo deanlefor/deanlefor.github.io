@@ -606,10 +606,21 @@ function renderTable(){
 function renderGameArchive(){
   const target = document.getElementById('gameHistory');
   const count = gameArchive.length;
+  const handRecords = [];
   const statRecords = gameArchive.map(entry=>{
     const game = entry.state;
     const totals = totalsForGame(game);
     const best = Math.max(...totals);
+    if(game.gameMode !== 'teams'){
+      game.scores.slice(0,ROUND_COUNT).forEach((round,roundIndex)=>{
+        const players = round.slice(0,game.playerCount);
+        if(!players.some(rowHasScore)) return;
+        players.forEach((row,index)=>handRecords.push({
+          name:gameColumnName(game,index),score:rowTotal(row),round:roundIndex + 1,
+          date:formatArchivedDate(entry.completedAt)
+        }));
+      });
+    }
     return {
       completedAt:entry.completedAt,
       direction:'high',
@@ -617,7 +628,7 @@ function renderGameArchive(){
       winnerIndexes:totals.map((total,index)=>({total,index})).filter(item=>item.total === best).map(item=>item.index)
     };
   });
-  ScoreStats.render(document.getElementById('gameStats'),statRecords,{showLastPlace:true});
+  ScoreStats.render(document.getElementById('gameStats'),statRecords,{showLastPlace:true,handRecords});
   document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
   document.getElementById('clearHistoryBtn').disabled = count === 0;
   if(!count){
