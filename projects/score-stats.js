@@ -63,6 +63,7 @@
     records.forEach(function(record){
       var winnerSet = new Set(record.winners);
       var tied = record.winners.length > 1;
+      var lastPlaceIndexes = new Set(lastPlaces(record.participants.map(function(participant){ return participant.score; }),record.direction));
 
       record.participants.forEach(function(participant){
         var key = identity(participant.name);
@@ -72,6 +73,7 @@
           games:0,
           wins:0,
           ties:0,
+          lastPlaces:0,
           outs:0,
           scoreTotal:0,
           currentStreak:0
@@ -79,6 +81,7 @@
         person.name = participant.name;
         person.games += 1;
         person.scoreTotal += participant.score;
+        if(lastPlaceIndexes.has(participant.index)) person.lastPlaces += 1;
         if(record.direction === 'low') person.outs += participant.outs;
         if(winnerSet.has(participant.index)){
           person.wins += 1;
@@ -138,6 +141,14 @@
       '<div class="stats-meta" title="' + escapeHtml(meta) + '">' + escapeHtml(meta) + '</div></div>';
   }
 
+  function lastPlaces(scores,direction){
+    if(scores.length < 2) return [];
+    var worst = direction === 'low' ? Math.max.apply(null,scores) : Math.min.apply(null,scores);
+    if(scores.every(function(score){ return score === worst; })) return [];
+    return scores.map(function(score,index){ return score === worst ? index : -1; })
+      .filter(function(index){ return index !== -1; });
+  }
+
   function render(host,records,options){
     if(!host) return;
     var normalized = normalizeRecords(records);
@@ -148,6 +159,8 @@
 
     var stats = calculate(normalized);
     var showOuts = normalized.some(function(record){ return record.direction === 'low'; });
+    var showLastPlace = options && options.showLastPlace;
+    var rowClass = (showOuts ? ' stats-row-with-outs' : '') + (showLastPlace ? ' stats-row-with-last-place' : '');
     var mostNames = stats.mostWinners.map(function(person){ return person.name; }).join(', ');
     var hotNames = stats.hotPlayers.map(function(person){ return person.name; }).join(', ');
     var html = '<div class="stats-highlight-grid">';
@@ -163,15 +176,17 @@
     html += highlight('Hot streak',format(stats.hotStreak),hotNames || 'No active streak');
     html += '</div><div class="stats-leaderboard-title">Player standings</div>';
     html += '<div class="stats-table-wrap"><div class="stats-table">';
-    html += '<div class="stats-row stats-row-head' + (showOuts ? ' stats-row-with-outs' : '') + '"><div>Player</div><div>Wins</div><div>Ties</div>';
+    html += '<div class="stats-row stats-row-head' + rowClass + '"><div>Player</div><div>Wins</div><div>Ties</div>';
+    if(showLastPlace) html += '<div title="Last-place finishes, including ties for last. All-player ties are excluded.">Last place</div>';
     if(showOuts) html += '<div title="Rounds won by going out or scoring 0">Outs / 0s</div>';
     html += '<div>Games</div><div>Win %</div><div>Avg</div><div>Streak</div></div>';
     stats.leaderboard.forEach(function(person){
       var winRate = person.games ? Math.round(person.wins / person.games * 100) : 0;
       var average = person.games ? person.scoreTotal / person.games : 0;
-      html += '<div class="stats-row' + (showOuts ? ' stats-row-with-outs' : '') + '"><div class="stats-player" title="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + '</div>';
+      html += '<div class="stats-row' + rowClass + '"><div class="stats-player" title="' + escapeHtml(person.name) + '">' + escapeHtml(person.name) + '</div>';
       html += '<div class="stats-number">' + format(person.wins) + '</div>';
       html += '<div class="stats-number">' + format(person.ties) + '</div>';
+      if(showLastPlace) html += '<div class="stats-number">' + format(person.lastPlaces) + '</div>';
       if(showOuts) html += '<div class="stats-number">' + format(person.outs) + '</div>';
       html += '<div class="stats-number">' + format(person.games) + '</div>';
       html += '<div class="stats-number">' + format(winRate) + '%</div>';
@@ -179,8 +194,9 @@
       html += '<div class="stats-number">' + format(person.currentStreak) + '</div></div>';
     });
     html += '</div></div>';
+    if(showLastPlace) html += '<p class="stats-note">Last place counts ties for the worst total, excluding all-player ties. Includes all saved matches.</p>';
     host.innerHTML = html;
   }
 
-  global.ScoreStats = {render:render};
+  global.ScoreStats = {render:render,lastPlaces:lastPlaces};
 })(window);

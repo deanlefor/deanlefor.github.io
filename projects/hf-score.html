@@ -617,7 +617,7 @@ function renderGameArchive(){
       winnerIndexes:totals.map((total,index)=>({total,index})).filter(item=>item.total === best).map(item=>item.index)
     };
   });
-  ScoreStats.render(document.getElementById('gameStats'),statRecords);
+  ScoreStats.render(document.getElementById('gameStats'),statRecords,{showLastPlace:true});
   document.getElementById('gameHistoryCount').textContent = count + (count === 1 ? ' saved match' : ' saved matches');
   document.getElementById('clearHistoryBtn').disabled = count === 0;
   if(!count){
@@ -632,6 +632,11 @@ function renderGameArchive(){
     const best = Math.max(...totals);
     const leaders = totals.map((total,index)=>({total,index})).filter(item=>item.total === best);
     const leaderNames = leaders.map(item=>gameColumnName(game,item.index)).join(', ');
+    const lastIndexes = ScoreStats.lastPlaces(totals,'high');
+    const lastNames = lastIndexes.map(index=>gameColumnName(game,index)).join(', ');
+    const lastResult = lastIndexes.length
+      ? (lastIndexes.length > 1 ? 'Tied for last: ' : 'Last place: ') + escapeHtml(lastNames) + ' · ' + fmt(totals[lastIndexes[0]])
+      : 'All players tied — no last place';
     const rounds = playedRoundCount(game);
     const resultLabel = rounds === ROUND_COUNT ? (leaders.length === 1 ? 'Winner' : 'Winners') : (leaders.length === 1 ? 'Final leader' : 'Final leaders');
     const roundLabel = rounds + (rounds === 1 ? ' played round' : ' played rounds');
@@ -640,7 +645,7 @@ function renderGameArchive(){
     html += '<details class="archived-game">';
     html += '<summary><span class="archive-heading"><span class="archive-title">' + escapeHtml(game.title) + '</span>';
     html += '<span class="archive-meta">' + escapeHtml(formatArchivedDate(entry.completedAt)) + ' · ' + roundLabel + ' · ' + modeLabel + '</span></span>';
-    html += '<span class="archive-result">' + resultLabel + ': ' + escapeHtml(leaderNames) + ' · ' + fmt(best) + '</span></summary>';
+    html += '<span class="archive-result">' + resultLabel + ': ' + escapeHtml(leaderNames) + ' · ' + fmt(best) + '<span class="archive-last-place">' + lastResult + '</span></span></summary>';
     html += '<div class="archive-body"><div class="archive-totals">';
     totals.forEach((total,index)=>{
       html += '<div class="archive-total"><span>' + escapeHtml(gameColumnName(game,index)) + '</span><strong>' + fmt(total) + '</strong></div>';
