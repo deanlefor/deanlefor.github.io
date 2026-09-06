@@ -1,6 +1,29 @@
 # Federal Retirement Calculator: Project History and Direction
 
-**Status date:** July 15, 2026
+**Status date:** September 6, 2026
+
+### September 6 audit corrections
+
+The website audit was reviewed and its fixes authorized. Regression cases now
+reconcile the 2026 age-60-through-63 TSP limit to $35,750, preserving the exact
+$11,250 catch-up baseline and including late-year age-63 birthdays. In a
+zero-FERS, zero-inflation example with $4,000 and $1,000 commenced Social Security
+benefits, the first survivor phase now retains $4,000 under the documented
+simplified higher-benefit model. Either person can reach the first horizon.
+
+The monthly income schedule is reused during the solver search, with a $0.0001
+monthly-income tolerance. Independent zero-return examples reconcile $348,000
+over 348 months to $1,000/month, or $900/month when preserving a $34,800 legacy.
+The public sample's warm local engine timing fell from about 430 ms to 4.4 ms;
+this is a direct engine benchmark, not a cross-device performance guarantee.
+
+The UI and engine now enforce numeric and chronology boundaries. Invalid
+scenarios hide results and preserve the previous valid save. Guarded storage
+initialization, visible save failures, and input downloads protect against
+blocked storage. The existing storage key and supported claiming-date migration
+are retained. Vite and affected transitive dependencies were updated and the
+static site rebuilt. These changes do not broaden the documented benefit model
+or complete the owner's separate reconciliation against official estimates.
 **Purpose:** Preserve the product decisions, reasoning, roadmap, and current development state so a new Codex session can continue without reconstructing the originating conversation.
 
 ## Instructions for Codex

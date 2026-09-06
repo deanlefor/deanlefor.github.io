@@ -259,3 +259,10 @@ footer p { margin: 0; } footer nav { display: flex; flex-wrap: wrap; justify-con
   html { scroll-behavior: auto; }
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+
+[hidden] { display:none!important; }
+.field-error, .validation-errors { color:#82271b; }
+.field-error { display:block; margin-top:.4rem; line-height:1.5; }
+.validation-errors { background:#fff1e6; border:1px solid #c9922f; border-radius:12px; padding:1rem 1.5rem; margin-bottom:1rem; }
+.validation-errors ul { padding-left:1.25rem; }
+.save-status { font-size:.9rem; margin:1rem 0; }

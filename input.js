@@ -5,14 +5,31 @@ function attachInputHandlers() {
 
   // Mobile: any tap focuses the hidden input
   document.body.addEventListener("touchstart", () => {
-    // FIX: Don't focus if system is shut down
+    // Don't focus if system is shut down
     if (window.isShutdown) return;
     mobileInput.focus();
   });
 
+  function submitCommand() {
+    if (isPrinting || window.isShutdown) return;
+    document.getElementById("input-wrapper").style.display = "none";
+    const command = window.currentInput.trim();
+    echoLine(getPrompt() + " " + command);
+    if (command && command !== window.commandHistory.at(-1))
+      window.commandHistory.push(command);
+    window.historyIndex = window.commandHistory.length;
+    window.currentInput = "";
+    document.getElementById("typed-text").textContent = "";
+    handleCommand(command.toLowerCase());
+  }
+
   // Desktop key handling
-  document.addEventListener("keydown", e => {
-    // --- FIX: Ignore all input if the system is shut down ---
+  document.addEventListener("keydown", (e) => {
+    if (e.ctrlKey || e.metaKey || e.altKey) return;
+    if (isPrinting) {
+      e.preventDefault();
+      return;
+    }
     if (window.isShutdown) {
       e.preventDefault();
       return;
@@ -24,14 +41,14 @@ function attachInputHandlers() {
     }
 
     const key = e.key;
-    
+
     // Always handle history navigation first.
     if (key === "ArrowUp") {
       e.preventDefault();
       if (window.commandHistory.length > 0 && window.historyIndex > 0) {
         window.historyIndex--;
         window.currentInput = window.commandHistory[window.historyIndex];
-        document.getElementById("typed-text").innerText = window.currentInput;
+        document.getElementById("typed-text").textContent = window.currentInput;
       }
       return;
     }
@@ -45,56 +62,49 @@ function attachInputHandlers() {
         } else {
           window.currentInput = window.commandHistory[window.historyIndex];
         }
-        document.getElementById("typed-text").innerText = window.currentInput;
+        document.getElementById("typed-text").textContent = window.currentInput;
       }
       return;
     }
-    
+
     if (document.activeElement === mobileInput) {
-        return;
+      return;
     }
-    
+
     if (key === "Enter") {
-      document.getElementById("input-wrapper").style.display = "none";
-      const command = window.currentInput.trim();
-      echoLine(getPrompt() + " " + command);
-
-      // FIX: Use a more compatible way to get the last element.
-      const lastCommand = window.commandHistory[window.commandHistory.length - 1];
-      if (command && command !== lastCommand) {
-        window.commandHistory.push(command);
-      }
-      window.historyIndex = window.commandHistory.length;
-      
-      handleCommand(command.toLowerCase());
-      window.currentInput = "";
-      document.getElementById("typed-text").innerText = "";
-
+      e.preventDefault();
+      submitCommand();
     } else if (key === "Backspace") {
       window.historyIndex = window.commandHistory.length;
       window.currentInput = window.currentInput.slice(0, -1);
-      document.getElementById("typed-text").innerText = window.currentInput;
-
+      document.getElementById("typed-text").textContent = window.currentInput;
     } else if (key.length === 1) {
       window.historyIndex = window.commandHistory.length;
       window.currentInput += key;
-      document.getElementById("typed-text").innerText = window.currentInput;
+      document.getElementById("typed-text").textContent = window.currentInput;
     }
   });
 
   // Mobile: capture characters via the hidden <input>
-  mobileInput.addEventListener("input", ev => {
-    if (window.isShutdown) return;
+  mobileInput.addEventListener("input", (ev) => {
+    if (window.isShutdown || isPrinting) {
+      mobileInput.value = "";
+      return;
+    }
     const ch = ev.data;
     if (ch) {
       window.currentInput += ch;
-      document.getElementById("typed-text").innerText = window.currentInput;
+      document.getElementById("typed-text").textContent = window.currentInput;
     }
     mobileInput.value = "";
   });
 
   // Mobile: handle Backspace & Enter in the hidden <input>
-  mobileInput.addEventListener("keydown", ev => {
+  mobileInput.addEventListener("keydown", (ev) => {
+    if (isPrinting) {
+      ev.preventDefault();
+      return;
+    }
     if (window.isShutdown) {
       ev.preventDefault();
       return;
@@ -103,23 +113,10 @@ function attachInputHandlers() {
     if (ev.key === "Backspace") {
       ev.preventDefault();
       window.currentInput = window.currentInput.slice(0, -1);
-      document.getElementById("typed-text").innerText = window.currentInput;
+      document.getElementById("typed-text").textContent = window.currentInput;
     } else if (ev.key === "Enter") {
       ev.preventDefault();
-      document.getElementById("input-wrapper").style.display = "none";
-      const command = window.currentInput.trim();
-      echoLine(getPrompt() + " " + command);
-      
-      // FIX: Use a more compatible way to get the last element.
-      const lastCommand = window.commandHistory[window.commandHistory.length - 1];
-      if (command && command !== lastCommand) {
-        window.commandHistory.push(command);
-      }
-      window.historyIndex = window.commandHistory.length;
-
-      handleCommand(command.toLowerCase());
-      window.currentInput = "";
-      document.getElementById("typed-text").innerText = "";
+      submitCommand();
     }
   });
 }

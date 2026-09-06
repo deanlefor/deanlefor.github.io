@@ -3,16 +3,15 @@
 function handleCommand(command) {
   const entry = window.fs[cwdKey];
 
-  // --- FIX: Add EXIT and QUIT commands ---
   if (["exit", "quit"].includes(command)) {
     runShutdownSequence();
     return;
   }
-  // --- End FIX ---
 
   // CLEAR & CLS
   if (["clear", "cls"].includes(command)) {
-    document.getElementById("output").innerText = "";
+    cancelOutput();
+    document.getElementById("output").replaceChildren();
     updatePrompt();
     document.getElementById("input-wrapper").style.display = "inline-flex";
     const mi = document.getElementById("mobile-input");
@@ -22,8 +21,8 @@ function handleCommand(command) {
 
   // RESET
   if (command === "reset") {
-    ["green","blue","amber"].forEach(t =>
-      document.body.classList.remove(`theme-${t}`)
+    ["green", "blue", "amber"].forEach((t) =>
+      document.body.classList.remove(`theme-${t}`),
     );
     document.body.classList.add("theme-green");
     typingSpeed = defaultSpeed;
@@ -50,9 +49,7 @@ function handleCommand(command) {
     enqueueLine("  SPEED [1-150]        Typing speed in ms/char");
     enqueueLine("  RESET                Restore defaults");
     enqueueLine("  CLEAR   or   CLS     Clear the screen");
-    // --- FIX: Add EXIT and QUIT to HELP ---
     enqueueLine("  EXIT    or   QUIT    Shut down the terminal");
-    // --- End FIX ---
     enqueueLine("");
     enqueueLine("Type HELP at any time to see this again.");
     return;
@@ -62,33 +59,33 @@ function handleCommand(command) {
   if (command === "dir") {
     // 1. Gather all names
     const folderNames = entry.folders.slice();
-    const fileNames   = Object.keys(entry.files);
-    const imageNames  = entry.images ? Object.keys(entry.images) : [];
-    const allNames    = folderNames.concat(fileNames, imageNames);
+    const fileNames = Object.keys(entry.files);
+    const imageNames = entry.images ? Object.keys(entry.images) : [];
+    const allNames = folderNames.concat(fileNames, imageNames);
 
     // 2. Compute max length
     const maxLen = allNames.reduce(
       (max, name) => Math.max(max, name.length),
-      0
+      0,
     );
 
     // 3. Header
     enqueueLine(` Directory of ${getPrompt().slice(0, -1)}`);
 
     // 4. Folders
-    folderNames.forEach(name => {
+    folderNames.forEach((name) => {
       const padded = name.padEnd(maxLen, " ");
       enqueueLine(`  ${padded}  <DIR>`);
     });
 
     // 5. Text files
-    fileNames.forEach(name => {
+    fileNames.forEach((name) => {
       const padded = name.padEnd(maxLen, " ");
       enqueueLine(`  ${padded}`);
     });
 
     // 6. Images
-    imageNames.forEach(name => {
+    imageNames.forEach((name) => {
       const padded = name.padEnd(maxLen, " ");
       enqueueLine(`  ${padded}`);
     });
@@ -133,11 +130,9 @@ function handleCommand(command) {
   // COLOR
   if (command.startsWith("color ")) {
     const theme = command.split(" ")[1];
-    const valid = ["green","blue","amber"];
+    const valid = ["green", "blue", "amber"];
     if (valid.includes(theme)) {
-      valid.forEach(t =>
-        document.body.classList.remove(`theme-${t}`)
-      );
+      valid.forEach((t) => document.body.classList.remove(`theme-${t}`));
       document.body.classList.add(`theme-${theme}`);
       enqueueLine(`Theme set to ${theme.toUpperCase()}.`);
     } else {
@@ -160,11 +155,14 @@ function handleCommand(command) {
 
   // IMAGE display
   if (command.endsWith(".jpg")) {
-    const fn      = command.toUpperCase();
+    const fn = command.toUpperCase();
     const imgPath = entry.images && entry.images[fn];
     if (imgPath) {
-      document.getElementById("output").innerHTML +=
-        `<img src="${imgPath}" alt="${fn}" style="max-width:100%;margin:1rem 0;">`;
+      const image = document.createElement("img");
+      image.src = imgPath;
+      image.alt = fn;
+      image.addEventListener("load", scrollToBottom, { once: true });
+      document.getElementById("output").appendChild(image);
     } else {
       enqueueLine("File not found.");
     }
@@ -177,10 +175,10 @@ function handleCommand(command) {
 
   // TEXT files
   if (command.endsWith(".txt")) {
-    const fn      = command.toUpperCase();
+    const fn = command.toUpperCase();
     const content = entry.files[fn];
     if (typeof content !== "undefined") {
-      content.split("\n").forEach(line => enqueueLine(line));
+      content.split("\n").forEach((line) => enqueueLine(line));
     } else {
       enqueueLine("File not found.");
     }

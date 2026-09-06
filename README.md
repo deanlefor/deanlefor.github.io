@@ -41,3 +41,29 @@ calculator change, run `npm run check` from `apps/fers-retirement/`. That comman
 runs the calculation tests and rebuilds the committed `fers-retirement/` site.
 Push the resulting commit through GitHub Desktop as usual; no custom deployment
 workflow is required.
+
+## Checking changes
+
+Use Node.js 24.15 or later. From the repository root:
+
+```bash
+npm ci
+npm ci --prefix apps/fers-retirement
+npm run check --prefix apps/fers-retirement
+npm test
+```
+
+The root suite checks the scorecards, tracker imports and storage failures,
+rendered controls, terminal output, the built retirement interface, public local
+links, and JavaScript syntax. The retirement check runs calculation and storage
+tests, TypeScript, and the production build. GitHub Actions runs these checks on
+pushes and pull requests and rejects a calculator build that differs from its
+source. Its deployment remains the normal GitHub Pages branch workflow.
+
+The tracker uses `site-data.js` for guarded persistence and `tracker-data.js` for
+its backup schema. Rendering and interaction live in `tracker.js`. The run
+tracker has a separate schema in `projects/run-tracker-data.js`; the scorecard
+schemas and storage keys are maintained independently.
+
+See [the September 2026 audit fixes](AUDIT-FIXES.md) for the fixes, compatibility
+decisions, and verification details.

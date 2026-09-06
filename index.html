@@ -445,7 +445,6 @@
       z-index: 200;
     }
     .nav-dropdown-menu.open { display: block; }
-    .nav-dropdown:hover .nav-dropdown-menu { display: block; }
     .nav-dropdown-item {
       display: block;
       padding: 0.75rem 1rem;
@@ -682,6 +681,14 @@
       .nav-dropdown { display: flex; }
       .nav-dropdown .nav-link { display: flex; }
     }
+    button.nav-dropdown-trigger { background:transparent; font-family:inherit; }
+    button.toggle-track { border:0; padding:0; }
+    :focus-visible { outline:2px solid var(--gold-light); outline-offset:4px; }
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior:auto; }
+      *, *::before, *::after { animation:none!important; transition:none!important; }
+      .reveal, .hero-eyebrow, .hero-name, .hero-roles, .hero-divider, .hero-bio, .hero-linkedin { opacity:1!important; transform:none!important; }
+    }
   </style>
 </head>
 <body>
@@ -698,8 +705,8 @@
       <a class="nav-link" href="#research">Research</a>
       <a class="nav-link" href="#service">Background</a>
       <div class="nav-dropdown">
-        <span class="nav-link terminal-btn nav-dropdown-trigger">Resources &#9662;</span>
-        <div class="nav-dropdown-menu">
+        <button type="button" class="nav-link terminal-btn nav-dropdown-trigger" aria-expanded="false" aria-controls="resources-menu">Resources &#9662;</button>
+        <div class="nav-dropdown-menu" id="resources-menu">
           <a href="tracker.html" class="nav-dropdown-item">VT PAPA Program Tracker</a>
           <a href="tracker-guide.html" target="_blank" class="nav-dropdown-item">Tracker User Guide</a>
           <div class="nav-dropdown-divider"></div>
@@ -900,138 +907,35 @@
 </div>
 
 <!-- Settings button + panel -->
-<button id="settings-btn" title="Settings">&#9881;</button>
+<button type="button" id="settings-btn" title="Settings" aria-label="Display settings" aria-expanded="false" aria-controls="settings-panel">&#9881;</button>
 
 <div id="settings-panel">
   <p class="sp-title">Display Settings</p>
 
   <div class="sp-toggle">
     <span>Light Mode (VT)</span>
-    <div class="toggle-track" id="mode-toggle"><div class="toggle-thumb"></div></div>
+    <button type="button" class="toggle-track" id="mode-toggle" role="switch" aria-checked="false" aria-label="Light mode"><span class="toggle-thumb"></span></button>
   </div>
 
   <div class="sp-divider"></div>
 
   <div class="sp-row">
-    <label>Star Count <span id="lbl-count">180</span></label>
+    <label for="sl-count">Star Count <span id="lbl-count">180</span></label>
     <input type="range" id="sl-count" min="30" max="500" value="180" step="10">
   </div>
 
   <div class="sp-row">
-    <label>Twinkle Speed <span id="lbl-speed">5</span></label>
+    <label for="sl-speed">Twinkle Speed <span id="lbl-speed">5</span></label>
     <input type="range" id="sl-speed" min="1" max="10" value="5" step="1">
   </div>
 
   <div class="sp-row">
-    <label>Star Size <span id="lbl-size">5</span></label>
+    <label for="sl-size">Star Size <span id="lbl-size">5</span></label>
     <input type="range" id="sl-size" min="1" max="10" value="5" step="1">
   </div>
 </div>
 
-<script>
-// ── Starfield ──
-const canvas = document.getElementById('starCanvas');
-const ctx = canvas.getContext('2d');
-let stars = [];
-
-const cfg = { count: 180, speed: 5, size: 5 };
-
-function getStarColor() {
-  const v = getComputedStyle(document.body).getPropertyValue('--star-color').trim();
-  return v || '220, 210, 185';
-}
-
-function resize() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-
-function initStars() {
-  const speedBase = cfg.speed * 0.0015;
-  const sizeBase  = cfg.size  * 0.18;
-  stars = [];
-  for (let i = 0; i < cfg.count; i++) {
-    const bright = Math.random() < 0.15;
-    stars.push({
-      x:   Math.random() * canvas.width,
-      y:   Math.random() * canvas.height,
-      r:   bright ? sizeBase * (Math.random() * 0.8 + 1.2) : sizeBase * (Math.random() * 0.6 + 0.4),
-      a:   Math.random(),
-      min: bright ? 0.15 : 0.04,
-      max: bright ? 0.95 : 0.5,
-      da:  (Math.random() * speedBase + speedBase * 0.4) * (Math.random() < 0.5 ? 1 : -1)
-    });
-  }
-}
-
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-  const col = getStarColor();
-  stars.forEach(s => {
-    s.a += s.da;
-    if (s.a <= s.min || s.a >= s.max) s.da *= -1;
-    s.a = Math.max(s.min, Math.min(s.max, s.a));
-    ctx.beginPath();
-    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
-    ctx.fillStyle = `rgba(${col}, ${s.a})`;
-    ctx.fill();
-  });
-  requestAnimationFrame(draw);
-}
-
-resize();
-initStars();
-draw();
-window.addEventListener('resize', () => { resize(); initStars(); });
-
-// ── Settings panel ──
-const btn   = document.getElementById('settings-btn');
-const panel = document.getElementById('settings-panel');
-btn.addEventListener('click', () => panel.classList.toggle('open'));
-document.addEventListener('click', e => {
-  if (!panel.contains(e.target) && e.target !== btn) panel.classList.remove('open');
-});
-
-function wire(id, lblId, key, reinit) {
-  const el = document.getElementById(id);
-  const lb = document.getElementById(lblId);
-  el.addEventListener('input', () => {
-    cfg[key] = +el.value;
-    lb.textContent = el.value;
-    if (reinit) initStars();
-  });
-}
-wire('sl-count', 'lbl-count', 'count', true);
-wire('sl-speed', 'lbl-speed', 'speed', true);
-wire('sl-size',  'lbl-size',  'size',  true);
-
-// ── Resources dropdown ──
-const dropTrigger = document.querySelector('.nav-dropdown-trigger');
-const dropMenu    = document.querySelector('.nav-dropdown-menu');
-dropTrigger.addEventListener('click', e => {
-  e.stopPropagation();
-  dropMenu.classList.toggle('open');
-});
-document.addEventListener('click', () => dropMenu.classList.remove('open'));
-
-// ── Light / dark toggle ──
-const track = document.getElementById('mode-toggle');
-let isLight = false;
-track.addEventListener('click', () => {
-  isLight = !isLight;
-  document.body.classList.toggle('light', isLight);
-  track.classList.toggle('on', isLight);
-});
-
-// ── Scroll reveal ──
-const reveals = document.querySelectorAll('.reveal');
-const observer = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) { e.target.classList.add('visible'); observer.unobserve(e.target); }
-  });
-}, { threshold: 0.1 });
-reveals.forEach(el => observer.observe(el));
-</script>
+<script src="homepage.js"></script>
 
 </body>
 </html>

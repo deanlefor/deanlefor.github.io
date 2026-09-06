@@ -34,10 +34,11 @@ guide before changing formulas or expanding scope.
 
 ## Run locally
 
-Requires Node.js 22 or later.
+Requires Node.js 22.13 or later for this app; use Node.js 24.15 or later to run
+the website's root regression suite as well.
 
 ```bash
-npm install
+npm ci
 npm run dev
 ```
 
@@ -58,6 +59,13 @@ GitHub Pages publishes the repository root without a custom Actions workflow.
 ## Privacy
 
 The application has no database or application backend. Scenario inputs are stored in the browser's `localStorage`. Do not commit personal financial inputs or replace the neutral sample with real household data.
+
+Storage is read before autosaving starts. Invalid or unreadable saved data is
+preserved, and blocked writes leave the current inputs available in the tab with
+a visible warning and a **Download current inputs** recovery option. Downloaded
+inputs are plain JSON for safekeeping; this release does not yet provide a
+retirement-scenario file-import interface. Reloading the sample requires an
+explicit confirmation and replaces the saved scenario only if saving succeeds.
 
 ## Project documentation
 

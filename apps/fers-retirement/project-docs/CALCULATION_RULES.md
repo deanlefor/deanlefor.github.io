@@ -17,6 +17,10 @@ Rule baseline: **2026**. Every rule should be verified against primary sources b
 - The 2026 elective-deferral baseline is $24,500.
 - The 2026 general age-50 catch-up baseline is $8,000.
 - The 2026 higher catch-up baseline for ages 60 through 63 is $11,250.
+- Published baseline amounts are used exactly, without $500 rounding. The
+  higher catch-up applies in the calendar year a person turns 60, 61, 62, or 63;
+  the 2026 total for these ages is $35,750. Display and accumulation share this
+  limit calculation and the selected future-growth assumption.
 - Unknown future limits are projected using a user-selected growth assumption and rounded to $500. These are scenarios, not predictions of future IRS limits.
 - Agency Automatic (1%) contributions are included.
 - A zero employee contribution stops matching but does not stop the Agency Automatic 1% contribution while basic pay remains above zero.
@@ -69,6 +73,11 @@ Sources: [OPM types of retirement](https://www.opm.gov/retirement-center/fers-in
 - Today's-dollar entries are used directly. Future-dollar entries are divided by the household inflation factor through the applicable age-62 or benefit-commencement date before entering the real-dollar projection.
 - Social Security benefits remain level in real terms after commencement.
 - The survivor phase uses a simplified higher-benefit assumption rather than a complete SSA survivor-benefit calculation.
+- After the first planning horizon, compare both benefits that have commenced,
+  including the deceased person's benefit. Before a benefit's modeled start
+  date, it contributes zero to that comparison. After both horizons, Social
+  Security contributes zero. This retains the existing commencement assumption;
+  it does not add SSA eligibility or deceased-worker entitlement calculations.
 
 Sources: [SSA personalized benefit estimates](https://www.ssa.gov/prepare/get-benefits-estimate) and [SSA benefit calculators](https://www.ssa.gov/benefits/calculators/).
 
@@ -83,6 +92,28 @@ Sources: [SSA personalized benefit estimates](https://www.ssa.gov/prepare/get-be
 - Portfolio withdrawals fill the gap between the income target and fixed FERS/Social Security income.
 - After the first planning horizon, the income target falls to the selected survivor-spending percentage.
 - Fixed income above the target is assumed spent rather than reinvested.
+- The monthly fixed-income and spending schedule is calculated once per
+  scenario and reused during the search. The search stops when its monthly
+  income bracket is within $0.0001, or floating-point precision prevents
+  further narrowing, with an 80-iteration safety cap. The upper bound is the
+  amount that would exhaust the portfolio in the first month, plus $1.
+
+## Input and storage boundaries
+
+- All numeric inputs must be finite and within the declared limits in
+  `PERSON_NUMBER_LIMITS` and `HOUSEHOLD_NUMBER_LIMITS`. Planning age and claiming
+  age in months must be whole numbers. Unsupported enumerations are rejected.
+- Birth must precede the projection date. Retirement must be on or after it,
+  and retirement SCD must fall between birth and retirement. Each planning
+  horizon must follow the both-retired date because accumulation does not model
+  a death before both people retire.
+- Invalid scenarios do not enter the engine, display results, or replace saved
+  valid inputs. Incomplete numeric edits remain local field drafts, with a
+  message explaining that the last valid value is still used.
+- Saved input is validated before use. Missing fields from supported legacy
+  versions receive defaults; supplied invalid values are rejected. Unreadable
+  storage is preserved until an explicit sample replacement. Save failures keep
+  inputs in memory and expose a download option.
 
 ## Known exclusions
 

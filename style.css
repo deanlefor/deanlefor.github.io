@@ -21,7 +21,7 @@ body.theme-amber { --fg: #FFBF00; --bg: black; }
 /* ================================
    Base Layout and Typography
 =================================*/
-/* FIX: Prevent the main page from scrolling */
+/* Prevent the main page from scrolling */
 html, body {
   height: 100%;
   overflow: hidden;
@@ -57,13 +57,13 @@ body {
 
 /* ================================
    Terminal Container
-   (FIX: Now a self-contained scrolling view)
+   (Self-contained scrolling view)
 =================================*/
 #terminal {
   max-width: 1200px;
   margin: 0;
   background-color: var(--bg);
-  /* FIX: Height is now controlled by JavaScript to handle mobile keyboards.
+  /* Height is now controlled by JavaScript to handle mobile keyboards.
      The 'height' property is removed from here to prevent conflicts. */
   overflow-y: auto;
   display: flex;
@@ -131,4 +131,8 @@ body {
 =================================*/
 @keyframes blink {
   50% { opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #fake-cursor { animation:none; }
 }
