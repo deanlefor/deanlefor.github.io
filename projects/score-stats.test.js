@@ -83,6 +83,8 @@ test('last-place standings derive counts from existing history and recalculate a
   }
   ScoreStats.render(host,records,{showLastPlace:true});
   assert.match(host.innerHTML,/>Last place<\/div>/);
+  assert.match(host.innerHTML,/>Win %<\/div><div title="Last-place finishes divided by games played">Last place %<\/div>/);
+  assert.equal((host.innerHTML.match(/>33%<\/div><div class="stats-number">33%<\/div>/g) || []).length,1);
   assert.deepEqual(['Alex','Blair','Casey'].map(count),[1,1,1]);
   assert.equal(JSON.stringify(records),original);
   records[0].participants[1].score = 0;
@@ -90,6 +92,8 @@ test('last-place standings derive counts from existing history and recalculate a
   assert.deepEqual(['Alex','Blair','Casey'].map(count),[1,0,1]);
   ScoreStats.render(host,records.slice(1),{showLastPlace:true});
   assert.deepEqual(['Alex','Blair','Casey'].map(count),[1,0,0]);
+  assert.match(host.innerHTML,/title="Alex">Alex<\/div>(?:<div class="stats-number">[^<]*<\/div>){4}<div class="stats-number">50%<\/div><div class="stats-number">50%<\/div>/);
+  assert.match(host.innerHTML,/title="Blair">Blair<\/div>(?:<div class="stats-number">[^<]*<\/div>){4}<div class="stats-number">50%<\/div><div class="stats-number">0%<\/div>/);
 });
 
 test('record cards show the matching game date without a time when enabled',() => {

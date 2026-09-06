@@ -210,7 +210,9 @@
     html += '<div class="stats-row stats-row-head' + rowClass + '"><div>Player</div><div>Wins</div><div>Ties</div>';
     if(showLastPlace) html += '<div title="Last-place finishes, including ties for last. All-player ties are excluded.">Last place</div>';
     if(showOuts) html += '<div title="Rounds won by going out or scoring 0">Outs / 0s</div>';
-    html += '<div>Games</div><div>Win %</div><div>Avg</div><div>Streak</div></div>';
+    html += '<div>Games</div><div>Win %</div>';
+    if(showLastPlace) html += '<div title="Last-place finishes divided by games played">Last place %</div>';
+    html += '<div>Avg</div><div>Streak</div></div>';
     stats.leaderboard.forEach(function(person){
       var winRate = person.games ? Math.round(person.wins / person.games * 100) : 0;
       var average = person.games ? person.scoreTotal / person.games : 0;
@@ -221,6 +223,7 @@
       if(showOuts) html += '<div class="stats-number">' + format(person.outs) + '</div>';
       html += '<div class="stats-number">' + format(person.games) + '</div>';
       html += '<div class="stats-number">' + format(winRate) + '%</div>';
+      if(showLastPlace) html += '<div class="stats-number">' + format(person.games ? Math.round(person.lastPlaces / person.games * 100) : 0) + '%</div>';
       html += '<div class="stats-number">' + format(average) + '</div>';
       html += '<div class="stats-number">' + format(person.currentStreak) + '</div></div>';
     });
