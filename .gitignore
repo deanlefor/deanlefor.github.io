@@ -7,3 +7,20 @@ apps/fers-retirement/coverage/
 *.log
 
 node_modules/
+
+# Private downloads and local credentials must never enter the public checkout.
+.env
+.env.*
+!.env.example
+retirement-inputs*.json
+phd-tracker-*.json
+nd-run-backup-*.json
+game-history-backup-*.json
+game-history-before-restore-*.json
+.private/
+*.pem
+*.key
+*.p12
+*.pfx
+id_rsa
+id_ed25519

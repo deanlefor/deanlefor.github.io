@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'none'; style-src 'self' 'unsafe-inline'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Privacy and your data — Dean Lefor</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { max-width: 720px; margin: 0 auto; padding: 32px 24px 64px; font-family: system-ui, sans-serif; line-height: 1.65; }
+    h1 { line-height: 1.2; margin-top: 36px; }
+    h2 { font-size: 1.2rem; margin-top: 32px; }
+    a { color: light-dark(#175c9b, #8cc7ff); }
+    .updated { font-size: .9rem; opacity: .75; }
+  </style>
+</head>
+<body>
+  <nav aria-label="Website"><a href="index.html">deanlefor.com</a></nav>
+  <main>
+    <h1>Privacy and your data</h1>
+    <p class="updated">Updated September 6, 2026</p>
+    <p>The retirement planner, PhD tracker, run tracker and scorecards save your inputs in your browser. They do not upload saved records to an application database, and the website owner cannot recover them for you.</p>
+
+    <h2>Saved on this device</h2>
+    <p>Other people using the same browser profile can access saved records. Pages on the same website origin share browser storage, so scripts running on this site can also access it. These tools do not encrypt records or provide a separate private account.</p>
+    <p>Clearing this site's browser data removes locally saved records. Private browsing usually removes them when that session ends. If saving is blocked or storage is full, follow the tool's warning and export a backup before closing the page.</p>
+
+    <h2>Sharing and exports</h2>
+    <p>The PhD tracker lets you preview a snapshot before copying a share link. Name and email are excluded by default; you can choose to include them. Custom course names and the plan itself may still identify you.</p>
+    <p><strong>Anyone with the full link can read, forward and retain that snapshot.</strong> The link uses reversible encoding, not encryption. It has no sign-in, expiry or revocation. Editing or resetting your tracker does not remove earlier links or copies. The portion after <code>#view=</code> is not sent in the normal page request, but recipients and services where you paste the full link receive it.</p>
+    <p>Use <strong>Print summary (no profile)</strong> when credit totals, DMP count and start semester are sufficient. The full PDF report includes your name, email and detailed plan. Review any report before sharing it.</p>
+    <p>JSON exports may contain names, financial inputs, academic plans, run notes or game participants. Keep recovery backups in a private location outside this public website repository. Share only the information the recipient needs. To clear all records from these tools, remove this site's data using your browser settings; this does not erase downloaded files or shared copies.</p>
+
+    <h2>Website and resource requests</h2>
+    <p>GitHub Pages hosts the site and receives ordinary web requests, including connection information such as your IP address. Some pages load fonts from Google or icon fonts from jsDelivr; the run tracker loads map tiles from OpenStreetMap. Map image requests include the website origin as the referrer, as required by that provider, but do not include the page path or share-link fragment. These providers receive the requests needed to supply those resources. The tools do not include saved planning records in those resource requests.</p>
+    <p>The run map shows a fixed virtual North Dakota route. It does not request your GPS location. The site includes no analytics or advertising scripts. Leaflet, the map's JavaScript library, is served with this site's own files.</p>
+    <p>Links to other websites follow those sites' own practices. For a privacy question, use the <a href="mailto:webmaster@deanlefor.com">website contact address</a>; avoid sending financial inputs or private backup files.</p>
+  </main>
+</body>
+</html>

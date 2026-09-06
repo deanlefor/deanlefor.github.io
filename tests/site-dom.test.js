@@ -11,6 +11,153 @@ function shared(data) {
 }
 const attack = '<img src="missing.png" onerror="window.auditExecuted=true">';
 
+test("terminal privacy navigation retains keyboard/touch access and has viewport space", (t) => {
+  const p = page("terminal.html");
+  t.after(() => p.dom.window.close());
+  p.window.attachInputHandlers();
+  const nav = p.document.getElementById("terminal-privacy");
+  Object.defineProperty(nav, "offsetHeight", { value: 32 });
+  p.window.handleViewportChanges();
+  assert.equal(
+    p.document.getElementById("terminal").style.height,
+    `${p.window.innerHeight - 32}px`,
+  );
+  const link = nav.querySelector("a");
+  link.focus();
+  const enter = new p.window.KeyboardEvent("keydown", {
+    key: "Enter",
+    bubbles: true,
+    cancelable: true,
+  });
+  link.dispatchEvent(enter);
+  assert.equal(enter.defaultPrevented, false);
+  link.dispatchEvent(new p.window.Event("touchstart", { bubbles: true }));
+  assert.equal(p.document.activeElement, link);
+});
+
+test("share preview omits profile by default and copies only the reviewed snapshot", async (t) => {
+  const original = {
+    ...initial,
+    userName: "Private student",
+    userEmail: "student@example.com",
+    done: ["f1"],
+    names: { el1: attack },
+    assign: { el1: "f2025" },
+  };
+  const p = page("tracker.html", {
+    stored: { "phd-tracker-v2": JSON.stringify(original) },
+  });
+  t.after(() => p.dom.window.close());
+  const copied = [];
+  Object.defineProperty(p.window.navigator, "clipboard", {
+    value: {
+      writeText: async (url) =>
+        copied.push(
+          JSON.parse(
+            decodeURIComponent(
+              Buffer.from(url.split("#view=")[1], "base64").toString(),
+            ),
+          ),
+        ),
+    },
+  });
+  p.window.toggleSettings();
+  await p.window.copyShareLink();
+  assert.equal(copied.length, 0, "copy requires a preview");
+  p.document.getElementById("preview-share-button").click();
+  const checkbox = p.document.getElementById("share-include-profile");
+  assert.equal(checkbox.checked, false);
+  assert.equal(p.document.activeElement, checkbox);
+  assert.equal(p.document.querySelector("#share-preview-data img"), null);
+  const preview = JSON.parse(
+    p.document.getElementById("share-preview-data").textContent,
+  );
+  assert.equal(Object.hasOwn(preview, "userName"), false);
+  assert.equal(Object.hasOwn(preview, "userEmail"), false);
+  assert.deepEqual(preview.names, original.names);
+  await p.window.copyShareLink();
+  assert.deepEqual(copied[0], preview);
+  const recipient = page("tracker.html", {
+    hash: shared(copied[0]),
+    stored: {
+      "phd-tracker-v2": JSON.stringify({
+        ...initial,
+        userName: "Recipient private name",
+      }),
+    },
+  });
+  t.after(() => recipient.dom.window.close());
+  const recipientState = JSON.parse(recipient.window.stateData());
+  assert.equal(recipientState.userName, "");
+  assert.equal(recipientState.userEmail, "");
+  assert.deepEqual(recipientState.done, original.done);
+
+  // New edits after preview cannot enter a snapshot without another review.
+  const name = p.document.querySelector('input[aria-label="Your name"]');
+  name.value = "Changed after preview";
+  name.dispatchEvent(new p.window.Event("input", { bubbles: true }));
+  checkbox.click();
+  await p.window.copyShareLink();
+  assert.equal(copied[1].userName, original.userName);
+  assert.equal(copied[1].userEmail, original.userEmail);
+  assert.deepEqual(
+    copied[1],
+    JSON.parse(p.document.getElementById("share-preview-data").textContent),
+  );
+  assert.equal(
+    JSON.parse(p.window.stateData()).userName,
+    "Changed after preview",
+    "full backups retain the current profile",
+  );
+  p.window.previewShareLink();
+  assert.equal(
+    checkbox.checked,
+    false,
+    "every new review starts without the profile",
+  );
+});
+
+test("summary reports exclude profile, custom names and individual plan details", (t) => {
+  const p = page("tracker.html", {
+    stored: {
+      "phd-tracker-v2": JSON.stringify({
+        ...initial,
+        userName: "Private student",
+        userEmail: "student@example.com",
+        names: { el1: "Private research title" },
+        assign: { el1: "f2025" },
+        done: ["f1"],
+      }),
+    },
+  });
+  t.after(() => p.dom.window.close());
+  const summary = p.window.generatePrintHTML(true);
+  assert.match(summary, /Progress summary/);
+  assert.match(summary, /Fall 2025/);
+  for (const value of [
+    "Private student",
+    "student@example.com",
+    "Private research title",
+    "Semester plan",
+    "Course completion",
+    "Milestones",
+  ])
+    assert.equal(summary.includes(value), false, value);
+  assert.match(p.window.generatePrintHTML(), /Private research title/);
+});
+
+test("sharing has a manual fallback when the Clipboard API is unavailable", async (t) => {
+  const p = page("tracker.html");
+  t.after(() => p.dom.window.close());
+  const prompts = [];
+  p.window.prompt = (...args) => prompts.push(args);
+  p.window.toggleSettings();
+  p.window.previewShareLink();
+  await p.window.copyShareLink();
+  assert.equal(prompts.length, 1);
+  assert.match(prompts[0][1], /#view=/);
+});
+
 test("shared and printed profile/course names are literal text, never executable HTML", (t) => {
   const fixture = {
     ...initial,

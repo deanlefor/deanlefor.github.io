@@ -73,8 +73,8 @@ window.fs = {
         "NASA Office of Inspector General - Washington, DC\n" +
         "\n" +
         "• Oversees the strategic direction and financial oversight of NASA OIG’s $47.6M budget, including procurement, policy, and resource allocation.\n" +
-        "• Directs an 8-member team, establishing performance metrics and professional development to achieve operational excellence.\n" +
-        "• Leads financial planning and procurement operations for over $9M in federal procurements, ensuring regulatory compliance and cost-effectiveness.\n" +
+        "• Directs a resource management team, establishing performance metrics and professional development to achieve operational excellence.\n" +
+        "• Leads financial planning and federal procurement operations, ensuring regulatory compliance and cost-effectiveness.\n" +
         "• Provides strategic leadership for the OIG's travel and procurement training programs to ensure adherence to federal policies.\n" +
         "• Acts as the primary liaison between NASA OIG Headquarters and its facilities, facilitating collaboration with senior leadership to optimize performance.",
       "PPA_MANAGER.TXT":
@@ -82,7 +82,7 @@ window.fs = {
         "NASA Office of Inspector General - Washington, DC\n" +
         "\n" +
         "• Leads procurement, budgeting, and operations, developing strategies to optimize resource use and ensure regulatory compliance.\n" +
-        "• Acts as the primary liaison between headquarters and ten nationwide OIG facilities, ensuring seamless communication and continuity of operations.\n" +
+        "• Acts as the primary liaison between headquarters and nationwide OIG facilities, ensuring seamless communication and continuity of operations.\n" +
         "• Directs the coordination of NASA OIG’s Strategic Plan, developing and tracking key performance metrics for internal and Congressional reporting.\n" +
         "• Chaired the inaugural ‘Return To Work’ committee and contributed to NASA’s ‘Future of Work’ initiatives, shaping strategic workforce planning.\n" +
         "• Oversees a diverse portfolio of projects, driving process innovation and cross-divisional collaboration using technologies like PowerBI.",

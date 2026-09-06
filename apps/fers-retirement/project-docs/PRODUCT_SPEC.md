@@ -11,7 +11,7 @@ Help a two-person FERS household estimate:
 
 ## Intended initial users
 
-The initial test household is the project owner and spouse, both regular FERS employees. The design nevertheless stores each person's inputs independently so it can later serve other dual-federal households.
+The calculator is designed for households with two regular FERS employees. Each person's inputs are stored independently. All bundled household examples are fictional.
 
 ## Design principles
 

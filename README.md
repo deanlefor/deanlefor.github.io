@@ -67,3 +67,45 @@ schemas and storage keys are maintained independently.
 
 See [the September 2026 audit fixes](AUDIT-FIXES.md) for the fixes, compatibility
 decisions, and verification details.
+
+## Privacy when contributing
+
+Everything committed here is public, including development notes and Git
+metadata. Use fictional examples and generic product requirements. Keep
+personal planning notes, exports and backups outside this checkout. The
+`.private/` fallback directory and known backup/credential filenames are ignored;
+never force-add them. `.env.example` is reserved for sanitized placeholders.
+Ignoring a file does not remove an earlier committed copy.
+
+Use your account's GitHub noreply address for commits, and enable GitHub's
+private-email and push-blocking settings. See the
+[GitHub commit email instructions](https://docs.github.com/en/account-and-profile/how-tos/email-preferences/setting-your-commit-email-address).
+
+Privacy checks scan reachable history with checksum-verified Gitleaks 8.30.1.
+The only scanner exception is the exact public retirement localStorage key.
+To scan staged changes and reachable history locally with that version installed:
+
+```bash
+gitleaks git --pre-commit --staged --config .gitleaks.toml --redact=100 .
+gitleaks git --config .gitleaks.toml --log-opts="--all" --redact=100 .
+```
+
+The public [privacy explanation](privacy.html) describes browser storage,
+sharing, backups and third-party resource requests. Share links default to
+omitting the profile; full backups remain complete. Leaflet is vendored under
+`vendor/leaflet/` with its license and verified source integrity.
+
+Public pages use a Content Security Policy and suppress outgoing referrers,
+except map images, which send only the site origin.
+Legacy pages still allow inline handlers, but executable scripts must come
+from this origin. The retirement production build uses the stricter
+`script-src 'self'` policy injected by Vite. The policies permit only the fonts
+and map images each page needs; they do not isolate storage between tools.
+After changing resources or inline behavior, check them in a real browser:
+DOM tests do not enforce CSP. See the
+[CSP reference](https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Content-Security-Policy).
+
+The run map uses standard OpenStreetMap tiles with visible attribution, normal
+browser caching, and origin-only image referrers. Do not add bulk downloads or
+offline tile prefetching; see the
+[OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/).

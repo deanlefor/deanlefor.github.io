@@ -23,7 +23,7 @@ initialization, visible save failures, and input downloads protect against
 blocked storage. The existing storage key and supported claiming-date migration
 are retained. Vite and affected transitive dependencies were updated and the
 static site rebuilt. These changes do not broaden the documented benefit model
-or complete the owner's separate reconciliation against official estimates.
+or complete a separate reconciliation against official estimates.
 **Purpose:** Preserve the product decisions, reasoning, roadmap, and current development state so a new Codex session can continue without reconstructing the originating conversation.
 
 ## Instructions for Codex
@@ -34,18 +34,18 @@ Treat this document as project context, not as a substitute for inspecting the r
 2. Read `README.md`, `project-docs/PRODUCT_SPEC.md`, `project-docs/CALCULATION_RULES.md`, `project-docs/ROADMAP.md`, and `project-docs/HANDOFF_TO_CODEX.md`.
 3. Inspect `src/lib/calculator.ts`, `src/App.tsx`, and `tests/calculator.test.ts`.
 4. Run `npm run check` and preserve the passing baseline.
-5. Do not broaden the feature set until the Release 0.1 results have been reconciled against the project owner's independent calculations.
+5. Do not broaden the feature set until the Release 0.1 results have been reconciled against independent calculations.
 
 ## 1. Project origin
 
-The project began as an effort to create a federal employee retirement calculator that could eventually cover the full retirement-planning lifecycle. The owner wanted to avoid building one enormous application all at once. The initial planning therefore organized the product into ten incremental releases, each of which would be understandable, testable, and useful on its own.
+The project began as an effort to create a federal employee retirement calculator that could eventually cover the full retirement-planning lifecycle. The development plan avoids building one enormous application all at once. The initial planning therefore organized the product into ten incremental releases, each of which would be understandable, testable, and useful on its own.
 
 Two principles governed the original roadmap:
 
 1. Every release should produce a working product rather than invisible infrastructure alone.
 2. Users should not be required to complete the federal-retirement equivalent of a tax return before receiving an initial projection. The application should use progressive disclosure, permit official estimates where available, and carry saved information into later modules.
 
-The project owner subsequently clarified that the first useful audience would be the owner and spouse, both regular FERS employees. This shifted Release 0.1 from a generic retirement runway into a distinctive dual-federal household calculator.
+The initial audience was defined as households with two regular FERS employees. This shifted Release 0.1 from a generic retirement runway into a distinctive dual-federal household calculator.
 
 ## 2. Intended product identity
 
@@ -78,7 +78,7 @@ This release was later expanded substantially for the initial dual-FERS use case
 
 ### Release 0.2: Basic FERS Pension Module
 
-Originally planned to add regular FERS immediate-retirement eligibility, high-3 salary, service, the 1.0% and 1.1% formulas, sick-leave credit, FERS COLAs, retirement dates, and comparison with an official estimate. The core general-formula calculations were moved into Release 0.1 because the owner considered them essential to a minimally useful product.
+Originally planned to add regular FERS immediate-retirement eligibility, high-3 salary, service, the 1.0% and 1.1% formulas, sick-leave credit, FERS COLAs, retirement dates, and comparison with an official estimate. The core general-formula calculations were moved into Release 0.1 because they were essential to a minimally useful product.
 
 More exact FERS computation and eligibility work remains appropriate for Release 0.2.
 
@@ -128,7 +128,7 @@ The initial public-ready release should focus on reliability and usability: guid
 
 ## 4. Decisions that expanded Release 0.1
 
-The owner identified four results that Release 0.1 must provide at a minimum:
+The requirements identified four results that Release 0.1 must provide at a minimum:
 
 1. Calculate the projected total retirement-account amount.
 2. Accept Social Security estimates obtained from the SSA website and separate claiming dates.
@@ -156,11 +156,11 @@ The current intended boundary is:
 - User-selected ending portfolio in today's dollars, including zero
 - Browser-only storage
 
-The owner confirmed that CSRS should not be a design priority because relatively few remaining employees would require it. Special-category, disability, VERA, deferred, postponed, and other complex cases are also outside Release 0.1.
+CSRS was excluded as a design priority because relatively few remaining employees would require it. Special-category, disability, VERA, deferred, postponed, and other complex cases are also outside Release 0.1.
 
 ## 5. Contribution and account decisions
 
-The owner currently contributes to the Traditional TSP rather than Roth TSP or a Roth IRA, but wanted the architecture to permit Roth choices later.
+The architecture models Traditional and Roth TSP contributions separately and allows additional account types in later releases.
 
 The project therefore made these decisions:
 
@@ -214,7 +214,7 @@ Legacy locally saved scenarios that stored a Social Security start date are migr
 
 ## 8. Sustainable-income and legacy decisions
 
-The owner wanted the calculator to support both full portfolio spend-down and preservation of an inheritance.
+The calculator must support both full portfolio spend-down and preservation of an inheritance.
 
 The application therefore accepts a **target ending portfolio in today's dollars**:
 
@@ -256,7 +256,7 @@ Three visual directions were considered:
 2. Analytical Dashboard
 3. Journey Timeline
 
-The owner selected **Journey Timeline**.
+**Journey Timeline** was selected as the visual direction.
 
 The selected direction uses:
 
@@ -381,7 +381,7 @@ The following items are intentionally unresolved or approximate:
 
 The highest-priority next step is empirical reconciliation, not feature expansion.
 
-The owner should enter an actual two-person household scenario and compare the application against independent calculations for:
+Validation should use a representative fictional two-person household scenario and compare the application against independent calculations for:
 
 1. Each spouse's projected Traditional and Roth TSP balances.
 2. Creditable service at retirement.
@@ -417,9 +417,9 @@ For each discrepancy:
 
 ## 17. Definition of near-term success
 
-Release 0.1 should be considered ready for the owner's continuing personal use when:
+Release 0.1 should be considered ready for ongoing use when:
 
-- The owner's and spouse's TSP projections reconcile within an explained tolerance.
+- Both sample participants' TSP projections reconcile within an explained tolerance.
 - FERS annuity estimates reconcile with independent calculations or official estimates.
 - Supplement estimates are either reconciled or explicitly treated as manual inputs.
 - Sustainable-income results respond correctly to retirement dates, Social Security dates, returns, inflation, survivor elections, and legacy targets.

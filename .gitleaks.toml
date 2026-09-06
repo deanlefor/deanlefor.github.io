@@ -1,0 +1,7 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Public localStorage record name; not an authentication credential."
+regexTarget = "secret"
+regexes = ['''^dual-fers-retirement-planner-v01$''']

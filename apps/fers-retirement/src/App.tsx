@@ -638,8 +638,8 @@ export default function App() {
             deanlefor.com
           </a>
           <div className="privacy-note">
-            <span aria-hidden="true">✓</span> Your financial data stays in this
-            browser
+            <span aria-hidden="true">✓</span> Inputs are saved in this browser.{" "}
+            <a href="/privacy.html">Privacy and exports</a>
           </div>
         </div>
       </header>

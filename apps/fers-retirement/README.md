@@ -4,8 +4,8 @@ A local-first web application for projecting retirement income for a household w
 
 This repository contains the portable version of the Release 0.1 prototype developed in ChatGPT Work. It is intentionally limited to regular FERS employees and is not an official benefit estimator.
 
-Development is currently gated on reconciling Release 0.1 outputs against the
-project owner's independent calculations. Read the project history and handoff
+Development is currently gated on reconciling Release 0.1 outputs against
+independent reference calculations. Read the project history and handoff
 guide before changing formulas or expanding scope.
 
 ## Current capabilities

@@ -119,7 +119,10 @@ body {
 =================================*/
 #mobile-input {
   position: absolute;
-  inset: 0;
+  inset: auto 0 0;
+  /* Terminal taps focus this input in JavaScript; it must not cover links. */
+  pointer-events: none;
+  box-sizing: border-box;
   background: transparent !important;
   border: none !important;
   outline: none !important;

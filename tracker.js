@@ -10,12 +10,14 @@ const dataStore = SiteData.createStore({
   validate: PhDTrackerData.validate,
 });
 let shareError = "";
+// Only a reviewed snapshot can be copied; it is never saved to localStorage.
+let pendingShare = null;
 function updateSaveStatus() {
   document.getElementById("storage-status").textContent =
     shareError || (state.readOnly ? "" : dataStore.error);
 }
 
-const DISCLAIMER = `This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nThe constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nFor safety and security reasons, none of this is stored on a server. I do not see your data and it is not saved anywhere other than on your computer. However, since your progress is saved in your browser’s local storage it will disappear if you clear your browser data or use private/incognito mode. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
+const DISCLAIMER = `This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nThe constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nThe tracker saves progress in this browser without an application-server backup. Share links and exported files contain the data you choose to share. Anyone with a link can read and retain it; old links cannot be revoked. Hosting and font providers receive ordinary web requests. Other people using this browser profile and scripts running on this website can access locally saved data. Clearing site data removes saved progress, and private browsing usually removes it when that session ends. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
 
 const STATIC_BUCKETS = [
   {
@@ -417,7 +419,6 @@ let state = {
   names: {},
   renaming: null,
   termDone: new Set(),
-  shareLinkCopied: false,
   darkMode: false,
   readOnly: false,
   userName: "",
@@ -648,7 +649,7 @@ function renderSettings() {
         type="email"
         value="${escapeHtml(state.userEmail)}"
         oninput="state.userEmail=this.value;saveProgress()"
-        placeholder="e.g. hsimon@vt.edu"
+        placeholder="e.g. student@example.com"
         style="flex:1;font-size:12px;padding:5px 8px;border:0.5px solid var(--bd2);border-radius:var(--rm);background:var(--bg1);color:var(--tx1);outline:none"
       />
     </div>
@@ -712,17 +713,68 @@ function renderSettings() {
         Share &amp; export
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">
-        Share a read-only link with your advisor, or export a printable PDF
-        report.
+        Preview a read-only link before sharing. Full reports include your
+        profile; summaries contain credit totals and your start semester only.
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap">
-        <button class="btn" onclick="copyShareLink()">
-          ${state.shareLinkCopied ? "&#10003; Link copied!" : "Copy share link"}
+        <button
+          class="btn"
+          onclick="previewShareLink()"
+          aria-expanded="false"
+          aria-controls="share-preview"
+          id="preview-share-button"
+        >
+          Preview share link
         </button>
         <button class="btn" onclick="openPrintView()">
           Print / Save as PDF
         </button>
+        <button class="btn" onclick="openPrintView(true)">
+          Print summary (no profile)
+        </button>
       </div>
+      <section
+        id="share-preview"
+        hidden
+        aria-labelledby="share-preview-title"
+        style="margin-top:12px"
+      >
+        <h3 id="share-preview-title" style="font-size:13px">
+          Review this snapshot
+        </h3>
+        <p style="font-size:12px;line-height:1.6;margin:8px 0">
+          Includes completed courses and milestones, DMP sessions, semester
+          assignments, custom course names, start semester and appearance.
+          Custom names can identify you even when your profile is omitted.
+          Anyone with the link can read, forward and keep this data. The link is
+          not encrypted, never expires and cannot be revoked.
+        </p>
+        <label style="font-size:12px;display:block;margin:8px 0">
+          <input
+            id="share-include-profile"
+            type="checkbox"
+            onchange="updateSharePreview()"
+          />
+          Include my name and email in this link
+        </label>
+        <details>
+          <summary style="cursor:pointer;font-size:12px">
+            Exact data included in the link
+          </summary>
+          <pre
+            id="share-preview-data"
+            style="font-size:11px;white-space:pre-wrap;overflow-wrap:anywhere;margin:8px 0"
+          ></pre>
+        </details>
+        <button class="btn" onclick="copyShareLink()">
+          Copy reviewed link
+        </button>
+        <p
+          id="share-copy-status"
+          role="status"
+          style="font-size:12px;margin-top:8px"
+        ></p>
+      </section>
     </div>
     <div
       style="border-top:0.5px solid var(--bd1);padding-top:10px;margin-top:10px"
@@ -733,8 +785,8 @@ function renderSettings() {
         Backup &amp; restore
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">
-        Save a backup file to your device and reload it any time — even months
-        later.
+        Backups include your name, email and full plan. Keep them in a private
+        location outside the website repository or a public shared folder.
       </div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">
         <button class="btn" onclick="downloadBackup()">
@@ -828,14 +880,14 @@ function renderDashboard() {
           ${Math.round((total / 90) * 100)}% complete
         </div>
         ${[
-      { l: "Coursework", v: cw, m: 60 },
-      { l: "Dissertation", v: diss, m: 30 },
-    ]
-      .map(
-        (x) =>
-          `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--tx2)">${x.l}</span><span style="font-size:12px;font-weight:500;color:${x.v >= x.m ? GR : BL}">${x.v}/${x.m} cr.</span></div>${bar(x.v, x.m)}</div>`,
-      )
-      .join("")}
+          { l: "Coursework", v: cw, m: 60 },
+          { l: "Dissertation", v: diss, m: 30 },
+        ]
+          .map(
+            (x) =>
+              `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:12px;color:var(--tx2)">${x.l}</span><span style="font-size:12px;font-weight:500;color:${x.v >= x.m ? GR : BL}">${x.v}/${x.m} cr.</span></div>${bar(x.v, x.m)}</div>`,
+          )
+          .join("")}
         <div style="margin-top:4px">
           <div
             style="display:flex;justify-content:space-between;margin-bottom:3px"
@@ -864,27 +916,27 @@ function renderDashboard() {
     </div>
     <div class="g2">
       ${p
-    .map(
-      (b) =>
-        /* HTML */ `<div
-          class="csec"
-          style="${b.earned >= b.req ? "border-color:" + GR + "55" : ""}"
-        >
-          <div
-            style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px"
-          >
-            <span
-              style="font-size:12px;font-weight:500;flex:1;padding-right:6px;line-height:1.35"
-              >${b.name}</span
-            ><span
-              style="font-size:12px;font-weight:500;color:${b.earned >= b.req ? GR : BL}"
-              >${b.earned}/${b.req}</span
+        .map(
+          (b) =>
+            /* HTML */ `<div
+              class="csec"
+              style="${b.earned >= b.req ? "border-color:" + GR + "55" : ""}"
             >
-          </div>
-          ${bar(b.earned, b.req)}${b.earned >= b.req ? /* HTML */ `<div style="font-size:10px;color:${GR};margin-top:3px;font-weight:500">&#10003; complete</div>` : ""}
-        </div>`,
-    )
-    .join("")}
+              <div
+                style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px"
+              >
+                <span
+                  style="font-size:12px;font-weight:500;flex:1;padding-right:6px;line-height:1.35"
+                  >${b.name}</span
+                ><span
+                  style="font-size:12px;font-weight:500;color:${b.earned >= b.req ? GR : BL}"
+                  >${b.earned}/${b.req}</span
+                >
+              </div>
+              ${bar(b.earned, b.req)}${b.earned >= b.req ? /* HTML */ `<div style="font-size:10px;color:${GR};margin-top:3px;font-weight:500">&#10003; complete</div>` : ""}
+            </div>`,
+        )
+        .join("")}
     </div>`;
 }
 
@@ -945,9 +997,9 @@ function renderPlanner() {
         ${!isXP ? /* HTML */ `<button data-edit class="bsm" onclick="openPicker('_transfer')">+ add transferred course</button>` : /* HTML */ `<button class="bsm" onclick="closePicker()">cancel</button>`}
       </div>
       ${
-      isXP
-        ? /* HTML */ `<div class="picker">
-            ${xferGrouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${xferGrouped
+        isXP
+          ? /* HTML */ `<div class="picker">
+              ${xferGrouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${xferGrouped
               .map(
                 (g) =>
                   /* HTML */ `<div
@@ -958,64 +1010,66 @@ function renderPlanner() {
                     ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></button>`).join("")}`,
               )
               .join("")}
-          </div>`
-        : ""
-    }
+            </div>`
+          : ""
+      }
     </div>
     ${terms
-    .map((tm) => {
-      const tc = termCourses(tm.id),
-        used = tc.reduce((a, c) => a + c.cr, 0),
-        isP = state.picker === tm.id;
-      const isDoneT = state.termDone.has(tm.id);
-      const tmAvail = allCourses().filter(avail);
-      const grouped = allBuckets()
-        .map((b) => ({ ...b, av: tmAvail.filter((c) => c.bid === b.id) }))
-        .filter((b) => b.av.length > 0);
-      return /* HTML */ `<div
-        class="card"
-        style="${isDoneT ? "background:var(--bg2);border-color:" + GR + "44" : ""}"
-      >
-        <div
-          style="display:flex;justify-content:space-between;align-items:center"
+      .map((tm) => {
+        const tc = termCourses(tm.id),
+          used = tc.reduce((a, c) => a + c.cr, 0),
+          isP = state.picker === tm.id;
+        const isDoneT = state.termDone.has(tm.id);
+        const tmAvail = allCourses().filter(avail);
+        const grouped = allBuckets()
+          .map((b) => ({ ...b, av: tmAvail.filter((c) => c.bid === b.id) }))
+          .filter((b) => b.av.length > 0);
+        return /* HTML */ `<div
+          class="card"
+          style="${isDoneT ? "background:var(--bg2);border-color:" + GR + "44" : ""}"
         >
-          <div style="display:flex;align-items:center;gap:8px">
-            <button
-              type="button"
-              data-edit
-              aria-pressed="${isDoneT}"
-              class="circ ${isDoneT ? "on" : ""}"
-              onclick="toggleTermDone('${tm.id}')"
-              style="width:18px;height:18px;border-width:1.5px;flex-shrink:0"
-              aria-label="Mark ${tm.name} done"
-            >
-              ${isDoneT ? /* HTML */ `<svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>` : ""}
-            </button>
-            <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-              <span
-                style="font-size:13px;font-weight:500;color:${isDoneT ? GR : "var(--tx1)"}"
-                >${tm.name}</span
+          <div
+            style="display:flex;justify-content:space-between;align-items:center"
+          >
+            <div style="display:flex;align-items:center;gap:8px">
+              <button
+                type="button"
+                data-edit
+                aria-pressed="${isDoneT}"
+                class="circ ${isDoneT ? "on" : ""}"
+                onclick="toggleTermDone('${tm.id}')"
+                style="width:18px;height:18px;border-width:1.5px;flex-shrink:0"
+                aria-label="Mark ${tm.name} done"
               >
-              ${tm.label ? /* HTML */ `<span style="font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:4px;color:var(--tx2);font-weight:500">${tm.label}</span>` : ""}
-              ${tm.type === "summer" ? /* HTML */ `<span style="font-size:10px;color:${AM};font-weight:500">summer</span>` : ""}
+                ${isDoneT ? /* HTML */ `<svg width="8" height="7" viewBox="0 0 10 8" fill="none"><path d="M1 4l2.5 2.5L9 1" stroke="white" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" /></svg>` : ""}
+              </button>
+              <div
+                style="display:flex;align-items:center;gap:6px;flex-wrap:wrap"
+              >
+                <span
+                  style="font-size:13px;font-weight:500;color:${isDoneT ? GR : "var(--tx1)"}"
+                  >${tm.name}</span
+                >
+                ${tm.label ? /* HTML */ `<span style="font-size:10px;background:var(--bg2);padding:1px 6px;border-radius:4px;color:var(--tx2);font-weight:500">${tm.label}</span>` : ""}
+                ${tm.type === "summer" ? /* HTML */ `<span style="font-size:10px;color:${AM};font-weight:500">summer</span>` : ""}
+              </div>
+            </div>
+            <div style="text-align:right;flex-shrink:0;margin-left:10px">
+              <div
+                style="font-size:13px;font-weight:500;color:${used > 0 ? BL : "var(--tx2)"}${used > 0 ? "" : ""}"
+              >
+                ${used} cr.
+              </div>
             </div>
           </div>
-          <div style="text-align:right;flex-shrink:0;margin-left:10px">
-            <div
-              style="font-size:13px;font-weight:500;color:${used > 0 ? BL : "var(--tx2)"}${used > 0 ? "" : ""}"
-            >
-              ${used} cr.
-            </div>
+          ${tc.length > 0 ? /* HTML */ `<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map((c) => /* HTML */ `<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${escapeHtml(courseName(c).length > 22 ? courseName(c).slice(0, 22) + "..." : courseName(c))}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button data-edit class="cx" onclick="unassignCourse('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join("")}</div>` : ""}
+          <div style="margin-top:8px">
+            ${!isP ? /* HTML */ `<button data-edit class="bsm" onclick="openPicker('${tm.id}')">+ add course</button>` : /* HTML */ `<button class="bsm" onclick="closePicker()">cancel</button>`}
           </div>
-        </div>
-        ${tc.length > 0 ? /* HTML */ `<div style="margin-top:8px;display:flex;flex-wrap:wrap">${tc.map((c) => /* HTML */ `<div class="chip"><span class="code">${c.code}</span><span style="font-size:12px">${escapeHtml(courseName(c).length > 22 ? courseName(c).slice(0, 22) + "..." : courseName(c))}</span><span style="font-size:11px;color:var(--tx2)">${c.cr} cr.</span><button data-edit class="cx" onclick="unassignCourse('${c.id}')" aria-label="Remove">&#x2715;</button></div>`).join("")}</div>` : ""}
-        <div style="margin-top:8px">
-          ${!isP ? /* HTML */ `<button data-edit class="bsm" onclick="openPicker('${tm.id}')">+ add course</button>` : /* HTML */ `<button class="bsm" onclick="closePicker()">cancel</button>`}
-        </div>
-        ${
-        isP
-          ? /* HTML */ `<div class="picker">
-              ${grouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${grouped
+          ${
+          isP
+            ? /* HTML */ `<div class="picker">
+                ${grouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${grouped
                 .map(
                   (g) =>
                     /* HTML */ `<div
@@ -1026,12 +1080,12 @@ function renderPlanner() {
                       ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></button>`).join("")}`,
                 )
                 .join("")}
-            </div>`
-          : ""
-      }
-      </div>`;
-    })
-    .join("")}`;
+              </div>`
+            : ""
+        }
+        </div>`;
+      })
+      .join("")}`;
 }
 
 // Tab: Courses
@@ -1052,33 +1106,33 @@ function renderCourses() {
       >
     </div>
     ${p
-    .map((b) => {
-      const io = state.open.has(b.id);
-      return /* HTML */ `<div
-        class="card"
-        style="${b.earned >= b.req ? "border-color:" + GR + "44" : ""}"
-      >
-        <button
-          type="button"
-          class="ahdr"
-          aria-expanded="${io}"
-          onclick="toggleBucket('${b.id}')"
+      .map((b) => {
+        const io = state.open.has(b.id);
+        return /* HTML */ `<div
+          class="card"
+          style="${b.earned >= b.req ? "border-color:" + GR + "44" : ""}"
         >
-          <span
-            ><span style="font-size:13px;font-weight:500">${b.name}</span
-            ><span
-              style="display:block;font-size:11px;color:var(--tx2);margin-top:1px"
-              >${b.sub}</span
-            ></span
-          ><span style="display:flex;align-items:center;gap:8px"
-            ><span
-              style="font-size:12px;font-weight:500;color:${b.earned >= b.req ? GR : BL}"
-              >${b.earned}/${b.req} cr.</span
-            ><span style="font-size:12px;color:var(--tx2)"
-              >${io ? "&#9650;" : "&#9660;"}</span
-            ></span
-          ></button
-        >${
+          <button
+            type="button"
+            class="ahdr"
+            aria-expanded="${io}"
+            onclick="toggleBucket('${b.id}')"
+          >
+            <span
+              ><span style="font-size:13px;font-weight:500">${b.name}</span
+              ><span
+                style="display:block;font-size:11px;color:var(--tx2);margin-top:1px"
+                >${b.sub}</span
+              ></span
+            ><span style="display:flex;align-items:center;gap:8px"
+              ><span
+                style="font-size:12px;font-weight:500;color:${b.earned >= b.req ? GR : BL}"
+                >${b.earned}/${b.req} cr.</span
+              ><span style="font-size:12px;color:var(--tx2)"
+                >${io ? "&#9650;" : "&#9660;"}</span
+              ></span
+            ></button
+          >${
           io
             ? /* HTML */ `<div
                 style="border-top:0.5px solid var(--bd1);padding-top:4px"
@@ -1172,9 +1226,9 @@ function renderCourses() {
               </div>`
             : ""
         }
-      </div>`;
-    })
-    .join("")}`;
+        </div>`;
+      })
+      .join("")}`;
 }
 
 // Tab: Milestones
@@ -1223,6 +1277,7 @@ function renderMilestones() {
 
 // Main render
 function render() {
+  pendingShare = null;
   const active = document.activeElement;
   const focusAction = active?.closest("[onclick]")?.getAttribute("onclick");
   const { total } = totals();
@@ -1233,6 +1288,7 @@ function render() {
         >${VERSION}</span
       >
       <div style="display:flex;align-items:center;gap:14px">
+        <a href="privacy.html">Privacy</a>
         <a href="tracker-guide.html" target="_blank">User Guide</a
         ><a href="index.html">deanlefor.com</a>
       </div>
@@ -1281,7 +1337,7 @@ function render() {
   if (state.readOnly)
     document
       .querySelectorAll(
-        '[data-edit], input, button[onclick*="resetAll"], button[onclick*="loadFromFile"]',
+        '[data-edit], input:not(#share-include-profile), button[onclick*="resetAll"], button[onclick*="loadFromFile"]',
       )
       .forEach((el) => (el.disabled = true));
   if (focusAction)
@@ -1499,49 +1555,67 @@ function saveRename() {
   render();
 }
 
-function copyShareLink() {
-  const data = JSON.stringify({
-    done: [...state.done],
-    mdone: [...state.mdone],
-    dmp: state.dmp,
-    assign: state.assign,
-    names: state.names,
-    termDone: [...state.termDone],
-    startSem: state.startSem,
-    startYear: state.startYear,
-    darkMode: state.darkMode,
-    userName: state.userName,
-    userEmail: state.userEmail,
-  });
+function previewShareLink() {
+  // Clone at preview time, so later profile edits cannot silently enter this link.
+  pendingShare = JSON.parse(stateData());
+  document.getElementById("share-include-profile").checked = false;
+  document.getElementById("share-preview").hidden = false;
+  document
+    .getElementById("preview-share-button")
+    .setAttribute("aria-expanded", "true");
+  updateSharePreview();
+  document.getElementById("share-include-profile").focus();
+}
+
+function reviewedShareData() {
+  if (!pendingShare) return null;
+  const data = { ...pendingShare };
+  if (!document.getElementById("share-include-profile")?.checked) {
+    delete data.userName;
+    delete data.userEmail;
+  }
+  return data;
+}
+
+function updateSharePreview() {
+  document.getElementById("share-preview-data").textContent = JSON.stringify(
+    reviewedShareData(),
+    null,
+    2,
+  );
+  document.getElementById("share-copy-status").textContent = "";
+}
+
+async function copyShareLink() {
+  const snapshot = reviewedShareData();
+  if (!snapshot) return;
+  const status = document.getElementById("share-copy-status");
   const url =
     window.location.origin +
     window.location.pathname +
     "#view=" +
-    btoa(encodeURIComponent(data));
-  navigator.clipboard
-    .writeText(url)
-    .then(() => {
-      state.shareLinkCopied = true;
-      render();
-      setTimeout(() => {
-        state.shareLinkCopied = false;
-        render();
-      }, 2500);
-    })
-    .catch(() => prompt("Copy this share link:", url));
+    btoa(encodeURIComponent(JSON.stringify(snapshot)));
+  try {
+    await navigator.clipboard.writeText(url);
+    status.textContent =
+      "Link copied. Earlier links remain readable after you change or reset your tracker.";
+  } catch {
+    // Also covers browsers that do not expose the Clipboard API at all.
+    prompt("Copy this reviewed share link:", url);
+  }
 }
 
-function openPrintView() {
+function openPrintView(summaryOnly = false) {
   const w = window.open("", "_blank");
   if (!w) {
     alert("Allow popups to open the printable report.");
     return;
   }
-  w.document.write(generatePrintHTML());
+  w.document.write(generatePrintHTML(summaryOnly));
   w.document.close();
 }
 
-function generatePrintHTML() {
+function generatePrintHTML(summaryOnly = false) {
   const { p, cw, diss, total } = totals();
   const terms = generateTerms();
   const xferCourses = allCourses().filter(
@@ -1596,30 +1670,30 @@ function generatePrintHTML() {
             ${b.name} · ${b.earned}/${b.req} cr.
           </div>
           ${b.courses
-      .map((c) => {
-        const done = isDone(c.id);
-        return /* HTML */ `<div
-          style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:.5px solid #f0f0f0"
-        >
-          <div
-            style="width:13px;height:13px;border-radius:3px;border:1.5px solid ${done ? "#639922" : "#ccc"};background:${done ? "#639922" : "white"};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:white"
-          >
-            ${done ? "✓" : ""}
-          </div>
-          <span
-            style="font-size:10px;font-family:monospace;background:#f5f5f5;padding:1px 4px;border-radius:2px;color:#666;flex-shrink:0"
-            >${c.code}</span
-          >
-          <span
-            style="font-size:11px;flex:1;color:${done ? "#aaa" : "#1a1a1a"};${done ? "text-decoration:line-through" : ""}"
-            >${escapeHtml(courseName(c))}</span
-          >
-          <span style="font-size:10px;color:#861F41;font-weight:600"
-            >${c.cr} cr.</span
-          >
-        </div>`;
-      })
-      .join("")}
+            .map((c) => {
+              const done = isDone(c.id);
+              return /* HTML */ `<div
+                style="display:flex;align-items:center;gap:6px;padding:3px 0;border-bottom:.5px solid #f0f0f0"
+              >
+                <div
+                  style="width:13px;height:13px;border-radius:3px;border:1.5px solid ${done ? "#639922" : "#ccc"};background:${done ? "#639922" : "white"};flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:9px;color:white"
+                >
+                  ${done ? "✓" : ""}
+                </div>
+                <span
+                  style="font-size:10px;font-family:monospace;background:#f5f5f5;padding:1px 4px;border-radius:2px;color:#666;flex-shrink:0"
+                  >${c.code}</span
+                >
+                <span
+                  style="font-size:11px;flex:1;color:${done ? "#aaa" : "#1a1a1a"};${done ? "text-decoration:line-through" : ""}"
+                  >${escapeHtml(courseName(c))}</span
+                >
+                <span style="font-size:10px;color:#861F41;font-weight:600"
+                  >${c.cr} cr.</span
+                >
+              </div>`;
+            })
+            .join("")}
         </div>`,
     )
     .join("");
@@ -1724,7 +1798,7 @@ function generatePrintHTML() {
           <div style="font-size:22px;font-weight:700">
             PAPA PhD Progress Report
           </div>
-          ${state.userName || state.userEmail ? /* HTML */ `<div style="font-size:13px;font-weight:500;margin-top:5px;opacity:.95">${escapeHtml([state.userName, state.userEmail].filter(Boolean).join(" · "))}</div>` : ""}
+          ${!summaryOnly && (state.userName || state.userEmail) ? /* HTML */ `<div style="font-size:13px;font-weight:500;margin-top:5px;opacity:.95">${escapeHtml([state.userName, state.userEmail].filter(Boolean).join(" · "))}</div>` : ""}
           <div style="font-size:11px;opacity:.8;margin-top:4px">
             Start: ${startLabel} · Generated ${dateStr}
           </div>
@@ -1736,76 +1810,82 @@ function generatePrintHTML() {
               style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px"
             >
               ${[
-          { l: "Total credits", v: total, m: 90 },
-          { l: "Coursework", v: cw, m: 60 },
-          { l: "Dissertation", v: diss, m: 30 },
-          { l: "DMP sessions", v: state.dmp, m: 15 },
-        ]
-          .map(
-            (x) =>
-              `<div style="text-align:center;padding:10px;background:#f5f1f2;border-radius:6px"><div style="font-size:24px;font-weight:700;color:${x.v >= x.m ? "#639922" : "#861F41"}">${x.v}</div><div style="font-size:10px;color:#666;margin-top:1px">${x.l}</div><div style="font-size:10px;color:#999">of ${x.m}</div></div>`,
-          )
-          .join("")}
+                { l: "Total credits", v: total, m: 90 },
+                { l: "Coursework", v: cw, m: 60 },
+                { l: "Dissertation", v: diss, m: 30 },
+                { l: "DMP sessions", v: state.dmp, m: 15 },
+              ]
+                .map(
+                  (x) =>
+                    `<div style="text-align:center;padding:10px;background:#f5f1f2;border-radius:6px"><div style="font-size:24px;font-weight:700;color:${x.v >= x.m ? "#639922" : "#861F41"}">${x.v}</div><div style="font-size:10px;color:#666;margin-top:1px">${x.l}</div><div style="font-size:10px;color:#999">of ${x.m}</div></div>`,
+                )
+                .join("")}
             </div>
           </div>
-          <div style="margin-bottom:24px">
-            <div class="sec-title">Semester plan</div>
-            ${
-        xferCourses.length
-          ? /* HTML */ `<div
-              style="margin-bottom:8px;padding:8px 10px;background:#fff8f0;border-left:3px solid #E5751F;border-radius:3px"
-            >
-              <div
-                style="font-size:10px;font-weight:600;color:#E5751F;margin-bottom:3px"
-              >
-                Transfer in
-              </div>
-              ${xferCourses.map((c) => /* HTML */ `<div style="font-size:11px">${c.code} — ${escapeHtml(courseName(c))} · ${c.cr} cr.</div>`).join("")}
-            </div>`
-          : ""
-      }
-            ${
-        semRows
-          ? /* HTML */ `<table style="width:100%;border-collapse:collapse">
-              <thead>
-                <tr style="background:#f5f1f2">
-                  <th
-                    style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+          ${
+            summaryOnly
+              ? ""
+              : /* HTML */ `<div style="margin-bottom:24px">
+                    <div class="sec-title">Semester plan</div>
+                    ${
+              xferCourses.length
+                ? /* HTML */ `<div
+                    style="margin-bottom:8px;padding:8px 10px;background:#fff8f0;border-left:3px solid #E5751F;border-radius:3px"
                   >
-                    Term
-                  </th>
-                  <th
-                    style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                    <div
+                      style="font-size:10px;font-weight:600;color:#E5751F;margin-bottom:3px"
+                    >
+                      Transfer in
+                    </div>
+                    ${xferCourses.map((c) => /* HTML */ `<div style="font-size:11px">${c.code} — ${escapeHtml(courseName(c))} · ${c.cr} cr.</div>`).join("")}
+                  </div>`
+                : ""
+            }
+                    ${
+              semRows
+                ? /* HTML */ `<table
+                    style="width:100%;border-collapse:collapse"
                   >
-                    Courses
-                  </th>
-                  <th
-                    style="padding:6px 8px;text-align:right;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                  >
-                    Cr.
-                  </th>
-                  <th
-                    style="padding:6px 8px;text-align:center;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                  >
-                    Done
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                ${semRows}
-              </tbody>
-            </table>`
-          : '<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'
-      }
-          </div>
-          <div class="page-break" style="margin-bottom:24px">
-            <div class="sec-title">Course completion</div>
-            <div style="columns:2;column-gap:24px">${courseList}</div>
-          </div>
-          <div style="margin-bottom:24px">
-            <div class="sec-title">Milestones</div>
-            ${mileRows}
-          </div>
+                    <thead>
+                      <tr style="background:#f5f1f2">
+                        <th
+                          style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                        >
+                          Term
+                        </th>
+                        <th
+                          style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                        >
+                          Courses
+                        </th>
+                        <th
+                          style="padding:6px 8px;text-align:right;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                        >
+                          Cr.
+                        </th>
+                        <th
+                          style="padding:6px 8px;text-align:center;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                        >
+                          Done
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${semRows}
+                    </tbody>
+                  </table>`
+                : '<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'
+            }
+                  </div>
+                  <div class="page-break" style="margin-bottom:24px">
+                    <div class="sec-title">Course completion</div>
+                    <div style="columns:2;column-gap:24px">${courseList}</div>
+                  </div>
+                  <div style="margin-bottom:24px">
+                    <div class="sec-title">Milestones</div>
+                    ${mileRows}
+                  </div>`
+          }
           <div
             style="font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:8px"
           >

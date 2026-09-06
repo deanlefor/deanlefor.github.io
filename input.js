@@ -3,8 +3,9 @@
 function attachInputHandlers() {
   const mobileInput = document.getElementById("mobile-input");
 
-  // Mobile: any tap focuses the hidden input
-  document.body.addEventListener("touchstart", () => {
+  // Links retain their native touch behavior; terminal taps open the keyboard.
+  document.body.addEventListener("touchstart", (event) => {
+    if (event.target?.closest?.("a")) return;
     // Don't focus if system is shut down
     if (window.isShutdown) return;
     mobileInput.focus();
@@ -25,6 +26,7 @@ function attachInputHandlers() {
 
   // Desktop key handling
   document.addEventListener("keydown", (e) => {
+    if (e.target?.closest?.("a")) return;
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     if (isPrinting) {
       e.preventDefault();

@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PAPA PhD Tracker — User Guide & FAQ</title>
@@ -435,7 +437,7 @@
     <p>The PAPA PhD Tracker is a free, browser-based planning tool for Virginia Tech CPAP doctoral students. It lets you map your courses to semesters, track credit completion across all five requirement buckets, follow your 15 program milestones, and log Doctoral Mentoring Program (DMP) sessions.</p>
     <p>It is <strong>not</strong> an official Virginia Tech or CPAP tool. It was built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination &amp; Constellations update (approved April 23, 2026). Use it as a planning aid and always confirm decisions with your advisor and the VT Graduate School.</p>
     <div class="callout callout-info">
-      <strong><span class="callout-icon">ℹ️</span> No account needed.</strong> The tracker runs entirely in your browser. None of your data is ever sent to a server. Progress is stored only in your browser's local storage.
+      <strong><span class="callout-icon">ℹ️</span> No account needed.</strong> The tracker runs entirely in your browser. Progress is saved in your browser without an application-server backup. Sharing links and exported files is your choice. Hosting and font providers receive ordinary web requests; see <a href="privacy.html">Privacy and your data</a>.
     </div>
   </div>
 
@@ -626,7 +628,7 @@
     <p>Tap the <strong>Settings</strong> button in the header, to the right of the "PAPA PhD tracker" title. The Settings panel opens inline above the tab content and contains all configuration options.</p>
 
     <h3>Your name and email</h3>
-    <p>Enter your name and VT email address at the top of the Settings panel. These fields save automatically as you type. Once set, your name and email appear in the shared read-only link (so your advisor immediately sees whose plan they're viewing) and in the printed PDF report header. They are never sent to a server.</p>
+    <p>Name and email are optional. These fields save in your browser as you type and appear in full backups and full PDF reports. Share links omit them by default; the preview lets you explicitly include them. The summary report omits your profile.</p>
 
     <h3>Start semester</h3>
     <p>Set the semester you began the program. This controls how Planner semesters are labeled (e.g., Fall 2024, Spring 2025, and so on).</p>
@@ -651,15 +653,16 @@
     <h2>Sharing with your advisor</h2>
     <p>Both sharing options are under <strong>Settings &rarr; Share &amp; Export</strong>.</p>
 
-    <h3>Copy share link</h3>
-    <p>This encodes your entire tracker state into a URL. Copy it and send it via email, Discord, or any messaging tool. When your advisor opens the link, they see your full tracker in <strong>read-only mode</strong> with an orange banner at the top showing your name and email (if set in Settings) so they know immediately whose plan they're viewing.</p>
+    <h3>Preview share link</h3>
+    <p>Select <strong>Preview share link</strong> to review a snapshot of completed courses, milestones, DMP sessions, assignments, custom course names, start semester and appearance. Name and email are excluded unless you check <strong>Include my name and email in this link</strong>. Expand <strong>Exact data included in the link</strong> to inspect the payload, then choose <strong>Copy reviewed link</strong>. Custom course names may identify you even without a profile. The recipient sees a read-only view.</p>
     <div class="callout callout-info">
-      <strong><span class="callout-icon">ℹ️</span> Note:</strong> If you update your tracker after sharing the link, the old link will no longer reflect your new progress. Generate a fresh link any time you want your advisor to see current data.
+      <strong><span class="callout-icon">ℹ️</span> Note:</strong> <strong>Anyone with the link can read, forward and retain it.</strong> Links use reversible encoding, not encryption, and have no sign-in, expiry or revocation. Editing or resetting your tracker does not invalidate an earlier link. Generate a fresh link to share an updated snapshot.
     </div>
     <p>See a read-only tracker with sample data: <a href="tracker.html#view=JTdCJTIyZG9uZSUyMiUzQSU1QiUyMmYxJTIyJTJDJTIyZjIlMjIlNUQlMkMlMjJtZG9uZSUyMiUzQSU1QiUyMm1zMSUyMiU1RCUyQyUyMmRtcCUyMiUzQTIlMkMlMjJhc3NpZ24lMjIlM0ElN0IlMjJmMSUyMiUzQSUyMmYyMDI1JTIyJTJDJTIyZjIlMjIlM0ElMjJmMjAyNSUyMiUyQyUyMmYzJTIyJTNBJTIyczIwMjYlMjIlMkMlMjJmNCUyMiUzQSUyMnMyMDI2JTIyJTdEJTJDJTIybmFtZXMlMjIlM0ElN0IlN0QlMkMlMjJ0ZXJtRG9uZSUyMiUzQSU1QiUyMmYyMDI1JTIyJTVEJTJDJTIyc3RhcnRTZW0lMjIlM0ElMjJmYWxsJTIyJTJDJTIyc3RhcnRZZWFyJTIyJTNBMjAyNSUyQyUyMmRhcmtNb2RlJTIyJTNBZmFsc2UlMkMlMjJ1c2VyTmFtZSUyMiUzQSUyMkV4YW1wbGUlMjBzdHVkZW50JTIyJTJDJTIydXNlckVtYWlsJTIyJTNBJTIyJTIyJTdE" target="_blank" style="color:var(--blue)">View example shared tracker</a></p>
 
     <h3>Print / Save as PDF</h3>
     <p>Opens a clean, VT-branded progress report in a new browser tab. The report includes your credit summary, full semester plan, course completion checklist, and milestone checklist. Use your browser's print dialog (Ctrl+P on Windows, Cmd+P on Mac) to print or save it as a PDF.</p>
+    <p>For a smaller disclosure, <strong>Print summary (no profile)</strong> includes only credit totals, DMP count, start semester and the report date. Full reports include your profile and detailed plan. Review the output before sharing it.</p>
     <p>See an example of the printable PDF report: <a href="Progress_Report_Example.pdf" target="_blank" style="color:var(--blue)">View example PDF report</a></p>
   </div>
 
@@ -675,7 +678,7 @@
     <p>If browser storage is blocked or full, a status message warns that changes remain only in the current tab. Download a backup before closing the page. An unreadable saved copy is preserved until you explicitly restore a valid backup.</p>
 
     <h3>Saving a backup</h3>
-    <p>Go to <strong>Settings &rarr; Backup &amp; Restore</strong> and click <strong>Download backup (.json)</strong>. This saves a small file to your computer containing your entire tracker state, including your name, email, custom course names, assignments, and preferences. Keep it somewhere reliable, such as your Documents folder or a cloud drive.</p>
+    <p>Go to <strong>Settings &rarr; Backup &amp; Restore</strong> and click <strong>Download backup (.json)</strong>. This saves a small file to your computer containing your entire tracker state, including your name, email, custom course names, assignments, and preferences. Keep it in a private location outside this public website repository or any publicly shared folder. A full backup is a recovery file, not a minimal report for an advisor.</p>
 
     <h3>Restoring from a backup</h3>
     <p>In the same Backup &amp; Restore section, click <strong>Restore from file</strong> and select your saved .json file. The tracker validates the complete file before asking to replace your plan. An invalid file or failed save leaves your current plan unchanged. Older backups that omit your name and email keep the profile already on this device.</p>
@@ -705,7 +708,7 @@
           Where is my data stored? Can anyone see it? <span class="faq-arrow">&#9654;</span>
         </div>
         <div class="faq-a">
-          <p>Your data is stored only in your browser's local storage on your own device. Nothing is sent to a server. Nobody else can see your progress unless you share a link or export a file yourself.</p>
+          <p>The tracker saves progress in this browser without uploading it to an application database. Other people using this browser profile and scripts running on this website can access saved data. Shared links and exports contain the data you choose to share. Hosting and font providers receive ordinary requests. See <a href="privacy.html">Privacy and your data</a>.</p>
         </div>
       </div>
 
@@ -723,7 +726,7 @@
           The tracker does not open or shows a blank screen. What should I do? <span class="faq-arrow">&#9654;</span>
         </div>
         <div class="faq-a">
-          <p>Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). Make sure you are using a modern browser (Chrome, Firefox, Safari, or Edge). The tracker does not support Internet Explorer. If the issue continues, try opening it in a non-incognito browser window, since incognito mode blocks local storage and will prevent the app from loading correctly.</p>
+          <p>Try a hard refresh (Ctrl+Shift+R on Windows, Cmd+Shift+R on Mac). Make sure you are using a modern browser (Chrome, Firefox, Safari, or Edge). The tracker does not support Internet Explorer. If the issue continues, try opening it in a non-incognito browser window, since private browsing may limit storage or discard it when the session ends. The tracker shows a warning when saving is unavailable.</p>
         </div>
       </div>
 
@@ -750,7 +753,7 @@
           How do I share my plan with my advisor? <span class="faq-arrow">&#9654;</span>
         </div>
         <div class="faq-a">
-          <p>Two options are available under Settings &rarr; Share &amp; Export. <strong>Copy share link</strong> generates a URL your advisor can open in any browser to see a read-only view of your plan. <strong>Print / Save as PDF</strong> produces a formatted report they can review on-screen or print.</p>
+          <p>Two options are available under Settings &rarr; Share &amp; Export. <strong>Preview share link</strong> lets you review the data before copying a read-only URL. Name and email are excluded by default. Anyone with the URL can read and retain it. <strong>Print / Save as PDF</strong> produces a formatted report they can review on-screen or print.</p>
         </div>
       </div>
 
@@ -832,7 +835,7 @@
     <div class="section-label">Important</div>
     <h2>Disclaimer</h2>
     <p>This tracker is built from the <strong>November 2024 CPAP Policy Guide</strong> and the <strong>April 2026 Qualifying Examination &amp; Constellations update</strong> (approved April 23, 2026). It is meant for planning and tracking only, not as an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.</p>
-    <p>This tool is not affiliated with or endorsed by Virginia Tech. For safety and security reasons, none of your data is stored on a server. Your progress is saved only in your browser's local storage and will disappear if you clear your browser data or use private/incognito mode. Back up your data regularly using the .json export in Settings.</p>
+    <p>This tool is not affiliated with or endorsed by Virginia Tech. The tracker saves progress in this browser without an application-server backup. Clearing site data removes it; private browsing usually removes it when the session ends. Share links and exports contain the data you choose to share. See <a href="privacy.html">Privacy and your data</a> for details about storage and external resource requests. Back up your data regularly using the .json export in Settings.</p>
     <p>The constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.</p>
     <p style="font-style:italic; color:var(--text3)">Finally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂</p>
   </div>
@@ -840,6 +843,7 @@
 </div>
 
 <footer class="site-footer">
+  <p><a href="privacy.html">Privacy and your data</a></p>
   <p>PAPA PhD Tracker &middot; <a href="https://www.deanlefor.com/tracker.html">Open the tracker</a> &middot; <a href="https://www.deanlefor.com">deanlefor.com</a></p>
   <p style="margin-top:6px">Built for Virginia Tech CPAP doctoral students. Not affiliated with or endorsed by Virginia Tech.</p>
 </footer>

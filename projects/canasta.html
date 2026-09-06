@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; font-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Canasta Scorecard</title>
@@ -1029,5 +1031,6 @@ SiteScorecards.bindLifecycleFlush(flushPendingState);
 render();
 setSaveState('Loaded');
 </script>
+<footer aria-label="Privacy" style="padding:16px;text-align:center;font-size:12px"><a href="../privacy.html" style="color:inherit;text-decoration:underline">Privacy and your data</a></footer>
 </body>
 </html>

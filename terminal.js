@@ -112,12 +112,18 @@ function processQueue() {
 function handleViewportChanges() {
   const terminal = document.getElementById("terminal");
   if (!terminal) return;
+  // Reserve the visible privacy navigation above the independently scrolling terminal.
+  const contentHeight = (height) =>
+    Math.max(
+      0,
+      height - (document.getElementById("terminal-privacy")?.offsetHeight || 0),
+    );
 
   // Use the VisualViewport API for a reliable mobile experience.
   // This modern API correctly handles the on-screen keyboard.
   if (window.visualViewport) {
     const setTerminalHeight = () => {
-      terminal.style.height = `${window.visualViewport.height}px`;
+      terminal.style.height = `${contentHeight(window.visualViewport.height)}px`;
       scrollToBottom();
     };
     // Set initial height and listen for changes.
@@ -126,7 +132,7 @@ function handleViewportChanges() {
   } else {
     // Fallback for older browsers.
     const setTerminalHeightFallback = () => {
-      terminal.style.height = `${window.innerHeight}px`;
+      terminal.style.height = `${contentHeight(window.innerHeight)}px`;
       scrollToBottom();
     };
     setTerminalHeightFallback();
