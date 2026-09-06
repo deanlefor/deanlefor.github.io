@@ -9,6 +9,7 @@ function round(values = {}){
     dealer:0,
     bidder:values.bidder ?? 0,
     bid:values.bid ?? 30,
+    trump:values.trump ?? 'Spades',
     meld:values.meld ?? [20,10,5],
     tricks:values.tricks ?? [10,8,7],
     thrown:values.thrown ?? false
@@ -18,6 +19,23 @@ function round(values = {}){
 test('Pinochle requires exactly 25 trick points',() => {
   assert.equal(rules.validateRound(round({tricks:[10,8,7]}),3),'');
   assert.match(rules.validateRound(round({tricks:[10,8,6]}),3),/total 25/);
+});
+
+test('Pinochle requires bidder, bid, and trump even for conceded rounds',() => {
+  for(const thrown of [false,true]){
+    const complete = round({thrown});
+    assert.equal(rules.validateRound(complete,3),'');
+    assert.equal(rules.validateRound({...complete,bidder:null},3),'Select a bidder.');
+    for(const bid of [null,0]){
+      assert.equal(rules.validateRound({...complete,bid},3),'Enter the bid.');
+    }
+    for(const trump of ['',undefined,'Unknown']){
+      assert.equal(rules.validateRound({...complete,trump},3),'Select trump.');
+    }
+    for(const trump of ['Spades','Hearts','Clubs','Diamonds']){
+      assert.equal(rules.validateRound({...complete,trump},3),'');
+    }
+  }
 });
 
 test('Pinochle bidder makes or fails the bid under 1/10 scoring',() => {

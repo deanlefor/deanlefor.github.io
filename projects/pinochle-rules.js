@@ -87,6 +87,7 @@
   function validateRound(round,playerCount){
     if(!round || round.bidder === null) return 'Select a bidder.';
     if(!numberOr(round.bid,0)) return 'Enter the bid.';
+    if(['Spades','Hearts','Clubs','Diamonds'].indexOf(round.trump) < 0) return 'Select trump.';
     if(round.thrown) return '';
     var visible = playerIndexes(playerCount);
     if(visible.some(function(index){ return round.tricks[index] === null; })){
