@@ -169,7 +169,13 @@ function NumberField({
 }) {
   const inputId = useId();
   const [draft, setDraft] = useState(String(value));
-  useEffect(() => setDraft(String(value)), [value]);
+  const [previousValue, setPreviousValue] = useState(value);
+  // Synchronize actual model changes before committing the input. A deferred
+  // mount effect could overwrite a draft the user has already started editing.
+  if (value !== previousValue) {
+    setPreviousValue(value);
+    setDraft(String(value));
+  }
   const minimum = limits?.[0] ?? min;
   const maximum = limits?.[1] ?? 1e12;
   const parsed = Number(draft);

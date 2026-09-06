@@ -6,6 +6,17 @@ const key = "dual-fers-retirement-planner-v01";
 async function flush() {
   await new Promise((resolve) => setTimeout(resolve, 30));
 }
+async function firstSalaryField(p) {
+  const deadline = Date.now() + 5000;
+  while (Date.now() < deadline) {
+    const label = [...p.document.querySelectorAll("label")].find(
+      (label) => label.textContent === "Current basic salary",
+    );
+    if (label) return p.document.getElementById(label.htmlFor);
+    await new Promise((resolve) => setTimeout(resolve, 0));
+  }
+  assert.fail("Salary field did not mount");
+}
 function inputValue(p, input, value) {
   Object.getOwnPropertyDescriptor(
     p.window.HTMLInputElement.prototype,
@@ -91,4 +102,27 @@ test("incomplete numeric drafts stay editable without entering the calculation o
   await flush();
   assert.equal(salary.getAttribute("aria-invalid"), "false");
   assert.equal(JSON.parse(p.storage.get(key)).people[0].currentSalary, 180000);
+});
+
+test("an edit immediately after mount survives initialization and later sample reloads update the field", async (t) => {
+  const p = page("fers-retirement/index.html");
+  t.after(() => p.dom.window.close());
+  // Edit on the first rendered frame, before deferred mount effects can settle.
+  const salary = await firstSalaryField(p);
+  const originalSalary = salary.value;
+  inputValue(p, salary, "");
+  await flush();
+  assert.equal(salary.value, "");
+  assert.equal(salary.getAttribute("aria-invalid"), "true");
+  assert.equal(p.storage.has(key), false);
+
+  inputValue(p, salary, "180000");
+  await flush();
+  assert.equal(JSON.parse(p.storage.get(key)).people[0].currentSalary, 180000);
+  [...p.document.querySelectorAll("button")]
+    .find((button) => button.textContent.trim() === "Reload sample household")
+    .click();
+  await flush();
+  assert.equal(salary.value, originalSalary);
+  assert.equal(salary.getAttribute("aria-invalid"), "false");
 });
