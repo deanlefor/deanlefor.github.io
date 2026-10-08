@@ -57,6 +57,11 @@
   </url>
 
   <url>
+    <loc>https://deanlefor.com/projects/project-tracker/</loc>
+    <priority>0.6</priority>
+  </url>
+
+  <url>
     <loc>https://deanlefor.com/terminal.html</loc>
     <priority>0.5</priority>
   </url>

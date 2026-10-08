@@ -17,6 +17,8 @@ phd-tracker-*.json
 nd-run-backup-*.json
 game-history-backup-*.json
 game-history-before-restore-*.json
+project-tracker-backup-*.json
+talk-timer-backup-*.json
 .private/
 *.pem
 *.key

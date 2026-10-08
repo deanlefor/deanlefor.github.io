@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'"
+    />
+    <meta name="referrer" content="no-referrer" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#172333" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Project Tracker" />
+    <meta
+      name="description"
+      content="One-tap project tracking with total time, session counts, and average session length."
+    />
+    <link rel="icon" href="icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="icon-180.png" />
+    <link rel="manifest" href="manifest.webmanifest" />
+    <title>Project Tracker · Personal project timer</title>
+    <link rel="stylesheet" href="project-tracker.css" />
+  </head>
+  <body>
+    <main class="shell">
+      <header class="masthead">
+        <div class="brand">
+          <span class="mark" aria-hidden="true"
+            ><svg viewBox="0 0 32 32" fill="none">
+              <circle
+                cx="16"
+                cy="17"
+                r="10"
+                stroke="currentColor"
+                stroke-width="2.6"
+              />
+              <path
+                d="M16 11v6l4 3M13 3h6M16 3v4"
+                stroke="currentColor"
+                stroke-width="2.6"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              /></svg
+          ></span>
+          <div>
+            <p class="eyebrow">Personal time tracker</p>
+            <h1>Project Tracker</h1>
+          </div>
+        </div>
+        <button class="button primary" id="addPersonTop" type="button">
+          + Add project
+        </button>
+      </header>
+      <p class="lede">
+        Tap a project to start tracking time. Tap it again to stop. That's it.
+      </p>
+      <div id="storageWarning" class="notice" role="alert">
+        Your browser blocked local storage, so changes might not persist. Export
+        a JSON backup before closing this page.
+      </div>
+
+      <section aria-label="Project statistics" id="dashboard">
+        <div class="dashboard-head">
+          <h2>Overview</h2>
+          <div
+            class="segmented"
+            id="rangePicker"
+            role="group"
+            aria-label="Statistics time range"
+          >
+            <button class="segment selected" data-range="today" type="button">
+              Today</button
+            ><button class="segment" data-range="week" type="button">
+              7 days</button
+            ><button class="segment" data-range="all" type="button">All</button>
+          </div>
+        </div>
+        <div class="stat-strip">
+          <div class="stat">
+            <span class="metric">Total time</span
+            ><strong class="figure" id="summaryTime">0m</strong>
+          </div>
+          <div class="stat">
+            <span class="metric">Sessions</span
+            ><strong class="figure" id="summaryVisits">0</strong>
+          </div>
+          <div class="stat">
+            <span class="metric">Average length</span
+            ><strong class="figure" id="summaryAverage">0m</strong>
+          </div>
+        </div>
+        <p class="dashboard-note">
+          Every timer session counts once. Average length is total time divided
+          by sessions. Running timers count too.
+        </p>
+      </section>
+
+      <section
+        class="active-panel"
+        id="activePanel"
+        aria-live="polite"
+        aria-label="Running timer"
+      >
+        <div>
+          <div class="active-label">
+            <span class="live-dot" aria-hidden="true"></span> Timer running
+          </div>
+          <div class="active-person" id="activePerson"></div>
+          <strong class="active-clock" id="activeElapsed">00:00:00</strong>
+          <div class="micro" id="activeStarted"></div>
+        </div>
+        <div class="active-actions">
+          <button class="button finish" id="finishActive" type="button">
+            Stop & save
+          </button>
+          <button class="button" id="discardActive" type="button">
+            Discard
+          </button>
+        </div>
+      </section>
+
+      <section aria-labelledby="peopleTitle">
+        <div class="section-head">
+          <div>
+            <h2 id="peopleTitle">Projects</h2>
+            <p class="section-note">
+              Only one timer runs at a time. Tapping a different project
+              switches automatically.
+            </p>
+          </div>
+        </div>
+        <div class="people-grid" id="peopleGrid"></div>
+      </section>
+
+      <div class="sub-panels">
+        <section class="panel" aria-labelledby="breakdownTitle">
+          <div class="panel-header">
+            <h2 id="breakdownTitle">By project</h2>
+            <select
+              class="breakdown-sort"
+              id="breakdownSort"
+              aria-label="Sort projects by"
+            >
+              <option value="total">Most time</option>
+              <option value="count">Most sessions</option>
+              <option value="avg">Longest average</option>
+            </select>
+          </div>
+          <div id="breakdown"></div>
+        </section>
+        <section class="panel" aria-labelledby="historyTitle">
+          <div class="panel-header">
+            <h2 id="historyTitle">Recent sessions</h2>
+            <span class="micro" id="sessionCount"></span>
+          </div>
+          <div id="history"></div>
+          <div class="panel-footer">
+            <button class="button" id="exportCSV" type="button">
+              Export CSV
+            </button>
+            <button class="button" id="exportJSON" type="button">
+              Backup data
+            </button>
+            <button class="button" id="importButton" type="button">
+              Restore backup
+            </button>
+            <input
+              type="file"
+              id="fileImport"
+              accept=".json,application/json"
+              aria-label="Import JSON backup"
+            />
+          </div>
+        </section>
+      </div>
+
+      <footer class="bottom">
+        <p class="micro">
+          Everything stays in this browser on this device. No account, tracking
+          service, or data upload. Save a backup periodically; clearing browser
+          or app data can erase history. Active timers continue across refreshes
+          and device sleep. On iPhone or iPad, use Safari's Share menu to Add to
+          Home Screen.
+        </p>
+        <p class="micro">
+          <a href="../../index.html#projects">All side projects</a> &middot;
+          <a href="../../privacy.html">Privacy</a>
+        </p>
+        <div class="secondary-controls">
+          <button class="button quiet" id="toggleHidden" type="button" hidden>
+            Show hidden projects
+          </button>
+          <button class="button quiet danger" id="clearHistory" type="button">
+            Clear history
+          </button>
+        </div>
+      </footer>
+      <div
+        id="hiddenPanel"
+        class="hidden-panel"
+        aria-label="Hidden projects"
+      ></div>
+    </main>
+
+    <dialog id="personDialog" aria-labelledby="personDialogTitle">
+      <form id="personForm">
+        <h2 id="personDialogTitle">Add a project</h2>
+        <p class="dialog-text">
+          Give this button any project name you prefer. You can change it later.
+        </p>
+        <label for="personName" class="field-label">Button name</label>
+        <input
+          class="text-input"
+          id="personName"
+          name="personName"
+          autocomplete="off"
+          maxlength="60"
+          placeholder="e.g. Planning"
+          required
+        />
+        <div class="dialog-actions">
+          <button class="button" id="cancelPerson" type="button">Cancel</button
+          ><button class="button primary" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+
+    <script src="project-tracker.js" defer></script>
+  </body>
+</html>

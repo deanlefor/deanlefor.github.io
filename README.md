@@ -24,7 +24,12 @@ their public URL paths so GitHub Pages can publish everything directly from the
 
 - **Root HTML files** — The personal homepage, doctoral tracker, tracker guide,
   and retro terminal.
-- **projects/** — Standalone recreational tools and scorecards. See
+- **projects/** — Standalone tools and scorecards, including
+  **projects/project-tracker/** for one-tap project timers with local history,
+  session statistics, CSV exports, and JSON backups. It supports Home Screen
+  installation and offline use after an initial visit. Keep its original
+  `talk-timer-local-v1` storage key and version 1 backup schema compatible;
+  downloaded Talk Timer backups can be restored in Project Tracker. See
   **projects/SCORECARD-DEVELOPMENT.md** before adding or restructuring a
   scorekeeper, and **projects/SCORECARD-RULES.md** for the maintained scoring
   contracts and deliberate house rules.
@@ -109,3 +114,8 @@ The run map uses standard OpenStreetMap tiles with visible attribution, normal
 browser caching, and origin-only image referrers. Do not add bulk downloads or
 offline tile prefetching; see the
 [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
+
+Project Tracker's service worker is scoped to `projects/project-tracker/` and
+caches only its own static files. Bump its `project-tracker-v1` cache version
+when updating the app's static asset list. Project Tracker records stay in
+browser storage, separate from the static offline cache.
