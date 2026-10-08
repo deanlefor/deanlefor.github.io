@@ -2,7 +2,7 @@
   "id": "./",
   "name": "Project Tracker",
   "short_name": "Project Tracker",
-  "description": "One-tap project timers with session statistics and local backups.",
+  "description": "Project timers organized into separate Work, School, Personal, and custom buckets.",
   "start_url": "./",
   "scope": "./",
   "display": "standalone",

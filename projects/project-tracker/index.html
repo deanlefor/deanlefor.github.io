@@ -17,7 +17,7 @@
     <meta name="apple-mobile-web-app-title" content="Project Tracker" />
     <meta
       name="description"
-      content="One-tap project tracking with total time, session counts, and average session length."
+      content="One-tap project tracking in Work, School, Personal, and custom buckets, with separate statistics and history."
     />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon-180.png" />
@@ -47,7 +47,7 @@
               /></svg
           ></span>
           <div>
-            <p class="eyebrow">Personal time tracker</p>
+            <p class="eyebrow">Personal time tracker · v2</p>
             <h1>Project Tracker</h1>
           </div>
         </div>
@@ -63,9 +63,31 @@
         a JSON backup before closing this page.
       </div>
 
+      <section class="bucket-section" aria-label="Buckets">
+        <div
+          class="bucket-tabs"
+          id="bucketTabs"
+          role="group"
+          aria-label="Choose a bucket"
+        ></div>
+        <div class="bucket-tools">
+          <p class="micro">
+            Projects, statistics, and history stay separate in each bucket.
+          </p>
+          <div>
+            <button class="button quiet" id="addBucket" type="button">
+              + Add bucket
+            </button>
+            <button class="button quiet" id="renameBucket" type="button">
+              Rename bucket
+            </button>
+          </div>
+        </div>
+      </section>
+
       <section aria-label="Project statistics" id="dashboard">
         <div class="dashboard-head">
-          <h2>Overview</h2>
+          <h2 id="overviewTitle">Work overview</h2>
           <div
             class="segmented"
             id="rangePicker"
@@ -107,13 +129,17 @@
       >
         <div>
           <div class="active-label">
-            <span class="live-dot" aria-hidden="true"></span> Timer running
+            <span class="live-dot" aria-hidden="true"></span>
+            <span id="activeBucketLabel">Timer running</span>
           </div>
           <div class="active-person" id="activePerson"></div>
           <strong class="active-clock" id="activeElapsed">00:00:00</strong>
           <div class="micro" id="activeStarted"></div>
         </div>
         <div class="active-actions">
+          <button class="button" id="viewActiveBucket" type="button" hidden>
+            View timer
+          </button>
           <button class="button finish" id="finishActive" type="button">
             Stop & save
           </button>
@@ -128,8 +154,8 @@
           <div>
             <h2 id="peopleTitle">Projects</h2>
             <p class="section-note">
-              Only one timer runs at a time. Tapping a different project
-              switches automatically.
+              One timer runs across all buckets. Starting another project saves
+              the current session. Switching buckets leaves the timer running.
             </p>
           </div>
         </div>
@@ -160,10 +186,10 @@
           <div id="history"></div>
           <div class="panel-footer">
             <button class="button" id="exportCSV" type="button">
-              Export CSV
+              Export bucket CSV
             </button>
             <button class="button" id="exportJSON" type="button">
-              Backup data
+              Backup all data
             </button>
             <button class="button" id="importButton" type="button">
               Restore backup
@@ -210,7 +236,7 @@
       <form id="personForm">
         <h2 id="personDialogTitle">Add a project</h2>
         <p class="dialog-text">
-          Give this button any project name you prefer. You can change it later.
+          Choose a name and bucket. Moving a project moves its history too.
         </p>
         <label for="personName" class="field-label">Button name</label>
         <input
@@ -222,14 +248,44 @@
           placeholder="e.g. Planning"
           required
         />
+        <label for="personBucket" class="field-label bucket-field-label"
+          >Bucket</label
+        >
+        <select id="personBucket" class="text-input" required></select>
+        <p class="micro" id="moveProjectNote">
+          Stop a running timer before moving its project.
+        </p>
         <div class="dialog-actions">
           <button class="button" id="cancelPerson" type="button">Cancel</button
           ><button class="button primary" type="submit">Save</button>
         </div>
       </form>
     </dialog>
+    <dialog id="bucketDialog" aria-labelledby="bucketDialogTitle">
+      <form id="bucketForm">
+        <h2 id="bucketDialogTitle">Add a bucket</h2>
+        <p class="dialog-text">
+          Use a bucket for an area of your life, such as Work, School, or
+          Personal.
+        </p>
+        <label for="bucketName" class="field-label">Bucket name</label>
+        <input
+          class="text-input"
+          id="bucketName"
+          autocomplete="off"
+          maxlength="60"
+          required
+        />
+        <p id="bucketError" class="micro" role="alert" hidden></p>
+        <div class="dialog-actions">
+          <button class="button" id="cancelBucket" type="button">Cancel</button>
+          <button class="button primary" type="submit">Save</button>
+        </div>
+      </form>
+    </dialog>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
 
-    <script src="project-tracker.js" defer></script>
+    <script src="project-tracker-data.js" defer></script>
+    <script src="project-tracker-v2.js" defer></script>
   </body>
 </html>

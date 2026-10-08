@@ -99,6 +99,50 @@ h1 {
   margin: 0 0 26px;
   line-height: 1.5;
 }
+.bucket-section {
+  margin-bottom: 24px;
+}
+.bucket-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.button.bucket-tab {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+.button.bucket-tab[aria-pressed="true"] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: white;
+}
+.bucket-tools {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-top: 10px;
+}
+.bucket-tools .micro {
+  margin: 0;
+}
+.bucket-field-label {
+  margin-top: 18px;
+}
+.person-foot {
+  flex-wrap: wrap;
+}
+.person-foot .micro {
+  flex: 1 1 54px;
+}
+.person-foot > div {
+  display: flex;
+}
+.text-input:disabled {
+  opacity: 0.65;
+}
 .button {
   border: 1px solid var(--line);
   background: white;
@@ -191,6 +235,15 @@ h1 {
 .active-panel.visible {
   display: flex;
 }
+.active-panel > div,
+.section-head > div {
+  min-width: 0;
+}
+#viewActiveBucket {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
 .active-label {
   color: var(--accent-dark);
   font-size: 11px;
@@ -201,6 +254,7 @@ h1 {
   align-items: center;
   gap: 9px;
   margin-bottom: 7px;
+  overflow-wrap: anywhere;
 }
 .live-dot {
   width: 8px;
@@ -208,6 +262,7 @@ h1 {
   border-radius: 50%;
   background: var(--accent);
   box-shadow: 0 0 0 4px #c3e6d7;
+  flex-shrink: 0;
 }
 .active-person {
   font-size: 20px;
@@ -250,6 +305,8 @@ h2 {
   letter-spacing: -0.025em;
   margin: 0;
   font-weight: 750;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 .section-note {
   margin: 5px 0 0;
@@ -402,10 +459,9 @@ h2 {
 .breakdown-head,
 .breakdown-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(0, 0.95fr) minmax(
-      0,
-      0.67fr
-    ) minmax(0, 1fr);
+  grid-template-columns:
+    minmax(0, 1.5fr) minmax(0, 0.95fr) minmax(0, 0.67fr)
+    minmax(0, 1fr);
   align-items: baseline;
   column-gap: 8px;
 }
@@ -661,10 +717,9 @@ dialog::backdrop {
   .breakdown-head,
   .breakdown-row {
     column-gap: 5px;
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 0.88fr) minmax(
-        0,
-        0.55fr
-      ) minmax(0, 1.03fr);
+    grid-template-columns:
+      minmax(0, 1.35fr) minmax(0, 0.88fr) minmax(0, 0.55fr)
+      minmax(0, 1.03fr);
   }
   .breakdown-row {
     font-size: 12px;

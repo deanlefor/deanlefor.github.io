@@ -1,10 +1,11 @@
 /* Cache only this app's public files. Records remain in localStorage. */
-const CACHE = "project-tracker-v1";
+const CACHE = "project-tracker-v2";
 const ASSETS = [
   "./",
   "./index.html",
   "./project-tracker.css",
-  "./project-tracker.js",
+  "./project-tracker-v2.js",
+  "./project-tracker-data.js",
   "./manifest.webmanifest",
   "./icon.svg",
   "./icon-180.png",

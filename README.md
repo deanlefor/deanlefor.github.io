@@ -27,10 +27,17 @@ their public URL paths so GitHub Pages can publish everything directly from the
   and retro terminal.
 - **projects/** — Standalone tools and scorecards, including
   **projects/project-tracker/** for one-tap project timers with local history,
-  session statistics, CSV exports, and JSON backups. It supports Home Screen
-  installation and offline use after an initial visit. Keep its original
-  `talk-timer-local-v1` storage key and version 1 backup schema compatible;
-  downloaded Talk Timer backups can be restored in Project Tracker. See
+  session statistics, CSV exports, and JSON backups. Version 2 groups projects
+  into editable Work, School, Personal, and custom buckets, with separate
+  statistics and history. One timer runs across the app; switching buckets does
+  not stop it. Moving a project moves its history too. CSV export and history
+  clearing apply to the selected bucket; JSON backups include all buckets.
+  It supports Home Screen installation and offline use after an initial visit.
+  Version 1 records migrate into Work. Version 2 saves under
+  `project-tracker-local-v2`, retaining the original `talk-timer-local-v1` copy
+  for older tabs. Both backup versions can be restored. The original
+  `project-tracker.js` remains available for cached version 1 pages; the current
+  page uses `project-tracker-v2.js` and `project-tracker-data.js`. See
   **projects/SCORECARD-DEVELOPMENT.md** before adding or restructuring a
   scorekeeper, and **projects/SCORECARD-RULES.md** for the maintained scoring
   contracts and deliberate house rules.
@@ -117,6 +124,7 @@ offline tile prefetching; see the
 [OSM tile usage policy](https://operations.osmfoundation.org/policies/tiles/).
 
 Project Tracker's service worker is scoped to `projects/project-tracker/` and
-caches only its own static files. Bump its `project-tracker-v1` cache version
-when updating the app's static asset list. Project Tracker records stay in
+caches only its own static files. Bump the service worker's cache version
+when updating the app's static assets. Its current cache is
+`project-tracker-v2`. Project Tracker records stay in
 browser storage, separate from the static offline cache.
