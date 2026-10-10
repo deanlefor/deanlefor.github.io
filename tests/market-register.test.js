@@ -25,7 +25,7 @@ function worker(network) {
     fetch: network,
     caches: {
       open: async () => cache,
-      keys: async () => ['market-register-shell-v7', 'market-register-shell-v8', 'project-tracker-v2'],
+      keys: async () => ['market-register-shell-v8', 'market-register-shell-v9', 'project-tracker-v2'],
       delete: async name => { deleted.push(name); return true; },
     },
     self: {
@@ -101,5 +101,5 @@ test('activating Market Register preserves other apps offline caches', async () 
   let completion;
   app.handlers.activate({ waitUntil: promise => { completion = promise; } });
   await completion;
-  assert.deepEqual(app.deleted, ['market-register-shell-v7']);
+  assert.deepEqual(app.deleted, ['market-register-shell-v8']);
 });

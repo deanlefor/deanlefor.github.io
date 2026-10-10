@@ -29,6 +29,11 @@ async function page(saved = records(), { db = storage() } = {}) {
   await db.restore(saved);
   const dom = new JSDOM(html, { url: 'https://site.test/market-register/', runScripts: 'outside-only' });
   const { window } = dom;
+  const exports = [];
+  window.Blob = Blob;
+  window.File = File;
+  window.navigator.canShare = () => true;
+  window.navigator.share = async ({ files }) => { exports.push(...files); };
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
   window.HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
   window.confirm = () => true;
@@ -39,8 +44,75 @@ async function page(saved = records(), { db = storage() } = {}) {
   const settle = async () => { for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve)); };
   const view = name => window.document.querySelector(`[data-view="${name}"]`).click();
   const select = async (id, value) => { byId(id).value = value; byId(id).dispatchEvent(new window.Event('change')); await settle(); };
-  return { dom, db, byId, settle, view, select };
+  return { dom, db, byId, settle, view, select, exports };
 }
+
+test('Export for Excel starts with a single sold item in the requested seven columns, without headers or SKU', async () => {
+  const app = await page();
+  try {
+    app.view('shows');
+    app.byId('export-excel').click(); await app.settle();
+    assert.equal(app.exports.length, 1);
+    assert.equal(app.exports[0].name, '2026-10-10-Example-market-excel-sales.csv');
+    assert.equal(await app.exports[0].text(), '"Example","Coasters","12.00","Cash","Example market","10/10/2026","2026"\r\n');
+  } finally { app.dom.window.close(); }
+});
+
+test('Excel rows are consecutive, escaped, chronological, and limited to nonvoid items for the selected show', async () => {
+  const data = records();
+  data.shows[0].name = 'Example "Fall", market';
+  const discounted = sale('discounted');
+  discounted.timestamp = '2026-10-11T00:30:00Z';
+  discounted.paymentMethod = 'Card';
+  discounted.lines[0] = { ...discounted.lines[0], name: 'Oak "leaf", coaster', quantity: 3, unitPriceCents: 400, unitNetPricesCents: [333,333,334] };
+  discounted.subtotalCents = 1200; discounted.discountCents = 200; discounted.totalCents = 1000;
+  const earlier = sale('earlier');
+  earlier.lines[0].name = '=Example title';
+  earlier.lines[0].category = 'Signs';
+  const voided = sale('voided'); voided.voidedAt = '2026-10-10T13:00:00Z';
+  data.sales = [discounted, sale('different-show','show2'), voided, earlier];
+  const app = await page(data);
+  try {
+    app.view('shows');
+    app.byId('export-excel').click(); await app.settle();
+    assert.equal(app.exports.length, 1);
+    assert.equal(await app.exports[0].text(), [
+      '"\'=Example title","Signs","12.00","Cash","Example ""Fall"", market","10/10/2026","2026"',
+      '"Oak ""leaf"", coaster","Coasters","3.33","Card","Example ""Fall"", market","10/10/2026","2026"',
+      '"Oak ""leaf"", coaster","Coasters","3.33","Card","Example ""Fall"", market","10/10/2026","2026"',
+      '"Oak ""leaf"", coaster","Coasters","3.34","Card","Example ""Fall"", market","10/10/2026","2026"',
+    ].join('\r\n') + '\r\n');
+  } finally { app.dom.window.close(); }
+});
+
+test('all exports report no sales when the selected show has only voided sales', async () => {
+  const data = records(); data.sales[0].voidedAt = '2026-10-10T13:00:00Z';
+  const app = await page(data);
+  try {
+    app.view('shows');
+    for (const id of ['export-excel','export-detail','export-summary']) {
+      app.byId(id).click(); await app.settle();
+      assert.equal(app.exports.length, 0);
+      assert.match(app.byId('toast').textContent, /no sales to export/i);
+    }
+    await app.select('report-show-select', 'show2');
+    app.byId('export-excel').click(); await app.settle();
+    assert.equal(app.exports.length, 0, 'a show with no sales has no header-only export');
+  } finally { app.dom.window.close(); }
+});
+
+test('detailed and product totals exports retain their column headers', async () => {
+  const app = await page();
+  try {
+    app.view('shows');
+    app.byId('export-detail').click(); await app.settle();
+    app.byId('export-summary').click(); await app.settle();
+    assert.equal(app.exports.length, 2);
+    assert.equal((await app.exports[0].text()).split('\r\n')[0], '"Transaction ID","Time","SKU","Titles","Category","Original Price","Discount","Price Charged","Payment","Location","Date"');
+    assert.equal((await app.exports[1].text()).split('\r\n')[0], '"SKU","Product","Category","Quantity","Net Sales"');
+    assert.equal((await app.exports[1].text()).split('\r\n')[1], '"MR-0001","Example","Coasters","1","12.00"');
+  } finally { app.dom.window.close(); }
+});
 
 test('legacy shows stay open; completion locks records, clears selection, and persists in full backups', async () => {
   const db = storage(); await db.restore(records());

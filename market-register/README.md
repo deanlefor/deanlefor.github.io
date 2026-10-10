@@ -1,4 +1,4 @@
-# Market Register — prototype 0.5
+# Market Register — prototype 0.6
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -111,15 +111,15 @@ reload after a reset, restore, or category change, and stale writes are blocked.
 
 ## Your existing Excel workbook
 
-The **Export for Excel** button makes a CSV with the same eight headers as the uploaded `Sales` sheet:
+The **Export for Excel** button makes a CSV with these seven columns in this order:
 
 ```
-SKU,Titles,Category,Price,Payment,Location,Date,Year
+Item Title,Category,Price,Payment,Location (Show Name),Date,Year
 ```
 
-A separate row is written for *each individual item sold*, even when multiple items were purchased in one transaction. `Price` is the **actual amount allocated to that item after promotion discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** also includes transaction IDs, original prices, and item discount amounts. **Product totals CSV** summarizes quantity and revenue by product.
+A separate row is written for *each individual item sold*, with **no title/header row or blank rows between items**, even when multiple items were purchased in one transaction. Location is the selected show's name; Date and Year come from that show's date. Voided sales are excluded. `Price` is the **actual amount allocated to that item after promotion discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** keeps its headers and also includes SKUs, transaction IDs, original prices, and item discount amounts. **Product totals CSV** keeps its headers and summarizes quantity and revenue by product.
 
-Manually append/import the exported CSV rows to the workbook's `Sales` sheet. The application does not update the workbook in place or automatically refresh pivot tables. Check Excel's treatment of SKU and date formats when pasting or importing.
+Manually append/import the exported CSV rows to the workbook's `Sales` sheet. The application does not update the workbook in place or automatically refresh pivot tables. Check Excel's treatment of date formats when pasting or importing.
 
 ## Product entry and discounts
 

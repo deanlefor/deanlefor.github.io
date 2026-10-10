@@ -1,4 +1,4 @@
-const CACHE = 'market-register-shell-v8';
+const CACHE = 'market-register-shell-v9';
 const FILES = [
   './', './index.html', './styles.css', './app.js', './db.js',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'

@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.5: no backend, analytics, account, or payment API.
+// Market Register 0.6: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -621,8 +621,8 @@ async function saveFile(blob,filename){
   setTimeout(()=>URL.revokeObjectURL(url),30000);
   return true; // Download initiated; not proof it was saved elsewhere.
 }
-async function downloadCSV(rows,filename){
-  if(rows.length<=1){toast('There are no sales to export for this show.',true);return;}
+async function downloadCSV(rows,filename,{hasHeader=true}={}){
+  if(rows.length<=(hasHeader?1:0)){toast('There are no sales to export for this show.',true);return;}
   const file=new Blob([makeCSV(rows)],{type:'text/csv;charset=utf-8'});
   const launched=await saveFile(file,filename);
   if(launched)toast('Export prepared. Save the file outside this app.');
@@ -632,17 +632,17 @@ async function exportShow(mode){
   const show=reportShow();if(!show)return;
   const sales=nonvoidSales(show.id).sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
   const stem=`${show.date}-${fileSafe(show.name)}`;
-  const excel=[['SKU','Titles','Category','Price','Payment','Location','Date','Year']];
+  const excel=[];
   const detail=[['Transaction ID','Time','SKU','Titles','Category','Original Price','Discount','Price Charged','Payment','Location','Date']];
   for(const sale of sales){
     for(const line of sale.lines){
       for(const unitNet of line.unitNetPricesCents){
-        excel.push([line.sku,line.name,line.category,(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date),show.date.slice(0,4)]);
+        excel.push([line.name,line.category,(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date),show.date.slice(0,4)]);
         detail.push([sale.id,sale.timestamp,line.sku,line.name,line.category,(line.unitPriceCents/100).toFixed(2),((line.unitPriceCents-unitNet)/100).toFixed(2),(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date)]);
       }
     }
   }
-  if(mode==='excel')return downloadCSV(excel,`${stem}-excel-sales.csv`);
+  if(mode==='excel')return downloadCSV(excel,`${stem}-excel-sales.csv`,{hasHeader:false});
   if(mode==='detail')return downloadCSV(detail,`${stem}-transactions.csv`);
   const data=reportData(show.id);
   const summary=[['SKU','Product','Category','Quantity','Net Sales']];
