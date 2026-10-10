@@ -59,6 +59,30 @@ export async function put(storeName, value) {
 
 export const setMeta = (id, value) => put('meta', { id, value });
 
+export async function setMetaValues(values) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['meta'], 'readwrite');
+    for (const [id, value] of Object.entries(values)) tx.objectStore('meta').put({ id, value });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error('Could not save category settings.'));
+    tx.onabort = () => reject(tx.error || new Error('Category settings were not saved.'));
+  });
+}
+
+// Save a product and its remembered category together.
+export async function commitProduct(product) {
+  const db = await openDB();
+  return new Promise((resolve, reject) => {
+    const tx = db.transaction(['products', 'meta'], 'readwrite');
+    tx.objectStore('products').put(product);
+    tx.objectStore('meta').put({ id: 'lastProductCategory', value: product.category });
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error || new Error('Could not save product.'));
+    tx.onabort = () => reject(tx.error || new Error('Product was not saved.'));
+  });
+}
+
 // A completed sale and clearing its draft cart are one atomic database transaction.
 export async function commitSale(sale) {
   const db = await openDB();

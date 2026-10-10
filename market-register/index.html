@@ -117,7 +117,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.2</span><span id="footer-save">Stored locally on this device</span></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.3</span><span id="footer-save">Stored locally on this device</span></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -146,7 +146,13 @@
           <label for="product-name">Name <span class="required">*</span></label><input id="product-name" required maxlength="100" autocomplete="off" placeholder="3D Printed Dragon">
           <div class="two-cols">
             <div><label for="product-price">Price ($) <span class="required">*</span></label><input id="product-price" inputmode="decimal" type="number" min="0" max="9999" step="0.01" required placeholder="12.00"></div>
-            <div><label for="product-category">Category / tab <span class="required">*</span></label><input id="product-category" list="category-options" maxlength="55" placeholder="3D Printing" required><datalist id="category-options"></datalist></div>
+            <div><label for="product-category">Category / tab <span class="required">*</span></label><select id="product-category" required></select><button type="button" class="link-button category-add-button" id="start-add-category">+ Add category</button></div>
+          </div>
+          <div id="new-category-fields" class="new-category-fields" hidden>
+            <label for="new-category-name">New category name</label>
+            <input id="new-category-name" maxlength="55" autocomplete="off" placeholder="Enter a new category">
+            <div class="new-category-actions"><button type="button" class="btn btn-outline btn-small" id="save-category">Add category</button><button type="button" class="btn btn-text btn-small" id="cancel-add-category">Cancel</button></div>
+            <p class="field-hint" id="category-message" role="status" aria-live="polite">Check the name before adding it. Existing categories are selected above.</p>
           </div>
           <label for="product-sku">SKU (optional)</label><input id="product-sku" autocomplete="off" maxlength="45" placeholder="Assigned automatically if blank"><p class="field-hint">Use an existing Excel SKU, or let the app create one.</p>
           <label class="check-row promo-check"><input type="checkbox" id="product-promo"> Eligible for the 3 × $4 for $10 promotion</label>

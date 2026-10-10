@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.2: no backend, analytics, account, or payment API.
+// Market Register 0.3: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -26,7 +26,7 @@ const state = {
   products:[], shows:[], sales:[], cart:{}, activeShowId:null, reportShowId:null,
   activeCategory:'All', view:'register', productPhoto:null, editingProductId:null,
   payment:'Square', completing:false, lastSaleId:null, lastBackupAt:null, ready:false,
-  photoSize:256, photoProcessing:false
+  photoSize:256, photoProcessing:false, categories:[], lastProductCategory:null
 };
 let toastTimer;
 let cartSaveQueue = Promise.resolve();
@@ -44,8 +44,46 @@ function errorMessage(error) {
   toast(error?.message || 'Something went wrong. No changes were made.', true);
 }
 function currentShow() { return state.shows.find(show=>show.id===state.activeShowId) || null; }
+const cleanCategory = value => typeof value === 'string' ? value.trim().replace(/\s+/g,' ') : '';
+const categoryKey = value => cleanCategory(value).toLocaleLowerCase('en-US');
 function categoryList() {
-  return [...new Set(['3D Printing','Jewelry','Bracelets','Coasters',...state.products.map(p=>p.category).filter(Boolean)])];
+  const unique = new Map();
+  for(const value of ['3D Printing','Jewelry','Bracelets','Coasters',...state.categories,...state.products.map(p=>p.category)]) {
+    const category=cleanCategory(value);
+    if(category && !unique.has(categoryKey(category)))unique.set(categoryKey(category),category);
+  }
+  return [...unique.values()];
+}
+function canonicalCategory(value) {
+  return categoryList().find(category=>categoryKey(category)===categoryKey(value)) || cleanCategory(value);
+}
+function fillProductCategories(selected) {
+  const select=byId('product-category');select.replaceChildren();
+  categoryList().forEach(category=>select.add(new Option(category,category)));
+  select.value=canonicalCategory(selected);
+  if(!select.value)select.value=categoryList()[0];
+}
+function closeCategoryEntry() {
+  byId('new-category-fields').hidden=true;
+  byId('new-category-name').value='';
+}
+async function addCategory() {
+  const name=cleanCategory(byId('new-category-name').value);
+  const message=byId('category-message');
+  if(!name || name.length>55){message.textContent='Enter a category name of up to 55 characters.';return;}
+  if(categoryKey(name)==='all'){message.textContent='Choose another name. All is used to show every category.';return;}
+  const existing=categoryList().find(category=>categoryKey(category)===categoryKey(name));
+  const selected=existing || name;
+  const categories=existing?state.categories:[...state.categories,name];
+  const button=byId('save-category');button.disabled=true;
+  try {
+    await db.setMetaValues({productCategories:categories,lastProductCategory:selected});
+    state.categories=categories;state.lastProductCategory=selected;
+    fillProductCategories(selected);closeCategoryEntry();
+    toast(existing?`Selected existing category: ${existing}.`:`Category added: ${name}.`);
+    byId('product-category').focus();
+  }catch(error){message.textContent='Could not save the category. Please try again.';errorMessage(error);}
+  finally{button.disabled=false;}
 }
 function sortProducts(products) {
   return [...products].sort((a,b) => (a.sortOrder || 0)-(b.sortOrder || 0) || a.name.localeCompare(b.name));
@@ -75,7 +113,7 @@ function priceCart() {
     const prices = Array(quantity).fill(product.priceCents);
     subtotalCents += quantity * product.priceCents;
     const line = {
-      productId:product.id, sku:product.sku, name:product.name, category:product.category,
+      productId:product.id, sku:product.sku, name:product.name, category:canonicalCategory(product.category),
       unitPriceCents:product.priceCents, quantity, unitNetPricesCents:prices,
       promotionEligible: Boolean(product.promoEligible && product.priceCents===400)
     };
@@ -139,13 +177,13 @@ function renderRegister() {
   const show=currentShow();
   byId('cart-show-label').textContent=show? `${show.name} · ${shortDate(show.date)}` : 'Choose or create a show';
   const tabs=byId('category-tabs');tabs.replaceChildren();
-  const categories=['All',...new Set(state.products.filter(p=>p.active).map(p=>p.category).filter(Boolean))];
+  const categories=['All',...new Set(state.products.filter(p=>p.active).map(p=>canonicalCategory(p.category)).filter(Boolean))];
   if (!categories.includes(state.activeCategory)) state.activeCategory='All';
   categories.forEach(cat=>tabs.append(showCategoryButton(cat)));
 
   const filter=byId('register-search').value.trim().toLocaleLowerCase();
   const shown=sortProducts(state.products.filter(p => p.active &&
-    (state.activeCategory==='All'||p.category===state.activeCategory) &&
+    (state.activeCategory==='All'||canonicalCategory(p.category)===state.activeCategory) &&
     (!filter||`${p.name} ${p.sku} ${p.category}`.toLocaleLowerCase().includes(filter))));
   const grid=byId('product-grid');grid.replaceChildren();
   for(const product of shown) {
@@ -265,11 +303,10 @@ function openProductDialog(product=null, duplicate=false, categoryOverride=null)
   byId('product-id').value=state.editingProductId || '';
   byId('product-name').value=duplicate?`${product.name} (copy)`:(product?.name || '');
   byId('product-price').value=product? (product.priceCents/100).toFixed(2) : '';
-  byId('product-category').value=categoryOverride || product?.category || (state.activeCategory==='All'?'3D Printing':state.activeCategory);
+  fillProductCategories(categoryOverride || product?.category || (state.activeCategory==='All'?state.lastProductCategory:state.activeCategory) || '3D Printing');
+  closeCategoryEntry();
   byId('product-sku').value=duplicate?'':(product?.sku || '');
   byId('product-promo').checked=Boolean(product?.promoEligible);
-  const options=byId('category-options');options.replaceChildren();
-  categoryList().forEach(c=>options.append(new Option(c,c)));
   refreshPhotoPreview();
   byId('photo-status').textContent=state.productPhoto?'Current product photo loaded.':'New photos are resized and stored only in the app.';
   byId('product-dialog').showModal();
@@ -340,10 +377,10 @@ async function saveProduct(event) {
   event.preventDefault();
   if(state.photoProcessing){toast('Please wait for the photo to finish processing.',true);return;}
   const name=byId('product-name').value.trim();
-  const category=byId('product-category').value.trim();
+  const category=byId('product-category').value;
   const priceText=byId('product-price').value;
   const priceValue=Number(priceText);
-  if(!name||!category||priceText.trim()===''||!Number.isFinite(priceValue)||priceValue<0||priceValue>9999){toast('Enter a product name, category, and valid price.',true);return;}
+  if(!name||!categoryList().includes(category)||priceText.trim()===''||!Number.isFinite(priceValue)||priceValue<0||priceValue>9999){toast('Enter a product name, choose a category, and enter a valid price.',true);return;}
   const priceCents=Math.round(priceValue*100);
   const promoEligible=byId('product-promo').checked;
   if(promoEligible && priceCents!==400){toast('The 3-for-$10 promotion is only for products priced at $4.00.',true);return;}
@@ -361,7 +398,8 @@ async function saveProduct(event) {
   };
   const saveButton=byId('save-product');const anotherButton=byId('save-add-another');saveButton.disabled=true;anotherButton.disabled=true;
   try {
-    await db.put('products',product);
+    await db.commitProduct(product);
+    state.lastProductCategory=category;
     if(existing) state.products=state.products.map(p=>p.id===product.id?product:p);
     else state.products.push(product);
     byId('product-dialog').close();
@@ -382,7 +420,7 @@ function renderProducts(){
   categorySelect.value=[...categorySelect.options].some(o=>o.value===current)?current:'all';
   const search=byId('manage-search').value.trim().toLocaleLowerCase();
   const includeHidden=byId('show-hidden').checked;
-  const filtered=sortProducts(state.products.filter(p=> (includeHidden||p.active) && (categorySelect.value==='all'||p.category===categorySelect.value) &&
+  const filtered=sortProducts(state.products.filter(p=> (includeHidden||p.active) && (categorySelect.value==='all'||canonicalCategory(p.category)===categorySelect.value) &&
     (!search||`${p.name} ${p.sku} ${p.category}`.toLocaleLowerCase().includes(search))));
   const active=state.products.filter(p=>p.active).length;
   byId('product-count').textContent=`${active} active · ${state.products.length-active} hidden`;
@@ -392,7 +430,7 @@ function renderProducts(){
     if(p.photo){const image=element('img','manage-thumb');image.src=p.photo;image.alt='';image.loading='lazy';card.append(image);}
     else card.append(element('div','manage-thumb',p.name.trim().charAt(0).toUpperCase()));
     const info=element('div');info.append(element('div','manage-title',p.name));
-    info.append(element('div','manage-subtitle',`${money(p.priceCents)} · ${p.category} · ${p.sku}${p.active?'':' · HIDDEN'}`));
+    info.append(element('div','manage-subtitle',`${money(p.priceCents)} · ${canonicalCategory(p.category)} · ${p.sku}${p.active?'':' · HIDDEN'}`));
     const actions=element('div','manage-actions');
     for(const [label,fn] of [
       ['Edit',()=>openProductDialog(p)],
@@ -612,10 +650,12 @@ function render(){
   if(state.view==='backup')renderBackup();
 }
 async function reloadData(){
-  const [products,shows,sales,active,draft,lastBackup]=await Promise.all([
-    db.getAll('products'),db.getAll('shows'),db.getAll('sales'),db.getMeta('activeShowId'),db.getMeta('draftCart',{}),db.getMeta('lastBackupPreparedAt')
+  const [products,shows,sales,active,draft,lastBackup,categories,lastCategory]=await Promise.all([
+    db.getAll('products'),db.getAll('shows'),db.getAll('sales'),db.getMeta('activeShowId'),db.getMeta('draftCart',{}),db.getMeta('lastBackupPreparedAt'),db.getMeta('productCategories',[]),db.getMeta('lastProductCategory')
   ]);
   state.products=products;state.shows=shows;state.sales=sales;
+  state.categories=Array.isArray(categories)?categories.filter(category=>typeof category==='string'):[];
+  state.lastProductCategory=canonicalCategory(lastCategory) || null;
   state.activeShowId=shows.some(s=>s.id===active)?active:null;
   state.reportShowId=state.activeShowId || [...shows].sort((a,b)=>b.date.localeCompare(a.date))[0]?.id || null;
   state.cart=Object.fromEntries(Object.entries(draft||{}).filter(([id,qty])=>products.some(p=>p.id===id)&&Number.isSafeInteger(qty)&&qty>0));
@@ -644,6 +684,16 @@ function connectEvents(){
   document.querySelectorAll('input[name="payment"]').forEach(input=>input.addEventListener('change',event=>state.payment=event.target.value));
   byId('add-product').addEventListener('click',()=>openProductDialog());
   byId('product-form').addEventListener('submit',saveProduct);
+  byId('start-add-category').addEventListener('click',()=>{
+    byId('new-category-fields').hidden=false;
+    byId('category-message').textContent='Check the name before adding it. Existing categories are selected above.';
+    byId('new-category-name').focus();
+  });
+  byId('cancel-add-category').addEventListener('click',()=>{closeCategoryEntry();byId('product-category').focus();});
+  byId('save-category').addEventListener('click',addCategory);
+  byId('new-category-name').addEventListener('keydown',event=>{
+    if(event.key==='Enter'){event.preventDefault();if(!byId('save-category').disabled)addCategory();}
+  });
   for(const id of ['product-camera','product-photo']){
     byId(id).addEventListener('change',async event=>{
       const file=event.target.files?.[0];

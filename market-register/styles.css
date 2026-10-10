@@ -175,6 +175,11 @@ main { padding: 26px 28px 10px; }
 .photo-input-col .btn-text {width:100%;}
 .photo-input-col[aria-busy="true"] .photo-upload-button {opacity:.6;pointer-events:none;}
 .two-cols {display:grid;grid-template-columns:.7fr 1fr;gap:12px;}
+.form-fields select {width:100%;}
+.category-add-button {margin:8px 0 10px;font-size:.8rem;}
+.new-category-fields {margin:12px 0;padding:12px;background:var(--bg);border:1px solid var(--line);border-radius:8px;}
+.new-category-actions {display:flex;gap:8px;align-items:center;margin-bottom:10px;}
+.new-category-fields .field-hint {margin:0;}
 .required {color:var(--danger);}
 .field-hint {font-size:.74rem;color:var(--muted);margin:-4px 0 14px;}
 .promo-check {margin-top:5px;margin-bottom:10px;}

@@ -1,4 +1,4 @@
-# Market Register — prototype 0.2
+# Market Register — prototype 0.3
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -83,6 +83,15 @@ Manually append/import the exported CSV rows to the workbook's `Sales` sheet. Th
 ## Product entry and discounts
 
 - Under **Products**, add a name, price, category, and optionally a photo and an existing SKU.
+- Choose an existing category from the dropdown. **Add category** creates a new,
+  remembered option explicitly; differences in capitalization or spacing reuse
+  the existing name. Categories are saved even before their first product.
+- The last category used for a saved product is remembered after reopening the
+  form or restarting the app. Existing product categories remain available.
+- To correct an old typo, edit each affected product and choose the intended
+  category. A typo disappears from the list after no products use it, unless it
+  was explicitly saved through **Add category**. Historical sales keep their
+  original category labels.
 - Choose **Save & add another** to keep the same category for the next entry.
 - Use **Duplicate** to create variations, or **Hide** to remove a discontinued product from checkout without deleting its recorded history.
 - Each product gets an internal unique ID even if a SKU is later edited. Auto-generated SKUs start `MR-0001`.
