@@ -177,6 +177,7 @@ main { padding: 26px 28px 10px; }
 .kicker {text-transform:uppercase;letter-spacing:.09em;color:var(--forest);font-weight:800;font-size:.73rem;}
 .backup-warning {background:var(--warn-bg);border-radius:8px;padding:12px;color:var(--warn);font-size:.8rem;line-height:1.4;}
 .category-management {margin-bottom:24px;}
+.user-guide-card {margin-bottom:24px;}
 .data-category-row {display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px 0;border-top:1px solid var(--line);}
 .data-category-details {display:grid;gap:5px;min-width:0;overflow-wrap:anywhere;}
 .data-category-actions {display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}

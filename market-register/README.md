@@ -8,6 +8,21 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 > **Version 1.0 trial release.** This is the baseline for the first one- or two-week trial. Keep the current features steady during the trial; use the results and feedback to decide later improvements. The suggested iPad acceptance checks below still apply.
 
+## User guide
+
+The [Version 1.0 user guide](output/pdf/market-register-user-guide-v1.0.pdf)
+is linked under **Data management → User guide**. Its 12 chapters cover iPad
+setup, products and photos, checkout, tips and discounts, shows and corrections,
+PDF reports, Excel/CSV exports, full backups, category cleanup, and refresh and
+troubleshooting. It includes clickable contents, PDF bookmarks, and show-day
+checklists. The offline worker caches it with the app after an online load.
+
+The guide uses fictional examples and contains no saved catalog or sales data.
+Rebuild it from the editable source with `python3 scripts/build-market-register-guide.py`
+from the repository root (requires ReportLab). The builder verifies the intended
+12-page chapter layout and writes the public PDF inside this app's directory.
+Guide-only updates retain the app's Version 1.0 label and the original release tag.
+
 ## First test on a Mac
 
 1. Unzip the project folder.

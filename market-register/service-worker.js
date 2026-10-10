@@ -1,4 +1,4 @@
-const CACHE = 'market-register-shell-v16';
+const CACHE = 'market-register-shell-v17';
 const FILES = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const FILES = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
+  './output/pdf/market-register-user-guide-v1.0.pdf',
 ];
 self.addEventListener('install', (event) => {
   const requests = FILES.map(
