@@ -52,12 +52,12 @@ async function page(saved = records(), { db = storage() } = {}) {
   return { dom, db, byId, settle, view, select, exports };
 }
 
-test('the four payment buttons record their exact choice and legacy labels group in reports and Excel', async () => {
+test('the three payment buttons record their exact choice and legacy labels group in reports and Excel', async () => {
   const data=records();data.sales=[{...sale('square'),paymentMethod:'Square'}, {...sale('cashapp'),paymentMethod:'Cash App'}];
   const app=await page(data);
   try{
     const choices=[...app.dom.window.document.querySelectorAll('input[name="payment"]')];
-    assert.deepEqual(choices.map(input=>input.value),['Cash','Card','Venmo','CashApp']);
+    assert.deepEqual(choices.map(input=>input.value),['Cash','Card','Venmo']);
     for(const input of choices){
       app.dom.window.document.querySelector('.product-tile').click();
       input.checked=true;input.dispatchEvent(new app.dom.window.Event('change'));
@@ -72,7 +72,7 @@ test('the four payment buttons record their exact choice and legacy labels group
     const book=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
     const rows=XLSX.utils.sheet_to_json(book.Sheets.Sales,{header:1});
     assert.equal(rows.filter(row=>row[3]==='Card').length,2);
-    assert.equal(rows.filter(row=>row[3]==='CashApp').length,2);
+    assert.equal(rows.filter(row=>row[3]==='CashApp').length,1);
     assert.deepEqual(copy(await app.db.snapshot()),before);
   }finally{app.dom.window.close();}
 });

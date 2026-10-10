@@ -1,4 +1,4 @@
-# Market Register — prototype 0.8
+# Market Register — prototype 0.9
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -127,7 +127,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.8** in the footer before exporting again.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.9** in the footer before exporting again.
 
 ## PDF reports and payment choices
 
@@ -153,7 +153,7 @@ time zone, and page number. The reports use the selected show's records saved
 on this device. Tax and adjustments made outside the app are not calculated
 or included; app references are not card processor receipt IDs.
 
-The Register offers exactly **Cash, Card, Venmo, and CashApp**. Historical
+The Register offers exactly **Cash, Card, and Venmo**, in a single row. Historical
 Square and Cash App labels display/export as Card and CashApp without rewriting
 the original records or backups. Historical PayPal and Other entries remain
 visible under their original labels and are not silently treated as Card.

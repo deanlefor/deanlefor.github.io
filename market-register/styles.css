@@ -106,7 +106,7 @@ main { padding: 26px 28px 10px; }
 .grand-total span:last-child {font-size:1.8rem;color:var(--forest);}
 .payment-fieldset {border:0;padding:7px 0 15px;margin:0;}
 .payment-fieldset legend {font-size:.79rem;color:var(--muted);font-weight:700;margin:0 0 9px;}
-.payment-choices {display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
+.payment-choices {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;}
 .payment-choices label {margin:0;}
 .payment-choices input {position:absolute;opacity:0;pointer-events:none;}
 .payment-choices span {display:grid;place-items:center;min-height:40px;padding:6px;background:white;border:1px solid #d8ddd5;border-radius:10px;font-size:.74rem;text-align:center;font-weight:700;white-space:nowrap;}

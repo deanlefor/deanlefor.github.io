@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=0.8">
+  <link rel="stylesheet" href="./styles.css?v=0.9">
   <title>Market Register</title>
 </head>
 <body>
@@ -73,7 +73,6 @@
               <label><input type="radio" name="payment" value="Cash"><span>Cash</span></label>
               <label><input type="radio" name="payment" value="Card" checked><span>Card</span></label>
               <label><input type="radio" name="payment" value="Venmo"><span>Venmo</span></label>
-              <label><input type="radio" name="payment" value="CashApp"><span>CashApp</span></label>
             </div></fieldset>
             <button type="button" id="complete-sale" class="btn btn-primary btn-large" disabled>Record completed sale</button>
             <button type="button" id="clear-cart" class="btn btn-text">Clear current sale</button>
@@ -150,7 +149,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.8</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.9</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -237,6 +236,6 @@
   <script src="./vendor/pdfmake.min.js?v=0.3.11"></script>
   <script src="./vendor/vfs_fonts.js?v=0.3.11"></script>
   <script src="./reports.js?v=0.8"></script>
-  <script type="module" src="./app.js?v=0.8"></script>
+  <script type="module" src="./app.js?v=0.9"></script>
 </body>
 </html>

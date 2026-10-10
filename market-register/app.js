@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.8: no backend, analytics, account, or payment API.
+// Market Register 0.9: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
