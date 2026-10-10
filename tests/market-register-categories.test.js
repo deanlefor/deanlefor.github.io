@@ -13,6 +13,7 @@ const source = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8'
 async function app(saved = { products: [], shows: [], sales: [], meta: [] }, { failWrites = false, cartWriteGate = null } = {}) {
   const dom = new JSDOM(html, { url: 'https://site.test/market-register/', runScripts: 'outside-only' });
   const { window } = dom;
+  window.MarketReports = require('../market-register/reports.js');
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
   window.HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
   window.console.error = () => {};

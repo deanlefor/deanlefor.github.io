@@ -1,4 +1,4 @@
-# Market Register — prototype 0.7
+# Market Register — prototype 0.8
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -127,7 +127,38 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.7** in the footer before exporting again.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.8** in the footer before exporting again.
+
+## PDF reports and payment choices
+
+In **Shows & reports**, select the show, then choose one of the three **PDF
+reports**. Each report is a real `.pdf` file that can be saved, shared, or
+printed. If sharing is canceled, **Download prepared PDF** still saves the
+generated file without having to recreate it.
+
+- **Card transactions PDF:** each Card transaction, in time order, with its
+  items, recorded amount, app reference, and blank columns for tax added and
+  final charged amount. Older **Square** records count as Card. Large baskets
+  continue under the same reference with the amount shown once.
+- **Item ledger PDF:** one row per individual item in chronological order,
+  showing its date/time, transaction reference, category, payment method, and
+  actual price after promotion discounts. Voided items remain visible.
+- **Show summary PDF:** recorded revenue, transactions, items, discounts,
+  average transaction, payment totals, category totals, and products ranked by
+  quantity sold.
+
+Voided sales are marked and excluded from every total. Table headings repeat
+on later pages. Each page identifies the show, its status, generation time,
+time zone, and page number. The reports use the selected show's records saved
+on this device. Tax and adjustments made outside the app are not calculated
+or included; app references are not card processor receipt IDs.
+
+The Register offers exactly **Cash, Card, Venmo, and CashApp**. Historical
+Square and Cash App labels display/export as Card and CashApp without rewriting
+the original records or backups. Historical PayPal and Other entries remain
+visible under their original labels and are not silently treated as Card.
+The PDF writer and fonts are bundled locally, so reports also work offline
+after the updated app has loaded and cached while online.
 
 ## Product entry and discounts
 
@@ -155,7 +186,7 @@ If an older copy does not yet have the button, reload the Safari page (or fully 
 2. Add two $4 qualifying products and a third non-qualifying product. Confirm a mixed basket of three eligible units totals $10, and verify the discount disappears if one unit is removed.
 3. Record a test show, three completed transactions using different payment methods, and void one transaction.
 4. Confirm the show revenue and payment totals exclude the voided transaction.
-5. Export all three reports. Open the Excel workbook in Excel and check its seven columns, consecutive item rows starting at A1, absence of headers/SKU, and prices that add up to the register total. Check that the other two CSV reports still have their headers.
+5. Export the Excel workbook and both CSVs. Open the workbook in Excel and check its seven columns, consecutive item rows starting at A1, absence of headers/SKU, and prices that add up to the register total. Check that the CSV reports retain their headers. Save all three PDF reports, check the card transactions against Card/Square sales, verify that the ledger is chronological and every total excludes voided sales, and print a page to check handwriting space for tax.
 6. Save a full backup with at least one product photo. Confirm the `.json` file can be found outside the browser.
 7. Restore the backup on a second installation / test device. Check that the photo, sales, prices, and show name return correctly.
 8. Install to the iPad Home Screen and test starting the app **with internet fully disabled** (not just disabling Wi-Fi while cellular remains on).
@@ -163,7 +194,7 @@ If an older copy does not yet have the button, reload the Safari page (or fully 
 
 ## Technical notes
 
-- No npm packages or third-party JavaScript dependencies; plain HTML, CSS, and JavaScript.
+- Plain HTML, CSS, and JavaScript, with locally bundled SheetJS for Excel and pdfmake/Roboto for PDFs (versions, sources, integrity, and licenses in `vendor/README.md`). No external script or PDF service is used.
 - Local data: IndexedDB (`db.js`). Photos are compressed by the device before storing.
 - Offline application shell: service worker (`service-worker.js`). It caches only static application files, not customer information.
 - App-install information: `manifest.webmanifest` and the `icons/` directory.

@@ -106,7 +106,7 @@ main { padding: 26px 28px 10px; }
 .grand-total span:last-child {font-size:1.8rem;color:var(--forest);}
 .payment-fieldset {border:0;padding:7px 0 15px;margin:0;}
 .payment-fieldset legend {font-size:.79rem;color:var(--muted);font-weight:700;margin:0 0 9px;}
-.payment-choices {display:grid;grid-template-columns:repeat(3,1fr);gap:7px;}
+.payment-choices {display:grid;grid-template-columns:repeat(2,1fr);gap:7px;}
 .payment-choices label {margin:0;}
 .payment-choices input {position:absolute;opacity:0;pointer-events:none;}
 .payment-choices span {display:grid;place-items:center;min-height:40px;padding:6px;background:white;border:1px solid #d8ddd5;border-radius:10px;font-size:.74rem;text-align:center;font-weight:700;white-space:nowrap;}
@@ -137,6 +137,12 @@ main { padding: 26px 28px 10px; }
 .report-toolbar label {color:var(--muted);font-size:.8rem;}
 .report-toolbar select {min-width:260px;max-width:360px;}
 .report-actions {display:flex;gap:9px;flex-wrap:wrap;}
+.pdf-reports {padding:18px;margin-bottom:18px;}
+.pdf-reports-heading p {color:var(--muted);font-size:.82rem;margin:5px 0 16px;}
+.pdf-report-options {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;}
+.pdf-report-options .btn {white-space:normal;width:100%;min-height:44px;}
+.pdf-report-options p {font-size:.78rem;line-height:1.5;color:var(--muted);margin:9px 0;}
+@media (max-width:720px){.pdf-report-options {grid-template-columns:1fr;gap:12px;}}
 .report-stats {display:grid;grid-template-columns:repeat(3,1fr);gap:13px;margin-bottom:14px;}
 .stat-card {padding:20px;}
 .stat-caption {font-size:.81rem;color:var(--muted);font-weight:650;}

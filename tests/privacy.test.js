@@ -23,6 +23,9 @@ test("Git excludes private exports and credentials, while keeping project JSON t
     "downloads/2026-10-10-example-excel-sales.csv",
     "downloads/2026-10-10-example-transactions.csv",
     "downloads/2026-10-10-example-product-totals.csv",
+    "downloads/2026-10-10-example-card-transactions.pdf",
+    "downloads/2026-10-10-example-item-ledger.pdf",
+    "downloads/2026-10-10-example-show-summary.pdf",
   ];
   const ignored = execFileSync(
     "git",

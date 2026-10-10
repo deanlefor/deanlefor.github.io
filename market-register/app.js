@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.7: no backend, analytics, account, or payment API.
+// Market Register 0.8: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -22,16 +22,18 @@ const element = (tag, className='', text='') => {
   return node;
 };
 const safeString = value => typeof value === 'string' ? value : String(value ?? '');
+const reports = window.MarketReports;
 const state = {
   products:[], shows:[], sales:[], cart:{}, activeShowId:null, reportShowId:null,
   activeCategory:'All', view:'register', productPhoto:null, editingProductId:null,
-  payment:'Square', completing:false, lastSaleId:null, lastBackupAt:null, ready:false,
+  payment:'Card', completing:false, lastSaleId:null, lastBackupAt:null, ready:false,
   photoSize:256, photoProcessing:false, categories:[], removedCategories:[], lastProductCategory:null,
-  categoryChange:null, managingData:false, showChange:null, changingShow:false, selectingShow:false
+  categoryChange:null, managingData:false, showChange:null, changingShow:false, selectingShow:false, generatingPdf:false
 };
 let toastTimer;
 let cartSaveQueue = Promise.resolve();
 let photoRequestId=0;
+let preparedPdfUrl=null;
 const dataChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('market-register-data') : null;
 // Other open copies must discard stale records after a destructive data change.
 if (dataChannel) dataChannel.onmessage = () => location.reload();
@@ -533,7 +535,8 @@ function reportData(showId){
   const result={sales,items:0,total:0,discount:0,payment:new Map(),category:new Map(),products:new Map()};
   for(const s of sales){
     result.total+=s.totalCents;result.discount+=s.discountCents;
-    result.payment.set(s.paymentMethod,(result.payment.get(s.paymentMethod)||0)+s.totalCents);
+    const payment=reports.paymentName(s.paymentMethod);
+    result.payment.set(payment,(result.payment.get(payment)||0)+s.totalCents);
     for(const line of s.lines){
       result.items+=line.quantity;
       const net=line.unitNetPricesCents.reduce((a,b)=>a+b,0);
@@ -560,6 +563,12 @@ function renderReports(){
   const area=byId('reports-body');area.replaceChildren();
   const show=state.shows.find(s=>s.id===state.reportShowId);
   ['export-excel','export-detail','export-summary'].forEach(id=>byId(id).disabled=!show);
+  document.querySelectorAll('[data-pdf-report]').forEach(button=>button.disabled=!show || state.generatingPdf);
+  byId('report-show-select').disabled=state.generatingPdf;
+  if(byId('pdf-report-download').dataset.showId!==show?.id){
+    byId('pdf-report-download').hidden=true;
+    if(!state.generatingPdf)byId('pdf-report-status').textContent='';
+  }
   byId('show-status-panel').hidden=!show;
   if(show){
     const completed=Boolean(show.completedAt);
@@ -589,7 +598,7 @@ function renderReports(){
   for(const sale of all){
     const row=element('div',`transaction-row${sale.voidedAt?' is-void':''}`);
     const desc=element('div');
-    desc.append(element('div','transaction-summary',`${money(sale.totalCents)} · ${sale.paymentMethod}${sale.voidedAt?' · VOIDED':''}`));
+    desc.append(element('div','transaction-summary',`${money(sale.totalCents)} · ${reports.paymentName(sale.paymentMethod)}${sale.voidedAt?' · VOIDED':''}`));
     const when=new Date(sale.timestamp).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});
     const parts=sale.lines.map(line=>`${line.quantity} ${line.name}`).join(', ');
     desc.append(element('div','transaction-detail',`${when} · ${parts}`));row.append(desc);
@@ -654,8 +663,8 @@ async function exportShow(mode){
   for(const sale of sales){
     for(const line of sale.lines){
       for(const unitNet of line.unitNetPricesCents){
-        excel.push([line.name,line.category,{t:'n',v:unitNet/100,z:'0.00'},sale.paymentMethod,show.name,showDate,year]);
-        detail.push([sale.id,sale.timestamp,line.sku,line.name,line.category,(line.unitPriceCents/100).toFixed(2),((line.unitPriceCents-unitNet)/100).toFixed(2),(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date)]);
+        excel.push([line.name,line.category,{t:'n',v:unitNet/100,z:'0.00'},reports.paymentName(sale.paymentMethod),show.name,showDate,year]);
+        detail.push([sale.id,sale.timestamp,line.sku,line.name,line.category,(line.unitPriceCents/100).toFixed(2),((line.unitPriceCents-unitNet)/100).toFixed(2),(unitNet/100).toFixed(2),reports.paymentName(sale.paymentMethod),show.name,shortDate(show.date)]);
       }
     }
   }
@@ -667,6 +676,31 @@ async function exportShow(mode){
     summary.push([item.sku,item.name,item.category,String(item.qty),(item.total/100).toFixed(2)]);
   }
   return downloadCSV(summary,`${stem}-product-totals.csv`);
+}
+
+async function exportPdf(kind){
+  const show=reportShow();
+  if(!show || state.generatingPdf)return;
+  if(!window.pdfMake)throw new Error('PDF reports could not load. Refresh the app while online and try again.');
+  // Capture this show's records before rendering; switching shows cannot mix the output.
+  const data=reports.model(show,state.sales);
+  const names={card:'card-transactions',ledger:'item-ledger',summary:'show-summary'};
+  const filename=`${show.date}-${fileSafe(show.name)}-${names[kind]}.pdf`;
+  state.generatingPdf=true;
+  byId('report-show-select').disabled=true;
+  document.querySelectorAll('[data-pdf-report]').forEach(button=>button.disabled=true);
+  byId('pdf-report-status').textContent='Preparing PDF…';
+  byId('pdf-report-download').hidden=true;
+  try{
+    const blob=await window.pdfMake.createPdf(reports.definition(kind,data)).getBlob();
+    if(preparedPdfUrl)URL.revokeObjectURL(preparedPdfUrl);
+    preparedPdfUrl=URL.createObjectURL(blob);
+    const download=byId('pdf-report-download');download.href=preparedPdfUrl;download.download=filename;download.dataset.showId=show.id;download.hidden=false;
+    const launched=await saveFile(blob,filename);
+    if(launched)toast('PDF prepared. Save or print it from the file menu.');
+    byId('pdf-report-status').textContent=launched?'PDF prepared. Choose where to save it.':'Sharing canceled. You can still download the prepared PDF below.';
+  }catch(error){byId('pdf-report-status').textContent='PDF could not be prepared. Try again.';throw error;}
+  finally{state.generatingPdf=false;renderReports();}
 }
 
 function backupIsValid(data){
@@ -809,9 +843,9 @@ async function deleteAllData(){
     await db.clearAllData();
     dataChannel?.postMessage('data-changed');
     photoRequestId++;state.productPhoto=null;state.editingProductId=null;state.photoProcessing=false;
-    state.lastSaleId=null;state.activeCategory='All';state.payment='Square';state.photoSize=256;
+    state.lastSaleId=null;state.activeCategory='All';state.payment='Card';state.photoSize=256;
     byId('register-search').value='';byId('manage-search').value='';byId('show-hidden').checked=false;byId('manage-category').value='all';
-    document.querySelector('input[name="payment"][value="Square"]').checked=true;
+    document.querySelector('input[name="payment"][value="Card"]').checked=true;
     await reloadData();dialog.close();render();
     toast('All Market Register data on this device was deleted. You can start fresh.');
   }catch(error){byId('delete-all-error').textContent=error.message || 'Deletion failed. Please try again.';byId('delete-all-error').hidden=false;errorMessage(error);}
@@ -922,6 +956,7 @@ function connectEvents(){
   byId('export-excel').addEventListener('click',()=>exportShow('excel').catch(errorMessage));
   byId('export-detail').addEventListener('click',()=>exportShow('detail').catch(errorMessage));
   byId('export-summary').addEventListener('click',()=>exportShow('summary').catch(errorMessage));
+  document.querySelectorAll('[data-pdf-report]').forEach(button=>button.addEventListener('click',()=>exportPdf(button.dataset.pdfReport).catch(errorMessage)));
   byId('create-backup').addEventListener('click',createBackup);
   byId('start-restore').addEventListener('click',()=>byId('restore-file').click());
   byId('restore-file').addEventListener('change',async event=>{

@@ -34,6 +34,9 @@ async function page(saved = records(), { db = storage() } = {}) {
   window.Blob = Blob;
   window.File = File;
   window.XLSX = XLSX;
+  window.MarketReports = require('../market-register/reports.js');
+  window.URL.createObjectURL = () => 'blob:example-pdf';
+  window.URL.revokeObjectURL = () => {};
   window.navigator.canShare = () => true;
   window.navigator.share = async ({ files }) => { exports.push(...files); };
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
@@ -48,6 +51,61 @@ async function page(saved = records(), { db = storage() } = {}) {
   const select = async (id, value) => { byId(id).value = value; byId(id).dispatchEvent(new window.Event('change')); await settle(); };
   return { dom, db, byId, settle, view, select, exports };
 }
+
+test('the four payment buttons record their exact choice and legacy labels group in reports and Excel', async () => {
+  const data=records();data.sales=[{...sale('square'),paymentMethod:'Square'}, {...sale('cashapp'),paymentMethod:'Cash App'}];
+  const app=await page(data);
+  try{
+    const choices=[...app.dom.window.document.querySelectorAll('input[name="payment"]')];
+    assert.deepEqual(choices.map(input=>input.value),['Cash','Card','Venmo','CashApp']);
+    for(const input of choices){
+      app.dom.window.document.querySelector('.product-tile').click();
+      input.checked=true;input.dispatchEvent(new app.dom.window.Event('change'));
+      app.byId('complete-sale').click();await app.settle();
+      const latest=(await app.db.getAll('sales')).find(sale=>!['square','cashapp'].includes(sale.id)&&sale.paymentMethod===input.value);
+      assert.ok(latest,`${input.value} was saved`);
+    }
+    const before=copy(await app.db.snapshot());
+    app.view('shows');
+    assert.doesNotMatch(app.byId('reports-body').textContent,/Square|Cash App/);
+    app.byId('export-excel').click();await app.settle();
+    const book=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
+    const rows=XLSX.utils.sheet_to_json(book.Sheets.Sales,{header:1});
+    assert.equal(rows.filter(row=>row[3]==='Card').length,2);
+    assert.equal(rows.filter(row=>row[3]==='CashApp').length,2);
+    assert.deepEqual(copy(await app.db.snapshot()),before);
+  }finally{app.dom.window.close();}
+});
+
+test('PDF buttons share real PDFs for the selected show, preserve records, and offer a canceled-share download', async () => {
+  const app=await page();
+  try{
+    const pdfMake=require('../market-register/vendor/pdfmake.min.js');
+    pdfMake.addVirtualFileSystem(require('../market-register/vendor/vfs_fonts.js'));
+    app.dom.window.pdfMake=pdfMake;
+    const before=copy(await app.db.snapshot());
+    app.view('shows');
+    for(const [id,suffix] of [['export-card-pdf','card-transactions'],['export-ledger-pdf','item-ledger'],['export-show-pdf','show-summary']]){
+      app.byId(id).click();
+      for(let i=0;i<100 && app.byId(id).disabled;i++)await app.settle();
+      const file=app.exports.at(-1);
+      assert.equal(file.name,`2026-10-10-Example-market-${suffix}.pdf`);
+      assert.equal(file.type,'application/pdf');
+      assert.equal(Buffer.from(await file.arrayBuffer()).subarray(0,5).toString(),'%PDF-');
+      assert.equal(app.byId('pdf-report-download').hidden,false);
+    }
+    assert.deepEqual(copy(await app.db.snapshot()),before);
+    app.dom.window.navigator.share=async()=>{throw new DOMException('Canceled','AbortError');};
+    app.byId('export-card-pdf').click();
+    for(let i=0;i<100 && app.byId('export-card-pdf').disabled;i++)await app.settle();
+    assert.match(app.byId('pdf-report-status').textContent,/sharing canceled/i);
+    assert.equal(app.byId('pdf-report-download').download,'2026-10-10-Example-market-card-transactions.pdf');
+    await app.select('report-show-select','show2');
+    assert.equal(app.byId('pdf-report-download').hidden,true);
+    await app.select('report-show-select','');
+    assert.equal(app.byId('export-card-pdf').disabled,true);
+  }finally{app.dom.window.close();}
+});
 
 test('Export for Excel starts with a single sold item in the requested seven columns, without headers or SKU', async () => {
   const app = await page();

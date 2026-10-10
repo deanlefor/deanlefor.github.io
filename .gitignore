@@ -24,6 +24,9 @@ market-register-full-backup-*.json
 *-excel-sales.xlsx
 *-transactions.csv
 *-product-totals.csv
+*-card-transactions.pdf
+*-item-ledger.pdf
+*-show-summary.pdf
 .private/
 *.pem
 *.key
