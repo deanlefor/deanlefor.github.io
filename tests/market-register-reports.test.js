@@ -3,8 +3,45 @@ const assert = require('node:assert/strict');
 const reports = require('../market-register/reports.js');
 const pdfMake = require('../market-register/vendor/pdfmake.min.js');
 pdfMake.addVirtualFileSystem(require('../market-register/vendor/vfs_fonts.js'));
-const {show,sales,sale,line} = require('./fixtures/market-register-reports.js');
+const {show,sales,sale,line,adjustedSales} = require('./fixtures/market-register-reports.js');
 const options = {generatedAt:new Date('2026-10-10T21:00:00Z'), timeZone:'America/New_York'};
+
+test('transaction adjustments reconcile across reports without counting tips as merchandise or including void amounts', async () => {
+  const before = structuredClone(adjustedSales);
+  const data = reports.model(show, adjustedSales);
+  assert.equal(data.total, 4300);
+  assert.equal(data.tipTotal, 500);
+  assert.equal(data.merchandiseTotal, 3800);
+  assert.equal(data.discount, 800);
+  assert.equal(data.manualDiscount, 600);
+  assert.equal(data.promotionDiscount, 200);
+  assert.equal(data.items, 6);
+  assert.equal(data.validCount, 3);
+  assert.equal(data.cardCount, 1);
+  assert.equal(data.cardTotal, 2300);
+  assert.equal(data.payments.reduce((sum,row) => sum + row.total,0),data.total);
+  assert.equal(data.categories.reduce((sum,row) => sum + row.total,0),data.merchandiseTotal);
+  assert.equal(data.products.reduce((sum,row) => sum + row.qty,0),data.items);
+  assert.equal(data.ledger.filter(row=>!row.sale.voidedAt).reduce((sum,row)=>sum+row.amount,0),data.total);
+  assert.equal(data.ledger.filter(row=>row.isTip).length,3);
+  assert.deepEqual(data.ledger.filter(row=>row.sale.id==='example-both').map(row=>row.name),['Autumn coaster','Autumn coaster','Autumn coaster','Hand-painted ornament','Tip']);
+  assert.deepEqual(adjustedSales,before);
+  for (const kind of ['card','ledger','summary']) {
+    const doc=reports.definition(kind,data,options);
+    const text=JSON.stringify(doc);
+    assert.match(text,/Tip/);
+    if (kind==='card') {
+      const rows=doc.content.find(node=>node.table).table.body;
+      assert.equal(rows[1][3].text,'$23.00');
+      assert.match(JSON.stringify(rows[1]),/Tip: \$3.00/);
+      assert.match(JSON.stringify(rows[1]),/Discount: \$5.00/);
+      assert.deepEqual(rows[1].slice(4,6),['','']);
+      assert.equal(rows.at(-1)[3].text,'$23.00');
+    }
+    const bytes=await pdfMake.createPdf(doc).getBuffer();
+    assert.equal(bytes.subarray(0,5).toString(),'%PDF-');
+  }
+});
 
 test('card records include Card and legacy Square only, in time order, with voids excluded from totals', () => {
   const before = structuredClone(sales);

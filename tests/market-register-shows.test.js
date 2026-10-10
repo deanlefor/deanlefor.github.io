@@ -54,6 +54,180 @@ async function page(saved = records(), { db = storage(), channel = null } = {}) 
   return { dom, db, byId, settle, view, select, exports };
 }
 
+function adjustment(app, id, value) {
+  app.byId(id).value = value;
+  app.byId(id).dispatchEvent(new app.dom.window.Event('input'));
+}
+
+test('an interrupted sale write rolls back its record and all draft resets; failed clearing retains the current sale', async () => {
+  const app=await page();
+  try {
+    app.dom.window.document.querySelector('.product-tile').click();
+    adjustment(app,'sale-tip','3'); adjustment(app,'sale-discount','2'); await app.settle();
+    const before=copy(await app.db.snapshot());
+    const connection=await app.db.openDB();
+    const transaction=connection.transaction.bind(connection);
+    connection.transaction=(names, mode)=>{
+      const tx=transaction(names, mode);
+      if(mode==='readwrite') {
+        const meta=tx.objectStore('meta'), put=meta.put.bind(meta);
+        meta.put=row=>{if(row.id==='draftManualDiscountCents')throw new Error('Simulated interrupted draft reset');return put(row);};
+      }
+      return tx;
+    };
+    app.byId('complete-sale').click(); await app.settle();
+    assert.deepEqual(copy(await app.db.snapshot()), before);
+    assert.equal(app.byId('cart-total').textContent,'$13.00');
+    assert.equal(app.byId('sale-tip').value,'3');
+    assert.equal(app.byId('sale-discount').value,'2');
+    app.byId('clear-cart').click(); await app.settle();
+    assert.deepEqual(copy(await app.db.snapshot()), before);
+    assert.equal(app.byId('cart-total').textContent,'$13.00');
+    assert.equal(app.byId('clear-cart').disabled,false);
+    connection.transaction=transaction;
+    app.byId('clear-cart').click(); await app.settle();
+    assert.deepEqual(copy(await app.db.getMeta('draftCart')),{});
+    assert.equal(await app.db.getMeta('draftTipCents'),0);
+    assert.equal(await app.db.getMeta('draftManualDiscountCents'),0);
+    assert.equal(app.byId('cart-total').textContent,'$0.00');
+    assert.equal(app.byId('sale-tip').value,'');
+  } finally {app.dom.window.close();}
+});
+
+test('a sale saves both dollar adjustments and resets them for the next customer; Excel and reports reconcile', async () => {
+  const initial = records(); initial.sales = [];
+  const app = await page(initial);
+  try {
+    assert.equal(app.byId('sale-adjustments').open, false);
+    app.dom.window.document.querySelector('.product-tile').click();
+    adjustment(app, 'sale-tip', '3');
+    adjustment(app, 'sale-discount', '2');
+    assert.equal(app.byId('cart-total').textContent, '$13.00');
+    assert.equal(app.byId('tip-row').hidden, false);
+    assert.equal(app.byId('manual-discount-row').hidden, false);
+    app.byId('complete-sale').click(); await app.settle();
+    const saved = copy(await app.db.getAll('sales'));
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].tipCents, 300);
+    assert.equal(saved[0].manualDiscountCents, 200);
+    assert.equal(saved[0].promotionDiscountCents, 0);
+    assert.equal(saved[0].totalCents, 1300);
+    assert.deepEqual(saved[0].lines[0].unitNetPricesCents, [1000]);
+    assert.equal(await app.db.getMeta('draftTipCents'), 0);
+    assert.equal(await app.db.getMeta('draftManualDiscountCents'), 0);
+    assert.deepEqual(copy(await app.db.getMeta('draftCart')), {});
+    assert.equal(app.byId('sale-tip').value, '');
+    assert.equal(app.byId('sale-discount').value, '');
+    assert.equal(app.byId('sale-adjustments').open, false);
+    app.view('shows');
+    assert.match(app.byId('reports-body').textContent, /Total collected\$13.00/);
+    assert.match(app.byId('reports-body').textContent, /Items after discounts\$10.00Tips\$3.00Dollar discounts\$2.00/);
+    assert.match(app.byId('reports-body').textContent, /Tip \$3.00 · Discount \$2.00/);
+    app.byId('export-excel').click(); await app.settle();
+    const book = XLSX.read(Buffer.from(await app.exports.at(-1).arrayBuffer()), { type: 'buffer' });
+    const rows = XLSX.utils.sheet_to_json(book.Sheets.Sales, { header: 1 });
+    assert.equal(rows.length, 2);
+    assert.ok(rows.every(row => row.length === 7));
+    assert.deepEqual(rows.map(row => row.slice(0, 4)), [['Example', 'Coasters', 10, 'Card'], ['Tip', 'Tips', 3, 'Card']]);
+    assert.equal(rows.reduce((sum, row) => sum + Math.round(row[2] * 100), 0), saved[0].totalCents);
+    app.byId('export-detail').click(); await app.settle();
+    assert.match(await app.exports.at(-1).text(), /"Tip","Tips","3.00","0.00","3.00"/);
+    app.byId('export-summary').click(); await app.settle();
+    const summary = await app.exports.at(-1).text();
+    assert.match(summary, /"1","10.00"/);
+    assert.doesNotMatch(summary, /"Tip"/);
+    app.view('register');
+    app.dom.window.document.querySelector('.product-tile').click();
+    assert.equal(app.byId('cart-total').textContent, '$12.00');
+    app.byId('complete-sale').click(); await app.settle();
+    const next = (await app.db.getAll('sales')).find(sale => sale.id !== saved[0].id);
+    assert.equal(next.tipCents, 0); assert.equal(next.manualDiscountCents, 0);
+  } finally { app.dom.window.close(); }
+});
+
+test('invalid dollar entries and discounts above the item total block recording, including when a tip is present', async () => {
+  const app = await page();
+  try {
+    app.dom.window.document.querySelector('.product-tile').click();
+    adjustment(app, 'sale-tip', '5');
+    for (const value of ['13', '-1', '2.001', '10%']) {
+      adjustment(app, 'sale-discount', value);
+      assert.equal(app.byId('complete-sale').disabled, true);
+      assert.equal(app.byId('cart-total').textContent, '—');
+      assert.equal(app.byId('adjustments-error').hidden, false);
+      app.byId('complete-sale').click();
+    }
+    adjustment(app, 'sale-discount', '12');
+    assert.equal(app.byId('cart-total').textContent, '$5.00');
+    assert.equal(app.byId('complete-sale').disabled, false);
+    adjustment(app, 'sale-tip', '-1');
+    assert.equal(app.byId('complete-sale').disabled, true);
+    await app.settle();
+    assert.equal((await app.db.getAll('sales')).length, 1);
+  } finally { app.dom.window.close(); }
+});
+
+test('draft amounts survive backup and reload, block show changes without items, and clear together', async () => {
+  const initial = records(); initial.shows[1].completedAt = null;
+  const app = await page(initial);
+  let reopened;
+  try {
+    adjustment(app, 'sale-tip', '2.50');
+    adjustment(app, 'sale-discount', '1.25');
+    app.byId('new-show-register').click();
+    assert.equal(app.byId('show-dialog').open, false);
+    await app.select('active-show-select', 'show2');
+    assert.equal(app.byId('active-show-select').value, 'show1');
+    app.byId('complete-current-show').click();
+    assert.equal(app.byId('show-status-dialog').open, false);
+    app.view('backup'); app.byId('create-backup').click(); await app.settle();
+    const backup = JSON.parse(await app.exports.at(-1).text());
+    assert.doesNotThrow(() => app.dom.window.MarketData.validateBackup(backup));
+    assert.equal(backup.data.meta.find(row => row.id === 'draftTipCents').value, 250);
+    assert.equal(backup.data.meta.find(row => row.id === 'draftManualDiscountCents').value, 125);
+    reopened = await page(backup.data);
+    assert.equal(reopened.byId('sale-tip').value, '2.50');
+    assert.equal(reopened.byId('sale-discount').value, '1.25');
+    assert.equal(reopened.byId('sale-adjustments').open, true);
+    assert.equal(reopened.byId('clear-cart').disabled, false);
+    reopened.byId('clear-cart').click(); await reopened.settle();
+    assert.equal(await reopened.db.getMeta('draftTipCents'), 0);
+    assert.equal(await reopened.db.getMeta('draftManualDiscountCents'), 0);
+    assert.equal(reopened.byId('sale-adjustments').open, false);
+    assert.equal(reopened.byId('adjustments-error').hidden, true);
+    await reopened.select('active-show-select', 'show2');
+    assert.equal(reopened.byId('active-show-select').value, 'show2');
+  } finally { app.dom.window.close(); reopened?.dom.window.close(); }
+});
+
+test('storage guards amount-only drafts and failed commits retain all sale amounts', async () => {
+  const initial = records(); initial.shows[1].completedAt = null;
+  const db = storage(); await db.restore(initial);
+  await db.setMeta('draftTipCents', 300);
+  await assert.rejects(db.selectShow('show2'), /current sale/);
+  await assert.rejects(db.createShow({ id: 'show3', name: 'Other', date: '2026-10-10' }), /current sale/);
+  await assert.rejects(db.setShowCompleted('show1', true), /current sale/);
+  await db.setMetaValues({ draftTipCents: 0, draftManualDiscountCents: 200 });
+  await assert.rejects(db.selectShow('show2'), /current sale/);
+  const app = await page(initial);
+  try {
+    app.dom.window.document.querySelector('.product-tile').click();
+    adjustment(app, 'sale-tip', '3'); adjustment(app, 'sale-discount', '2');
+    const originalCommit = app.db.commitSale;
+    app.db.commitSale = async () => { throw new Error('Simulated save failure'); };
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal(app.byId('cart-total').textContent, '$13.00');
+    assert.equal(app.byId('sale-tip').value, '3');
+    assert.equal(app.byId('sale-discount').value, '2');
+    assert.equal(await app.db.getMeta('draftTipCents'), 300);
+    assert.equal(await app.db.getMeta('draftManualDiscountCents'), 200);
+    assert.equal((await app.db.getAll('sales')).length, 1);
+    app.db.commitSale = originalCommit;
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal((await app.db.getAll('sales')).length, 2);
+  } finally { app.dom.window.close(); }
+});
+
 test('the three payment buttons record their exact choice and legacy labels group in reports and Excel', async () => {
   const data=records();data.sales=[{...sale('square'),paymentMethod:'Square'}, {...sale('cashapp'),paymentMethod:'Cash App'}];
   const app=await page(data);

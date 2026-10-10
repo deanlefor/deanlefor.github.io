@@ -26,6 +26,12 @@
       )
       .map((sale, index) => ({
         ...sale,
+        // Older records stored only the automatic promotion discount.
+        tipCents: sale.tipCents || 0,
+        manualDiscountCents: sale.manualDiscountCents || 0,
+        promotionDiscountCents:
+          sale.promotionDiscountCents ??
+          (sale.discountCents || 0) - (sale.manualDiscountCents || 0),
         payment: paymentName(sale.paymentMethod),
         ref: String(index + 1).padStart(3, '0'),
       }));
@@ -35,12 +41,18 @@
       products = new Map();
     let total = 0,
       discount = 0,
+      tipTotal = 0,
+      manualDiscount = 0,
+      promotionDiscount = 0,
       items = 0,
       validCount = 0;
     for (const sale of transactions) {
       if (!sale.voidedAt) {
         total += sale.totalCents;
         discount += sale.discountCents || 0;
+        tipTotal += sale.tipCents;
+        manualDiscount += sale.manualDiscountCents;
+        promotionDiscount += sale.promotionDiscountCents;
         validCount++;
         const payment = payments.get(sale.payment) || {
           name: sale.payment,
@@ -91,6 +103,14 @@
         product.total += net;
         products.set(key, product);
       }
+      if (sale.tipCents)
+        ledger.push({
+          sale,
+          name: 'Tip',
+          category: 'Tips',
+          amount: sale.tipCents,
+          isTip: true,
+        });
     }
     const cards = transactions.filter((sale) => sale.payment === 'Card');
     return {
@@ -100,6 +120,10 @@
       cards,
       total,
       discount,
+      tipTotal,
+      manualDiscount,
+      promotionDiscount,
+      merchandiseTotal: total - tipTotal,
       items,
       validCount,
       voidCount: transactions.length - validCount,
@@ -187,7 +211,7 @@
       });
       content.push(
         note(
-          'Card payments only, including older Square records. Add tax and final charged amounts outside the app. Voided sales are shown for reference and excluded from totals.',
+          'Card payments only, including older Square records. Recorded amounts include tips and both discounts. Add tax and final charged amounts outside the app. Voided sales are shown for reference and excluded from totals.',
         ),
       );
       if (!data.cards.length)
@@ -213,6 +237,15 @@
                   {
                     text: `${continued ? 'Continued items:\n' : ''}${description}`,
                   },
+                  ...(!continued && (sale.tipCents || sale.discountCents)
+                    ? [
+                        {
+                          text: `Tip: ${money(sale.tipCents)}\nDiscount: ${money(sale.manualDiscountCents)} | 3 for $10: ${money(sale.promotionDiscountCents)}`,
+                          fontSize: 8,
+                          margin: [0, 5, 0, 0],
+                        },
+                      ]
+                    : []),
                   {
                     text: `App ID: ${sale.id}`,
                     fontSize: 7,
@@ -275,7 +308,7 @@
       });
       content.push(
         note(
-          `One row per individual item, oldest sale first. Prices include promotion discounts. ${data.voidCount} voided transactions are visible and excluded from the totals above. Ref. numbers match the card report.`,
+          `One row per individual item, oldest sale first. Item prices include all discounts; each tip has a separate row under its transaction. Tips do not count as items sold. ${data.voidCount} voided transactions are visible and excluded from the totals above. Ref. numbers match the card report.`,
         ),
       );
       if (!data.ledger.length)
@@ -320,6 +353,18 @@
           `${data.validCount} transactions  |  ${data.items} items sold  |  Discounts: ${money(data.discount)}\nAverage transaction: ${money(data.validCount ? Math.round(data.total / data.validCount) : 0)}  |  ${data.voidCount} voided transactions excluded`,
         ),
       );
+      content.push(
+        table(
+          ['Sale amounts', 'Amount'],
+          ['*', 110],
+          [
+            ['Items after discounts', amount(data.merchandiseTotal)],
+            ['Tips', amount(data.tipTotal)],
+            ['Dollar discounts', amount(data.manualDiscount)],
+            ['3 for $10 savings', amount(data.promotionDiscount)],
+          ],
+        ),
+      );
       content.push({ text: 'Payment totals', style: 'section' });
       if (data.payments.length)
         content.push(
@@ -334,11 +379,11 @@
           ),
         );
       else content.push(note('No nonvoid sales recorded.'));
-      content.push({ text: 'Category totals', style: 'section' });
+      content.push({ text: 'Category totals - items only', style: 'section' });
       if (data.categories.length)
         content.push(
           table(
-            ['Category', 'Items sold', 'Recorded amount'],
+            ['Category', 'Items sold', 'Net item sales'],
             ['*', 70, 110],
             data.categories.map((row) => [
               row.name,
@@ -352,7 +397,7 @@
       if (data.products.length)
         content.push(
           table(
-            ['Item title', 'Category', 'Items', 'Recorded amount'],
+            ['Item title', 'Category', 'Items', 'Net item sales'],
             ['*', 100, 40, 100],
             data.products.map((row) => [
               row.name,

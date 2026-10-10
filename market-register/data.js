@@ -1,4 +1,5 @@
-// Backup validation is shared with tests and runs before any replacement warning.
+// Checkout pricing and backup validation are shared with automated tests.
+// Validate backups before offering to replace any saved records.
 // Keep version 1 compatible: old optional settings and timestamps may be absent.
 (function (root, factory) {
   const data = factory();
@@ -10,6 +11,118 @@
     value !== null && typeof value === 'object' && !Array.isArray(value);
   const text = (value) => typeof value === 'string' && value.trim().length > 0;
   const cents = (value) => Number.isSafeInteger(value) && value >= 0;
+  // Empty means unused. Parse dollars exactly, without rounding extra decimals.
+  function parseDollarCents(value) {
+    const input = String(value).trim();
+    if (!input) return 0;
+    if (!/^(?:\d+(?:\.\d{0,2})?|\.\d{1,2})$/.test(input)) return null;
+    const [whole = '', fraction = ''] = input.split('.');
+    const amount = Number(whole || '0') * 100 + Number(fraction.padEnd(2, '0'));
+    return cents(amount) ? amount : null;
+  }
+  function priceSale(
+    products,
+    cart,
+    { tipCents = 0, manualDiscountCents = 0 } = {},
+  ) {
+    if (!cents(tipCents) || !cents(manualDiscountCents))
+      throw new Error(
+        'Enter a dollar amount with no more than two decimal places.',
+      );
+    let subtotalCents = 0,
+      count = 0;
+    const lines = [],
+      eligible = [];
+    for (const product of products) {
+      const quantity = cart[product.id] || 0;
+      if (!quantity) continue;
+      count += quantity;
+      if (
+        !Number.isSafeInteger(quantity) ||
+        quantity < 0 ||
+        count > MAX_CART_ITEMS ||
+        !cents(product.priceCents)
+      )
+        throw new Error(
+          'The current sale contains invalid item quantities or prices.',
+        );
+      const line = {
+        productId: product.id,
+        sku: product.sku,
+        name: product.name,
+        category: product.category,
+        unitPriceCents: product.priceCents,
+        quantity,
+        unitNetPricesCents: Array(quantity).fill(product.priceCents),
+        promotionEligible: Boolean(
+          product.promoEligible && product.priceCents === 400,
+        ),
+      };
+      subtotalCents += quantity * product.priceCents;
+      lines.push(line);
+      if (line.promotionEligible)
+        for (let index = 0; index < quantity; index++)
+          eligible.push({ line, index });
+    }
+    // Preserve the existing bundle allocation: $3.33, $3.33, $3.34.
+    const bundles = Math.floor(eligible.length / 3);
+    for (let k = 0; k < bundles; k++)
+      [67, 67, 66].forEach((discount, i) => {
+        const unit = eligible[k * 3 + i];
+        unit.line.unitNetPricesCents[unit.index] -= discount;
+      });
+    const promotionDiscountCents = bundles * 200;
+    const merchandiseBeforeManual = subtotalCents - promotionDiscountCents;
+    if (manualDiscountCents > merchandiseBeforeManual)
+      throw new Error(
+        'Discount cannot exceed the item total after 3 for $10 savings.',
+      );
+    if (manualDiscountCents) {
+      // Allocate the dollar discount proportionally after bundles. Largest
+      // remainders distribute leftover cents exactly. BigInt avoids overflow
+      // when multiplying amounts in a large basket. Tips never enter this sum.
+      const units = lines.flatMap((line) =>
+        line.unitNetPricesCents.map((amount, index) => {
+          const weighted = BigInt(manualDiscountCents) * BigInt(amount);
+          return {
+            line,
+            index,
+            discount: Number(weighted / BigInt(merchandiseBeforeManual)),
+            remainder: weighted % BigInt(merchandiseBeforeManual),
+          };
+        }),
+      );
+      let remaining =
+        manualDiscountCents -
+        units.reduce((sum, unit) => sum + unit.discount, 0);
+      units.sort((a, b) =>
+        a.remainder === b.remainder ? 0 : a.remainder > b.remainder ? -1 : 1,
+      );
+      for (const unit of units) {
+        if (remaining > 0) {
+          unit.discount++;
+          remaining--;
+        }
+        unit.line.unitNetPricesCents[unit.index] -= unit.discount;
+      }
+    }
+    const discountCents = promotionDiscountCents + manualDiscountCents;
+    const merchandiseTotalCents = subtotalCents - discountCents;
+    const totalCents = merchandiseTotalCents + tipCents;
+    if (!cents(subtotalCents) || !cents(totalCents))
+      throw new Error('The sale amount is too large.');
+    return {
+      lines,
+      subtotalCents,
+      promotionDiscountCents,
+      manualDiscountCents,
+      discountCents,
+      tipCents,
+      merchandiseTotalCents,
+      totalCents,
+      bundles,
+    };
+  }
   const timestamp = (value) =>
     typeof value === 'string' &&
     /^\d{4}-\d\d-\d\dT/.test(value) &&
@@ -101,7 +214,12 @@
         !sale.lines.length ||
         !cents(sale.subtotalCents) ||
         !cents(sale.discountCents) ||
-        !cents(sale.totalCents)
+        !cents(sale.totalCents) ||
+        (sale.tipCents !== undefined && !cents(sale.tipCents)) ||
+        (sale.manualDiscountCents !== undefined &&
+          !cents(sale.manualDiscountCents)) ||
+        (sale.promotionDiscountCents !== undefined &&
+          !cents(sale.promotionDiscountCents))
       ) {
         throw new Error('Backup contains an invalid sale.');
       }
@@ -137,8 +255,12 @@
         !cents(subtotal) ||
         !cents(net) ||
         subtotal !== sale.subtotalCents ||
-        net !== sale.totalCents ||
-        subtotal - net !== sale.discountCents
+        net + (sale.tipCents || 0) !== sale.totalCents ||
+        subtotal - net !== sale.discountCents ||
+        (sale.manualDiscountCents || 0) > sale.discountCents ||
+        (sale.promotionDiscountCents !== undefined &&
+          sale.promotionDiscountCents + (sale.manualDiscountCents || 0) !==
+            sale.discountCents)
       ) {
         throw new Error('Backup contains inconsistent sale totals.');
       }
@@ -162,9 +284,17 @@
       if (id === 'photoSize') valid = [256, 384, 512].includes(value);
       if (id === 'draftPayment')
         valid = ['Cash', 'Card', 'Venmo'].includes(value);
+      if (id === 'draftTipCents' || id === 'draftManualDiscountCents')
+        valid = cents(value);
       if (!valid) throw new Error(`Backup contains an invalid ${id} setting.`);
     }
     return data;
   }
-  return { validateBackup, calendarDate, MAX_CART_ITEMS };
+  return {
+    validateBackup,
+    calendarDate,
+    MAX_CART_ITEMS,
+    parseDollarCents,
+    priceSale,
+  };
 });

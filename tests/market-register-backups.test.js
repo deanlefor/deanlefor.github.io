@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const {validateBackup,calendarDate} = require('../market-register/data.js');
-const {show,sales} = require('./fixtures/market-register-reports.js');
+const {show,sales,adjustedSales} = require('./fixtures/market-register-reports.js');
 function backup() {
   return structuredClone({kind:'market-register-full-backup',version:1,data:{
     products:[{id:'example-product',name:'Example product',category:'Coasters',active:true,priceCents:400,photo:null}],
@@ -19,6 +19,28 @@ test('version 1 backups retain legacy payments, optional metadata, historical pr
   assert.doesNotThrow(()=>validateBackup(data));
   assert.equal(calendarDate('2024-02-29'),true);
   for(const date of ['2026-02-29','2026-02-31','2026-13-01','not-a-date'])assert.equal(calendarDate(date),false);
+});
+
+test('backups preserve attached tips, both discount types, and draft amounts; corrupted adjustments are rejected', () => {
+  const valid=backup(); valid.data.sales=structuredClone(adjustedSales);
+  valid.data.meta.push({id:'draftTipCents',value:300},{id:'draftManualDiscountCents',value:200});
+  const before=structuredClone(valid);
+  assert.equal(validateBackup(valid),valid.data);
+  assert.deepEqual(valid,before);
+  for(const change of [
+    data=>data.sales[0].tipCents=-1,
+    data=>data.sales[0].tipCents=300.5,
+    data=>data.sales[0].tipCents++,
+    data=>data.sales[0].manualDiscountCents=-1,
+    data=>data.sales[0].manualDiscountCents++,
+    data=>data.sales[0].promotionDiscountCents++,
+    data=>data.sales[0].discountCents++,
+    data=>data.meta.find(row=>row.id==='draftTipCents').value=-1,
+    data=>data.meta.find(row=>row.id==='draftManualDiscountCents').value='2.00',
+  ]) {
+    const damaged=structuredClone(valid);change(damaged.data);
+    assert.throws(()=>validateBackup(damaged),/Backup/);
+  }
 });
 
 const damage={

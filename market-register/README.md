@@ -1,4 +1,4 @@
-# Market Register — prototype 0.10
+# Market Register — prototype 0.12
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -68,6 +68,35 @@ The web host serves only the HTML, JavaScript, CSS, and icon files. This app has
 
 **This PWA cannot silently write the live database continuously to an arbitrary file in the iPad Files app.** Automatic live files would require a different deployment approach, such as a native or native-wrapped application. The backup action is intentionally explicit.
 
+## Tips and dollar discounts
+
+In **Current sale**, expand **Tip & discount** only when needed. Either field
+can be blank; both can be used on one transaction. Enter dollars with at most
+two decimal places. The dollar discount applies after automatic 3-for-$10
+savings and cannot exceed the remaining item total. A tip is added afterward
+and is never reduced by the discount. For example, $12 in items minus a $2
+discount plus a $3 tip records a $13 transaction.
+
+Valid amounts are remembered with the unfinished sale. Record or clear that
+sale before changing shows. A successful sale saves its tip, dollar discount,
+promotion savings, and final collected total together, then resets and closes
+the optional section for the next customer. Failed saves retain the draft.
+
+Reports show tips and both discount types separately. **Total collected** and
+payment totals include tips; merchandise counts and product/category totals
+include only the actual items. The card PDF shows the tip and discounts next
+to the transaction, with the full collected amount in its recorded-amount
+column. Voiding a sale excludes its tip and discounts from all totals too.
+
+The item ledger, Detailed CSV, and seven-column Excel export include a **Tip**
+row (category **Tips**) directly after that sale's items, when a tip was given.
+Dollar discounts are allocated proportionally across the actual items, with
+exact cent rounding, so item prices plus tip rows add up to the collected
+total. Product totals CSV reports merchandise only. Full backups retain the
+transaction amounts and unfinished draft amounts. Older records and version 1
+backups continue to work, with missing new amounts treated as zero; their
+existing discounts remain promotion discounts.
+
 ## Completing and reopening a show
 
 Choose or create an open show before tapping products to start a sale. The
@@ -121,7 +150,7 @@ The **Export for Excel** button makes a real Excel workbook (`.xlsx`) with a sin
 Item Title,Category,Price,Payment,Location (Show Name),Date,Year
 ```
 
-A separate row is written for *each individual item sold*, with **no title/header row or blank rows between items**, even when multiple items were purchased in one transaction. Location is the selected show's name; Date and Year come from that show's date. Voided sales are excluded. `Price` is the **actual amount allocated to that item after promotion discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** keeps its headers and also includes SKUs, transaction IDs, original prices, and item discount amounts. **Product totals CSV** keeps its headers and summarizes quantity and revenue by product.
+A separate row is written for *each individual item sold*, with **no title/header row or blank rows between items**, even when multiple items were purchased in one transaction. Location is the selected show's name; Date and Year come from that show's date. Voided sales are excluded. `Price` is the **actual amount allocated to that item after promotion and dollar discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** keeps its headers and also includes SKUs, transaction IDs, original prices, and item discount amounts. **Product totals CSV** keeps its headers and summarizes quantity and revenue by product.
 
 The first item starts in cell A1. Prices, dates, and years are typed spreadsheet values; prices display two decimal places and dates display as `m/d/yy`. Names and categories remain literal text, including names beginning with spreadsheet formula characters. The workbook does not pass through CSV/text import, avoiding blank rows inserted by text-sharing workflows. The Excel writer is stored with the app and works offline.
 
@@ -131,7 +160,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.11** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.12** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
@@ -146,7 +175,7 @@ generated file without having to recreate it.
   continue under the same reference with the amount shown once.
 - **Item ledger PDF:** one row per individual item in chronological order,
   showing its date/time, transaction reference, category, payment method, and
-  actual price after promotion discounts. Voided items remain visible.
+  actual price after promotion and dollar discounts. Voided items remain visible.
 - **Show summary PDF:** recorded revenue, transactions, items, discounts,
   average transaction, payment totals, category totals, and products ranked by
   quantity sold.
@@ -154,7 +183,7 @@ generated file without having to recreate it.
 Voided sales are marked and excluded from every total. Table headings repeat
 on later pages. Each page identifies the show, its status, generation time,
 time zone, and page number. The reports use the selected show's records saved
-on this device. Tax and adjustments made outside the app are not calculated
+on this device. Tax and later adjustments made outside the app are not calculated
 or included; app references are not card processor receipt IDs.
 
 The Register offers exactly **Cash, Card, and Venmo**, in a single row.
@@ -206,11 +235,11 @@ order. Adding or renaming a product places it in its alphabetical position.
 ## Technical notes
 
 - Plain HTML, CSS, and JavaScript, with locally bundled SheetJS for Excel and pdfmake/Roboto for PDFs (versions, sources, integrity, and licenses in `vendor/README.md`). No external script or PDF service is used.
-- Local data: IndexedDB (`db.js`). Every write checks and advances a revision in the same transaction. Storage schema version 2 keeps the original stores and records while closing older writers. UI reload and full backup read all stores in a single consistent snapshot. Photos are compressed by the device before storing.
+- Local data: IndexedDB (`db.js`). Every write checks and advances a revision in the same transaction. Storage schema version 3 keeps the original stores and records while closing older writers. UI reload and full backup read all stores in a single consistent snapshot. Photos are compressed by the device before storing.
 - Backup validation: `data.js` checks version 1 backup structure, dates, historical line details, quantities, settings, and the agreement between individual item prices and transaction totals before replacement is offered. Unsupported or damaged files leave current records intact. Historical product IDs may refer to retired products, and legacy payment labels remain supported.
 - Offline application shell: service worker (`service-worker.js`). It caches only static application files, not customer information.
 - App-install information: `manifest.webmanifest` and the `icons/` directory.
-- UI and integer-cent checkout pricing: `app.js`, `index.html`, and `styles.css`. Product order is alphabetical; the old insertion-order field is no longer written. Prices accept no more than two decimal places. A cart is limited to 10,000 units to bound per-item processing.
+- UI and checkout controls: `app.js`, `index.html`, and `styles.css`; shared integer-cent pricing and dollar discount allocation: `data.js`. Product order is alphabetical; the old insertion-order field is no longer written. Prices accept no more than two decimal places. A cart is limited to 10,000 units to bound per-item processing.
 - Shared historical report calculations and PDF layout: `reports.js`. Screen totals, product CSV, and PDFs use the same model. Historical name, SKU, and category changes remain distinct. Transaction order uses actual timestamps, including timezone offsets, with stable references for ties. Prepared PDF links are invalidated when records change; late rendering cannot offer an outdated file.
 - Third-party writers are pinned, locally bundled, and left unchanged. Their source, integrity, and licenses are recorded in `vendor/README.md`.
 - Run `node --test tests/market-register*.test.js` from the repository root for focused checks, or `npm test` for the entire website. Tests cover UI behavior with jsdom, storage transactions with fake-indexeddb, actual workbook and PDF generation, damaged backup rejection, interrupted-write rollback, storage upgrade, multiple-copy conflicts, promotion allocation, category/show management, and offline cache behavior. Browser checks use fictional local records; personal records are not test fixtures.
@@ -233,5 +262,5 @@ storage version needs a preservation test. Keep user records and generated
 exports out of this public repository. Re-run the relevant regression checks
 and test the browser workflow before publishing.
 
-Split payments, a configurable discount editor, direct legacy catalog import,
+Split payments, percentage discounts, direct legacy catalog import,
 automatic external backups, and multi-device synchronization are not supported.

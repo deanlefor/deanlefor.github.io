@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=0.9">
+  <link rel="stylesheet" href="./styles.css?v=0.12">
   <title>Market Register</title>
 </head>
 <body>
@@ -64,9 +64,20 @@
           <aside class="cart-panel surface" aria-label="Current sale">
             <div class="cart-heading"><div><h2>Current sale</h2><p id="cart-show-label">Choose a show to begin</p></div><span class="count-chip" id="cart-item-count">0 items</span></div>
             <div class="cart-items" id="cart-items"></div>
+            <details class="sale-adjustments" id="sale-adjustments">
+              <summary>Tip &amp; discount <span id="adjustments-summary"></span></summary>
+              <div class="two-cols">
+                <div><label for="sale-tip">Tip ($)</label><input id="sale-tip" type="text" inputmode="decimal" maxlength="18" autocomplete="off" placeholder="0.00" aria-describedby="adjustments-hint adjustments-error"></div>
+                <div><label for="sale-discount">Discount ($)</label><input id="sale-discount" type="text" inputmode="decimal" maxlength="18" autocomplete="off" placeholder="0.00" aria-describedby="adjustments-hint adjustments-error"></div>
+              </div>
+              <p class="field-hint" id="adjustments-hint">Optional dollar amounts for this sale. Discount applies after 3 for $10 savings. Tips are not discounted.</p>
+            </details>
+            <p class="adjustments-error" id="adjustments-error" role="alert" hidden></p>
             <div class="cart-breakdown" id="cart-breakdown">
               <div class="money-row"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>
               <div class="money-row discount-row" id="discount-row" hidden><span>3 for $10 savings</span><span id="cart-discount">−$0.00</span></div>
+              <div class="money-row discount-row" id="manual-discount-row" hidden><span>Discount</span><span id="cart-manual-discount">−$0.00</span></div>
+              <div class="money-row" id="tip-row" hidden><span>Tip</span><span id="cart-tip">$0.00</span></div>
               <div class="money-row grand-total"><span>Total</span><span id="cart-total">$0.00</span></div>
             </div>
             <fieldset class="payment-fieldset"><legend>Payment collected through</legend><div class="payment-choices" id="payment-choices">
@@ -104,13 +115,13 @@
             <button type="button" class="btn btn-outline" id="export-summary">Product totals CSV</button>
           </div>
         </div>
-        <p class="report-export-note">Excel workbook (.xlsx): one row per item, without headings, blank rows, or SKU.</p>
+        <p class="report-export-note">Excel workbook (.xlsx): one row per item, plus any tip. No headings, blank rows, or SKU.</p>
         <section class="surface pdf-reports" aria-labelledby="pdf-reports-heading">
           <div class="pdf-reports-heading"><h2 id="pdf-reports-heading">PDF reports</h2><p>Save or print records for the selected show.</p></div>
           <div class="pdf-report-options">
             <div><button type="button" class="btn btn-outline" id="export-card-pdf" data-pdf-report="card">Card transactions PDF</button><p>Every Card sale, with space to add tax and the final charged amount. Includes older Square sales.</p></div>
-            <div><button type="button" class="btn btn-outline" id="export-ledger-pdf" data-pdf-report="ledger">Item ledger PDF</button><p>Every individual item in time order, with its payment method and amount.</p></div>
-            <div><button type="button" class="btn btn-outline" id="export-show-pdf" data-pdf-report="summary">Show summary PDF</button><p>Payment totals, category totals, and products ranked by quantity sold.</p></div>
+            <div><button type="button" class="btn btn-outline" id="export-ledger-pdf" data-pdf-report="ledger">Item ledger PDF</button><p>Every individual item and tip in time order, with its payment method and amount.</p></div>
+            <div><button type="button" class="btn btn-outline" id="export-show-pdf" data-pdf-report="summary">Show summary PDF</button><p>Payment totals, tips, discounts, category totals, and products ranked by quantity sold.</p></div>
           </div>
           <p class="fine-print">Voided sales are marked and excluded from totals. Tax added outside the app is not included.</p>
           <p id="pdf-report-status" class="fine-print" role="status" aria-live="polite"></p>
@@ -149,7 +160,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.11</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.12</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -235,8 +246,8 @@
   <script src="./vendor/xlsx.mini.min.js?v=0.20.3"></script>
   <script src="./vendor/pdfmake.min.js?v=0.3.11"></script>
   <script src="./vendor/vfs_fonts.js?v=0.3.11"></script>
-  <script src="./data.js?v=0.11"></script>
-  <script src="./reports.js?v=0.11"></script>
-  <script type="module" src="./app.js?v=0.11"></script>
+  <script src="./data.js?v=0.12"></script>
+  <script src="./reports.js?v=0.12"></script>
+  <script type="module" src="./app.js?v=0.12"></script>
 </body>
 </html>

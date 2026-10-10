@@ -1,8 +1,8 @@
 // Offline IndexedDB storage. No remote endpoint is used.
 const DB_NAME = 'market-register-local';
-// Version 2 keeps the same stores and records. The upgrade closes connections
-// from older code whose ordinary writes did not advance the data revision.
-const DB_VERSION = 2;
+// Version 3 retains every store and record, while closing older connections
+// whose checkout and backups did not understand transaction tips and discounts.
+const DB_VERSION = 3;
 const STORES = ['products', 'shows', 'sales', 'meta'];
 let opening;
 let revision = null;
@@ -167,7 +167,7 @@ export function setMetaValues(values) {
       for (const [id, value] of Object.entries(values))
         tx.objectStore('meta').put({ id, value });
     },
-    'Category settings were not saved.',
+    'Settings were not saved.',
   );
 }
 
@@ -210,7 +210,10 @@ export function commitSale(sale) {
           );
         try {
           tx.objectStore('sales').add(sale);
-          tx.objectStore('meta').put({ id: 'draftCart', value: {} });
+          const meta = tx.objectStore('meta');
+          meta.put({ id: 'draftCart', value: {} });
+          meta.put({ id: 'draftTipCents', value: 0 });
+          meta.put({ id: 'draftManualDiscountCents', value: 0 });
         } catch (error) {
           fail(error);
         }
@@ -221,18 +224,24 @@ export function commitSale(sale) {
   );
 }
 
-const hasDraft = (draft) =>
-  draft &&
-  typeof draft === 'object' &&
-  Object.values(draft).some((quantity) => Number(quantity) > 0);
+// An amount entered before the first item still belongs to this show.
+const hasDraft = (settings) =>
+  settings.some(({ id, value }) =>
+    id === 'draftCart'
+      ? value &&
+        typeof value === 'object' &&
+        Object.values(value).some((quantity) => Number(quantity) > 0)
+      : ['draftTipCents', 'draftManualDiscountCents'].includes(id) &&
+        Number(value) > 0,
+  );
 
 export function createShow(show) {
   return write(
     ['shows'],
     (tx, done, fail) => {
-      const draft = tx.objectStore('meta').get('draftCart');
+      const draft = tx.objectStore('meta').getAll();
       draft.onsuccess = () => {
-        if (hasDraft(draft.result?.value))
+        if (hasDraft(draft.result))
           return fail(
             new Error(
               'Record or clear the current sale before creating another show.',
@@ -269,10 +278,7 @@ export function selectShow(id) {
         const active = settings.result.find(
           (row) => row.id === 'activeShowId',
         )?.value;
-        const draft = settings.result.find(
-          (row) => row.id === 'draftCart',
-        )?.value;
-        if (hasDraft(draft) && active && active !== id)
+        if (hasDraft(settings.result) && active && active !== id)
           return fail(
             new Error(
               'Record or clear the current sale before switching shows.',
@@ -309,10 +315,7 @@ export function setShowCompleted(id, completed) {
         const active = settings.result.find(
           (row) => row.id === 'activeShowId',
         )?.value;
-        const draft = settings.result.find(
-          (row) => row.id === 'draftCart',
-        )?.value;
-        if (completed && active === id && hasDraft(draft))
+        if (completed && active === id && hasDraft(settings.result))
           return fail(
             new Error(
               'Record or clear the current sale before completing this show.',

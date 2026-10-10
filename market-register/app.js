@@ -1,6 +1,6 @@
-import * as db from './db.js?v=0.11';
+import * as db from './db.js?v=0.12';
 
-// Market Register 0.11: no backend, analytics, account, or payment API.
+// Market Register 0.12: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -38,6 +38,8 @@ const state = {
   shows: [],
   sales: [],
   cart: {},
+  tipText: '',
+  manualDiscountText: '',
   activeShowId: null,
   reportShowId: null,
   activeCategory: 'All',
@@ -260,48 +262,73 @@ function totalCount() {
   return Object.values(state.cart).reduce((sum, q) => sum + q, 0);
 }
 
-// Apply "3 for $10" only to marked $4 items. Each actual item remains identifiable.
-// Allocate the $2 bundle discount across 3 unit rows (67c, 67c, 66c).
+// Checkout uses shared integer-cent pricing so all exports can reconcile with
+// the recorded total. Invalid edits remain visible and cannot become a sale.
 function priceCart() {
-  let subtotalCents = 0;
-  const lines = [];
-  const eligible = [];
-  for (const product of state.products) {
-    const quantity = Math.max(0, Number(state.cart[product.id]) || 0);
-    if (!quantity) continue;
-    const prices = Array(quantity).fill(product.priceCents);
-    subtotalCents += quantity * product.priceCents;
-    const line = {
-      productId: product.id,
-      sku: product.sku,
-      name: product.name,
-      category: canonicalCategory(product.category),
-      unitPriceCents: product.priceCents,
-      quantity,
-      unitNetPricesCents: prices,
-      promotionEligible: Boolean(
-        product.promoEligible && product.priceCents === 400,
-      ),
-    };
-    lines.push(line);
-    if (line.promotionEligible)
-      for (let i = 0; i < quantity; i++) eligible.push({ line, index: i });
-  }
-  const bundles = Math.floor(eligible.length / 3);
-  for (let k = 0; k < bundles; k++) {
-    [67, 67, 66].forEach((discount, i) => {
-      const unit = eligible[k * 3 + i];
-      unit.line.unitNetPricesCents[unit.index] -= discount;
+  const products = state.products.map((product) => ({
+    ...product,
+    category: canonicalCategory(product.category),
+  }));
+  const tipCents = dataRules.parseDollarCents(state.tipText);
+  const manualDiscountCents = dataRules.parseDollarCents(
+    state.manualDiscountText,
+  );
+  try {
+    if (tipCents === null)
+      throw new Error(
+        'Tip must be a positive dollar amount or zero, with no more than two decimal places.',
+      );
+    if (manualDiscountCents === null)
+      throw new Error(
+        'Discount must be a positive dollar amount or zero, with no more than two decimal places.',
+      );
+    return dataRules.priceSale(products, state.cart, {
+      tipCents,
+      manualDiscountCents,
     });
+  } catch (error) {
+    return {
+      ...dataRules.priceSale(products, state.cart),
+      tipCents: tipCents || 0,
+      manualDiscountCents: manualDiscountCents || 0,
+      error: error.message,
+    };
   }
-  const discountCents = bundles * 200;
-  return {
-    lines,
-    subtotalCents,
-    discountCents,
-    totalCents: subtotalCents - discountCents,
-    bundles,
-  };
+}
+function hasCurrentSale() {
+  return (
+    totalCount() > 0 ||
+    Boolean(state.tipText.trim() || state.manualDiscountText.trim())
+  );
+}
+function setAdjustments(tipCents = 0, manualDiscountCents = 0) {
+  const dollars = (cents) =>
+    cents
+      ? `${Math.floor(cents / 100)}.${String(cents % 100).padStart(2, '0')}`
+      : '';
+  state.tipText = dollars(tipCents);
+  state.manualDiscountText = dollars(manualDiscountCents);
+  byId('sale-tip').value = state.tipText;
+  byId('sale-discount').value = state.manualDiscountText;
+  byId('sale-adjustments').open = Boolean(tipCents || manualDiscountCents);
+}
+function editAdjustment(event) {
+  if (saving() || state.stale || !currentShow() || currentShow().completedAt)
+    return;
+  const tip = event.target.id === 'sale-tip';
+  state[tip ? 'tipText' : 'manualDiscountText'] = event.target.value;
+  const amount = dataRules.parseDollarCents(event.target.value);
+  if (amount !== null) {
+    // The same queue as the cart prevents a delayed tip save from leaking into
+    // the next sale. The sale commit clears all draft amounts atomically.
+    cartSaveQueue = cartSaveQueue
+      .catch(() => {})
+      .then(() =>
+        db.setMeta(tip ? 'draftTipCents' : 'draftManualDiscountCents', amount),
+      );
+    cartSaveQueue.catch(errorMessage);
+  }
+  renderCart();
 }
 
 function setView(view) {
@@ -549,12 +576,49 @@ function renderCart() {
     list.append(row);
   }
   byId('cart-subtotal').textContent = money(breakdown.subtotalCents);
-  byId('cart-discount').textContent = `−${money(breakdown.discountCents)}`;
-  byId('discount-row').hidden = breakdown.discountCents === 0;
-  byId('cart-total').textContent = money(breakdown.totalCents);
+  byId('cart-discount').textContent =
+    `−${money(breakdown.promotionDiscountCents)}`;
+  byId('discount-row').hidden = breakdown.promotionDiscountCents === 0;
+  byId('cart-manual-discount').textContent =
+    `−${money(breakdown.manualDiscountCents)}`;
+  byId('manual-discount-row').hidden = breakdown.manualDiscountCents === 0;
+  byId('cart-tip').textContent = money(breakdown.tipCents);
+  byId('tip-row').hidden = breakdown.tipCents === 0;
+  byId('cart-total').textContent = breakdown.error
+    ? '—'
+    : money(breakdown.totalCents);
+  byId('adjustments-error').hidden = !breakdown.error;
+  byId('adjustments-error').textContent = breakdown.error || '';
+  const applied = [];
+  if (breakdown.manualDiscountCents)
+    applied.push(`${money(breakdown.manualDiscountCents)} discount`);
+  if (breakdown.tipCents) applied.push(`${money(breakdown.tipCents)} tip`);
+  byId('adjustments-summary').textContent = breakdown.error
+    ? '· Check amounts'
+    : applied.length
+      ? `· ${applied.join(' / ')}`
+      : '';
   const show = currentShow();
+  for (const [id, value] of [
+    ['sale-tip', state.tipText],
+    ['sale-discount', state.manualDiscountText],
+  ]) {
+    const input = byId(id);
+    input.disabled =
+      saving() || state.stale || !show || Boolean(show.completedAt);
+    input.setAttribute(
+      'aria-invalid',
+      String(
+        dataRules.parseDollarCents(value) === null ||
+          (id === 'sale-discount' &&
+            breakdown.manualDiscountCents >
+              breakdown.subtotalCents - breakdown.promotionDiscountCents),
+      ),
+    );
+  }
   byId('complete-sale').disabled =
     !breakdown.lines.length ||
+    Boolean(breakdown.error) ||
     !show ||
     Boolean(show.completedAt) ||
     !state.ready ||
@@ -563,8 +627,7 @@ function renderCart() {
   byId('complete-sale').textContent = state.completing
     ? 'Saving sale…'
     : 'Record completed sale';
-  byId('clear-cart').disabled =
-    !breakdown.lines.length || saving() || state.stale;
+  byId('clear-cart').disabled = !hasCurrentSale() || saving() || state.stale;
   const undo = byId('undo-area');
   undo.hidden = !state.lastSaleId;
   if (state.lastSaleId) {
@@ -575,6 +638,35 @@ function renderCart() {
     byId('last-sale-summary').textContent = sale
       ? `Recorded ${money(sale.totalCents)}.`
       : 'Sale recorded.';
+  }
+}
+async function clearCurrentSale() {
+  if (saving() || state.stale || !hasCurrentSale()) return;
+  if (
+    !window.confirm(
+      'Clear the items, tip, and discount from the current sale? No sale has been recorded yet.',
+    )
+  )
+    return;
+  state.savingRecord = true;
+  renderRegister();
+  try {
+    // Clearing also recovers from a failed draft write. Wait for earlier edits,
+    // then clear all draft values together; keep the screen intact on failure.
+    await cartSaveQueue.catch(() => {});
+    await db.setMetaValues({
+      draftCart: {},
+      draftTipCents: 0,
+      draftManualDiscountCents: 0,
+    });
+    state.cart = {};
+    setAdjustments();
+    state.lastSaleId = null;
+  } catch (error) {
+    errorMessage(error);
+  } finally {
+    state.savingRecord = false;
+    renderRegister();
   }
 }
 async function completeSale() {
@@ -588,6 +680,7 @@ async function completeSale() {
       true,
     );
   if (!priced.lines.length) return;
+  if (priced.error) return toast(priced.error, true);
   state.completing = true;
   renderRegister();
   const sale = {
@@ -600,6 +693,9 @@ async function completeSale() {
     lines: priced.lines,
     subtotalCents: priced.subtotalCents,
     discountCents: priced.discountCents,
+    promotionDiscountCents: priced.promotionDiscountCents,
+    manualDiscountCents: priced.manualDiscountCents,
+    tipCents: priced.tipCents,
     totalCents: priced.totalCents,
     voidedAt: null,
   };
@@ -610,6 +706,7 @@ async function completeSale() {
     state.sales.unshift(sale);
     invalidateReports();
     state.cart = {};
+    setAdjustments();
     state.lastSaleId = sale.id;
     toast(
       `${money(sale.totalCents)} sale recorded. Payment method: ${reports.paymentName(sale.paymentMethod)}.`,
@@ -1007,7 +1104,7 @@ function renderProducts() {
 }
 function openShowDialog() {
   if (saving() || state.stale) return;
-  if (totalCount())
+  if (hasCurrentSale())
     return toast(
       'Record or clear the current sale before creating another show.',
       true,
@@ -1022,7 +1119,7 @@ function openShowDialog() {
 async function saveShow(event) {
   event.preventDefault();
   if (saving() || state.stale) return;
-  if (totalCount())
+  if (hasCurrentSale())
     return toast(
       'Record or clear the current sale before creating another show.',
       true,
@@ -1069,7 +1166,7 @@ async function chooseShow(id) {
     renderShowPickers();
     return;
   }
-  if (totalCount() && state.activeShowId && state.activeShowId !== id) {
+  if (hasCurrentSale() && state.activeShowId && state.activeShowId !== id) {
     renderShowPickers();
     return toast(
       'Record or clear the current sale before switching shows.',
@@ -1099,7 +1196,7 @@ async function chooseShow(id) {
 function openShowStatusDialog(show) {
   if (!show || saving() || state.stale) return;
   const completed = !show.completedAt;
-  if (completed && state.activeShowId === show.id && totalCount())
+  if (completed && state.activeShowId === show.id && hasCurrentSale())
     return toast(
       'Record or clear the current sale before completing this show.',
       true,
@@ -1124,7 +1221,7 @@ async function confirmShowStatus() {
   const change = state.showChange;
   if (!change || !byId('show-status-dialog').open || saving() || state.stale)
     return;
-  if (change.completed && state.activeShowId === change.id && totalCount())
+  if (change.completed && state.activeShowId === change.id && hasCurrentSale())
     return toast(
       'Record or clear the current sale before completing this show.',
       true,
@@ -1251,11 +1348,23 @@ function renderReports() {
   const data = reports.model(show, state.sales);
   const cards = element('div', 'report-stats');
   cards.append(
-    statCard('Show revenue', money(data.total)),
+    statCard('Total collected', money(data.total)),
     statCard('Items sold', String(data.items)),
     statCard('Transactions', String(data.validCount)),
   );
   area.append(cards);
+  area.append(
+    reportTable(
+      'Sale amounts',
+      ['Amount', 'Total'],
+      [
+        ['Items after discounts', money(data.merchandiseTotal)],
+        ['Tips', money(data.tipTotal)],
+        ['Dollar discounts', money(data.manualDiscount)],
+        ['3 for $10 savings', money(data.promotionDiscount)],
+      ],
+    ),
+  );
   const split = element('div', 'report-details');
   const payments = data.payments.map((row) => [row.name, money(row.total)]);
   const categories = data.categories.map((row) => [
@@ -1265,7 +1374,11 @@ function renderReports() {
   ]);
   split.append(reportTable('Payment methods', ['Method', 'Total'], payments));
   split.append(
-    reportTable('Categories', ['Category', 'Items', 'Total'], categories),
+    reportTable(
+      'Categories · items only',
+      ['Category', 'Items', 'Total'],
+      categories,
+    ),
   );
   area.append(split);
   const products = data.products.map((p) => [
@@ -1312,6 +1425,18 @@ function renderReports() {
       .map((line) => `${line.quantity} ${line.name}`)
       .join(', ');
     desc.append(element('div', 'transaction-detail', `${when} · ${parts}`));
+    const adjustments = [];
+    if (sale.tipCents) adjustments.push(`Tip ${money(sale.tipCents)}`);
+    if (sale.manualDiscountCents)
+      adjustments.push(`Discount ${money(sale.manualDiscountCents)}`);
+    if (sale.promotionDiscountCents)
+      adjustments.push(
+        `3 for $10 savings ${money(sale.promotionDiscountCents)}`,
+      );
+    if (adjustments.length)
+      desc.append(
+        element('div', 'transaction-detail', adjustments.join(' · ')),
+      );
     row.append(desc);
     const actions = element('div', 'transaction-controls');
     if (!sale.voidedAt) {
@@ -1471,6 +1596,32 @@ async function exportShow(mode) {
           shortDate(show.date),
         ]);
       }
+    }
+    // Tips are transaction amounts, never catalog items or merchandise counts.
+    // A separate row keeps the existing seven-column workbook reconcilable.
+    if (sale.tipCents) {
+      excel.push([
+        'Tip',
+        'Tips',
+        { t: 'n', v: sale.tipCents / 100, z: '0.00' },
+        sale.payment,
+        show.name,
+        showDate,
+        year,
+      ]);
+      detail.push([
+        sale.id,
+        sale.timestamp,
+        '',
+        'Tip',
+        'Tips',
+        (sale.tipCents / 100).toFixed(2),
+        '0.00',
+        (sale.tipCents / 100).toFixed(2),
+        sale.payment,
+        show.name,
+        shortDate(show.date),
+      ]);
     }
   }
   if (mode === 'excel') return downloadExcel(excel, `${stem}-excel-sales.xlsx`);
@@ -1890,6 +2041,10 @@ async function reloadData() {
         qty > 0,
     ),
   );
+  setAdjustments(
+    setting('draftTipCents', 0),
+    setting('draftManualDiscountCents', 0),
+  );
   state.lastBackupAt = lastBackup;
   const payment = reports.paymentName(setting('draftPayment', 'Card'));
   state.payment = ['Cash', 'Card', 'Venmo'].includes(payment)
@@ -1920,7 +2075,7 @@ async function refreshApp() {
     );
   if (state.stale) {
     if (
-      totalCount() &&
+      hasCurrentSale() &&
       !window.confirm(
         'Another copy changed the saved records. Refreshing will load those records and discard this copy’s unfinished cart. Continue?',
       )
@@ -1929,7 +2084,7 @@ async function refreshApp() {
     // Reload current cached files even offline: this refreshes local records.
     location.reload();
     return;
-  } else if (totalCount())
+  } else if (hasCurrentSale())
     return toast('Record or clear the current sale before refreshing.', true);
   if (!navigator.onLine)
     return toast('Connect to the internet to refresh the app.', true);
@@ -1992,21 +2147,10 @@ function connectEvents() {
   byId('show-dialog').addEventListener('cancel', (event) => {
     if (state.selectingShow) event.preventDefault();
   });
+  byId('sale-tip').addEventListener('input', editAdjustment);
+  byId('sale-discount').addEventListener('input', editAdjustment);
   byId('complete-sale').addEventListener('click', completeSale);
-  byId('clear-cart').addEventListener('click', () => {
-    if (saving() || state.stale) return;
-    if (
-      totalCount() &&
-      !window.confirm(
-        'Remove the items from the current sale? No sale has been recorded yet.',
-      )
-    )
-      return;
-    state.cart = {};
-    persistCart();
-    state.lastSaleId = null;
-    renderRegister();
-  });
+  byId('clear-cart').addEventListener('click', clearCurrentSale);
   byId('undo-sale').addEventListener('click', () => voidSale(state.lastSaleId));
   document.querySelectorAll('input[name="payment"]').forEach((input) =>
     input.addEventListener('change', (event) => {

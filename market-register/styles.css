@@ -100,6 +100,13 @@ main { padding: 26px 28px 10px; }
 .qty-button {width:30px;height:31px;border-radius:8px;background:#f0f3ee;border:1px solid #dbe3d9;font-weight:800;color:var(--forest);}
 .qty-label {font-weight:800;min-width:22px;text-align:center;font-variant-numeric:tabular-nums;}
 .cart-breakdown {padding:15px 0 4px;}
+.sale-adjustments {margin:12px 0 0;border:1px solid var(--line);border-radius:12px;padding:0 12px;}
+.sale-adjustments summary {cursor:pointer;min-height:44px;align-content:center;font-size:.9rem;font-weight:600;}
+.sale-adjustments summary span {font-weight:400;color:var(--muted);font-size:.78rem;}
+.sale-adjustments .field-hint {margin:8px 0 12px;}
+.sale-adjustments input {min-width:0;width:100%;}
+.sale-adjustments input[aria-invalid="true"] {border-color:#943b32;}
+.adjustments-error {color:#943b32;font-size:.85rem;margin:10px 0 0;}
 .money-row {display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:.85rem;color:#58675e;font-variant-numeric:tabular-nums;}
 .discount-row {color:#35735b;}
 .money-row.grand-total {margin-top:10px;padding:14px 0;font-size:1.1rem;color:var(--ink);font-weight:800;border-top:1px solid var(--line);}

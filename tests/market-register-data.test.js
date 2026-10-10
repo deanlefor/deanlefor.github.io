@@ -195,10 +195,11 @@ test('a temporary open failure can be retried instead of reusing a rejected prom
   assert.equal(attempts,2);
 });
 
-test('the storage upgrade preserves version 1 records and closes older writers', async () => {
+for (const version of [1, 2]) {
+test(`the storage upgrade preserves version ${version} records and closes older writers`, async () => {
   const indexedDB=new IDBFactory();
   const legacy=await new Promise((resolve,reject)=>{
-    const request=indexedDB.open('market-register-local',1);
+    const request=indexedDB.open('market-register-local',version);
     request.onupgradeneeded=()=>{for(const name of ['products','shows','sales','meta'])request.result.createObjectStore(name,{keyPath:'id'});};
     request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
   });
@@ -212,14 +213,17 @@ test('the storage upgrade preserves version 1 records and closes older writers',
   legacy.onversionchange=()=>{closed=true;legacy.close();};
   const upgraded=storage(indexedDB);await upgraded.openDB();
   assert.equal(closed,true);
+  assert.equal((await upgraded.openDB()).version,3);
   const after=copy(await upgraded.snapshot());
   for(const name of Object.keys(original))original[name].sort((a,b)=>a.id.localeCompare(b.id));
   assert.deepEqual(after,original);
   await assert.rejects(new Promise((resolve,reject)=>{
-    const request=indexedDB.open('market-register-local',1);
+    const request=indexedDB.open('market-register-local',version);
     request.onsuccess=()=>{request.result.close();resolve();};request.onerror=()=>reject(request.error);
   }),{name:'VersionError'});
 });
+
+}
 
 test('reconnecting after a closed database does not authorize stale catalog writes', async () => {
   const indexedDB=new IDBFactory();const first=storage(indexedDB);
