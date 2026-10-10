@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=0.7">
   <title>Market Register</title>
 </head>
 <body>
@@ -107,6 +107,7 @@
             <button type="button" class="btn btn-outline" id="export-summary">Product totals CSV</button>
           </div>
         </div>
+        <p class="report-export-note">Excel workbook (.xlsx): one row per item, without headings, blank rows, or SKU.</p>
         <div id="show-status-panel" class="surface show-status-panel" hidden>
           <div><span id="report-show-status" class="show-status-badge">Open</span><p id="report-show-status-detail"></p></div>
           <div class="show-status-actions"><button class="btn btn-outline" id="change-show-status" type="button">Complete show</button><button class="btn btn-outline" id="completed-show-backup" type="button" hidden>Go to backups</button></div>
@@ -140,7 +141,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.6</span><span id="footer-save">Stored locally on this device</span></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.7</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -223,6 +224,7 @@
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
-  <script type="module" src="./app.js"></script>
+  <script src="./vendor/xlsx.mini.min.js?v=0.20.3"></script>
+  <script type="module" src="./app.js?v=0.7"></script>
 </body>
 </html>

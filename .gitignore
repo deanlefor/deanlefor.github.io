@@ -21,6 +21,7 @@ project-tracker-backup-*.json
 talk-timer-backup-*.json
 market-register-full-backup-*.json
 *-excel-sales.csv
+*-excel-sales.xlsx
 *-transactions.csv
 *-product-totals.csv
 .private/

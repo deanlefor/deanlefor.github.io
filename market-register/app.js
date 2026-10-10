@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.6: no backend, analytics, account, or payment API.
+// Market Register 0.7: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -621,28 +621,45 @@ async function saveFile(blob,filename){
   setTimeout(()=>URL.revokeObjectURL(url),30000);
   return true; // Download initiated; not proof it was saved elsewhere.
 }
-async function downloadCSV(rows,filename,{hasHeader=true}={}){
-  if(rows.length<=(hasHeader?1:0)){toast('There are no sales to export for this show.',true);return;}
+async function downloadCSV(rows,filename){
+  if(rows.length<=1){toast('There are no sales to export for this show.',true);return;}
   const file=new Blob([makeCSV(rows)],{type:'text/csv;charset=utf-8'});
   const launched=await saveFile(file,filename);
   if(launched)toast('Export prepared. Save the file outside this app.');
+}
+async function downloadExcel(rows,filename){
+  if(!rows.length){toast('There are no sales to export for this show.',true);return;}
+  const xlsx=window.XLSX;
+  if(!xlsx)throw new Error('Excel export could not load. Refresh the app while online and try again.');
+  // Real worksheet rows avoid text-import line endings and inferred cell types.
+  const sheet=xlsx.utils.aoa_to_sheet(rows);
+  sheet['!cols']=[38,20,12,14,32,14,8].map(wch=>({wch}));
+  const workbook=xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(workbook,sheet,'Sales');
+  const bytes=xlsx.write(workbook,{bookType:'xlsx',type:'array',compression:true});
+  const file=new Blob([bytes],{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  const launched=await saveFile(file,filename);
+  if(launched)toast('Excel workbook (.xlsx) prepared. Save it outside this app.');
 }
 function reportShow(){return state.shows.find(s=>s.id===state.reportShowId);}
 async function exportShow(mode){
   const show=reportShow();if(!show)return;
   const sales=nonvoidSales(show.id).sort((a,b)=>a.timestamp.localeCompare(b.timestamp));
   const stem=`${show.date}-${fileSafe(show.name)}`;
+  const [year,month,day]=show.date.split('-').map(Number);
+  // Excel's 1900 date system; show dates are calendar dates, independent of timezone.
+  const showDate={t:'n',v:(Date.UTC(year,month-1,day)-Date.UTC(1899,11,30))/86400000,z:'m/d/yy'};
   const excel=[];
   const detail=[['Transaction ID','Time','SKU','Titles','Category','Original Price','Discount','Price Charged','Payment','Location','Date']];
   for(const sale of sales){
     for(const line of sale.lines){
       for(const unitNet of line.unitNetPricesCents){
-        excel.push([line.name,line.category,(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date),show.date.slice(0,4)]);
+        excel.push([line.name,line.category,{t:'n',v:unitNet/100,z:'0.00'},sale.paymentMethod,show.name,showDate,year]);
         detail.push([sale.id,sale.timestamp,line.sku,line.name,line.category,(line.unitPriceCents/100).toFixed(2),((line.unitPriceCents-unitNet)/100).toFixed(2),(unitNet/100).toFixed(2),sale.paymentMethod,show.name,shortDate(show.date)]);
       }
     }
   }
-  if(mode==='excel')return downloadCSV(excel,`${stem}-excel-sales.csv`,{hasHeader:false});
+  if(mode==='excel')return downloadExcel(excel,`${stem}-excel-sales.xlsx`);
   if(mode==='detail')return downloadCSV(detail,`${stem}-transactions.csv`);
   const data=reportData(show.id);
   const summary=[['SKU','Product','Category','Quantity','Net Sales']];
@@ -828,7 +845,25 @@ function updateNetworkStatus(){
   node.classList.toggle('is-offline',offline);
   node.querySelector('span:last-child').textContent=offline?'Offline · local data':'Local-first';
 }
+async function refreshApp(){
+  if(document.querySelector('dialog[open]'))return toast('Finish or close the open form before refreshing.',true);
+  if(totalCount())return toast('Record or clear the current sale before refreshing.',true);
+  if(state.completing || state.changingShow || state.selectingShow || state.managingData)return toast('Wait for saving to finish before refreshing.',true);
+  if(!navigator.onLine)return toast('Connect to the internet to refresh the app.',true);
+  const button=byId('refresh-app');button.disabled=true;button.textContent='Refreshing…';
+  try{
+    await cartSaveQueue;
+    if('serviceWorker' in navigator){
+      const registration=await navigator.serviceWorker.getRegistration();
+      if(registration)await registration.update();
+    }
+    // A fresh navigation also works when an older service worker still controls this page.
+    const target=new URL('./index.html',location.href);target.searchParams.set('refresh',String(Date.now()));
+    location.replace(target.href);
+  }catch(error){errorMessage(error);button.disabled=false;button.textContent='Refresh app';}
+}
 function connectEvents(){
+  byId('refresh-app').addEventListener('click',refreshApp);
   document.querySelectorAll('[data-view]').forEach(btn=>btn.addEventListener('click',()=>setView(btn.dataset.view)));
   document.querySelectorAll('[data-close-dialog]').forEach(btn=>btn.addEventListener('click',()=>byId(btn.dataset.closeDialog).close()));
   byId('register-search').addEventListener('input',renderRegister);
@@ -923,7 +958,7 @@ async function startup(){
     return;
   }
   if ('serviceWorker' in navigator && location.protocol!=='file:') {
-    navigator.serviceWorker.register('./service-worker.js').catch(error=>console.warn('Offline installation unavailable',error));
+    navigator.serviceWorker.register('./service-worker.js',{updateViaCache:'none'}).catch(error=>console.warn('Offline installation unavailable',error));
   }
 }
 startup();

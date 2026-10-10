@@ -1,4 +1,4 @@
-# Market Register — prototype 0.6
+# Market Register — prototype 0.7
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -111,7 +111,7 @@ reload after a reset, restore, or category change, and stale writes are blocked.
 
 ## Your existing Excel workbook
 
-The **Export for Excel** button makes a CSV with these seven columns in this order:
+The **Export for Excel** button makes a real Excel workbook (`.xlsx`) with a single `Sales` worksheet and these seven columns in this order:
 
 ```
 Item Title,Category,Price,Payment,Location (Show Name),Date,Year
@@ -119,7 +119,15 @@ Item Title,Category,Price,Payment,Location (Show Name),Date,Year
 
 A separate row is written for *each individual item sold*, with **no title/header row or blank rows between items**, even when multiple items were purchased in one transaction. Location is the selected show's name; Date and Year come from that show's date. Voided sales are excluded. `Price` is the **actual amount allocated to that item after promotion discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** keeps its headers and also includes SKUs, transaction IDs, original prices, and item discount amounts. **Product totals CSV** keeps its headers and summarizes quantity and revenue by product.
 
-Manually append/import the exported CSV rows to the workbook's `Sales` sheet. The application does not update the workbook in place or automatically refresh pivot tables. Check Excel's treatment of date formats when pasting or importing.
+The first item starts in cell A1. Prices, dates, and years are typed spreadsheet values; prices display two decimal places and dates display as `m/d/yy`. Names and categories remain literal text, including names beginning with spreadsheet formula characters. The workbook does not pass through CSV/text import, avoiding blank rows inserted by text-sharing workflows. The Excel writer is stored with the app and works offline.
+
+Open the exported workbook and copy the item rows into the existing workbook's `Sales` sheet. The application does not update the existing workbook in place or automatically refresh pivot tables.
+
+### Refreshing the app
+
+Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
+
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.7** in the footer before exporting again.
 
 ## Product entry and discounts
 
@@ -147,7 +155,7 @@ Manually append/import the exported CSV rows to the workbook's `Sales` sheet. Th
 2. Add two $4 qualifying products and a third non-qualifying product. Confirm a mixed basket of three eligible units totals $10, and verify the discount disappears if one unit is removed.
 3. Record a test show, three completed transactions using different payment methods, and void one transaction.
 4. Confirm the show revenue and payment totals exclude the voided transaction.
-5. Export all three reports. Open the Excel CSV in Excel and check that the product totals equal the register totals.
+5. Export all three reports. Open the Excel workbook in Excel and check its seven columns, consecutive item rows starting at A1, absence of headers/SKU, and prices that add up to the register total. Check that the other two CSV reports still have their headers.
 6. Save a full backup with at least one product photo. Confirm the `.json` file can be found outside the browser.
 7. Restore the backup on a second installation / test device. Check that the photo, sales, prices, and show name return correctly.
 8. Install to the iPad Home Screen and test starting the app **with internet fully disabled** (not just disabling Wi-Fi while cellular remains on).

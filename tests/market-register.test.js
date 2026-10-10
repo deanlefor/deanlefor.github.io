@@ -14,18 +14,19 @@ function worker(network) {
   const entries = new Map();
   const writes = [];
   const deleted = [];
+  const precached = [];
   const key = request => new URL(typeof request === 'string' ? request : request.url, scope).href;
   const cache = {
     match: async request => entries.get(key(request)),
     put: async (request, response) => { entries.set(key(request), response); writes.push(key(request)); },
-    addAll: async () => {},
+    addAll: async requests => { precached.push(...requests); },
   };
   const context = vm.createContext({
-    URL, Response,
+    URL, Request, Response,
     fetch: network,
     caches: {
       open: async () => cache,
-      keys: async () => ['market-register-shell-v8', 'market-register-shell-v9', 'project-tracker-v2'],
+      keys: async () => ['market-register-shell-v9', 'market-register-shell-v10', 'project-tracker-v2'],
       delete: async name => { deleted.push(name); return true; },
     },
     self: {
@@ -47,7 +48,7 @@ function worker(network) {
     handlers.fetch(event);
     return { event, pending };
   }
-  return { handlers, entries, writes, deleted, request };
+  return { handlers, entries, writes, deleted, precached, request };
 }
 
 test('Market Register stays unlisted and installs within its own directory', () => {
@@ -75,7 +76,10 @@ test('the worker leaves other tools, outside requests, and non-GET requests alon
 });
 
 test('online app updates replace stale cached files without caching arbitrary files', async () => {
-  const app = worker(async () => new Response('updated'));
+  const app = worker(async (_request, options) => {
+    assert.equal(options.cache, 'no-cache', 'online fetches revalidate instead of reusing stale HTTP assets');
+    return new Response('updated');
+  });
   app.entries.set(scope + 'app.js', new Response('stale'));
   const { event, pending } = app.request(scope + 'app.js');
   assert.equal(await (await event.response).text(), 'updated');
@@ -85,6 +89,34 @@ test('online app updates replace stale cached files without caching arbitrary fi
   await extra.event.response;
   await Promise.all(extra.pending);
   assert.deepEqual(app.writes, [scope + 'app.js']);
+});
+
+test('versioned app files and the Excel writer are cached and can load offline', async () => {
+  const html = fs.readFileSync(path.join(root, 'market-register/index.html'), 'utf8');
+  const dom = new JSDOM(html);
+  const source = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8');
+  try {
+    assert.match(source, /updateViaCache:'none'/);
+    const files = [...dom.window.document.querySelectorAll('script[src],link[rel="stylesheet"]')].map(node => node.getAttribute('src') || node.getAttribute('href'));
+    assert.ok(files.includes('./app.js?v=0.7'));
+    assert.ok(files.includes('./vendor/xlsx.mini.min.js?v=0.20.3'));
+    for (const file of files) {
+      assert.ok(workerSource.includes(`'${file}'`), `${file} is precached`);
+      const app = worker(async () => { throw new Error('offline'); });
+      app.entries.set(new URL(file, scope).href, new Response('cached asset'));
+      assert.equal(await (await app.request(new URL(file, scope).href).event.response).text(), 'cached asset');
+    }
+  } finally { dom.window.close(); }
+});
+
+test('installation fetches a fresh page and app files instead of caching an older HTTP version', async () => {
+  const app = worker(() => {});
+  let completion;
+  app.handlers.install({ waitUntil: promise => { completion = promise; } });
+  await completion;
+  assert.ok(app.precached.some(request => request.url === scope + 'index.html'));
+  assert.ok(app.precached.some(request => request.url === scope + 'app.js?v=0.7'));
+  for (const request of app.precached) assert.equal(request.cache, 'reload');
 });
 
 test('offline navigation and assets load from the app cache', async () => {
@@ -101,5 +133,5 @@ test('activating Market Register preserves other apps offline caches', async () 
   let completion;
   app.handlers.activate({ waitUntil: promise => { completion = promise; } });
   await completion;
-  assert.deepEqual(app.deleted, ['market-register-shell-v8']);
+  assert.deepEqual(app.deleted, ['market-register-shell-v9']);
 });

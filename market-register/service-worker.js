@@ -1,10 +1,12 @@
-const CACHE = 'market-register-shell-v9';
+const CACHE = 'market-register-shell-v10';
 const FILES = [
-  './', './index.html', './styles.css', './app.js', './db.js',
+  './', './index.html', './styles.css', './styles.css?v=0.7', './app.js', './app.js?v=0.7', './db.js',
+  './vendor/xlsx.mini.min.js?v=0.20.3',
   './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png'
 ];
 self.addEventListener('install', event => {
-  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(FILES)).then(() => self.skipWaiting()));
+  const requests=FILES.map(file=>new Request(new URL(file,self.registration.scope),{cache:'reload'}));
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(requests)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
   event.waitUntil(
@@ -19,7 +21,7 @@ self.addEventListener('fetch', event => {
   event.respondWith((async () => {
     const cache = await caches.open(CACHE);
     try {
-      const response = await fetch(event.request);
+      const response = await fetch(event.request,{cache:'no-cache'});
       // Cache only the static app files, and keep updates available online.
       if (response.ok && FILES.some(file => new URL(file, self.registration.scope).href === url.href)) {
         event.waitUntil(cache.put(event.request, response.clone()).catch(() => {}));

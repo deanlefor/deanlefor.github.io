@@ -5,6 +5,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const { JSDOM } = require('jsdom');
 const { IDBFactory } = require('fake-indexeddb');
+const XLSX = require('../market-register/vendor/xlsx.mini.min.js');
 
 const root = path.resolve(__dirname, '..');
 const dbSource = fs.readFileSync(path.join(root, 'market-register/db.js'), 'utf8').replace(/^export /gm, '');
@@ -32,6 +33,7 @@ async function page(saved = records(), { db = storage() } = {}) {
   const exports = [];
   window.Blob = Blob;
   window.File = File;
+  window.XLSX = XLSX;
   window.navigator.canShare = () => true;
   window.navigator.share = async ({ files }) => { exports.push(...files); };
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
@@ -53,8 +55,21 @@ test('Export for Excel starts with a single sold item in the requested seven col
     app.view('shows');
     app.byId('export-excel').click(); await app.settle();
     assert.equal(app.exports.length, 1);
-    assert.equal(app.exports[0].name, '2026-10-10-Example-market-excel-sales.csv');
-    assert.equal(await app.exports[0].text(), '"Example","Coasters","12.00","Cash","Example market","10/10/2026","2026"\r\n');
+    const file = app.exports[0];
+    assert.equal(file.name, '2026-10-10-Example-market-excel-sales.xlsx');
+    assert.equal(file.type, 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+    const bytes = Buffer.from(await file.arrayBuffer());
+    assert.equal(bytes.subarray(0, 2).toString(), 'PK', 'a real workbook ZIP package, not renamed CSV');
+    const workbook = XLSX.read(bytes, { type: 'buffer', cellNF: true });
+    assert.deepEqual(workbook.SheetNames, ['Sales']);
+    const sheet = workbook.Sheets.Sales;
+    assert.equal(sheet['!ref'], 'A1:G1');
+    assert.deepEqual(XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }), [['Example','Coasters','12.00','Cash','Example market','10/10/26','2026']]);
+    assert.equal(sheet.C1.t, 'n'); assert.equal(sheet.C1.v, 12);
+    assert.equal(sheet.F1.t, 'n');
+    const date = XLSX.SSF.parse_date_code(sheet.F1.v);
+    assert.deepEqual([date.y,date.m,date.d], [2026,10,10]);
+    assert.equal(sheet.G1.t, 'n'); assert.equal(sheet.G1.v, 2026);
   } finally { app.dom.window.close(); }
 });
 
@@ -76,12 +91,18 @@ test('Excel rows are consecutive, escaped, chronological, and limited to nonvoid
     app.view('shows');
     app.byId('export-excel').click(); await app.settle();
     assert.equal(app.exports.length, 1);
-    assert.equal(await app.exports[0].text(), [
-      '"\'=Example title","Signs","12.00","Cash","Example ""Fall"", market","10/10/2026","2026"',
-      '"Oak ""leaf"", coaster","Coasters","3.33","Card","Example ""Fall"", market","10/10/2026","2026"',
-      '"Oak ""leaf"", coaster","Coasters","3.33","Card","Example ""Fall"", market","10/10/2026","2026"',
-      '"Oak ""leaf"", coaster","Coasters","3.34","Card","Example ""Fall"", market","10/10/2026","2026"',
-    ].join('\r\n') + '\r\n');
+    const workbook = XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()), { type: 'buffer' });
+    const sheet = workbook.Sheets.Sales;
+    assert.equal(sheet['!ref'], 'A1:G4', 'four consecutive rows and exactly seven columns');
+    assert.deepEqual(XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }), [
+      ['=Example title','Signs','12.00','Cash','Example "Fall", market','10/10/26','2026'],
+      ['Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
+      ['Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
+      ['Oak "leaf", coaster','Coasters','3.34','Card','Example "Fall", market','10/10/26','2026'],
+    ]);
+    assert.equal(sheet.A1.t, 's'); assert.equal(sheet.A1.f, undefined, 'a formula-like name stays literal text');
+    assert.equal([sheet.C2,sheet.C3,sheet.C4].reduce((cents,cell) => cents + Math.round(cell.v*100), 0), 1000);
+    for (const address of Object.keys(sheet).filter(key => !key.startsWith('!'))) assert.equal(sheet[address].f, undefined);
   } finally { app.dom.window.close(); }
 });
 
@@ -111,6 +132,27 @@ test('detailed and product totals exports retain their column headers', async ()
     assert.equal((await app.exports[0].text()).split('\r\n')[0], '"Transaction ID","Time","SKU","Titles","Category","Original Price","Discount","Price Charged","Payment","Location","Date"');
     assert.equal((await app.exports[1].text()).split('\r\n')[0], '"SKU","Product","Category","Quantity","Net Sales"');
     assert.equal((await app.exports[1].text()).split('\r\n')[1], '"MR-0001","Example","Coasters","1","12.00"');
+  } finally { app.dom.window.close(); }
+});
+
+test('refresh refuses to discard an open product form or a pending sale, and explains offline status', async () => {
+  const app = await page();
+  try {
+    app.view('products'); app.byId('add-product').click();
+    app.byId('product-name').value = 'Unsaved example';
+    app.byId('refresh-app').click(); await app.settle();
+    assert.match(app.byId('toast').textContent, /close the open form/i);
+    assert.equal(app.byId('product-name').value, 'Unsaved example');
+    app.byId('product-dialog').querySelector('[data-close-dialog]').click();
+    app.view('register'); app.dom.window.document.querySelector('.product-tile').click(); await app.settle();
+    const before = copy(await app.db.snapshot());
+    app.byId('refresh-app').click(); await app.settle();
+    assert.match(app.byId('toast').textContent, /current sale/i);
+    assert.deepEqual(copy(await app.db.snapshot()), before);
+    app.byId('clear-cart').click(); await app.settle();
+    Object.defineProperty(app.dom.window.navigator, 'onLine', { value: false });
+    app.byId('refresh-app').click(); await app.settle();
+    assert.match(app.byId('toast').textContent, /connect to the internet/i);
   } finally { app.dom.window.close(); }
 });
 
