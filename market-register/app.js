@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.3: no backend, analytics, account, or payment API.
+// Market Register 0.4: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -26,11 +26,15 @@ const state = {
   products:[], shows:[], sales:[], cart:{}, activeShowId:null, reportShowId:null,
   activeCategory:'All', view:'register', productPhoto:null, editingProductId:null,
   payment:'Square', completing:false, lastSaleId:null, lastBackupAt:null, ready:false,
-  photoSize:256, photoProcessing:false, categories:[], lastProductCategory:null
+  photoSize:256, photoProcessing:false, categories:[], removedCategories:[], lastProductCategory:null,
+  categoryChange:null, managingData:false
 };
 let toastTimer;
 let cartSaveQueue = Promise.resolve();
 let photoRequestId=0;
+const dataChannel = typeof BroadcastChannel === 'function' ? new BroadcastChannel('market-register-data') : null;
+// Other open copies must discard stale records after a destructive data change.
+if (dataChannel) dataChannel.onmessage = () => location.reload();
 
 function toast(message, error=false) {
   const node = byId('toast');
@@ -48,9 +52,11 @@ const cleanCategory = value => typeof value === 'string' ? value.trim().replace(
 const categoryKey = value => cleanCategory(value).toLocaleLowerCase('en-US');
 function categoryList() {
   const unique = new Map();
+  const removed = new Set(state.removedCategories.map(categoryKey));
+  const used = new Set(state.products.map(product=>categoryKey(product.category)));
   for(const value of ['3D Printing','Jewelry','Bracelets','Coasters',...state.categories,...state.products.map(p=>p.category)]) {
     const category=cleanCategory(value);
-    if(category && !unique.has(categoryKey(category)))unique.set(categoryKey(category),category);
+    if(category && (!removed.has(categoryKey(category)) || used.has(categoryKey(category))) && !unique.has(categoryKey(category)))unique.set(categoryKey(category),category);
   }
   return [...unique.values()];
 }
@@ -61,7 +67,7 @@ function fillProductCategories(selected) {
   const select=byId('product-category');select.replaceChildren();
   categoryList().forEach(category=>select.add(new Option(category,category)));
   select.value=canonicalCategory(selected);
-  if(!select.value)select.value=categoryList()[0];
+  if(!select.value && categoryList().length)select.value=categoryList()[0];
 }
 function closeCategoryEntry() {
   byId('new-category-fields').hidden=true;
@@ -75,10 +81,11 @@ async function addCategory() {
   const existing=categoryList().find(category=>categoryKey(category)===categoryKey(name));
   const selected=existing || name;
   const categories=existing?state.categories:[...state.categories,name];
+  const removedCategories=state.removedCategories.filter(category=>categoryKey(category)!==categoryKey(selected));
   const button=byId('save-category');button.disabled=true;
   try {
-    await db.setMetaValues({productCategories:categories,lastProductCategory:selected});
-    state.categories=categories;state.lastProductCategory=selected;
+    await db.setMetaValues({productCategories:categories,removedProductCategories:removedCategories,lastProductCategory:selected});
+    state.categories=categories;state.removedCategories=removedCategories;state.lastProductCategory=selected;
     fillProductCategories(selected);closeCategoryEntry();
     toast(existing?`Selected existing category: ${existing}.`:`Category added: ${name}.`);
     byId('product-category').focus();
@@ -626,7 +633,9 @@ async function restoreBackup(file){
     const count=current.products.length+current.shows.length+current.sales.length;
     const warning=`Restore ${data.products.length} products, ${data.shows.length} shows, and ${data.sales.length} sales?\n\nThis REPLACES all data currently stored on this iPad${count?` (${current.products.length} products, ${current.shows.length} shows, ${current.sales.length} sales)`:''}.\n\nMake a separate full backup of the current data first. This action cannot be undone.`;
     if(!window.confirm(warning))return;
+    await cartSaveQueue.catch(()=>{});
     await db.restore(data);
+    dataChannel?.postMessage('data-changed');
     await reloadData();
     state.lastSaleId=null;state.activeCategory='All';
     setView('backup');toast('Backup restored. Verify the product and show totals.');
@@ -642,19 +651,103 @@ async function renderBackup(){
     try{const {usage,quota}=await navigator.storage.estimate();byId('backup-size').textContent=`Estimated browser storage used: ${(usage/1048576).toFixed(1)} MB${quota?` (device quota approximately ${(quota/1048576).toFixed(0)} MB)`:''}.`;}catch{}
   }
 }
+function renderDataManagement() {
+  const list=byId('data-category-list');list.replaceChildren();
+  const categories=categoryList();
+  byId('data-category-empty').hidden=categories.length>0;
+  for(const category of categories){
+    const products=state.products.filter(product=>categoryKey(product.category)===categoryKey(category));
+    const hidden=products.filter(product=>!product.active).length;
+    const row=element('div','data-category-row');
+    const details=element('div','data-category-details');
+    details.append(element('strong','',category),element('span','subtle-text',`${products.length} ${products.length===1?'product':'products'}${hidden?` · ${hidden} hidden`:''}`));
+    const actions=element('div','data-category-actions');
+    const merge=element('button','btn btn-outline btn-small','Merge into another');merge.type='button';merge.disabled=categories.length<2;
+    merge.setAttribute('aria-label',`Merge ${category} into another category`);
+    merge.addEventListener('click',()=>openCategoryChange(category,'merge'));
+    const remove=element('button','btn btn-danger btn-small','Delete unused category');remove.type='button';remove.disabled=products.length>0;
+    remove.setAttribute('aria-label',`Delete unused category ${category}`);
+    if(products.length)remove.title='Move all products, including hidden ones, out of this category first, or merge it.';
+    remove.addEventListener('click',()=>openCategoryChange(category,'delete'));
+    actions.append(merge,remove);row.append(details,actions);list.append(row);
+  }
+}
+function openCategoryChange(category,mode){
+  if(state.managingData || !categoryList().includes(category))return;
+  const products=state.products.filter(product=>categoryKey(product.category)===categoryKey(category));
+  if(mode==='delete' && products.length)return;
+  state.categoryChange={category,mode};
+  byId('category-dialog-title').textContent=mode==='merge'?'Merge categories':'Delete unused category?';
+  byId('category-change-summary').textContent=mode==='merge'?`Move ${products.length} ${products.length===1?'product':'products'} from “${category}”.`:`Remove “${category}” from the category dropdown.`;
+  byId('merge-category-fields').hidden=mode!=='merge';
+  const select=byId('merge-category-target');select.replaceChildren();select.add(new Option('Choose a category',''));
+  categoryList().filter(name=>categoryKey(name)!==categoryKey(category)).forEach(name=>select.add(new Option(name,name)));
+  byId('category-change-details').textContent=mode==='merge'?'Includes hidden products. Product photos and prices stay the same. The old category is removed; past sales retain their original category labels.':'No products or sales are deleted. You can add this category again later.';
+  byId('category-change-error').hidden=true;
+  const button=byId('confirm-category-change');button.textContent=mode==='merge'?'Merge categories':'Delete category';button.className=`btn ${mode==='merge'?'btn-primary':'btn-danger'}`;
+  button.disabled=mode==='merge';
+  byId('category-dialog').showModal();
+}
+async function confirmCategoryChange(){
+  const change=state.categoryChange;if(!change || state.managingData || !byId('category-dialog').open)return;
+  const target=change.mode==='merge'?byId('merge-category-target').value:null;
+  if(change.mode==='merge' && (!categoryList().includes(target)||categoryKey(target)===categoryKey(change.category)))return;
+  state.managingData=true;
+  const button=byId('confirm-category-change');button.disabled=true;
+  byId('category-dialog').querySelectorAll('[data-close-dialog]').forEach(control=>control.disabled=true);
+  try{
+    const moved=await db.changeCategory(change.category,target);
+    dataChannel?.postMessage('data-changed');
+    await reloadData();state.activeCategory='All';
+    byId('category-dialog').close();state.categoryChange=null;render();
+    toast(target?`Moved ${moved} ${moved===1?'product':'products'} to ${target}.`:`Category deleted: ${change.category}.`);
+  }catch(error){byId('category-change-error').textContent=error.message || 'Could not save category changes.';byId('category-change-error').hidden=false;errorMessage(error);}
+  finally{state.managingData=false;button.disabled=false;byId('category-dialog').querySelectorAll('[data-close-dialog]').forEach(control=>control.disabled=false);}
+}
+function updateDeleteConfirmation(){
+  byId('confirm-delete-all').disabled=state.managingData || !byId('delete-all-acknowledge').checked || byId('delete-all-phrase').value!=='DELETE ALL DATA';
+}
+function openDeleteAll(){
+  if(!state.ready || state.managingData || state.completing)return;
+  byId('delete-all-summary').textContent=`${state.products.length} products · ${state.shows.length} shows · ${state.sales.length} sales (including voided)`;
+  byId('delete-all-acknowledge').checked=false;byId('delete-all-phrase').value='';byId('delete-all-error').hidden=true;
+  updateDeleteConfirmation();byId('delete-all-dialog').showModal();
+}
+async function deleteAllData(){
+  // A click, form submission, or Enter key cannot bypass these requirements.
+  if(!byId('delete-all-dialog').open || !state.ready || state.managingData || state.completing || !byId('delete-all-acknowledge').checked || byId('delete-all-phrase').value!=='DELETE ALL DATA')return;
+  state.managingData=true;updateDeleteConfirmation();
+  const dialog=byId('delete-all-dialog');
+  dialog.querySelectorAll('input,button').forEach(control=>control.disabled=true);
+  byId('confirm-delete-all').textContent='Deleting…';
+  try{
+    await cartSaveQueue.catch(()=>{});
+    await db.clearAllData();
+    dataChannel?.postMessage('data-changed');
+    photoRequestId++;state.productPhoto=null;state.editingProductId=null;state.photoProcessing=false;
+    state.lastSaleId=null;state.activeCategory='All';state.payment='Square';state.photoSize=256;
+    byId('register-search').value='';byId('manage-search').value='';byId('show-hidden').checked=false;byId('manage-category').value='all';
+    document.querySelector('input[name="payment"][value="Square"]').checked=true;
+    await reloadData();dialog.close();render();
+    toast('All Market Register data on this device was deleted. You can start fresh.');
+  }catch(error){byId('delete-all-error').textContent=error.message || 'Deletion failed. Please try again.';byId('delete-all-error').hidden=false;errorMessage(error);}
+  finally{state.managingData=false;dialog.querySelectorAll('input,button').forEach(control=>control.disabled=false);byId('confirm-delete-all').textContent='Delete everything permanently';byId('delete-all-acknowledge').checked=false;byId('delete-all-phrase').value='';updateDeleteConfirmation();}
+}
 function render(){
   if(!state.ready) return;
   if(state.view==='register')renderRegister();
   if(state.view==='products')renderProducts();
   if(state.view==='shows')renderReports();
   if(state.view==='backup')renderBackup();
+  if(state.view==='data')renderDataManagement();
 }
 async function reloadData(){
-  const [products,shows,sales,active,draft,lastBackup,categories,lastCategory]=await Promise.all([
-    db.getAll('products'),db.getAll('shows'),db.getAll('sales'),db.getMeta('activeShowId'),db.getMeta('draftCart',{}),db.getMeta('lastBackupPreparedAt'),db.getMeta('productCategories',[]),db.getMeta('lastProductCategory')
+  const [products,shows,sales,active,draft,lastBackup,categories,lastCategory,removedCategories]=await Promise.all([
+    db.getAll('products'),db.getAll('shows'),db.getAll('sales'),db.getMeta('activeShowId'),db.getMeta('draftCart',{}),db.getMeta('lastBackupPreparedAt'),db.getMeta('productCategories',[]),db.getMeta('lastProductCategory'),db.getMeta('removedProductCategories',[])
   ]);
   state.products=products;state.shows=shows;state.sales=sales;
   state.categories=Array.isArray(categories)?categories.filter(category=>typeof category==='string'):[];
+  state.removedCategories=Array.isArray(removedCategories)?removedCategories.filter(category=>typeof category==='string'):[];
   state.lastProductCategory=canonicalCategory(lastCategory) || null;
   state.activeShowId=shows.some(s=>s.id===active)?active:null;
   state.reportShowId=state.activeShowId || [...shows].sort((a,b)=>b.date.localeCompare(a.date))[0]?.id || null;
@@ -726,6 +819,16 @@ function connectEvents(){
   byId('restore-file').addEventListener('change',async event=>{
     const file=event.target.files?.[0];event.target.value='';if(file)await restoreBackup(file);
   });
+  byId('data-backup').addEventListener('click',()=>setView('backup'));
+  byId('merge-category-target').addEventListener('change',()=>byId('confirm-category-change').disabled=state.managingData || !byId('merge-category-target').value);
+  byId('confirm-category-change').addEventListener('click',confirmCategoryChange);
+  byId('start-delete-all').addEventListener('click',openDeleteAll);
+  byId('delete-all-acknowledge').addEventListener('change',updateDeleteConfirmation);
+  byId('delete-all-phrase').addEventListener('input',updateDeleteConfirmation);
+  byId('delete-all-phrase').addEventListener('keydown',event=>{if(event.key==='Enter')event.preventDefault();});
+  byId('delete-all-backup').addEventListener('click',()=>{byId('delete-all-dialog').close();setView('backup');});
+  byId('confirm-delete-all').addEventListener('click',deleteAllData);
+  for(const id of ['category-dialog','delete-all-dialog'])byId(id).addEventListener('cancel',event=>{if(state.managingData)event.preventDefault();});
   window.addEventListener('online',updateNetworkStatus);
   window.addEventListener('offline',updateNetworkStatus);
 }

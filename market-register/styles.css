@@ -154,6 +154,26 @@ main { padding: 26px 28px 10px; }
 .backup-card .fine-print {font-size:.74rem;margin:15px 0 0;}
 .kicker {text-transform:uppercase;letter-spacing:.09em;color:var(--forest);font-weight:800;font-size:.73rem;}
 .backup-warning {background:var(--warn-bg);border-radius:8px;padding:12px;color:var(--warn);font-size:.8rem;line-height:1.4;}
+.category-management {margin-bottom:24px;}
+.data-category-row {display:flex;justify-content:space-between;align-items:center;gap:15px;padding:15px 0;border-top:1px solid var(--line);}
+.data-category-details {display:grid;gap:5px;min-width:0;overflow-wrap:anywhere;}
+.data-category-actions {display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;}
+.danger-zone {margin-top:32px;border:2px solid #e8c9c5;background:#fffaf8;}
+.danger-zone .kicker,.danger-dialog .kicker {color:var(--danger);}
+.danger-zone > .btn {margin-top:8px;}
+.btn-danger-solid {background:var(--danger);color:white;white-space:normal;}
+.btn-danger-solid:hover:not(:disabled) {background:#812d26;}
+.danger-dialog {width:min(600px,calc(100vw - 28px));}
+.danger-dialog p,#category-change-details {font-size:.88rem;line-height:1.5;}
+.delete-warning {padding:16px;border-radius:10px;border:1px solid #e8c9c5;background:#fff0ed;color:#812d26;margin-bottom:16px;}
+.delete-warning p {margin:8px 0 0;}
+.delete-acknowledgment {margin:24px 0 18px;align-items:flex-start;line-height:1.5;}
+.delete-acknowledgment input {flex-shrink:0;margin-top:3px;}
+.danger-dialog .dialog-actions {flex-wrap:wrap;gap:14px;justify-content:space-between;}
+.danger-dialog .dialog-actions .btn {white-space:normal;}
+.dialog-error {color:var(--danger);background:#fff0ed;padding:12px;border-radius:8px;}
+#merge-category-target {width:100%;}
+@media (max-width:720px){.main-nav {overflow-x:auto;}.nav-tab {flex-shrink:0;}.data-category-row {align-items:flex-start;flex-direction:column;}.data-category-actions {justify-content:flex-start;}.data-category-actions .btn {white-space:normal;}}
 .site-footer {color:#7b877e;padding:22px 28px 30px;font-size:.73rem;display:flex;align-items:center;justify-content:space-between;gap:10px;}
 .entry-dialog {width:min(720px,calc(100vw - 28px)); max-height:90dvh;overflow:auto;border:1px solid #d4ded4;border-radius:20px;padding:23px;box-shadow:0 20px 90px #10251b4b;color:var(--ink);background:var(--paper);}
 .entry-dialog::backdrop {background:rgba(20,37,28,.51);}

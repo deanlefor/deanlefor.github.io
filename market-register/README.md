@@ -1,4 +1,4 @@
-# Market Register — prototype 0.3
+# Market Register — prototype 0.4
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -68,6 +68,22 @@ The web host serves only the HTML, JavaScript, CSS, and icon files. This app has
 
 **This PWA cannot silently write the live database continuously to an arbitrary file in the iPad Files app.** Automatic live files would require a different deployment approach, such as a native or native-wrapped application. The backup action is intentionally explicit.
 
+## Starting fresh after testing
+
+Open **Data management → DELETE ALL DATA…**. The first tap opens a warning;
+it does not delete anything. To enable the final deletion button, check the
+acknowledgment and type **DELETE ALL DATA** exactly. Pressing Enter does not
+confirm deletion. Canceling or reopening the warning resets the confirmation.
+
+Deletion removes this installation’s products and photos, shows, sales
+(including voided sales), saved categories, current cart, and settings together
+in one transaction. Starter categories return. The app remains installed and
+its offline files remain available. Other tools on the website, records on
+other devices, and independent backup files are unaffected. There is no undo;
+save a full backup first if anything should be kept. Close other copies before
+continuing, particularly copies running an older app version. Current copies
+reload after a reset, restore, or category change, and stale writes are blocked.
+
 ## Your existing Excel workbook
 
 The **Export for Excel** button makes a CSV with the same eight headers as the uploaded `Sales` sheet:
@@ -88,10 +104,12 @@ Manually append/import the exported CSV rows to the workbook's `Sales` sheet. Th
   the existing name. Categories are saved even before their first product.
 - The last category used for a saved product is remembered after reopening the
   form or restarting the app. Existing product categories remain available.
-- To correct an old typo, edit each affected product and choose the intended
-  category. A typo disappears from the list after no products use it, unless it
-  was explicitly saved through **Add category**. Historical sales keep their
-  original category labels.
+- **Data management → Merge into another** moves every product in a category,
+  including hidden products, into the selected category and removes the old
+  name. Historical sales retain their original category labels.
+- **Delete unused category** removes an empty category after confirmation,
+  including a starter category. It stays removed after restarting or restoring
+  a current backup. Use **Add category** to bring the name back.
 - Choose **Save & add another** to keep the same category for the next entry.
 - Use **Duplicate** to create variations, or **Hide** to remove a discontinued product from checkout without deleting its recorded history.
 - Each product gets an internal unique ID even if a SKU is later edited. Auto-generated SKUs start `MR-0001`.

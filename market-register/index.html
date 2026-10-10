@@ -35,6 +35,7 @@
       <button class="nav-tab" data-view="products" type="button">Products</button>
       <button class="nav-tab" data-view="shows" type="button">Shows & reports</button>
       <button class="nav-tab" data-view="backup" type="button">Backups</button>
+      <button class="nav-tab" data-view="data" type="button">Data management</button>
     </nav>
 
     <main>
@@ -116,8 +117,24 @@
           <div class="surface backup-card"><div class="kicker">Important</div><h2>How offline works</h2><p>Install the app from Safari using <strong>Share → Add to Home Screen</strong>. Visit and load it while online first. Thereafter, a cached version can open offline.</p><p>Browser storage is still removable when the website is deleted or its data is cleared. Keep independent backup files.</p><p class="fine-print">There is no automatic cloud synchronization or payment connection.</p></div>
         </div>
       </section>
+      <section class="view" id="view-data" aria-label="Data management" hidden>
+        <div class="section-title-row"><div><h1>Data management</h1><p>Keep categories tidy, or start fresh after testing.</p></div><button class="btn btn-outline" id="data-backup" type="button">Go to backups</button></div>
+        <div class="surface backup-card category-management">
+          <div class="kicker">Catalog organization</div><h2>Manage categories</h2>
+          <p>Delete a category once it has no products. Merge a category to move all its products, including hidden ones, into another category. Past sales keep their original details.</p>
+          <div id="data-category-list" class="data-category-list"></div>
+          <p id="data-category-empty" hidden>No categories remain. Use Add category when creating a product.</p>
+        </div>
+        <div class="surface backup-card danger-zone">
+          <div class="kicker">Start over</div><h2>Delete all data on this device</h2>
+          <p>Removes every product and photo, category you added, show, sale (including voided sales), current sale, and saved setting from this copy of Market Register.</p>
+          <p>There is no undo. An existing full backup can restore your records. Backup files already saved outside the app and records on other devices are not deleted.</p>
+          <button class="btn btn-danger" id="start-delete-all" type="button">DELETE ALL DATA…</button>
+          <p class="fine-print">Opens a warning first. Nothing is deleted by this button.</p>
+        </div>
+      </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.3</span><span id="footer-save">Stored locally on this device</span></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.4</span><span id="footer-save">Stored locally on this device</span></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -170,6 +187,26 @@
       <label for="show-date">Show date</label><input type="date" id="show-date" required>
       <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="show-dialog">Cancel</button><button class="btn btn-primary" type="submit">Save & use this show</button></div>
     </form>
+  </dialog>
+
+  <dialog id="category-dialog" class="entry-dialog narrow-dialog" aria-labelledby="category-dialog-title">
+    <div class="dialog-heading"><div><h2 id="category-dialog-title">Manage category</h2><p id="category-change-summary"></p></div><button class="icon-button" type="button" data-close-dialog="category-dialog" aria-label="Close">×</button></div>
+    <div id="merge-category-fields"><label for="merge-category-target">Move products into</label><select id="merge-category-target"></select></div>
+    <p id="category-change-details"></p>
+    <p id="category-change-error" class="dialog-error" role="alert" hidden></p>
+    <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="category-dialog" autofocus>Cancel</button><button class="btn btn-primary" id="confirm-category-change" type="button">Confirm</button></div>
+  </dialog>
+
+  <dialog id="delete-all-dialog" class="entry-dialog narrow-dialog danger-dialog" aria-labelledby="delete-all-title">
+    <div class="dialog-heading"><div><div class="kicker">Permanent deletion</div><h2 id="delete-all-title">Delete all Market Register data?</h2></div></div>
+    <div class="delete-warning"><strong id="delete-all-summary"></strong><p>Every product and photo, show, sale, category you added, current sale, and saved setting in this copy of the app will be removed. Starter categories return. There is no undo.</p></div>
+    <p>Save a full backup first if you want to keep anything. Close other copies of Market Register before continuing. Records on other devices and backup files outside the app are not affected.</p>
+    <button class="btn btn-outline" id="delete-all-backup" type="button">Cancel and go to backups</button>
+    <label class="check-row delete-acknowledgment"><input id="delete-all-acknowledge" type="checkbox"> I understand this permanently deletes this app’s data on this device.</label>
+    <label for="delete-all-phrase">Type <strong>DELETE ALL DATA</strong> exactly to unlock deletion</label>
+    <input id="delete-all-phrase" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="Type the confirmation phrase">
+    <p id="delete-all-error" class="dialog-error" role="alert" hidden></p>
+    <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="delete-all-dialog" autofocus>Cancel — keep my data</button><button class="btn btn-danger-solid" id="confirm-delete-all" type="button" disabled>Delete everything permanently</button></div>
   </dialog>
 
   <div id="toast" class="toast" role="status" aria-live="polite"></div>
