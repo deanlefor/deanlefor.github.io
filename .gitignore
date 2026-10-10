@@ -19,6 +19,10 @@ game-history-backup-*.json
 game-history-before-restore-*.json
 project-tracker-backup-*.json
 talk-timer-backup-*.json
+market-register-full-backup-*.json
+*-excel-sales.csv
+*-transactions.csv
+*-product-totals.csv
 .private/
 *.pem
 *.key

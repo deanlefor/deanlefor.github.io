@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'none'; form-action 'none'; worker-src 'self'; manifest-src 'self'">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#244c41">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Market Register">
+  <meta name="description" content="Offline sales register for a small market booth, with records stored on this device.">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/icon-192.png">
+  <link rel="icon" href="./icons/icon-192.png">
+  <link rel="stylesheet" href="./styles.css">
+  <title>Market Register</title>
+</head>
+<body>
+  <div class="app-shell" id="app-shell">
+    <header class="site-header">
+      <div class="brand-area">
+        <div class="logo-mark" aria-hidden="true">M</div>
+        <div><div class="brand-title">Market Register</div><div class="brand-subtitle">A simpler way to run the booth</div></div>
+      </div>
+      <div class="header-status">
+        <span class="status-pill" id="network-status"><span class="status-dot"></span><span>Local-first</span></span>
+        <span class="status-secondary">No payment processing</span>
+      </div>
+    </header>
+
+    <nav class="main-nav" aria-label="App sections">
+      <button class="nav-tab is-active" data-view="register" type="button" aria-current="page">Register</button>
+      <button class="nav-tab" data-view="products" type="button">Products</button>
+      <button class="nav-tab" data-view="shows" type="button">Shows & reports</button>
+      <button class="nav-tab" data-view="backup" type="button">Backups</button>
+    </nav>
+
+    <main>
+      <section class="view is-visible" id="view-register" aria-label="Register">
+        <div class="section-title-row register-topline">
+          <div><h1>Register</h1><p>Tap products to add them to the current sale.</p></div>
+          <div class="show-picker-group">
+            <label for="active-show-select">Current show</label>
+            <div class="inline-controls">
+              <select id="active-show-select" aria-label="Current show"></select>
+              <button class="btn btn-outline" type="button" id="new-show-register">+ New show</button>
+            </div>
+          </div>
+        </div>
+        <div class="register-layout">
+          <section class="catalog-panel surface" aria-label="Product selection">
+            <div class="catalog-top-controls">
+              <div class="category-tabs" id="category-tabs" role="group" aria-label="Product categories"></div>
+              <input type="search" id="register-search" class="search-input" placeholder="Search products" aria-label="Search products">
+            </div>
+            <div class="product-grid" id="product-grid"></div>
+            <div class="empty-state" id="register-empty" hidden></div>
+          </section>
+          <aside class="cart-panel surface" aria-label="Current sale">
+            <div class="cart-heading"><div><h2>Current sale</h2><p id="cart-show-label">Choose a show to begin</p></div><span class="count-chip" id="cart-item-count">0 items</span></div>
+            <div class="cart-items" id="cart-items"></div>
+            <div class="cart-breakdown" id="cart-breakdown">
+              <div class="money-row"><span>Subtotal</span><span id="cart-subtotal">$0.00</span></div>
+              <div class="money-row discount-row" id="discount-row" hidden><span>3 for $10 savings</span><span id="cart-discount">−$0.00</span></div>
+              <div class="money-row grand-total"><span>Total</span><span id="cart-total">$0.00</span></div>
+            </div>
+            <fieldset class="payment-fieldset"><legend>Payment collected through</legend><div class="payment-choices" id="payment-choices">
+              <label><input type="radio" name="payment" value="Square" checked><span>Square</span></label>
+              <label><input type="radio" name="payment" value="Cash"><span>Cash</span></label>
+              <label><input type="radio" name="payment" value="Venmo"><span>Venmo</span></label>
+              <label><input type="radio" name="payment" value="PayPal"><span>PayPal</span></label>
+              <label><input type="radio" name="payment" value="Cash App"><span>Cash App</span></label>
+              <label><input type="radio" name="payment" value="Other"><span>Other</span></label>
+            </div></fieldset>
+            <button type="button" id="complete-sale" class="btn btn-primary btn-large" disabled>Record completed sale</button>
+            <button type="button" id="clear-cart" class="btn btn-text">Clear current sale</button>
+            <p class="fine-print">Collect and confirm payment separately. This screen only records the sale.</p>
+            <div class="undo-area" id="undo-area" hidden><span id="last-sale-summary">Sale recorded.</span><button type="button" class="link-button" id="undo-sale">Void last sale</button></div>
+          </aside>
+        </div>
+      </section>
+
+      <section class="view" id="view-products" aria-label="Manage products" hidden>
+        <div class="section-title-row"><div><h1>Products</h1><p>Create picture buttons once, then tap them during shows. No stock counting.</p></div><button id="add-product" class="btn btn-primary" type="button">+ Add product</button></div>
+        <div class="management-tools surface">
+          <input type="search" id="manage-search" class="search-input" placeholder="Find a product" aria-label="Find a product">
+          <select id="manage-category" aria-label="Filter product category"><option value="all">All categories</option></select>
+          <label class="check-row"><input type="checkbox" id="show-hidden"> Show hidden products</label>
+          <span class="subtle-text" id="product-count"></span>
+        </div>
+        <div id="manage-product-list" class="management-grid"></div>
+        <div id="manage-empty" class="empty-state" hidden></div>
+      </section>
+
+      <section class="view" id="view-shows" aria-label="Shows and reports" hidden>
+        <div class="section-title-row"><div><h1>Shows & reports</h1><p>A separate record of everything sold at each event.</p></div><button id="new-show-report" class="btn btn-primary" type="button">+ New show</button></div>
+        <div class="report-toolbar surface">
+          <div><label for="report-show-select">View show</label><select id="report-show-select"></select></div>
+          <div class="report-actions">
+            <button type="button" class="btn btn-outline" id="export-excel">Export for Excel</button>
+            <button type="button" class="btn btn-outline" id="export-detail">Detailed CSV</button>
+            <button type="button" class="btn btn-outline" id="export-summary">Product totals CSV</button>
+          </div>
+        </div>
+        <div id="reports-body"></div><p class="report-backup-note">After each market, export this show for Excel, then save a <strong>full backup</strong> from the Backups tab. An Excel sales export alone does not include product photos or your catalog.</p>
+      </section>
+
+      <section class="view" id="view-backup" aria-label="Backups and restore" hidden>
+        <div class="section-title-row"><div><h1>Backups & data</h1><p>The catalog and sales are saved on this iPad, not on a server.</p></div></div>
+        <div class="backup-layout">
+          <div class="surface backup-card"><div class="kicker">Your records</div><h2>All local data</h2><p id="backup-record-summary">Loading…</p><p class="subtle-text" id="backup-size"></p><div id="last-backup-label" class="backup-warning"></div></div>
+          <div class="surface backup-card"><div class="kicker">Make a copy</div><h2>Full backup</h2><p>Includes every product, photo, show, and sale in one restorable JSON file. Save it in Files, on a computer, or in iCloud Drive.</p><button class="btn btn-primary" id="create-backup" type="button">Save full backup</button><p class="fine-print">A backup isn't safe until you've actually saved the file outside this app. The app cannot verify where you stored it.</p></div>
+          <div class="surface backup-card"><div class="kicker">Recovery</div><h2>Restore a backup</h2><p>Import an earlier full backup. Restoring replaces the current local catalog and sales history after confirmation.</p><button class="btn btn-outline" id="start-restore" type="button">Choose backup file</button><input type="file" id="restore-file" accept=".json,application/json" hidden><p class="fine-print">Try restoring a test backup on another device before relying on this app at a market.</p></div>
+          <div class="surface backup-card"><div class="kicker">Important</div><h2>How offline works</h2><p>Install the app from Safari using <strong>Share → Add to Home Screen</strong>. Visit and load it while online first. Thereafter, a cached version can open offline.</p><p>Browser storage is still removable when the website is deleted or its data is cleared. Keep independent backup files.</p><p class="fine-print">There is no automatic cloud synchronization or payment connection.</p></div>
+        </div>
+      </section>
+    </main>
+    <footer class="site-footer"><span>Market Register · Prototype 0.2</span><span id="footer-save">Stored locally on this device</span></footer>
+  </div>
+
+  <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
+    <form id="product-form" novalidate>
+      <div class="dialog-heading"><div><h2 id="product-dialog-title">Add a product</h2><p>Photos are optional. You can always add one later.</p></div><button class="icon-button" type="button" data-close-dialog="product-dialog" aria-label="Close">×</button></div>
+      <input type="hidden" id="product-id">
+      <div class="product-form-grid">
+        <div class="photo-input-col">
+          <div class="photo-preview" id="photo-preview"><span class="photo-placeholder">Photo</span></div>
+          <div class="photo-actions">
+            <label class="btn btn-primary photo-upload-button" for="product-camera">Take photo</label>
+            <input id="product-camera" type="file" accept="image/*" capture="environment" class="visually-hidden">
+            <label class="btn btn-outline photo-upload-button" for="product-photo">Choose existing photo</label>
+            <input id="product-photo" type="file" accept="image/*" class="visually-hidden">
+          </div>
+          <label class="photo-size-label" for="photo-size">Size of new photos</label>
+          <select id="photo-size" aria-label="Saved photo resolution">
+            <option value="256">256 × 256 · Small</option>
+            <option value="384">384 × 384 · Medium</option>
+            <option value="512">512 × 512 · Large</option>
+          </select>
+          <p class="photo-status" id="photo-status" role="status" aria-live="polite">Photos are resized automatically before saving.</p>
+          <button type="button" class="btn btn-text" id="remove-photo">Remove photo</button>
+        </div>
+        <div class="form-fields">
+          <label for="product-name">Name <span class="required">*</span></label><input id="product-name" required maxlength="100" autocomplete="off" placeholder="3D Printed Dragon">
+          <div class="two-cols">
+            <div><label for="product-price">Price ($) <span class="required">*</span></label><input id="product-price" inputmode="decimal" type="number" min="0" max="9999" step="0.01" required placeholder="12.00"></div>
+            <div><label for="product-category">Category / tab <span class="required">*</span></label><input id="product-category" list="category-options" maxlength="55" placeholder="3D Printing" required><datalist id="category-options"></datalist></div>
+          </div>
+          <label for="product-sku">SKU (optional)</label><input id="product-sku" autocomplete="off" maxlength="45" placeholder="Assigned automatically if blank"><p class="field-hint">Use an existing Excel SKU, or let the app create one.</p>
+          <label class="check-row promo-check"><input type="checkbox" id="product-promo"> Eligible for the 3 × $4 for $10 promotion</label>
+          <p class="field-hint">Promotion applies automatically when 3 eligible $4 items are in the same sale.</p>
+        </div>
+      </div>
+      <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="product-dialog">Cancel</button><button class="btn btn-outline" type="submit" id="save-add-another" data-action="another">Save & add another</button><button class="btn btn-primary" type="submit" id="save-product">Save product</button></div>
+    </form>
+  </dialog>
+
+  <dialog id="show-dialog" class="entry-dialog narrow-dialog" aria-labelledby="show-dialog-title">
+    <form id="show-form">
+      <div class="dialog-heading"><div><h2 id="show-dialog-title">New show</h2><p>Every sale will be linked to this event.</p></div><button class="icon-button" type="button" data-close-dialog="show-dialog" aria-label="Close">×</button></div>
+      <label for="show-name">Show or market name</label><input type="text" id="show-name" required maxlength="120" placeholder="Saturday Farmers Market">
+      <label for="show-date">Show date</label><input type="date" id="show-date" required>
+      <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="show-dialog">Cancel</button><button class="btn btn-primary" type="submit">Save & use this show</button></div>
+    </form>
+  </dialog>
+
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>

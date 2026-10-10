@@ -19,6 +19,10 @@ test("Git excludes private exports and credentials, while keeping project JSON t
     "game-history-before-restore-2026-09-06.json",
     ".private/notes.md",
     "credentials.key",
+    "market-register-full-backup-2026-10-10.json",
+    "downloads/2026-10-10-example-excel-sales.csv",
+    "downloads/2026-10-10-example-transactions.csv",
+    "downloads/2026-10-10-example-product-totals.csv",
   ];
   const ignored = execFileSync(
     "git",
@@ -76,6 +80,7 @@ test("public pages restrict external JavaScript and have a privacy explanation",
       .filter((f) => f.endsWith(".html"))
       .map((f) => `projects/${f}`),
     "fers-retirement/index.html",
+    "market-register/index.html",
   ];
   for (const file of files) {
     const dom = new JSDOM(fs.readFileSync(path.join(root, file), "utf8"));
