@@ -48,6 +48,7 @@
               <select id="active-show-select" aria-label="Current show"></select>
               <button class="btn btn-outline" type="button" id="new-show-register">+ New show</button>
             </div>
+            <div class="current-show-actions" id="current-show-actions" hidden><span class="show-status-badge">Open</span><button class="btn btn-outline btn-small" type="button" id="complete-current-show">Complete show</button></div>
           </div>
         </div>
         <div class="register-layout">
@@ -55,6 +56,7 @@
             <div class="catalog-top-controls">
               <div class="category-tabs" id="category-tabs" role="group" aria-label="Product categories"></div>
               <input type="search" id="register-search" class="search-input" placeholder="Search products" aria-label="Search products">
+              <p id="register-show-prompt" class="register-show-prompt">Choose or create an open show before starting a sale.</p>
             </div>
             <div class="product-grid" id="product-grid"></div>
             <div class="empty-state" id="register-empty" hidden></div>
@@ -105,6 +107,10 @@
             <button type="button" class="btn btn-outline" id="export-summary">Product totals CSV</button>
           </div>
         </div>
+        <div id="show-status-panel" class="surface show-status-panel" hidden>
+          <div><span id="report-show-status" class="show-status-badge">Open</span><p id="report-show-status-detail"></p></div>
+          <div class="show-status-actions"><button class="btn btn-outline" id="change-show-status" type="button">Complete show</button><button class="btn btn-outline" id="completed-show-backup" type="button" hidden>Go to backups</button></div>
+        </div>
         <div id="reports-body"></div><p class="report-backup-note">After each market, export this show for Excel, then save a <strong>full backup</strong> from the Backups tab. An Excel sales export alone does not include product photos or your catalog.</p>
       </section>
 
@@ -134,7 +140,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Prototype 0.4</span><span id="footer-save">Stored locally on this device</span></footer>
+    <footer class="site-footer"><span>Market Register · Prototype 0.5</span><span id="footer-save">Stored locally on this device</span></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -187,6 +193,13 @@
       <label for="show-date">Show date</label><input type="date" id="show-date" required>
       <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="show-dialog">Cancel</button><button class="btn btn-primary" type="submit">Save & use this show</button></div>
     </form>
+  </dialog>
+
+  <dialog id="show-status-dialog" class="entry-dialog narrow-dialog" aria-labelledby="show-status-dialog-title">
+    <div class="dialog-heading"><div><h2 id="show-status-dialog-title">Complete show?</h2><p id="show-status-dialog-summary"></p></div><button class="icon-button" type="button" data-close-dialog="show-status-dialog" aria-label="Close">×</button></div>
+    <p id="show-status-dialog-details"></p>
+    <p id="show-status-dialog-error" class="dialog-error" role="alert" hidden></p>
+    <div class="dialog-actions"><button class="btn btn-outline" type="button" data-close-dialog="show-status-dialog" autofocus>Cancel</button><button class="btn btn-primary" id="confirm-show-status" type="button">Complete show</button></div>
   </dialog>
 
   <dialog id="category-dialog" class="entry-dialog narrow-dialog" aria-labelledby="category-dialog-title">

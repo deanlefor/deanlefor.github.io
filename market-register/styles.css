@@ -47,6 +47,14 @@ main { padding: 26px 28px 10px; }
 .show-picker-group label {color:var(--muted);font-size:.74rem;}
 .inline-controls {display:flex;gap:8px;}
 .inline-controls select {flex:1; max-width:340px;}
+.current-show-actions {display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;}
+.show-status-badge {display:inline-block;background:var(--soft-green);color:var(--forest);padding:6px 10px;border-radius:20px;font-size:.78rem;font-weight:750;white-space:nowrap;}
+.show-status-badge.is-completed {background:#e8e9e4;color:#465449;}
+.show-status-panel {display:flex;justify-content:space-between;align-items:center;gap:20px;padding:18px;margin-bottom:16px;}
+.show-status-panel p {font-size:.85rem;color:var(--muted);margin:10px 0 0;max-width:650px;}
+.show-status-actions {display:flex;gap:9px;flex-wrap:wrap;flex-shrink:0;}
+#show-status-dialog-details {font-size:.9rem;line-height:1.5;}
+@media (max-width:850px){.show-status-panel {align-items:flex-start;flex-direction:column;}.show-status-actions {flex-shrink:1;}}
 .btn {border:1px solid transparent; border-radius:11px; display:inline-flex; justify-content:center; align-items:center; gap:7px; padding:11px 15px; text-align:center; font-size:.9rem; font-weight:720; line-height:1.2;white-space:nowrap;min-height:44px;}
 .btn-primary {background:var(--forest);color:white;}
 .btn-primary:hover:not(:disabled) {background:var(--forest-hover);}
@@ -62,6 +70,7 @@ main { padding: 26px 28px 10px; }
 .register-layout {display:grid;grid-template-columns:minmax(0, 1fr) minmax(310px,390px);gap:17px;align-items:start;}
 .catalog-panel {min-height:600px;overflow:hidden;}
 .catalog-top-controls {display:flex;flex-direction:column;gap:12px;padding:17px 16px 14px;border-bottom:1px solid var(--line);}
+.register-show-prompt {margin:0;padding:12px;border-radius:9px;background:var(--warn-bg);color:var(--warn);font-size:.85rem;}
 .category-tabs {display:flex;gap:8px;overflow-x:auto;padding-bottom:3px;scrollbar-width:thin;}
 .category-tab {border:1px solid var(--line);background:white;border-radius:30px;padding:11px 15px;font-size:.86rem;color:var(--ink);font-weight:650;white-space:nowrap;min-height:45px;}
 .category-tab.is-selected {background:var(--forest);border-color:var(--forest);color:white;}

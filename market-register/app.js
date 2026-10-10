@@ -1,6 +1,6 @@
 import * as db from './db.js';
 
-// Market Register 0.4: no backend, analytics, account, or payment API.
+// Market Register 0.5: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = cents => (cents / 100).toLocaleString('en-US', {style:'currency', currency:'USD'});
@@ -27,7 +27,7 @@ const state = {
   activeCategory:'All', view:'register', productPhoto:null, editingProductId:null,
   payment:'Square', completing:false, lastSaleId:null, lastBackupAt:null, ready:false,
   photoSize:256, photoProcessing:false, categories:[], removedCategories:[], lastProductCategory:null,
-  categoryChange:null, managingData:false
+  categoryChange:null, managingData:false, showChange:null, changingShow:false, selectingShow:false
 };
 let toastTimer;
 let cartSaveQueue = Promise.resolve();
@@ -170,19 +170,26 @@ function showCategoryButton(cat) {
   return button;
 }
 function renderShowPickers() {
-  const sorted=[...state.shows].sort((a,b)=> b.date.localeCompare(a.date) || b.createdAt.localeCompare(a.createdAt));
+  const sorted=[...state.shows].sort((a,b)=> b.date.localeCompare(a.date) || (b.createdAt || '').localeCompare(a.createdAt || ''));
   for (const [id, selected] of [['active-show-select',state.activeShowId],['report-show-select',state.reportShowId]]) {
+    const available=id==='active-show-select'?sorted.filter(show=>!show.completedAt):sorted;
     const select=byId(id);
     select.replaceChildren();
-    select.add(new Option(sorted.length ? 'Choose a show' : 'No shows yet',''));
-    sorted.forEach(show=>select.add(new Option(`${show.name} · ${shortDate(show.date)}`,show.id)));
+    select.add(new Option(available.length ? (id==='active-show-select'?'Choose an open show':'Choose a show') : (sorted.length?'No open shows':'No shows yet'),''));
+    available.forEach(show=>select.add(new Option(`${show.name} · ${shortDate(show.date)} · ${show.completedAt?'Completed':'Open'}`,show.id)));
     select.value=selected || '';
+    select.disabled=state.completing || state.changingShow || state.selectingShow;
   }
+  byId('new-show-register').disabled=byId('new-show-report').disabled=state.completing || state.changingShow || state.selectingShow;
+  const active=currentShow();
+  byId('current-show-actions').hidden=!active || Boolean(active.completedAt);
+  byId('complete-current-show').disabled=state.completing || state.changingShow || state.selectingShow;
 }
 function renderRegister() {
   renderShowPickers();
   const show=currentShow();
-  byId('cart-show-label').textContent=show? `${show.name} · ${shortDate(show.date)}` : 'Choose or create a show';
+  byId('cart-show-label').textContent=show? `${show.name} · ${shortDate(show.date)}${show.completedAt?' · Completed':''}` : 'Choose or create an open show';
+  byId('register-show-prompt').hidden=Boolean(show && !show.completedAt);
   const tabs=byId('category-tabs');tabs.replaceChildren();
   const categories=['All',...new Set(state.products.filter(p=>p.active).map(p=>canonicalCategory(p.category)).filter(Boolean))];
   if (!categories.includes(state.activeCategory)) state.activeCategory='All';
@@ -196,6 +203,7 @@ function renderRegister() {
   for(const product of shown) {
     const tile=element('button','product-tile');
     tile.type='button';
+    tile.disabled=!show || Boolean(show.completedAt) || state.completing || state.changingShow || state.selectingShow;
     tile.title=`Add ${product.name}: ${money(product.priceCents)}`;
     tile.setAttribute('aria-label',`Add ${product.name}, ${money(product.priceCents)}${state.cart[product.id] ? `, ${state.cart[product.id]} in cart` : ''}`);
     if (product.photo) { const img=element('img','tile-picture');img.src=product.photo;img.alt='';img.loading='lazy';tile.append(img); }
@@ -222,13 +230,15 @@ function renderRegister() {
   renderCart();
 }
 function addToCart(id) {
-  if (!state.ready || state.completing) return;
+  if (!state.ready || state.completing || state.changingShow || state.selectingShow) return;
+  if(!currentShow())return toast('Choose or create an open show before starting a sale.',true);
+  if(currentShow()?.completedAt)return toast('Reopen this show before adding to a sale.',true);
   state.cart[id]=(state.cart[id]||0)+1;
   state.lastSaleId=null;
   persistCart();renderRegister();
 }
 function decreaseCart(id) {
-  if (state.completing) return;
+  if (state.completing || state.changingShow || state.selectingShow) return;
   const next=(state.cart[id]||0)-1;
   if (next>0) state.cart[id]=next;
   else delete state.cart[id];
@@ -254,20 +264,23 @@ function renderCart() {
   byId('cart-discount').textContent=`−${money(breakdown.discountCents)}`;
   byId('discount-row').hidden=breakdown.discountCents===0;
   byId('cart-total').textContent=money(breakdown.totalCents);
-  byId('complete-sale').disabled=!breakdown.lines.length || !currentShow() || !state.ready || state.completing;
+  const show=currentShow();
+  byId('complete-sale').disabled=!breakdown.lines.length || !show || Boolean(show.completedAt) || !state.ready || state.completing || state.changingShow || state.selectingShow;
   byId('complete-sale').textContent=state.completing?'Saving sale…':'Record completed sale';
-  byId('clear-cart').disabled=!breakdown.lines.length || state.completing;
+  byId('clear-cart').disabled=!breakdown.lines.length || state.completing || state.changingShow || state.selectingShow;
   const undo=byId('undo-area');
   undo.hidden=!state.lastSaleId;
   if(state.lastSaleId) {
     const sale=state.sales.find(s=>s.id===state.lastSaleId);
+    byId('undo-sale').disabled=Boolean(state.shows.find(s=>s.id===sale?.showId)?.completedAt) || state.changingShow;
     byId('last-sale-summary').textContent=sale?`Recorded ${money(sale.totalCents)}.`:'Sale recorded.';
   }
 }
 async function completeSale() {
-  if(state.completing) return;
+  if(state.completing || state.changingShow || state.selectingShow) return;
   const show=currentShow();const priced=priceCart();
   if(!show) return toast('Create or choose a show first.',true);
+  if(show.completedAt)return toast('This show is completed. Reopen it before recording sales.',true);
   if(!priced.lines.length) return;
   state.completing=true;renderCart();
   const sale={
@@ -290,9 +303,10 @@ async function completeSale() {
 async function voidSale(id) {
   const sale=state.sales.find(s=>s.id===id);
   if(!sale || sale.voidedAt) return;
+  if(state.changingShow)return;
+  if(state.shows.find(show=>show.id===sale.showId)?.completedAt)return toast('This show is completed. Reopen it before voiding a sale.',true);
   if(!window.confirm(`Void this ${money(sale.totalCents)} sale? It will remain in the audit history but no longer count in show totals.`)) return;
-  const updated={...sale,voidedAt:new Date().toISOString()};
-  try {await db.put('sales',updated);state.sales=state.sales.map(s=>s.id===id?updated:s);state.lastSaleId=null;render();toast('Sale voided.');}
+  try {const updated=await db.voidRecordedSale(id);state.sales=state.sales.map(s=>s.id===id?updated:s);state.lastSaleId=null;render();toast('Sale voided.');}
   catch(error){errorMessage(error);}
 }
 
@@ -453,22 +467,65 @@ function renderProducts(){
     'Each product needs only a name, category, and price. Photos can be added later.',
     state.products.length?null:'Add first product',()=>openProductDialog()));}
 }
-function openShowDialog(){byId('show-name').value='';byId('show-date').value=localDate();byId('show-dialog').showModal();setTimeout(()=>byId('show-name').focus(),30);}
+function openShowDialog(){
+  if(state.completing || state.changingShow || state.selectingShow)return;
+  if(totalCount())return toast('Record or clear the current sale before creating another show.',true);
+  byId('show-name').value='';byId('show-date').value=localDate();byId('show-dialog').showModal();setTimeout(()=>byId('show-name').focus(),30);
+}
 async function saveShow(event){
   event.preventDefault();
+  if(state.selectingShow || state.completing || state.changingShow)return;
+  if(totalCount())return toast('Record or clear the current sale before creating another show.',true);
   const name=byId('show-name').value.trim();const date=byId('show-date').value;
   if(!name||!/^\d{4}-\d{2}-\d{2}$/.test(date)){toast('Enter a show name and date.',true);return;}
-  const show={id:uid(),name,date,createdAt:new Date().toISOString()};
+  const show={id:uid(),name,date,createdAt:new Date().toISOString(),completedAt:null};
+  state.selectingShow=true;
+  byId('show-dialog').querySelectorAll('button').forEach(button=>button.disabled=true);
   try {
-    await db.put('shows',show);await db.setMeta('activeShowId',show.id);
+    await cartSaveQueue;
+    await db.createShow(show);
     state.shows.push(show);state.activeShowId=show.id;state.reportShowId=show.id;
     byId('show-dialog').close();setView('register');toast('Show created and selected.');
   }catch(error){errorMessage(error);}
+  finally{state.selectingShow=false;byId('show-dialog').querySelectorAll('button').forEach(button=>button.disabled=false);render();}
 }
 async function chooseShow(id){
-  state.activeShowId=id||null;
-  try{await db.setMeta('activeShowId',state.activeShowId);renderRegister();}
+  if(state.completing || state.changingShow || state.selectingShow){renderShowPickers();return;}
+  if(totalCount() && state.activeShowId && state.activeShowId!==id){renderShowPickers();return toast('Record or clear the current sale before switching shows.',true);}
+  if(id && !state.shows.some(show=>show.id===id && !show.completedAt)){renderShowPickers();return toast('Choose an open show. Reopen completed shows from Shows & reports.',true);}
+  state.selectingShow=true;
+  try{await cartSaveQueue;await db.selectShow(id || null);state.activeShowId=id || null;state.lastSaleId=null;}
   catch(error){errorMessage(error);}
+  finally{state.selectingShow=false;renderRegister();}
+}
+function openShowStatusDialog(show){
+  if(!show || state.changingShow || state.completing || state.selectingShow)return;
+  const completed=!show.completedAt;
+  if(completed && state.activeShowId===show.id && totalCount())return toast('Record or clear the current sale before completing this show.',true);
+  state.showChange={id:show.id,completed};
+  byId('show-status-dialog-title').textContent=completed?'Complete show?':'Reopen show?';
+  byId('show-status-dialog-summary').textContent=`${show.name} · ${shortDate(show.date)}`;
+  byId('show-status-dialog-details').textContent=completed?'This closes the show to new sales and voids. Reports and exports remain available. You can reopen it deliberately to make corrections. After completing, export the sales and save a full backup.':'This allows new sales and voids again. To add a missed sale, choose this show in the Register’s Current show dropdown.';
+  byId('show-status-dialog-error').hidden=true;
+  byId('confirm-show-status').textContent=completed?'Complete show':'Reopen show';
+  byId('confirm-show-status').disabled=false;
+  byId('show-status-dialog').showModal();
+}
+async function confirmShowStatus(){
+  const change=state.showChange;
+  if(!change || !byId('show-status-dialog').open || state.changingShow || state.completing || state.selectingShow)return;
+  if(change.completed && state.activeShowId===change.id && totalCount())return toast('Record or clear the current sale before completing this show.',true);
+  state.changingShow=true;
+  byId('show-status-dialog').querySelectorAll('button').forEach(button=>button.disabled=true);
+  try{
+    await cartSaveQueue.catch(()=>{});
+    await db.setShowCompleted(change.id,change.completed);
+    dataChannel?.postMessage('data-changed');
+    await reloadData();state.reportShowId=change.id;state.lastSaleId=null;
+    byId('show-status-dialog').close();state.showChange=null;setView('shows');
+    toast(change.completed?'Show completed. Export its sales and save a full backup.':'Show reopened. Choose it in the Register when you’re ready to add sales.');
+  }catch(error){byId('show-status-dialog-error').textContent=error.message || 'The show status was not saved.';byId('show-status-dialog-error').hidden=false;errorMessage(error);}
+  finally{state.changingShow=false;byId('show-status-dialog').querySelectorAll('button').forEach(button=>button.disabled=false);render();}
 }
 function nonvoidSales(showId){return state.sales.filter(s=>s.showId===showId && !s.voidedAt);}
 function reportData(showId){
@@ -503,6 +560,16 @@ function renderReports(){
   const area=byId('reports-body');area.replaceChildren();
   const show=state.shows.find(s=>s.id===state.reportShowId);
   ['export-excel','export-detail','export-summary'].forEach(id=>byId(id).disabled=!show);
+  byId('show-status-panel').hidden=!show;
+  if(show){
+    const completed=Boolean(show.completedAt);
+    byId('report-show-status').textContent=completed?'Completed':'Open';
+    byId('report-show-status').className=`show-status-badge${completed?' is-completed':''}`;
+    byId('report-show-status-detail').textContent=completed?`Completed ${new Date(show.completedAt).toLocaleString()}. New sales and voids are locked. Export this show’s sales and save a full backup.`:'This show is open for sales and corrections. Complete it when the market is finished.';
+    byId('change-show-status').textContent=completed?'Reopen show':'Complete show';
+    byId('change-show-status').disabled=state.completing || state.changingShow || state.selectingShow;
+    byId('completed-show-backup').hidden=!completed;
+  }
   if(!show){const empty=element('div','surface empty-state');empty.append(makeEmpty('Create a show to see reports','Every recorded sale will appear here under its show name and date.','New show',openShowDialog));area.append(empty);return;}
   const data=reportData(show.id);
   const cards=element('div','report-stats');
@@ -528,7 +595,7 @@ function renderReports(){
     desc.append(element('div','transaction-detail',`${when} · ${parts}`));row.append(desc);
     const actions=element('div','transaction-controls');
     if(!sale.voidedAt){
-      const voidButton=element('button','btn btn-outline btn-small','Void');voidButton.type='button';voidButton.addEventListener('click',()=>voidSale(sale.id));actions.append(voidButton);
+      const voidButton=element('button','btn btn-outline btn-small','Void');voidButton.type='button';voidButton.disabled=Boolean(show.completedAt) || state.changingShow;voidButton.title=show.completedAt?'Reopen this show before voiding a sale.':'';voidButton.addEventListener('click',()=>voidSale(sale.id));actions.append(voidButton);
     }
     row.append(actions);panel.append(row);
   }
@@ -600,7 +667,7 @@ function backupIsValid(data){
     if(typeof p.name!=='string'||typeof p.category!=='string'||typeof p.priceCents!=='number'||!Number.isSafeInteger(p.priceCents)||p.priceCents<0||p.priceCents>999900) throw new Error('Backup contains an invalid product.');
     if(p.photo!==null&&p.photo!==undefined&& !(typeof p.photo==='string' && /^data:image\/(jpeg|png|webp);base64,/.test(p.photo)))throw new Error('Backup contains an unsupported product photo.');
   }
-  for(const s of data.data.shows){if(typeof s.name!=='string'||typeof s.date!=='string') throw new Error('Backup contains an invalid show.');}
+  for(const s of data.data.shows){if(typeof s.name!=='string'||typeof s.date!=='string'||(s.completedAt!==null&&s.completedAt!==undefined&&(typeof s.completedAt!=='string'||!Number.isFinite(Date.parse(s.completedAt))))) throw new Error('Backup contains an invalid show.');}
   for(const s of data.data.sales){
     if(typeof s.showId!=='string'||!Array.isArray(s.lines)||!Number.isSafeInteger(s.totalCents)||s.totalCents<0) throw new Error('Backup contains an invalid sale.');
     for(const line of s.lines){if(!Array.isArray(line.unitNetPricesCents)||line.unitNetPricesCents.length!==line.quantity||line.unitNetPricesCents.some(x=>!Number.isSafeInteger(x)||x<0))throw new Error('Backup contains invalid item prices.');}
@@ -749,7 +816,7 @@ async function reloadData(){
   state.categories=Array.isArray(categories)?categories.filter(category=>typeof category==='string'):[];
   state.removedCategories=Array.isArray(removedCategories)?removedCategories.filter(category=>typeof category==='string'):[];
   state.lastProductCategory=canonicalCategory(lastCategory) || null;
-  state.activeShowId=shows.some(s=>s.id===active)?active:null;
+  state.activeShowId=shows.some(s=>s.id===active && !s.completedAt)?active:null;
   state.reportShowId=state.activeShowId || [...shows].sort((a,b)=>b.date.localeCompare(a.date))[0]?.id || null;
   state.cart=Object.fromEntries(Object.entries(draft||{}).filter(([id,qty])=>products.some(p=>p.id===id)&&Number.isSafeInteger(qty)&&qty>0));
   state.lastBackupAt=lastBackup;
@@ -768,6 +835,12 @@ function connectEvents(){
   byId('active-show-select').addEventListener('change',event=>chooseShow(event.target.value));
   byId('new-show-register').addEventListener('click',openShowDialog);
   byId('new-show-report').addEventListener('click',openShowDialog);
+  byId('complete-current-show').addEventListener('click',()=>openShowStatusDialog(currentShow()));
+  byId('change-show-status').addEventListener('click',()=>openShowStatusDialog(state.shows.find(show=>show.id===state.reportShowId)));
+  byId('confirm-show-status').addEventListener('click',confirmShowStatus);
+  byId('completed-show-backup').addEventListener('click',()=>setView('backup'));
+  byId('show-status-dialog').addEventListener('cancel',event=>{if(state.changingShow)event.preventDefault();});
+  byId('show-dialog').addEventListener('cancel',event=>{if(state.selectingShow)event.preventDefault();});
   byId('complete-sale').addEventListener('click',completeSale);
   byId('clear-cart').addEventListener('click',()=>{
     if(totalCount()&&!window.confirm('Remove the items from the current sale? No sale has been recorded yet.'))return;

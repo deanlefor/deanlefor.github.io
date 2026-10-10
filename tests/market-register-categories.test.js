@@ -174,7 +174,7 @@ test('hidden products block category deletion and merges require a destination',
 test('deletion waits for a pending cart save so the old cart cannot return afterward', async () => {
   let finishCartWrite;
   const cartWriteGate = new Promise(resolve => { finishCartWrite = resolve; });
-  const saved = { products: [{ id: 'p1', sku: 'MR-0001', name: 'Test product', category: 'Coasters', priceCents: 1200, active: true }], shows: [], sales: [], meta: [] };
+  const saved = { products: [{ id: 'p1', sku: 'MR-0001', name: 'Test product', category: 'Coasters', priceCents: 1200, active: true }], shows: [{ id: 'show1', name: 'Example market', date: '2026-10-10', createdAt: '2026-10-10T10:00:00Z' }], sales: [], meta: [{ id: 'activeShowId', value: 'show1' }] };
   const page = await app(saved, { cartWriteGate });
   try {
     page.dom.window.document.querySelector('.product-tile').click();

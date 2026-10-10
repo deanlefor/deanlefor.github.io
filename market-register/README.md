@@ -1,4 +1,4 @@
-# Market Register — prototype 0.4
+# Market Register — prototype 0.5
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -67,6 +67,31 @@ The web host serves only the HTML, JavaScript, CSS, and icon files. This app has
 - Clearing website data, removing an installed PWA, changing the app's website origin, losing the iPad, or certain browser/device failures may delete local records. Make an independent full backup after each market. Keep at least one copy off the iPad.
 
 **This PWA cannot silently write the live database continuously to an arbitrary file in the iPad Files app.** Automatic live files would require a different deployment approach, such as a native or native-wrapped application. The backup action is intentionally explicit.
+
+## Completing and reopening a show
+
+Choose or create an open show before tapping products to start a sale. The
+Register lists only open shows and displays the selected show's name and date.
+A pending sale must be recorded or cleared before switching to another show or
+creating one.
+
+Use **Complete show** beside the Register's show picker, or in **Shows &
+reports**. Completion requires confirmation and blocks new sales and voids for
+that show. An unfinished sale at that show must be recorded or cleared first.
+Completing the current show leaves the Register with no show selected, so the
+next market's sales cannot be added to it by accident.
+
+Completed shows remain available in **Shows & reports**, including all sales
+and void history. Export the completed show for Excel and use **Go to backups**
+to save a full backup. Show status is included in full backups and persists
+when restoring or reopening the app. Existing shows from older versions remain
+open until you complete them.
+
+For a missed sale or correction, select the completed show in **Shows &
+reports**, choose **Reopen show**, and confirm. Reopening enables sales and
+voids but does not switch the Register to that show automatically. Select it
+in the Register when you are ready to record a missed sale; complete it again
+after making the correction.
 
 ## Starting fresh after testing
 
