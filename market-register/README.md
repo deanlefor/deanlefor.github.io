@@ -1,4 +1,4 @@
-# Market Register — prototype 0.9
+# Market Register — prototype 0.10
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -127,7 +127,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.9** in the footer before exporting again.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.10** in the footer before exporting again.
 
 ## PDF reports and payment choices
 
@@ -161,6 +161,11 @@ The PDF writer and fonts are bundled locally, so reports also work offline
 after the updated app has loaded and cached while online.
 
 ## Product entry and discounts
+
+Product buttons are alphabetized by item name, ignoring capitalization, both
+across All and within a category or search result. Numbers in names sort
+naturally (for example, Item 2 before Item 10). The Products list uses the same
+order. Adding or renaming a product places it in its alphabetical position.
 
 - Under **Products**, add a name, price, category, and optionally a photo and an existing SKU.
 - Choose an existing category from the dropdown. **Add category** creates a new,
