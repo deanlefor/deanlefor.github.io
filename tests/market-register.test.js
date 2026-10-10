@@ -26,7 +26,7 @@ function worker(network) {
     fetch: network,
     caches: {
       open: async () => cache,
-      keys: async () => ['market-register-shell-v12', 'market-register-shell-v13', 'project-tracker-v2'],
+      keys: async () => ['market-register-shell-v13', 'market-register-shell-v14', 'project-tracker-v2'],
       delete: async name => { deleted.push(name); return true; },
     },
     self: {
@@ -96,10 +96,10 @@ test('versioned app files, report writer, fonts, and Excel writer can load offli
   const dom = new JSDOM(html);
   const source = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8');
   try {
-    assert.match(source, /updateViaCache:'none'/);
+    assert.match(source, /updateViaCache:\s*'none'/);
     const files = [...dom.window.document.querySelectorAll('script[src],link[rel="stylesheet"]')].map(node => node.getAttribute('src') || node.getAttribute('href'));
-    assert.ok(files.includes('./app.js?v=0.10'));
-    assert.ok(files.includes('./reports.js?v=0.8'));
+    assert.ok(files.includes('./app.js?v=0.11'));
+    assert.ok(files.includes('./reports.js?v=0.11'));
     assert.ok(files.includes('./vendor/pdfmake.min.js?v=0.3.11'));
     assert.ok(files.includes('./vendor/vfs_fonts.js?v=0.3.11'));
     assert.ok(files.includes('./vendor/xlsx.mini.min.js?v=0.20.3'));
@@ -118,7 +118,7 @@ test('installation fetches a fresh page and app files instead of caching an olde
   app.handlers.install({ waitUntil: promise => { completion = promise; } });
   await completion;
   assert.ok(app.precached.some(request => request.url === scope + 'index.html'));
-  assert.ok(app.precached.some(request => request.url === scope + 'app.js?v=0.10'));
+  assert.ok(app.precached.some(request => request.url === scope + 'app.js?v=0.11'));
   for (const request of app.precached) assert.equal(request.cache, 'reload');
 });
 
@@ -136,5 +136,24 @@ test('activating Market Register preserves other apps offline caches', async () 
   let completion;
   app.handlers.activate({ waitUntil: promise => { completion = promise; } });
   await completion;
-  assert.deepEqual(app.deleted, ['market-register-shell-v12']);
+  assert.deepEqual(app.deleted, ['market-register-shell-v13']);
+});
+
+test('HTTP outages retain good cached assets and the app shell without caching error responses', async () => {
+  const app=worker(async()=>new Response('Temporary outage',{status:503}));
+  app.entries.set(scope+'app.js',new Response('cached code'));
+  app.entries.set(scope+'index.html',new Response('cached shell'));
+  assert.equal(await (await app.request(scope+'app.js').event.response).text(),'cached code');
+  assert.equal(await (await app.request(scope+'index.html?refresh=1',{mode:'navigate'}).event.response).text(),'cached shell');
+  assert.equal((await app.request(scope+'missing.png').event.response).status,503);
+  assert.deepEqual(app.writes,[]);
+});
+
+test('the versioned database module imported by the app is available offline', async () => {
+  const source=fs.readFileSync(path.join(root,'market-register/app.js'),'utf8');
+  const module=source.match(/import \* as db from ['"]([^'"]+)['"]/)[1];
+  const app=worker(async()=>{throw new Error('offline');});
+  let complete;
+  app.handlers.install({waitUntil:promise=>{complete=promise;}});await complete;
+  assert.ok(app.precached.some(request=>request.url===new URL(module,scope).href));
 });

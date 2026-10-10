@@ -106,8 +106,12 @@ in one transaction. Starter categories return. The app remains installed and
 its offline files remain available. Other tools on the website, records on
 other devices, and independent backup files are unaffected. There is no undo;
 save a full backup first if anything should be kept. Close other copies before
-continuing, particularly copies running an older app version. Current copies
-reload after a reset, restore, or category change, and stale writes are blocked.
+continuing, particularly copies running an older app version. Use one copy of
+the Register at a time. Another open copy displays a refresh warning after any
+saved change and blocks stale writes without discarding an unfinished form.
+Close that form and use **Refresh app** to load the saved records. Refreshing a
+stale copy with an unfinished cart requires confirmation before discarding that
+copy's edits. Refreshing local records also works from the offline cache.
 
 ## Your existing Excel workbook
 
@@ -127,7 +131,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.10** in the footer before exporting again.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.11** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
@@ -153,8 +157,10 @@ time zone, and page number. The reports use the selected show's records saved
 on this device. Tax and adjustments made outside the app are not calculated
 or included; app references are not card processor receipt IDs.
 
-The Register offers exactly **Cash, Card, and Venmo**, in a single row. Historical
-Square and Cash App labels display/export as Card and CashApp without rewriting
+The Register offers exactly **Cash, Card, and Venmo**, in a single row.
+The selected payment method is remembered with an unfinished sale when reopening
+the app and is included in a full backup.
+Historical Square and Cash App labels display/export as Card and CashApp without rewriting
 the original records or backups. Historical PayPal and Other entries remain
 visible under their original labels and are not silently treated as Card.
 The PDF writer and fonts are bundled locally, so reports also work offline
@@ -200,12 +206,32 @@ order. Adding or renaming a product places it in its alphabetical position.
 ## Technical notes
 
 - Plain HTML, CSS, and JavaScript, with locally bundled SheetJS for Excel and pdfmake/Roboto for PDFs (versions, sources, integrity, and licenses in `vendor/README.md`). No external script or PDF service is used.
-- Local data: IndexedDB (`db.js`). Photos are compressed by the device before storing.
+- Local data: IndexedDB (`db.js`). Every write checks and advances a revision in the same transaction. Storage schema version 2 keeps the original stores and records while closing older writers. UI reload and full backup read all stores in a single consistent snapshot. Photos are compressed by the device before storing.
+- Backup validation: `data.js` checks version 1 backup structure, dates, historical line details, quantities, settings, and the agreement between individual item prices and transaction totals before replacement is offered. Unsupported or damaged files leave current records intact. Historical product IDs may refer to retired products, and legacy payment labels remain supported.
 - Offline application shell: service worker (`service-worker.js`). It caches only static application files, not customer information.
 - App-install information: `manifest.webmanifest` and the `icons/` directory.
-- UI, pricing, and reporting: `app.js`, `index.html`, and `styles.css`.
-- Tested with an automated Chromium-based **interface simulation** using an in-memory database mock. Tested image upload via both input fields, 256 × 256 and 512 × 512 JPEG conversion, product creation, checkout and photo inclusion in full backup, as well as earlier discount/report/CSV tests. **Actual iPad camera picker, IndexedDB persistence, Safari/iPadOS file handling, and offline installation must still be checked on hardware.**
+- UI and integer-cent checkout pricing: `app.js`, `index.html`, and `styles.css`. Product order is alphabetical; the old insertion-order field is no longer written. Prices accept no more than two decimal places. A cart is limited to 10,000 units to bound per-item processing.
+- Shared historical report calculations and PDF layout: `reports.js`. Screen totals, product CSV, and PDFs use the same model. Historical name, SKU, and category changes remain distinct. Transaction order uses actual timestamps, including timezone offsets, with stable references for ties. Prepared PDF links are invalidated when records change; late rendering cannot offer an outdated file.
+- Third-party writers are pinned, locally bundled, and left unchanged. Their source, integrity, and licenses are recorded in `vendor/README.md`.
+- Run `node --test tests/market-register*.test.js` from the repository root for focused checks, or `npm test` for the entire website. Tests cover UI behavior with jsdom, storage transactions with fake-indexeddb, actual workbook and PDF generation, damaged backup rejection, interrupted-write rollback, storage upgrade, multiple-copy conflicts, promotion allocation, category/show management, and offline cache behavior. Browser checks use fictional local records; personal records are not test fixtures.
+- Earlier browser checks covered image upload through both inputs, 256 × 256 and 512 × 512 JPEG conversion, product entry, checkout, and photo inclusion in a full backup. **Actual iPad camera picker, Safari/iPadOS file handling, and Home Screen offline installation still need hardware checks.**
 
-## Planned but not included
+## Audit maintenance notes (0.11)
 
-Product rearranging via drag-and-drop; a richer discount editor; category-specific display ordering; direct import of legacy product catalogs; split payments; automatic backup to an external file; multi-device synchronization. None is necessary to evaluate the initial booth workflow.
+The October 10, 2026 audit reviewed the initial application and subsequent
+category, deletion, show completion, Excel, PDF, payment, and ordering changes.
+It removed duplicate report totaling logic, tightened backup validation and
+concurrent-write protection, prevented repeated product submissions, waited for
+pending cart writes before backup, and added cached fallback for HTTP outages.
+The JavaScript is formatted consistently, with comments explaining transaction
+boundaries, historical snapshots, discount allocation, photo races, exports,
+and destructive-action guards.
+
+When editing app files, update their versioned references and the service worker
+cache together. Preserve the database name and version 1 backup format; any new
+storage version needs a preservation test. Keep user records and generated
+exports out of this public repository. Re-run the relevant regression checks
+and test the browser workflow before publishing.
+
+Split payments, a configurable discount editor, direct legacy catalog import,
+automatic external backups, and multi-device synchronization are not supported.

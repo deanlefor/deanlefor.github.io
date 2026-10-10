@@ -84,3 +84,10 @@ test('a large card basket continues across bounded rows without repeating its am
   const bytes=await pdfMake.createPdf(doc).getBuffer();
   assert.ok((bytes.toString('latin1').match(/\/Type \/Page\b/g)||[]).length>1);
 });
+
+test('transaction order uses actual times across timezone offsets with stable tied references', () => {
+  const timed=[sale('later','2026-10-10T12:00:00Z','Card',[line('Later','Gifts',[100])]),
+    sale('b','2026-10-10T13:00:00+02:00','Card',[line('Earlier','Gifts',[100])]),
+    sale('a','2026-10-10T11:00:00Z','Card',[line('Tie','Gifts',[100])])];
+  assert.deepEqual(reports.model(show,timed).transactions.map(row=>[row.id,row.ref]),[['a','001'],['b','002'],['later','003']]);
+});

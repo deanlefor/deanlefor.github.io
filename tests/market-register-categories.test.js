@@ -8,12 +8,13 @@ const { JSDOM } = require('jsdom');
 const root = path.resolve(__dirname, '..');
 const html = fs.readFileSync(path.join(root, 'market-register/index.html'), 'utf8');
 const source = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8')
-  .replace(/^import \* as db from '\.\/db.js';\s*/, '');
+  .replace(/^import \* as db from ['\"]\.\/db.js(?:\?v=[\d.]+)?['\"];\s*/, '');
 
 async function app(saved = { products: [], shows: [], sales: [], meta: [] }, { failWrites = false, cartWriteGate = null } = {}) {
   const dom = new JSDOM(html, { url: 'https://site.test/market-register/', runScripts: 'outside-only' });
   const { window } = dom;
   window.MarketReports = require('../market-register/reports.js');
+  window.MarketData = require('../market-register/data.js');
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
   window.HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
   window.console.error = () => {};
@@ -22,6 +23,7 @@ async function app(saved = { products: [], shows: [], sales: [], meta: [] }, { f
     saved[store] = [...saved[store].filter(item => item.id !== row.id), structuredClone(row)];
   }
   const db = {
+    snapshot: async () => structuredClone(saved),
     getAll: async store => structuredClone(saved[store]),
     getMeta: async (id, fallback = null) => structuredClone(saved.meta.find(row => row.id === id)?.value ?? fallback),
     put: async (store, row) => put(store, row),

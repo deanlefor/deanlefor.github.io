@@ -9,11 +9,11 @@ const XLSX = require('../market-register/vendor/xlsx.mini.min.js');
 
 const root = path.resolve(__dirname, '..');
 const dbSource = fs.readFileSync(path.join(root, 'market-register/db.js'), 'utf8').replace(/^export /gm, '');
-const appSource = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8').replace(/^import \* as db from '\.\/db.js';\s*/, '');
+const appSource = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8').replace(/^import \* as db from ['\"]\.\/db.js(?:\?v=[\d.]+)?['\"];\s*/, '');
 const html = fs.readFileSync(path.join(root, 'market-register/index.html'), 'utf8');
 const copy = value => JSON.parse(JSON.stringify(value));
 function storage(indexedDB = new IDBFactory()) {
-  return vm.runInNewContext(`${dbSource}\n({ openDB, getAll, getMeta, put, setMeta, setMetaValues, commitProduct, commitSale, createShow, selectShow, setShowCompleted, voidRecordedSale, changeCategory, clearAllData, snapshot, restore });`, {
+  return vm.runInNewContext(`${dbSource}\n({ openDB, onWrite, getAll, getMeta, put, setMeta, setMetaValues, commitProduct, commitSale, createShow, selectShow, setShowCompleted, voidRecordedSale, changeCategory, clearAllData, snapshot, restore });`, {
     indexedDB, window: { indexedDB }, crypto, Date, console,
   });
 }
@@ -26,7 +26,7 @@ function records() {
     { id: 'show2', name: 'Earlier market', date: '2026-10-03', createdAt: '2026-10-03T10:00:00Z', completedAt: '2026-10-03T18:00:00Z' },
   ], sales: [sale()], meta: [{ id: 'activeShowId', value: 'show1' }, { id: 'draftCart', value: {} }] };
 }
-async function page(saved = records(), { db = storage() } = {}) {
+async function page(saved = records(), { db = storage(), channel = null } = {}) {
   await db.restore(saved);
   const dom = new JSDOM(html, { url: 'https://site.test/market-register/', runScripts: 'outside-only' });
   const { window } = dom;
@@ -35,6 +35,8 @@ async function page(saved = records(), { db = storage() } = {}) {
   window.File = File;
   window.XLSX = XLSX;
   window.MarketReports = require('../market-register/reports.js');
+  window.MarketData = require('../market-register/data.js');
+  if(channel)window.BroadcastChannel=function(){return channel;};
   window.URL.createObjectURL = () => 'blob:example-pdf';
   window.URL.revokeObjectURL = () => {};
   window.navigator.canShare = () => true;
@@ -369,4 +371,193 @@ test('sales cannot be saved under a different open show than the currently selec
   await db.restore(data);
   await assert.rejects(db.commitSale(sale('wrong-show','show2')), /current show changed/);
   assert.deepEqual(copy(await db.getAll('sales')), data.sales);
+});
+
+test('screen and CSV preserve renamed product history with the same grouping as PDFs', async () => {
+  const data=records();
+  const renamed=sale('renamed');
+  renamed.lines[0]={...renamed.lines[0],name:'Renamed example',category:'Jewelry',sku:'NEW-SKU'};
+  data.sales.push(renamed);
+  const app=await page(data);
+  try{
+    app.view('shows');
+    const panels=[...app.byId('reports-body').querySelectorAll('.report-block')];
+    const items=panels.find(panel=>panel.querySelector('h2').textContent==='Items sold by product');
+    assert.equal(items.querySelectorAll('tbody tr').length,2);
+    assert.match(items.textContent,/Renamed example/);
+    app.byId('export-summary').click();await app.settle();
+    const csv=await app.exports[0].text();
+    assert.match(csv,/'?"MR-0001","Example","Coasters","1","12.00"/);
+    assert.match(csv,/"NEW-SKU","Renamed example","Jewelry","1","12.00"/);
+  }finally{app.dom.window.close();}
+});
+
+test('a backup waits for the latest pending cart write', async () => {
+  const db=storage();
+  let release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  const setMeta=db.setMeta;
+  db.setMeta=async(id,value)=>{if(id==='draftCart')await gate;return setMeta(id,value);};
+  const app=await page(records(),{db});
+  try{
+    app.dom.window.document.querySelector('.product-tile').click();
+    app.view('backup');app.byId('create-backup').click();await app.settle();
+    assert.equal(app.exports.length,0);
+    release();await app.settle();
+    const backup=JSON.parse(await app.exports[0].text());
+    assert.deepEqual(backup.data.meta.find(row=>row.id==='draftCart').value,{p1:1});
+    assert.equal(require('../market-register/data.js').validateBackup(backup),backup.data);
+  }finally{release();app.dom.window.close();}
+});
+
+test('a damaged backup is rejected before confirmation and leaves records intact', async () => {
+  const app=await page();
+  try{
+    const before=copy(await app.db.snapshot());
+    const broken=copy(before);broken.sales[0].totalCents=1;
+    let confirmations=0;
+    app.dom.window.confirm=()=>{confirmations++;return true;};
+    const file=new File([JSON.stringify({kind:'market-register-full-backup',version:1,data:broken})],'broken.json',{type:'application/json'});
+    Object.defineProperty(app.byId('restore-file'),'files',{value:[file]});
+    app.byId('restore-file').dispatchEvent(new app.dom.window.Event('change'));await app.settle();
+    assert.equal(confirmations,0);
+    assert.match(app.byId('toast').textContent,/inconsistent sale totals/);
+    assert.deepEqual(copy(await app.db.snapshot()),before);
+  }finally{app.dom.window.close();}
+});
+
+test('rapid repeated product submissions cannot create duplicate records and prices require exact cents', async () => {
+  const db=storage();
+  let release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  const commit=db.commitProduct;
+  db.commitProduct=async product=>{await gate;return commit(product);};
+  const app=await page(records(),{db});
+  try{
+    app.view('products');app.byId('add-product').click();
+    app.byId('product-name').value='New product';app.byId('product-price').value='1.005';
+    const submit=()=>app.byId('product-form').dispatchEvent(new app.dom.window.SubmitEvent('submit',{bubbles:true,cancelable:true,submitter:app.byId('save-product')}));
+    submit();await app.settle();
+    assert.match(app.byId('toast').textContent,/two decimal places/);
+    app.byId('product-price').value='1.01';submit();submit();
+    assert.equal(app.byId('save-product').disabled,true);
+    release();await app.settle();
+    const products=await app.db.getAll('products');
+    assert.equal(products.length,2);
+    assert.equal(products.find(row=>row.name==='New product').priceCents,101);
+  }finally{release();app.dom.window.close();}
+});
+
+test('PDF failure messages persist and prepared files are invalidated by new sales', async () => {
+  const app=await page();
+  try{
+    app.dom.window.pdfMake={createPdf:()=>({getBlob:async()=>{throw new Error('Simulated PDF failure');}})};
+    app.view('shows');app.byId('export-card-pdf').click();await app.settle();
+    assert.match(app.byId('pdf-report-status').textContent,/could not be prepared/);
+    app.dom.window.pdfMake={createPdf:()=>({getBlob:async()=>new Blob(['%PDF-example'],{type:'application/pdf'})})};
+    app.byId('export-card-pdf').click();await app.settle();
+    assert.equal(app.byId('pdf-report-download').hidden,false);
+    app.view('register');app.dom.window.document.querySelector('.product-tile').click();
+    app.byId('complete-sale').click();await app.settle();
+    app.view('shows');
+    assert.equal(app.byId('pdf-report-download').hidden,true);
+    assert.equal(app.byId('pdf-report-download').hasAttribute('href'),false);
+  }finally{app.dom.window.close();}
+});
+
+test('a PDF finishing after records change cannot offer an outdated download', async () => {
+  const app=await page();
+  let release;
+  const gate=new Promise(resolve=>{release=resolve;});
+  try{
+    app.dom.window.pdfMake={createPdf:()=>({getBlob:()=>gate})};
+    app.view('shows');app.byId('export-card-pdf').click();await app.settle();
+    app.view('register');app.dom.window.document.querySelector('.product-tile').click();
+    app.byId('complete-sale').click();await app.settle();
+    release(new Blob(['%PDF-example'],{type:'application/pdf'}));await app.settle();
+    app.view('shows');
+    assert.equal(app.exports.length,0);
+    assert.equal(app.byId('pdf-report-download').hidden,true);
+    assert.match(app.byId('pdf-report-status').textContent,/Records changed/);
+  }finally{release(new Blob([]));app.dom.window.close();}
+});
+
+test('another copy changing records retains an unfinished form and disables stale writes', async () => {
+  const indexedDB=new IDBFactory();const db=storage(indexedDB);
+  const messages=[];const channel={postMessage:message=>messages.push(message)};
+  const app=await page(records(),{db,channel});
+  try{
+    app.view('products');app.byId('add-product').click();
+    app.byId('product-name').value='Unfinished product';app.byId('product-price').value='5.00';
+    const other=storage(indexedDB);await other.openDB();
+    await other.commitProduct({...records().products[0],priceCents:1500});
+    channel.onmessage({data:'data-changed'});
+    assert.equal(app.byId('product-dialog').open,true);
+    assert.equal(app.byId('product-name').value,'Unfinished product');
+    app.byId('product-form').dispatchEvent(new app.dom.window.SubmitEvent('submit',{bubbles:true,cancelable:true,submitter:app.byId('save-product')}));await app.settle();
+    assert.equal((await db.getAll('products')).length,1);
+    assert.match(app.byId('footer-save').textContent,/Records changed/);
+    assert.equal(messages.length,0,'receiving a notice never writes or broadcasts');
+  }finally{app.dom.window.close();}
+});
+
+test('committed UI writes notify other copies without relying on notifications for storage safety', async () => {
+  const messages=[];const channel={postMessage:message=>messages.push(message)};
+  const app=await page(records(),{channel});
+  try{
+    app.dom.window.document.querySelector('.product-tile').click();await app.settle();
+    app.byId('complete-sale').click();await app.settle();
+    assert.equal(messages.length,2,'cart save and completed sale each notify');
+    assert.equal((await app.db.getAll('sales')).length,2);
+  }finally{app.dom.window.close();}
+});
+
+test('mixed promotion baskets price every unit correctly and rapid checkout records only one sale', async () => {
+  const data=records();data.sales=[];
+  data.products=[{...data.products[0],id:'z',name:'Zebra',priceCents:400,promoEligible:true},
+    {...data.products[0],id:'a',sku:'MR-0002',name:'apple',priceCents:400,promoEligible:true},
+    {...data.products[0],id:'n',sku:'MR-0003',name:'Not eligible',priceCents:400,promoEligible:false}];
+  const app=await page(data);
+  try{
+    const document=app.dom.window.document;
+    assert.deepEqual([...document.querySelectorAll('.tile-name')].map(node=>node.textContent),['apple','Not eligible','Zebra']);
+    const add=name=>document.querySelector(`.product-tile[aria-label^="Add ${name},"]`).click();
+    add('Zebra');add('apple');add('Zebra');add('apple');add('Zebra');add('apple');add('Not eligible');
+    assert.equal(app.byId('cart-subtotal').textContent,'$28.00');
+    assert.equal(app.byId('cart-total').textContent,'$24.00');
+    document.querySelector('[aria-label="Remove one apple"]').click();
+    assert.equal(app.byId('cart-total').textContent,'$22.00');
+    add('apple');
+    app.byId('complete-sale').click();app.byId('complete-sale').dispatchEvent(new app.dom.window.Event('click'));
+    for(let i=0;i<100 && app.byId('complete-sale').textContent==='Saving sale…';i++)await app.settle();
+    const saved=await app.db.getAll('sales');assert.equal(saved.length,1);
+    const transaction=saved[0];assert.equal(transaction.subtotalCents,2800);assert.equal(transaction.discountCents,400);assert.equal(transaction.totalCents,2400);
+    assert.deepEqual(copy(transaction.lines.find(row=>row.productId==='n').unitNetPricesCents),[400]);
+    assert.equal(transaction.lines.flatMap(row=>row.unitNetPricesCents).reduce((sum,price)=>sum+price,0),2400);
+    assert.deepEqual(copy(await app.db.getMeta('draftCart')),{});
+    app.view('shows');assert.match(app.byId('reports-body').textContent,/\$24\.00/);
+    app.byId('export-excel').click();await app.settle();
+    const book=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
+    const rows=XLSX.utils.sheet_to_json(book.Sheets.Sales,{header:1});
+    assert.equal(rows.length,7);assert.equal(rows.reduce((sum,row)=>sum+Math.round(row[2]*100),0),2400);
+  }finally{app.dom.window.close();}
+});
+
+test('an unfinished sale retains its payment selection after reopening the app', async () => {
+  const app=await page();
+  try{
+    const venmo=app.dom.window.document.querySelector('input[name="payment"][value="Venmo"]');
+    venmo.checked=true;venmo.dispatchEvent(new app.dom.window.Event('change'));
+    app.dom.window.document.querySelector('.product-tile').click();await app.settle();
+    const backup=copy(await app.db.snapshot());
+    assert.equal(backup.meta.find(row=>row.id==='draftPayment').value,'Venmo');
+    const restarted=await page(backup);
+    try{
+      assert.equal(restarted.byId('cart-item-count').textContent,'1 item');
+      assert.equal(restarted.dom.window.document.querySelector('input[name="payment"]:checked').value,'Venmo');
+      restarted.byId('complete-sale').click();await restarted.settle();
+      const saved=(await restarted.db.getAll('sales')).find(row=>row.id!=='sale1');
+      assert.equal(saved.paymentMethod,'Venmo');
+    }finally{restarted.dom.window.close();}
+  }finally{app.dom.window.close();}
 });

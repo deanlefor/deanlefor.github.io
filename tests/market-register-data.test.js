@@ -159,3 +159,74 @@ test('a failed restore leaves prior records intact and a pre-reset full backup r
   await db.restore(before);
   assert.deepEqual(copy(await db.snapshot()), before);
 });
+
+test('ordinary writes protect carts and catalogs in other copies, while this copy can queue writes', async () => {
+  const indexedDB = new IDBFactory();
+  const first = storage(indexedDB); await first.restore(records());
+  const second = storage(indexedDB); await second.openDB();
+  await first.setMeta('draftCart', {p1:3});
+  await assert.rejects(second.setMeta('draftCart', {p1:1}), {code:'DATA_CHANGED'});
+  await second.snapshot();
+  await assert.rejects(second.commitProduct({...records().products[0],priceCents:900}), /Reload this app/,
+    'a backup read must not let an old UI overwrite the latest data');
+  await second.snapshot({refreshRevision:true});
+  await second.commitProduct({...records().products[0],priceCents:900});
+  await assert.rejects(first.commitProduct(records().products[0]), /Reload this app/);
+  await second.setMetaValues({productCategories:['Coasters'],lastProductCategory:'Coasters'});
+  await Promise.all(Array.from({length:20},(_,i)=>second.setMeta('draftCart',{p1:i+1})));
+  assert.deepEqual(copy(await second.getMeta('draftCart')),{p1:20});
+  assert.equal((await second.getAll('products')).find(row=>row.id==='p1').priceCents,900);
+});
+
+test('a temporary open failure can be retried instead of reusing a rejected promise', async () => {
+  const factory = new IDBFactory();
+  let attempts=0;
+  const indexedDB={open:(...args)=>{
+    if(++attempts>1)return factory.open(...args);
+    const request={error:new Error('Temporary storage failure')};
+    setImmediate(()=>request.onerror());
+    return request;
+  }};
+  const db=storage(indexedDB);
+  await assert.rejects(db.openDB(),/Temporary storage failure/);
+  await db.openDB();
+  await db.setMeta('photoSize',256);
+  assert.equal(await db.getMeta('photoSize'),256);
+  assert.equal(attempts,2);
+});
+
+test('the storage upgrade preserves version 1 records and closes older writers', async () => {
+  const indexedDB=new IDBFactory();
+  const legacy=await new Promise((resolve,reject)=>{
+    const request=indexedDB.open('market-register-local',1);
+    request.onupgradeneeded=()=>{for(const name of ['products','shows','sales','meta'])request.result.createObjectStore(name,{keyPath:'id'});};
+    request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);
+  });
+  const original=records();
+  await new Promise((resolve,reject)=>{
+    const tx=legacy.transaction(['products','shows','sales','meta'],'readwrite');
+    for(const [name,rows] of Object.entries(original))for(const row of rows)tx.objectStore(name).add(row);
+    tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);
+  });
+  let closed=false;
+  legacy.onversionchange=()=>{closed=true;legacy.close();};
+  const upgraded=storage(indexedDB);await upgraded.openDB();
+  assert.equal(closed,true);
+  const after=copy(await upgraded.snapshot());
+  for(const name of Object.keys(original))original[name].sort((a,b)=>a.id.localeCompare(b.id));
+  assert.deepEqual(after,original);
+  await assert.rejects(new Promise((resolve,reject)=>{
+    const request=indexedDB.open('market-register-local',1);
+    request.onsuccess=()=>{request.result.close();resolve();};request.onerror=()=>reject(request.error);
+  }),{name:'VersionError'});
+});
+
+test('reconnecting after a closed database does not authorize stale catalog writes', async () => {
+  const indexedDB=new IDBFactory();const first=storage(indexedDB);
+  await first.restore(records());
+  const second=storage(indexedDB);await second.openDB();
+  const connection=await first.openDB();connection.close();connection.onclose();
+  await second.commitProduct({...records().products[0],priceCents:900});
+  await assert.rejects(first.commitProduct(records().products[0]),{code:'DATA_CHANGED'});
+  assert.equal((await first.getAll('products')).find(row=>row.id==='p1').priceCents,900);
+});
