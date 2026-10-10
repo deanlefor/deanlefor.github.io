@@ -1,15 +1,15 @@
-const CACHE = 'market-register-shell-v15';
+const CACHE = 'market-register-shell-v16';
 const FILES = [
   './',
   './index.html',
   './styles.css',
-  './styles.css?v=0.12',
+  './styles.css?v=1.0',
   './app.js',
-  './app.js?v=0.12',
+  './app.js?v=1.0',
   './db.js',
-  './db.js?v=0.12',
-  './data.js?v=0.12',
-  './reports.js?v=0.12',
+  './db.js?v=1.0',
+  './data.js?v=1.0',
+  './reports.js?v=1.0',
   './vendor/pdfmake.min.js?v=0.3.11',
   './vendor/vfs_fonts.js?v=0.3.11',
   './vendor/xlsx.mini.min.js?v=0.20.3',

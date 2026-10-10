@@ -1,4 +1,4 @@
-# Market Register — prototype 0.12
+# Market Register — version 1.0
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,7 +6,7 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Prototype, not yet production-validated.** Test on the actual iPad, including an offline restart and restoring a backup on another device, before recording real sales. Until then, keep the existing notebook/Excel workflow as a fallback.
+> **Version 1.0 trial release.** This is the baseline for the first one- or two-week trial. Keep the current features steady during the trial; use the results and feedback to decide later improvements. The suggested iPad acceptance checks below still apply.
 
 ## First test on a Mac
 
@@ -160,7 +160,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Prototype 0.12** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.0** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
