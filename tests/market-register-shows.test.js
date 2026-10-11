@@ -59,6 +59,152 @@ function adjustment(app, id, value) {
   app.byId(id).dispatchEvent(new app.dom.window.Event('input'));
 }
 
+function payment(app, value) {
+  app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
+}
+
+test('cash received shows change, keeps revenue at the sale total, and resets for the next customer', async () => {
+  const initial = records(); initial.sales = [];
+  const app = await page(initial);
+  try {
+    assert.equal(app.byId('cash-payment').hidden, true);
+    app.dom.window.document.querySelector('.product-tile').click();
+    payment(app, 'Cash');
+    assert.equal(app.byId('cash-payment').hidden, false);
+    assert.equal(app.dom.window.document.activeElement, app.byId('cash-received'));
+    assert.equal(app.byId('cash-received').inputMode, 'decimal');
+    adjustment(app, 'cash-received', '20');
+    assert.equal(app.byId('cart-total').textContent, '$12.00');
+    assert.equal(app.byId('cash-change-label').textContent, 'Change due');
+    assert.equal(app.byId('cash-change').textContent, '$8.00');
+    assert.equal(app.byId('complete-sale').disabled, false);
+    app.byId('complete-sale').click(); await app.settle();
+    const sales = await app.db.getAll('sales');
+    assert.equal(sales.length, 1);
+    assert.equal(sales[0].paymentMethod, 'Cash');
+    assert.equal(sales[0].totalCents, 1200);
+    assert.equal(app.byId('cash-received').value, '');
+    assert.equal(app.byId('cash-change-row').hidden, true);
+    assert.equal(app.byId('last-sale-summary').textContent, 'Recorded $12.00. Change due: $8.00.');
+    assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value, 'Card');
+    assert.equal(await app.db.getMeta('draftPayment'), 'Card');
+    assert.equal(app.byId('cash-payment').hidden, true);
+    app.view('shows');
+    assert.match(app.byId('reports-body').textContent, /Total collected\$12.00/);
+    app.view('register');
+    app.dom.window.document.querySelector('.product-tile').click();
+    assert.equal(app.byId('cash-received').value, '');
+    assert.equal(app.byId('undo-area').hidden, true);
+    assert.equal(app.byId('complete-sale').disabled, false, 'cash entry stays optional');
+  } finally { app.dom.window.close(); }
+});
+
+test('cash change follows quantities, tips, and both discounts in exact cents, including short and exact payments', async () => {
+  const initial = records(); initial.sales = [];
+  initial.products[0].priceCents = 400;
+  initial.products[0].promoEligible = true;
+  const app = await page(initial);
+  try {
+    const add = () => app.dom.window.document.querySelector('.product-tile').click();
+    add(); add(); add();
+    assert.equal(app.byId('cart-total').textContent, '$10.00');
+    payment(app, 'Cash');
+    adjustment(app, 'cash-received', '20.10');
+    adjustment(app, 'sale-discount', '2.05');
+    adjustment(app, 'sale-tip', '3.20');
+    assert.equal(app.byId('cart-total').textContent, '$11.15');
+    assert.equal(app.byId('cash-change').textContent, '$8.95');
+    add();
+    assert.equal(app.byId('cash-change').textContent, '$4.95');
+    adjustment(app, 'cash-received', '12');
+    assert.equal(app.byId('cash-change-label').textContent, 'Still due');
+    assert.equal(app.byId('cash-change').textContent, '$3.15');
+    assert.equal(app.byId('complete-sale').disabled, true);
+    assert.equal((await app.db.getAll('sales')).length, 0);
+    adjustment(app, 'cash-received', '15.15');
+    assert.equal(app.byId('cash-change-label').textContent, 'Change due');
+    assert.equal(app.byId('cash-change').textContent, '$0.00');
+    assert.equal(app.byId('complete-sale').disabled, false);
+    adjustment(app, 'sale-discount', '99');
+    assert.equal(app.byId('cash-change-row').hidden, true, 'invalid totals cannot produce change');
+    assert.equal(app.byId('complete-sale').disabled, true);
+    adjustment(app, 'sale-discount', '14');
+    assert.equal(app.byId('cart-total').textContent, '$3.20');
+    assert.equal(app.byId('cash-change').textContent, '$11.95');
+    adjustment(app, 'sale-tip', '');
+    assert.equal(app.byId('cart-total').textContent, '$0.00');
+    assert.equal(app.byId('cash-change').textContent, '$15.15');
+  } finally { app.dom.window.close(); }
+});
+
+test('only the cash field rejects nonnumeric edits and extra decimal places without changing their meaning', async () => {
+  const app = await page();
+  try {
+    app.dom.window.document.querySelector('.product-tile').click();
+    payment(app, 'Cash');
+    adjustment(app, 'cash-received', '20');
+    for (const invalid of ['2e1', '-20', 'twenty', '$20', '20.001', '20.1.2', '20\n']) {
+      adjustment(app, 'cash-received', invalid);
+      assert.equal(app.byId('cash-received').value, '20', invalid);
+      assert.equal(app.byId('cash-change').textContent, '$8.00');
+    }
+    const cash = app.byId('cash-received');
+    cash.setSelectionRange(0, cash.value.length);
+    const letters = new app.dom.window.InputEvent('beforeinput', { data: 'abc', inputType: 'insertText', cancelable: true });
+    cash.dispatchEvent(letters);
+    assert.equal(letters.defaultPrevented, true);
+    const number = new app.dom.window.InputEvent('beforeinput', { data: '25.50', inputType: 'insertFromPaste', cancelable: true });
+    cash.dispatchEvent(number);
+    assert.equal(number.defaultPrevented, false);
+    adjustment(app, 'cash-received', '.');
+    assert.equal(app.byId('complete-sale').disabled, true);
+    assert.equal(cash.getAttribute('aria-invalid'), 'true');
+    adjustment(app, 'cash-received', '999999999999999999');
+    assert.equal(app.byId('complete-sale').disabled, true);
+    adjustment(app, 'cash-received', '');
+    assert.equal(app.byId('complete-sale').disabled, false);
+    adjustment(app, 'register-search', 'Example');
+    assert.equal(app.byId('register-search').value, 'Example');
+    assert.equal(app.byId('register-search').getAttribute('inputmode'), null);
+  } finally { app.dom.window.close(); }
+});
+
+test('switching payments and clearing cash-only input reset the calculator; failed sales retain cash received', async () => {
+  const app = await page();
+  try {
+    payment(app, 'Cash');
+    adjustment(app, 'cash-received', '20');
+    assert.equal(app.byId('cash-change-row').hidden, true, 'an empty basket has no change');
+    assert.equal(app.byId('clear-cart').disabled, false);
+    app.byId('clear-cart').click(); await app.settle();
+    assert.equal(app.byId('cash-received').value, '');
+    assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value, 'Card');
+    assert.equal(await app.db.getMeta('draftPayment'), 'Card');
+    app.dom.window.document.querySelector('.product-tile').click();
+    payment(app, 'Cash');
+    adjustment(app, 'cash-received', '20');
+    const commit = app.db.commitSale;
+    app.db.commitSale = async () => { throw new Error('Example failed sale'); };
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal(app.byId('cash-received').value, '20');
+    assert.equal(app.byId('cash-change').textContent, '$8.00');
+    assert.equal(app.byId('cart-total').textContent, '$12.00');
+    assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value, 'Cash', 'failed saves retain the current method');
+    app.db.commitSale = commit;
+    payment(app, 'Card');
+    assert.equal(app.byId('cash-payment').hidden, true);
+    assert.equal(app.byId('cash-received').value, '');
+    payment(app, 'Venmo');
+    assert.equal(app.byId('cash-payment').hidden, true);
+    payment(app, 'Cash');
+    assert.equal(app.byId('cash-received').value, '');
+    assert.equal(app.byId('cash-change-row').hidden, true);
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal((await app.db.getAll('sales')).length, 2, 'cash can be recorded without the optional calculator');
+    assert.equal(app.byId('last-sale-summary').textContent, 'Recorded $12.00.');
+  } finally { app.dom.window.close(); }
+});
+
 test('an interrupted sale write rolls back its record and all draft resets; failed clearing retains the current sale', async () => {
   const app=await page();
   try {
@@ -732,6 +878,33 @@ test('an unfinished sale retains its payment selection after reopening the app',
       restarted.byId('complete-sale').click();await restarted.settle();
       const saved=(await restarted.db.getAll('sales')).find(row=>row.id!=='sale1');
       assert.equal(saved.paymentMethod,'Venmo');
+      assert.equal(restarted.dom.window.document.querySelector('input[name="payment"]:checked').value,'Card');
+      assert.equal(await restarted.db.getMeta('draftPayment'),'Card');
     }finally{restarted.dom.window.close();}
   }finally{app.dom.window.close();}
+});
+
+test('fresh sales start at Card even when old settings remember Cash or Venmo', async () => {
+  for (const method of ['Cash', 'Venmo']) {
+    const initial=records(); initial.meta.push({id:'draftPayment',value:method});
+    const app=await page(initial);
+    try {
+      assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value,'Card');
+      assert.equal(app.byId('cash-payment').hidden,true);
+      app.dom.window.document.querySelector('.product-tile').click();
+      payment(app,method); await app.settle();
+      app.byId('clear-cart').click(); await app.settle();
+      assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value,'Card');
+      assert.equal(await app.db.getMeta('draftPayment'),'Card');
+      const reopened=await page(copy(await app.db.snapshot()));
+      try {
+        assert.equal(reopened.dom.window.document.querySelector('input[name="payment"]:checked').value,'Card');
+      } finally { reopened.dom.window.close(); }
+    } finally { app.dom.window.close(); }
+  }
+  const pending=records(); pending.meta.push({id:'draftPayment',value:'Cash'}, {id:'draftTipCents',value:100});
+  const app=await page(pending);
+  try {
+    assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value,'Cash', 'an amount-only draft still preserves its payment method');
+  } finally { app.dom.window.close(); }
 });

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the public Version 1.0 guide, using only fictional examples.
+"""Build the public Version 1.01 guide, using only fictional examples.
 
 Requires ReportLab. Run from any directory; the output stays inside the app's
 scope so its service worker can make the guide available offline. Each chapter
@@ -26,7 +26,7 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.0.pdf"
+OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.01.pdf"
 TOTAL_PAGES = 12
 FOREST = colors.HexColor("#244c41")
 INK = colors.HexColor("#22362d")
@@ -94,10 +94,10 @@ def page_chrome(canvas, doc):
     canvas.drawString(48, 763, "MARKET REGISTER")
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(MUTED)
-    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.0")
+    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.01")
     canvas.line(48, 43, 564, 43)
     canvas.setFont("Helvetica", 8.5)
-    canvas.drawString(48, 29, "Version 1.0 trial guide  |  October 10, 2026")
+    canvas.drawString(48, 29, "Version 1.01 trial guide  |  October 11, 2026")
     canvas.drawRightString(564, 29, f"{doc.page} / {TOTAL_PAGES}")
     canvas.restoreState()
 
@@ -161,7 +161,7 @@ def table(rows, widths, header=True):
 def chapter(number, title, key):
     if story:
         story.append(PageBreak())
-    p(f"{number:02d}  /  VERSION 1.0", "kicker")
+    p(f"{number:02d}  /  VERSION 1.01", "kicker")
     heading = Paragraph(title, STYLES["title"])
     heading.bookmark_key = key
     story.append(heading)
@@ -235,15 +235,15 @@ step(3, "Review <b>Current sale</b>. Use the quantity <b>+</b> and <b>-</b> cont
 step(4, "If needed, expand <b>Tip &amp; discount</b>. Enter dollar amounts, then check the total again. Both fields can be used on the same sale (page 5).")
 step(5, "Collect and confirm payment outside this app. Select the actual payment method: <b>Cash, Card, or Venmo</b>.")
 step(6, "Tap <b>Record completed sale</b> once. Wait for the saved confirmation and the cleared basket before starting the next customer.")
-callout("<b>Check the payment button for every customer.</b> The app remembers the selected method. It starts with Card, but the next sale may keep the method used last time.")
+callout("<b>Check the payment button for every customer.</b> Each fresh sale defaults to Card. After recording or clearing a sale, Card is selected again. An unfinished sale keeps its chosen method when reopening the app.")
+h("Cash and change")
+p("Select <b>Cash</b> to open the optional <b>Cash received ($)</b> field. A $12 sale paid with $20 shows <b>$8 Change due</b>. The field accepts digits and a decimal point and requests a numeric keypad. Short cash shows <b>Still due</b>; correct the amount or clear this optional field before recording.")
+p("Change uses the final total after tips and discounts. Cash received resets for the next sale; the saved confirmation still shows change due. Reports record the sale total, not the cash tendered.", "small")
 h("What is saved")
-p("A completed sale keeps its show, date and time, items, payment method, tip, discounts, and final collected amount together. Tips and dollar discounts reset after a successful save, and their optional section closes.")
-p("The app records one payment method per sale. It does not charge a card, collect Venmo, calculate tax, or issue a payment-service receipt.")
+p("A completed sale saves the show, timestamp, items, payment method, tip, discounts, and total. Tips and discounts reset after saving. Payment collection, tax, and payment-service receipts are handled separately.")
 h("An unfinished or abandoned basket")
-p("The unfinished sale and valid tip or discount amounts are remembered on this device. Use <b>Clear current sale</b> and confirm to abandon the basket; this does not remove previously completed sales.")
-p("Finish or clear the pending sale before changing or completing its show. If saving fails, the basket remains so you can resolve the error and try again.")
-h("Avoid recording twice")
-p("If the button shows a saving message, wait. If you are unsure whether a sale was saved, check the selected show's transaction history before entering it again. Use <b>Void last sale</b> or the history's <b>Void</b> button for a confirmed mistake (page 6).")
+p("The basket and valid tip/discount amounts are remembered on this device. Confirm <b>Clear current sale</b> to abandon the basket; recorded sales remain. Finish or clear it before changing or completing the show. Failed saves keep the basket for another attempt.")
+p("<b>Avoid duplicates:</b> wait while saving. If unsure whether a sale saved, check the show's transaction history before entering it again. Use <b>Void last sale</b> or the history's <b>Void</b> button for a confirmed mistake (page 6).")
 
 chapter(5, "Tips and discounts", "adjustments")
 h("The optional section")
@@ -365,14 +365,14 @@ p("After deletion, starter categories return. The app, its offline files, and th
 
 chapter(11, "Refresh and troubleshooting", "help")
 h("Refresh an installed iPad app")
-p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.0</b> in the footer.")
+p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.01</b> in the footer.")
 p("The guide opens from Data management. After the updated app has loaded online, it is cached with the app. You can also save a separate PDF copy to Files.")
 h("Another copy changed the records")
 p("Close the other copy. If this copy shows a refresh warning, finish or close its form and use <b>Refresh app</b> to load saved records. Stale writes are blocked. Refreshing a stale copy with unfinished edits can ask permission to discard those edits; read that prompt carefully.")
 h("Products are missing from Register")
 p("Check the search text and category filter. In Products, check <b>Show hidden products</b> and bring back an item with <b>Show</b>. Select an open show before trying to add items. The app does not track or automatically hide sold-out inventory.")
 h("Record completed sale is unavailable")
-p("Check that an open show is selected, the basket has items, tip/discount entries are valid, and no save or stale-copy warning is pending. A completed show must be reopened before more sales or voids can be recorded.")
+p("Check that an open show is selected, the basket has items, tip/discount entries are valid, any entered cash covers the total, and no save or stale-copy warning is pending. A completed show must be reopened before more sales or voids can be recorded.")
 h("This copy looks empty")
 p("Check the device, browser, website address, and whether you opened Safari or the Home Screen app. Open the original copy and save a full backup, then restore it into the intended copy. Do not delete anything as a troubleshooting step.")
 h("An export looks wrong or will not save")
@@ -398,7 +398,7 @@ bullet("Correct mistakes with Void and a replacement record if needed, then comp
 bullet("Save the Card transactions PDF for later tax work, the Item ledger PDF for the sale-by-sale record, and the Show summary PDF for an overview.")
 bullet("Save the Excel export if you are updating your existing workbook.")
 bullet("Save a new full backup and verify the actual file. Keep a copy off the iPad.")
-h("During the Version 1.0 trial")
+h("During the Version 1.01 trial")
 p("Use this version for the planned week or two and note anything confusing or missing. Useful notes include the device, app version, what you tapped, what you expected, and what happened. Keep your full backups and exported sales files private.")
 callout("<b>Three things to remember:</b><br/>Check the show. Check the payment method. Save and verify a full backup after every show.")
 
@@ -408,8 +408,8 @@ def main():
     doc = GuideDocument(
         str(OUTPUT), pagesize=letter, leftMargin=48, rightMargin=48,
         topMargin=58, bottomMargin=56, pageCompression=1, invariant=1,
-        title="Market Register - Version 1.0 User Guide",
-        author="Market Register", subject="How to use Market Register Version 1.0",
+        title="Market Register - Version 1.01 User Guide",
+        author="Market Register", subject="How to use Market Register Version 1.01",
         creator="Market Register user guide builder",
     )
     frame = Frame(48, 56, WIDTH, 678, leftPadding=0, rightPadding=0,

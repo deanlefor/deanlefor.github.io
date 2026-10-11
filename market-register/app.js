@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.0';
+import * as db from './db.js?v=1.01';
 
-// Market Register 1.0: no backend, analytics, account, or payment API.
+// Market Register 1.01: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -40,6 +40,8 @@ const state = {
   cart: {},
   tipText: '',
   manualDiscountText: '',
+  cashReceivedText: '',
+  lastCashChangeCents: null,
   activeShowId: null,
   reportShowId: null,
   activeCategory: 'All',
@@ -258,6 +260,12 @@ function persistPayment() {
     .then(() => db.setMeta('draftPayment', payment));
   cartSaveQueue.catch(errorMessage);
 }
+function setPayment(payment = 'Card') {
+  state.payment = payment;
+  document.querySelectorAll('input[name="payment"]').forEach((input) => {
+    input.checked = input.value === payment;
+  });
+}
 function totalCount() {
   return Object.values(state.cart).reduce((sum, q) => sum + q, 0);
 }
@@ -298,7 +306,11 @@ function priceCart() {
 function hasCurrentSale() {
   return (
     totalCount() > 0 ||
-    Boolean(state.tipText.trim() || state.manualDiscountText.trim())
+    Boolean(
+      state.tipText.trim() ||
+      state.manualDiscountText.trim() ||
+      state.cashReceivedText,
+    )
   );
 }
 function setAdjustments(tipCents = 0, manualDiscountCents = 0) {
@@ -328,6 +340,48 @@ function editAdjustment(event) {
       );
     cartSaveQueue.catch(errorMessage);
   }
+  renderCart();
+}
+
+// Cash tender is a calculator for this customer, separate from sale revenue.
+// Keep it on screen after failed saves, but never carry it into another sale.
+function resetCashReceived() {
+  state.cashReceivedText = '';
+  byId('cash-received').value = '';
+}
+function cashPayment(breakdown) {
+  if (state.payment !== 'Cash' || !state.cashReceivedText)
+    return { changeCents: null, error: '' };
+  const receivedCents = dataRules.parseDollarCents(state.cashReceivedText);
+  if (receivedCents === null)
+    return {
+      changeCents: null,
+      error: 'Enter a dollar amount with up to two decimal places.',
+    };
+  if (breakdown.error || !breakdown.lines.length)
+    return { changeCents: null, error: '' };
+  const changeCents = receivedCents - breakdown.totalCents;
+  return {
+    changeCents,
+    error:
+      changeCents < 0 ? 'Collect the remaining amount before recording.' : '',
+  };
+}
+function editCashReceived(event) {
+  const input = event.target;
+  if (
+    saving() ||
+    state.stale ||
+    state.payment !== 'Cash' ||
+    !currentShow() ||
+    currentShow().completedAt ||
+    !/^\d*(?:\.\d{0,2})?$/.test(input.value)
+  ) {
+    // Reject the whole edit rather than turning pasted letters into a different amount.
+    input.value = state.cashReceivedText;
+    return;
+  }
+  state.cashReceivedText = input.value;
   renderCart();
 }
 
@@ -599,6 +653,27 @@ function renderCart() {
       ? `· ${applied.join(' / ')}`
       : '';
   const show = currentShow();
+  const cash = cashPayment(breakdown);
+  byId('cash-payment').hidden = state.payment !== 'Cash';
+  byId('cash-payment').classList.toggle('is-invalid', Boolean(cash.error));
+  const cashInput = byId('cash-received');
+  cashInput.disabled =
+    saving() || state.stale || !show || Boolean(show.completedAt);
+  cashInput.setAttribute('aria-invalid', String(Boolean(cash.error)));
+  byId('cash-change-row').hidden = cash.changeCents === null;
+  byId('cash-change-label').textContent =
+    cash.changeCents < 0 ? 'Still due' : 'Change due';
+  byId('cash-change').textContent = money(Math.abs(cash.changeCents || 0));
+  const cashMessage =
+    cash.error ||
+    (state.cashReceivedText &&
+      (breakdown.error
+        ? 'Check the tip and discount to calculate change.'
+        : !breakdown.lines.length
+          ? 'Add items to calculate change.'
+          : ''));
+  byId('cash-message').textContent = cashMessage;
+  byId('cash-message').hidden = !cashMessage;
   for (const [id, value] of [
     ['sale-tip', state.tipText],
     ['sale-discount', state.manualDiscountText],
@@ -619,6 +694,7 @@ function renderCart() {
   byId('complete-sale').disabled =
     !breakdown.lines.length ||
     Boolean(breakdown.error) ||
+    Boolean(cash.error) ||
     !show ||
     Boolean(show.completedAt) ||
     !state.ready ||
@@ -636,7 +712,7 @@ function renderCart() {
       Boolean(state.shows.find((s) => s.id === sale?.showId)?.completedAt) ||
       state.changingShow;
     byId('last-sale-summary').textContent = sale
-      ? `Recorded ${money(sale.totalCents)}.`
+      ? `Recorded ${money(sale.totalCents)}.${state.lastCashChangeCents !== null ? ` Change due: ${money(state.lastCashChangeCents)}.` : ''}`
       : 'Sale recorded.';
   }
 }
@@ -644,7 +720,7 @@ async function clearCurrentSale() {
   if (saving() || state.stale || !hasCurrentSale()) return;
   if (
     !window.confirm(
-      'Clear the items, tip, and discount from the current sale? No sale has been recorded yet.',
+      'Clear the items, tip, discount, and cash received from the current sale? No sale has been recorded yet.',
     )
   )
     return;
@@ -658,9 +734,12 @@ async function clearCurrentSale() {
       draftCart: {},
       draftTipCents: 0,
       draftManualDiscountCents: 0,
+      draftPayment: 'Card',
     });
     state.cart = {};
     setAdjustments();
+    resetCashReceived();
+    setPayment();
     state.lastSaleId = null;
   } catch (error) {
     errorMessage(error);
@@ -681,6 +760,8 @@ async function completeSale() {
     );
   if (!priced.lines.length) return;
   if (priced.error) return toast(priced.error, true);
+  const cash = cashPayment(priced);
+  if (cash.error) return toast(cash.error, true);
   state.completing = true;
   renderRegister();
   const sale = {
@@ -707,6 +788,9 @@ async function completeSale() {
     invalidateReports();
     state.cart = {};
     setAdjustments();
+    resetCashReceived();
+    setPayment();
+    state.lastCashChangeCents = cash.changeCents;
     state.lastSaleId = sale.id;
     toast(
       `${money(sale.totalCents)} sale recorded. Payment method: ${reports.paymentName(sale.paymentMethod)}.`,
@@ -2045,14 +2129,13 @@ async function reloadData() {
     setting('draftTipCents', 0),
     setting('draftManualDiscountCents', 0),
   );
+  resetCashReceived();
+  state.lastCashChangeCents = null;
   state.lastBackupAt = lastBackup;
   const payment = reports.paymentName(setting('draftPayment', 'Card'));
-  state.payment = ['Cash', 'Card', 'Venmo'].includes(payment)
-    ? payment
-    : 'Card';
-  document.querySelector(
-    `input[name="payment"][value="${state.payment}"]`,
-  ).checked = true;
+  // Preserve the method for an unfinished sale; every fresh sale starts at Card.
+  setPayment(hasCurrentSale() && ['Cash', 'Card', 'Venmo'].includes(payment)
+    ? payment : 'Card');
   state.ready = true;
 }
 // Refreshing code never clears IndexedDB. Stale-copy refresh loads saved records;
@@ -2149,6 +2232,16 @@ function connectEvents() {
   });
   byId('sale-tip').addEventListener('input', editAdjustment);
   byId('sale-discount').addEventListener('input', editAdjustment);
+  byId('cash-received').addEventListener('input', editCashReceived);
+  byId('cash-received').addEventListener('beforeinput', (event) => {
+    if (!event.data || !event.inputType.startsWith('insert')) return;
+    const input = event.target;
+    const next =
+      input.value.slice(0, input.selectionStart) +
+      event.data +
+      input.value.slice(input.selectionEnd);
+    if (!/^\d*(?:\.\d{0,2})?$/.test(next)) event.preventDefault();
+  });
   byId('complete-sale').addEventListener('click', completeSale);
   byId('clear-cart').addEventListener('click', clearCurrentSale);
   byId('undo-sale').addEventListener('click', () => voidSale(state.lastSaleId));
@@ -2156,7 +2249,11 @@ function connectEvents() {
     input.addEventListener('change', (event) => {
       if (saving() || state.stale) return;
       state.payment = event.target.value;
+      resetCashReceived();
       persistPayment();
+      renderCart();
+      if (state.payment === 'Cash' && !byId('cash-received').disabled)
+        byId('cash-received').focus();
     }),
   );
   byId('add-product').addEventListener('click', () => openProductDialog());

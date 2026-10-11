@@ -214,6 +214,7 @@ export function commitSale(sale) {
           meta.put({ id: 'draftCart', value: {} });
           meta.put({ id: 'draftTipCents', value: 0 });
           meta.put({ id: 'draftManualDiscountCents', value: 0 });
+          meta.put({ id: 'draftPayment', value: 'Card' });
         } catch (error) {
           fail(error);
         }

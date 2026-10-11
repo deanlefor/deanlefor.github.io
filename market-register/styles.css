@@ -124,6 +124,13 @@ main { padding: 26px 28px 10px; }
 .payment-choices span {display:grid;place-items:center;min-height:44px;padding:6px;background:var(--paper);border:1px solid var(--line);border-radius:10px;font-size:.79rem;text-align:center;font-weight:650;white-space:nowrap;}
 .payment-choices input:checked+span {background:var(--soft-green);border:2px solid var(--forest);color:var(--forest);}
 .payment-choices input:focus-visible+span {outline:3px solid #a68735;outline-offset:2px;}
+.cash-payment {margin-bottom:15px;padding:12px;border:1px solid var(--line);border-radius:12px;}
+.cash-payment input {width:100%;font-variant-numeric:tabular-nums;}
+.cash-payment .field-hint {margin:8px 0 0;}
+.cash-change {margin-top:10px;color:var(--forest);font-size:1rem;}
+.cash-change strong {font-size:1.4rem;}
+.cash-payment.is-invalid input {border-color:var(--danger);}
+.cash-payment.is-invalid .cash-change, .cash-payment.is-invalid #cash-message {color:var(--danger);}
 .cart-panel > .btn-text {width:100%;margin-top:4px;}
 #complete-sale {border-radius:28px;}
 .fine-print {font-size:.73rem;line-height:1.4;color:var(--muted);margin:10px 0 0;}

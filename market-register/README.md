@@ -1,4 +1,4 @@
-# Market Register — version 1.0
+# Market Register — version 1.01
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,11 +6,11 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.0 trial release.** This is the baseline for the first one- or two-week trial. Keep the current features steady during the trial; use the results and feedback to decide later improvements. The suggested iPad acceptance checks below still apply.
+> **Version 1.01 trial release.** Adds an optional cash-change calculator and resets fresh sales to Card. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
-The [Version 1.0 user guide](output/pdf/market-register-user-guide-v1.0.pdf)
+The [Version 1.01 user guide](output/pdf/market-register-user-guide-v1.01.pdf)
 is linked under **Data management → User guide**. Its 12 chapters cover iPad
 setup, products and photos, checkout, tips and discounts, shows and corrections,
 PDF reports, Excel/CSV exports, full backups, category cleanup, and refresh and
@@ -21,7 +21,7 @@ The guide uses fictional examples and contains no saved catalog or sales data.
 Rebuild it from the editable source with `python3 scripts/build-market-register-guide.py`
 from the repository root (requires ReportLab). The builder verifies the intended
 12-page chapter layout and writes the public PDF inside this app's directory.
-Guide-only updates retain the app's Version 1.0 label and the original release tag.
+Guide-only updates do not change the app's version label.
 
 ## First test on a Mac
 
@@ -175,7 +175,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.0** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.01** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
@@ -202,8 +202,20 @@ on this device. Tax and later adjustments made outside the app are not calculate
 or included; app references are not card processor receipt IDs.
 
 The Register offers exactly **Cash, Card, and Venmo**, in a single row.
-The selected payment method is remembered with an unfinished sale when reopening
-the app and is included in a full backup.
+**Card** is the default for every fresh sale, including after recording or
+clearing a sale. The selected payment method is remembered with an unfinished
+sale when reopening the app and is included in a full backup.
+Selecting **Cash** opens an optional **Cash received ($)** field and focuses it.
+Enter the amount given to see **Change due** (for example, a $12 sale paid with
+$20 shows $8 change). It uses the final total after tips and discounts. If the
+cash is short, **Still due** shows the remainder and recording is blocked until
+the amount is corrected or the optional field is cleared. The field requests a
+decimal keypad on mobile devices and accepts only digits and one decimal point,
+with up to two decimal places; other fields keep their existing keyboards.
+Cash received is a temporary calculation: it resets when changing payment
+methods, clearing or recording the sale, or reopening the app. After recording,
+the last-sale message still shows the change owed. Reports keep the sale total,
+so giving $20 for a $12 sale records $12 in revenue.
 Historical Square and Cash App labels display/export as Card and CashApp without rewriting
 the original records or backups. Historical PayPal and Other entries remain
 visible under their original labels and are not silently treated as Card.
