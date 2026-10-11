@@ -24,24 +24,22 @@
         <div class="logo-mark" aria-hidden="true">M</div>
         <div><div class="brand-title">Market Register</div><div class="brand-subtitle">A simpler way to run the booth</div></div>
       </div>
+      <nav class="main-nav" aria-label="App sections">
+        <button class="nav-tab is-active" data-view="register" type="button" aria-current="page">Register</button>
+        <button class="nav-tab" data-view="products" type="button">Products</button>
+        <button class="nav-tab" data-view="shows" type="button">Shows & reports</button>
+        <button class="nav-tab" data-view="backup" type="button">Backups</button>
+        <button class="nav-tab" data-view="data" type="button">Data management</button>
+      </nav>
       <div class="header-status">
         <span class="status-pill" id="network-status"><span class="status-dot"></span><span>Local-first</span></span>
-        <span class="status-secondary">No payment processing</span>
       </div>
     </header>
-
-    <nav class="main-nav" aria-label="App sections">
-      <button class="nav-tab is-active" data-view="register" type="button" aria-current="page">Register</button>
-      <button class="nav-tab" data-view="products" type="button">Products</button>
-      <button class="nav-tab" data-view="shows" type="button">Shows & reports</button>
-      <button class="nav-tab" data-view="backup" type="button">Backups</button>
-      <button class="nav-tab" data-view="data" type="button">Data management</button>
-    </nav>
 
     <main>
       <section class="view is-visible" id="view-register" aria-label="Register">
         <div class="section-title-row register-topline">
-          <div><h1>Register</h1><p>Tap products to add them to the current sale.</p></div>
+          <h1 class="visually-hidden">Register</h1>
           <div class="show-picker-group">
             <label for="active-show-select">Current show</label>
             <div class="inline-controls">
