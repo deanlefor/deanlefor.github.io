@@ -42,7 +42,7 @@ main { padding: 26px 28px 10px; }
 .view { display:none; }
 .view.is-visible { display:block; }
 .section-title-row {display:flex; gap:20px; align-items:center; justify-content:space-between; margin-bottom:18px;}
-.section-title-row p {font-size:.9rem;color:var(--muted);margin:5px 0 0;}
+.section-title-row p {font-size:.9rem;color:var(--muted);margin:0;}
 .show-picker-group {min-width:345px;}
 .show-picker-group label {color:var(--muted);font-size:.74rem;}
 .register-topline {margin-bottom:14px;}
