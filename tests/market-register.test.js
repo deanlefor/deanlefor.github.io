@@ -26,7 +26,7 @@ function worker(network) {
     fetch: network,
     caches: {
       open: async () => cache,
-      keys: async () => ['market-register-shell-v16', 'market-register-shell-v17', 'project-tracker-v2'],
+      keys: async () => ['market-register-shell-v18', 'market-register-shell-v19', 'project-tracker-v2'],
       delete: async name => { deleted.push(name); return true; },
     },
     self: {
@@ -141,7 +141,7 @@ test('activating Market Register preserves other apps offline caches', async () 
   let completion;
   app.handlers.activate({ waitUntil: promise => { completion = promise; } });
   await completion;
-  assert.deepEqual(app.deleted, ['market-register-shell-v16']);
+  assert.deepEqual(app.deleted, ['market-register-shell-v18']);
 });
 
 test('HTTP outages retain good cached assets and the app shell without caching error responses', async () => {

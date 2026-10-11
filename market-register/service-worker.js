@@ -1,4 +1,4 @@
-const CACHE = 'market-register-shell-v17';
+const CACHE = 'market-register-shell-v19';
 const FILES = [
   './',
   './index.html',
