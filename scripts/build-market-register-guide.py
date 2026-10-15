@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the public Version 1.01 guide, using only fictional examples.
+"""Build the public Version 1.02 guide, using only fictional examples.
 
 Requires ReportLab. Run from any directory; the output stays inside the app's
 scope so its service worker can make the guide available offline. Each chapter
@@ -26,7 +26,7 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.01.pdf"
+OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.02.pdf"
 TOTAL_PAGES = 12
 FOREST = colors.HexColor("#244c41")
 INK = colors.HexColor("#22362d")
@@ -94,10 +94,10 @@ def page_chrome(canvas, doc):
     canvas.drawString(48, 763, "MARKET REGISTER")
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(MUTED)
-    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.01")
+    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.02")
     canvas.line(48, 43, 564, 43)
     canvas.setFont("Helvetica", 8.5)
-    canvas.drawString(48, 29, "Version 1.01 trial guide  |  October 11, 2026")
+    canvas.drawString(48, 29, "Version 1.02 trial guide  |  October 15, 2026")
     canvas.drawRightString(564, 29, f"{doc.page} / {TOTAL_PAGES}")
     canvas.restoreState()
 
@@ -161,7 +161,7 @@ def table(rows, widths, header=True):
 def chapter(number, title, key):
     if story:
         story.append(PageBreak())
-    p(f"{number:02d}  /  VERSION 1.01", "kicker")
+    p(f"{number:02d}  /  VERSION 1.02", "kicker")
     heading = Paragraph(title, STYLES["title"])
     heading.bookmark_key = key
     story.append(heading)
@@ -230,11 +230,11 @@ callout("There are no stock quantities. Hide a sold-out item yourself. Hidden pr
 
 chapter(4, "Recording a sale", "sales")
 step(1, "In <b>Register</b>, check <b>Current show</b>. Choose an open show, or tap <b>+ New show</b> and enter its name and date.")
-step(2, "Tap each product the customer is buying. Each tap adds one item. Use the category buttons or search to narrow the list.")
+step(2, "Tap each product the customer is buying. Each tap adds one item. Search narrows the list; use its <b>X (Clear search)</b> button to clear it without changing the basket or category.")
 step(3, "Review <b>Current sale</b>. Use the quantity <b>+</b> and <b>-</b> controls to correct the basket. The total updates as items change.")
 step(4, "If needed, expand <b>Tip &amp; discount</b>. Enter dollar amounts, then check the total again. Both fields can be used on the same sale (page 5).")
 step(5, "Collect and confirm payment outside this app. Select the actual payment method: <b>Cash, Card, or Venmo</b>.")
-step(6, "Tap <b>Record completed sale</b> once. Wait for the saved confirmation and the cleared basket before starting the next customer.")
+step(6, "Tap <b>Record completed sale</b> once. Wait for confirmation. The basket and search clear for the next customer; a failed save keeps both.")
 callout("<b>Check the payment button for every customer.</b> Each fresh sale defaults to Card. After recording or clearing a sale, Card is selected again. An unfinished sale keeps its chosen method when reopening the app.")
 h("Cash and change")
 p("Select <b>Cash</b> to open the optional <b>Cash received ($)</b> field. A $12 sale paid with $20 shows <b>$8 Change due</b>. The field accepts digits and a decimal point and requests a numeric keypad. Short cash shows <b>Still due</b>; correct the amount or clear this optional field before recording.")
@@ -365,7 +365,7 @@ p("After deletion, starter categories return. The app, its offline files, and th
 
 chapter(11, "Refresh and troubleshooting", "help")
 h("Refresh an installed iPad app")
-p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.01</b> in the footer.")
+p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.02</b> in the footer.")
 p("The guide opens from Data management. After the updated app has loaded online, it is cached with the app. You can also save a separate PDF copy to Files.")
 h("Another copy changed the records")
 p("Close the other copy. If this copy shows a refresh warning, finish or close its form and use <b>Refresh app</b> to load saved records. Stale writes are blocked. Refreshing a stale copy with unfinished edits can ask permission to discard those edits; read that prompt carefully.")
@@ -398,7 +398,7 @@ bullet("Correct mistakes with Void and a replacement record if needed, then comp
 bullet("Save the Card transactions PDF for later tax work, the Item ledger PDF for the sale-by-sale record, and the Show summary PDF for an overview.")
 bullet("Save the Excel export if you are updating your existing workbook.")
 bullet("Save a new full backup and verify the actual file. Keep a copy off the iPad.")
-h("During the Version 1.01 trial")
+h("During the Version 1.02 trial")
 p("Use this version for the planned week or two and note anything confusing or missing. Useful notes include the device, app version, what you tapped, what you expected, and what happened. Keep your full backups and exported sales files private.")
 callout("<b>Three things to remember:</b><br/>Check the show. Check the payment method. Save and verify a full backup after every show.")
 
@@ -408,8 +408,8 @@ def main():
     doc = GuideDocument(
         str(OUTPUT), pagesize=letter, leftMargin=48, rightMargin=48,
         topMargin=58, bottomMargin=56, pageCompression=1, invariant=1,
-        title="Market Register - Version 1.01 User Guide",
-        author="Market Register", subject="How to use Market Register Version 1.01",
+        title="Market Register - Version 1.02 User Guide",
+        author="Market Register", subject="How to use Market Register Version 1.02",
         creator="Market Register user guide builder",
     )
     frame = Frame(48, 56, WIDTH, 678, leftPadding=0, rightPadding=0,

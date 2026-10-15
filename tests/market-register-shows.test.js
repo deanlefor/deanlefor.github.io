@@ -63,6 +63,60 @@ function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
 
+test('the search clear button restores the selected category without changing the current sale', async () => {
+  const initial=records();
+  initial.products.push(
+    {...initial.products[0],id:'p2',sku:'MR-0002',name:'Oak coaster'},
+    {...initial.products[0],id:'p3',sku:'MR-0003',name:'Bracelet',category:'Jewelry'},
+  );
+  const app=await page(initial);
+  try {
+    const document=app.dom.window.document;
+    assert.equal(app.byId('clear-register-search').hidden,true);
+    document.querySelector('.product-tile[aria-label^="Add Example,"]').click();
+    [...document.querySelectorAll('.category-tab')].find(node=>node.textContent==='Coasters').click();
+    adjustment(app,'register-search','oak');
+    assert.deepEqual([...document.querySelectorAll('.tile-name')].map(node=>node.textContent),['Oak coaster']);
+    assert.equal(app.byId('clear-register-search').hidden,false);
+    app.byId('clear-register-search').click();
+    assert.equal(app.byId('register-search').value,'');
+    assert.equal(app.byId('clear-register-search').hidden,true);
+    assert.equal(document.activeElement,app.byId('register-search'));
+    assert.deepEqual([...document.querySelectorAll('.tile-name')].map(node=>node.textContent),['Example','Oak coaster']);
+    assert.equal(app.byId('cart-total').textContent,'$12.00');
+    assert.equal(app.byId('cart-item-count').textContent,'1 item');
+    adjustment(app,'register-search','nothing matches');
+    assert.match(app.byId('register-empty').textContent,/No matching products/);
+    app.byId('clear-register-search').click();
+    assert.equal(document.querySelectorAll('.product-tile').length,2);
+  } finally { app.dom.window.close(); }
+});
+
+test('only a successful sale clears the register search and restores the product list', async () => {
+  const initial=records(); initial.sales=[];
+  initial.products.push({...initial.products[0],id:'p2',sku:'MR-0002',name:'Oak coaster'});
+  const app=await page(initial);
+  try {
+    adjustment(app,'register-search','Example');
+    app.dom.window.document.querySelector('.product-tile').click();
+    const commit=app.db.commitSale;
+    app.db.commitSale=async()=>{throw new Error('Example failed sale');};
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal(app.byId('register-search').value,'Example');
+    assert.equal(app.byId('clear-register-search').hidden,false);
+    assert.equal(app.byId('cart-total').textContent,'$12.00');
+    assert.equal((await app.db.getAll('sales')).length,0);
+    app.db.commitSale=commit;
+    app.byId('complete-sale').click(); await app.settle();
+    assert.equal((await app.db.getAll('sales')).length,1);
+    assert.equal(app.byId('register-search').value,'');
+    assert.equal(app.byId('clear-register-search').hidden,true);
+    assert.equal(app.dom.window.document.querySelectorAll('.product-tile').length,2);
+    assert.equal(app.byId('cart-item-count').textContent,'0 items');
+    assert.equal(app.dom.window.document.querySelector('input[name="payment"]:checked').value,'Card');
+  } finally { app.dom.window.close(); }
+});
+
 test('cash received shows change, keeps revenue at the sale total, and resets for the next customer', async () => {
   const initial = records(); initial.sales = [];
   const app = await page(initial);

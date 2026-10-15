@@ -1,4 +1,4 @@
-# Market Register — version 1.01
+# Market Register — version 1.02
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,11 +6,11 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.01 trial release.** Adds an optional cash-change calculator and resets fresh sales to Card. The suggested iPad acceptance checks below still apply.
+> **Version 1.02 trial release.** Adds an explicit search-clear button and clears the Register search after a successful sale. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
-The [Version 1.01 user guide](output/pdf/market-register-user-guide-v1.01.pdf)
+The [Version 1.02 user guide](output/pdf/market-register-user-guide-v1.02.pdf)
 is linked under **Data management → User guide**. Its 12 chapters cover iPad
 setup, products and photos, checkout, tips and discounts, shows and corrections,
 PDF reports, Excel/CSV exports, full backups, category cleanup, and refresh and
@@ -175,7 +175,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.01** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.02** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
@@ -221,6 +221,15 @@ the original records or backups. Historical PayPal and Other entries remain
 visible under their original labels and are not silently treated as Card.
 The PDF writer and fonts are bundled locally, so reports also work offline
 after the updated app has loaded and cached while online.
+
+## Register search
+
+Typing in **Search products** filters the Register product buttons. Tap the
+**×** button beside the field to clear the text and return focus to search.
+The button appears whenever the field contains text, including when no products
+match. Clearing search keeps the current category and current sale. After a
+sale is successfully recorded, the search clears automatically for the next
+customer. A failed save keeps the search and basket intact for retry.
 
 ## Product entry and discounts
 

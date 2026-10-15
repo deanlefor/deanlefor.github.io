@@ -1,22 +1,22 @@
-const CACHE = 'market-register-shell-v22';
+const CACHE = 'market-register-shell-v23';
 const FILES = [
   './',
   './index.html',
   './styles.css',
-  './styles.css?v=1.01',
+  './styles.css?v=1.02',
   './app.js',
-  './app.js?v=1.01',
+  './app.js?v=1.02',
   './db.js',
-  './db.js?v=1.01',
-  './data.js?v=1.01',
-  './reports.js?v=1.01',
+  './db.js?v=1.02',
+  './data.js?v=1.02',
+  './reports.js?v=1.02',
   './vendor/pdfmake.min.js?v=0.3.11',
   './vendor/vfs_fonts.js?v=0.3.11',
   './vendor/xlsx.mini.min.js?v=0.20.3',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './output/pdf/market-register-user-guide-v1.01.pdf',
+  './output/pdf/market-register-user-guide-v1.02.pdf',
 ];
 self.addEventListener('install', (event) => {
   const requests = FILES.map(

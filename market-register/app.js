@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.01';
+import * as db from './db.js?v=1.02';
 
-// Market Register 1.01: no backend, analytics, account, or payment API.
+// Market Register 1.02: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -496,7 +496,9 @@ function renderRegister() {
   if (!categories.includes(state.activeCategory)) state.activeCategory = 'All';
   categories.forEach((cat) => tabs.append(showCategoryButton(cat)));
 
-  const filter = byId('register-search').value.trim().toLocaleLowerCase();
+  const search = byId('register-search');
+  byId('clear-register-search').hidden = !search.value;
+  const filter = search.value.trim().toLocaleLowerCase();
   const shown = sortProducts(
     state.products.filter(
       (p) =>
@@ -784,6 +786,8 @@ async function completeSale() {
     // Ensure no older draft-cart save can race a successful sale commit.
     await cartSaveQueue;
     await db.commitSale(sale);
+    // Clear the filter only after the sale is safely saved for the next customer.
+    byId('register-search').value = '';
     state.sales.unshift(sale);
     invalidateReports();
     state.cart = {};
@@ -2207,6 +2211,11 @@ function connectEvents() {
     if (state.savingProduct || state.savingCategory) event.preventDefault();
   });
   byId('register-search').addEventListener('input', renderRegister);
+  byId('clear-register-search').addEventListener('click', () => {
+    byId('register-search').value = '';
+    renderRegister();
+    byId('register-search').focus();
+  });
   byId('active-show-select').addEventListener('change', (event) =>
     chooseShow(event.target.value),
   );
