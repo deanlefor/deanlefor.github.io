@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the public Version 1.02 guide, using only fictional examples.
+"""Build the public Version 1.03 guide, using only fictional examples.
 
 Requires ReportLab. Run from any directory; the output stays inside the app's
 scope so its service worker can make the guide available offline. Each chapter
@@ -26,7 +26,7 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.02.pdf"
+OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.03.pdf"
 TOTAL_PAGES = 12
 FOREST = colors.HexColor("#244c41")
 INK = colors.HexColor("#22362d")
@@ -94,10 +94,10 @@ def page_chrome(canvas, doc):
     canvas.drawString(48, 763, "MARKET REGISTER")
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(MUTED)
-    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.02")
+    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.03")
     canvas.line(48, 43, 564, 43)
     canvas.setFont("Helvetica", 8.5)
-    canvas.drawString(48, 29, "Version 1.02 trial guide  |  October 15, 2026")
+    canvas.drawString(48, 29, "Version 1.03 trial guide  |  October 16, 2026")
     canvas.drawRightString(564, 29, f"{doc.page} / {TOTAL_PAGES}")
     canvas.restoreState()
 
@@ -161,7 +161,7 @@ def table(rows, widths, header=True):
 def chapter(number, title, key):
     if story:
         story.append(PageBreak())
-    p(f"{number:02d}  /  VERSION 1.02", "kicker")
+    p(f"{number:02d}  /  VERSION 1.03", "kicker")
     heading = Paragraph(title, STYLES["title"])
     heading.bookmark_key = key
     story.append(heading)
@@ -308,21 +308,22 @@ p(f'On the iPad, a PDF open in Safari can be saved using <b>Share</b>, <b>View M
 chapter(8, "Excel and CSV exports", "exports")
 p("In <b>Shows &amp; reports</b>, select the show first. Every export covers that show only and excludes voided sales.")
 h("Export for Excel")
-p("This button makes a real <b>.xlsx</b> workbook with one <b>Sales</b> worksheet. The first sold item starts in <b>A1</b>. There is no heading/title row, no SKU column, and no blank rows between items.")
+p("The <b>.xlsx</b> file has one <b>Sales</b> worksheet. SKU starts in <b>A1</b>; the other fields follow through H. There are no headings or blank rows.")
 table([
     ["<b>Excel column</b>", "<b>What it contains</b>"],
-    ["A - Item Title", "The recorded product name; <b>Tip</b> for a tip row."],
-    ["B - Category", "The recorded category; <b>Tips</b> for a tip row."],
-    ["C - Price", "Actual amount for this individual item after discounts."],
-    ["D - Payment", "The transaction's payment method."],
-    ["E - Location (Show Name)", "The selected show's name."],
-    ["F - Date", "The show's date, displayed as m/d/yy."],
-    ["G - Year", "The year from the show's date."],
+    ["A - SKU", "Recorded SKU as text. Blank for tips or missing SKUs."],
+    ["B - Item Title", "The recorded product name; <b>Tip</b> for a tip row."],
+    ["C - Category", "The recorded category; <b>Tips</b> for a tip row."],
+    ["D - Price", "Actual amount for this individual item after discounts."],
+    ["E - Payment", "The transaction's payment method."],
+    ["F - Location (Show Name)", "The selected show's name."],
+    ["G - Date", "The show's date, displayed as m/d/yy."],
+    ["H - Year", "The year from the show's date."],
 ], [185, 331])
-p("A quantity of three produces three item rows. A tip produces a separate row immediately after that sale's items. Promotion and dollar discounts reduce the item prices; for three qualifying $4 items sold for $10, the exported prices are $3.33, $3.33, and $3.34.")
+p("Each unit gets a row, even when bought together. Tips follow the sale's items. Prices include discounts: three qualifying $4 items sold for $10 export as $3.33, $3.33, and $3.34.")
 p("Open the file in Excel and copy its rows into the Sales sheet of your existing workbook if needed. The app does not modify that workbook or refresh its pivot tables automatically.")
 h("Detailed CSV")
-p("A fuller transaction export with headings, SKUs, transaction references, the actual sale date/time, original prices, and allocated discounts. It includes separate tip rows. Use this when you need detail beyond the seven-column workbook.")
+p("A transaction export with headings, SKUs, transaction IDs, sale timestamps, original prices, discounts, and tip rows.")
 h("Product totals CSV")
 p("A summary with headings, product references, categories, quantities, and merchandise revenue after discounts. Tips are not included in product totals.")
 callout("Reports and sales exports are not full backups. They cannot restore your catalog, photos, all shows, settings, or complete sale history. Use <b>Backups > Save full backup</b> for recovery.")
@@ -365,7 +366,7 @@ p("After deletion, starter categories return. The app, its offline files, and th
 
 chapter(11, "Refresh and troubleshooting", "help")
 h("Refresh an installed iPad app")
-p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.02</b> in the footer.")
+p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.03</b> in the footer.")
 p("The guide opens from Data management. After the updated app has loaded online, it is cached with the app. You can also save a separate PDF copy to Files.")
 h("Another copy changed the records")
 p("Close the other copy. If this copy shows a refresh warning, finish or close its form and use <b>Refresh app</b> to load saved records. Stale writes are blocked. Refreshing a stale copy with unfinished edits can ask permission to discard those edits; read that prompt carefully.")
@@ -376,7 +377,7 @@ p("Check that an open show is selected, the basket has items, tip/discount entri
 h("This copy looks empty")
 p("Check the device, browser, website address, and whether you opened Safari or the Home Screen app. Open the original copy and save a full backup, then restore it into the intended copy. Do not delete anything as a troubleshooting step.")
 h("An export looks wrong or will not save")
-p("Check the selected show and generate a fresh report. <b>Export for Excel</b> should produce an .xlsx file with seven columns starting at A1. The CSV buttons intentionally include headings. If PDF sharing was canceled, use <b>Download prepared PDF</b>. If a writer cannot load, refresh online and try again.")
+p("Check the selected show and generate a fresh report. <b>Export for Excel</b> should produce an .xlsx file with eight columns starting at A1. The CSV buttons intentionally include headings. If PDF sharing was canceled, use <b>Download prepared PDF</b>. If a writer cannot load, refresh online and try again.")
 h("A save or storage error appears")
 p("Keep the unfinished sale, check the message, and verify any existing backup. Stop entering sales until saving works again. Record the exact message and what you were doing so we can investigate; avoid clearing website data to fix it.")
 
@@ -398,7 +399,7 @@ bullet("Correct mistakes with Void and a replacement record if needed, then comp
 bullet("Save the Card transactions PDF for later tax work, the Item ledger PDF for the sale-by-sale record, and the Show summary PDF for an overview.")
 bullet("Save the Excel export if you are updating your existing workbook.")
 bullet("Save a new full backup and verify the actual file. Keep a copy off the iPad.")
-h("During the Version 1.02 trial")
+h("During the Version 1.03 trial")
 p("Use this version for the planned week or two and note anything confusing or missing. Useful notes include the device, app version, what you tapped, what you expected, and what happened. Keep your full backups and exported sales files private.")
 callout("<b>Three things to remember:</b><br/>Check the show. Check the payment method. Save and verify a full backup after every show.")
 
@@ -408,8 +409,8 @@ def main():
     doc = GuideDocument(
         str(OUTPUT), pagesize=letter, leftMargin=48, rightMargin=48,
         topMargin=58, bottomMargin=56, pageCompression=1, invariant=1,
-        title="Market Register - Version 1.02 User Guide",
-        author="Market Register", subject="How to use Market Register Version 1.02",
+        title="Market Register - Version 1.03 User Guide",
+        author="Market Register", subject="How to use Market Register Version 1.03",
         creator="Market Register user guide builder",
     )
     frame = Frame(48, 56, WIDTH, 678, leftPadding=0, rightPadding=0,

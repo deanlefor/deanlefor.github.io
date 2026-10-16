@@ -26,7 +26,7 @@ function worker(network) {
     fetch: network,
     caches: {
       open: async () => cache,
-      keys: async () => ['market-register-shell-v20', 'market-register-shell-v21', 'market-register-shell-v22', 'market-register-shell-v23', 'project-tracker-v2'],
+      keys: async () => ['market-register-shell-v20', 'market-register-shell-v21', 'market-register-shell-v22', 'market-register-shell-v23', 'market-register-shell-v24', 'project-tracker-v2'],
       delete: async name => { deleted.push(name); return true; },
     },
     self: {
@@ -98,8 +98,8 @@ test('versioned app files, report writers, and the user guide can load offline',
   try {
     assert.match(source, /updateViaCache:\s*'none'/);
     const files = [...dom.window.document.querySelectorAll('script[src],link[rel="stylesheet"],a[data-user-guide]')].map(node => node.getAttribute('src') || node.getAttribute('href'));
-    assert.ok(files.includes('./app.js?v=1.02'));
-    assert.ok(files.includes('./reports.js?v=1.02'));
+    assert.ok(files.includes('./app.js?v=1.03'));
+    assert.ok(files.includes('./reports.js?v=1.03'));
     assert.ok(files.includes('./vendor/pdfmake.min.js?v=0.3.11'));
     assert.ok(files.includes('./vendor/vfs_fonts.js?v=0.3.11'));
     assert.ok(files.includes('./vendor/xlsx.mini.min.js?v=0.20.3'));
@@ -122,8 +122,8 @@ test('installation fetches a fresh page and app files instead of caching an olde
   app.handlers.install({ waitUntil: promise => { completion = promise; } });
   await completion;
   assert.ok(app.precached.some(request => request.url === scope + 'index.html'));
-  assert.ok(app.precached.some(request => request.url === scope + 'app.js?v=1.02'));
-  assert.ok(app.precached.some(request => request.url === scope + 'output/pdf/market-register-user-guide-v1.02.pdf'));
+  assert.ok(app.precached.some(request => request.url === scope + 'app.js?v=1.03'));
+  assert.ok(app.precached.some(request => request.url === scope + 'output/pdf/market-register-user-guide-v1.03.pdf'));
   for (const request of app.precached) assert.equal(request.cache, 'reload');
 });
 
@@ -141,7 +141,7 @@ test('activating Market Register preserves other apps offline caches', async () 
   let completion;
   app.handlers.activate({ waitUntil: promise => { completion = promise; } });
   await completion;
-  assert.deepEqual(app.deleted, ['market-register-shell-v20', 'market-register-shell-v21', 'market-register-shell-v22']);
+  assert.deepEqual(app.deleted, ['market-register-shell-v20', 'market-register-shell-v21', 'market-register-shell-v22', 'market-register-shell-v23']);
 });
 
 test('HTTP outages retain good cached assets and the app shell without caching error responses', async () => {

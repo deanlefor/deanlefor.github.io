@@ -327,9 +327,9 @@ test('a sale saves both dollar adjustments and resets them for the next customer
     const book = XLSX.read(Buffer.from(await app.exports.at(-1).arrayBuffer()), { type: 'buffer' });
     const rows = XLSX.utils.sheet_to_json(book.Sheets.Sales, { header: 1 });
     assert.equal(rows.length, 2);
-    assert.ok(rows.every(row => row.length === 7));
-    assert.deepEqual(rows.map(row => row.slice(0, 4)), [['Example', 'Coasters', 10, 'Card'], ['Tip', 'Tips', 3, 'Card']]);
-    assert.equal(rows.reduce((sum, row) => sum + Math.round(row[2] * 100), 0), saved[0].totalCents);
+    assert.ok(rows.every(row => row.length === 8));
+    assert.deepEqual(rows.map(row => row.slice(0, 5)), [['MR-0001', 'Example', 'Coasters', 10, 'Card'], ['', 'Tip', 'Tips', 3, 'Card']]);
+    assert.equal(rows.reduce((sum, row) => sum + Math.round(row[3] * 100), 0), saved[0].totalCents);
     app.byId('export-detail').click(); await app.settle();
     assert.match(await app.exports.at(-1).text(), /"Tip","Tips","3.00","0.00","3.00"/);
     app.byId('export-summary').click(); await app.settle();
@@ -447,8 +447,8 @@ test('the three payment buttons record their exact choice and legacy labels grou
     app.byId('export-excel').click();await app.settle();
     const book=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
     const rows=XLSX.utils.sheet_to_json(book.Sheets.Sales,{header:1});
-    assert.equal(rows.filter(row=>row[3]==='Card').length,2);
-    assert.equal(rows.filter(row=>row[3]==='CashApp').length,1);
+    assert.equal(rows.filter(row=>row[4]==='Card').length,2);
+    assert.equal(rows.filter(row=>row[4]==='CashApp').length,1);
     assert.deepEqual(copy(await app.db.snapshot()),before);
   }finally{app.dom.window.close();}
 });
@@ -483,7 +483,7 @@ test('PDF buttons share real PDFs for the selected show, preserve records, and o
   }finally{app.dom.window.close();}
 });
 
-test('Export for Excel starts with a single sold item in the requested seven columns, without headers or SKU', async () => {
+test('Export for Excel starts with the recorded SKU in column A and shifts the seven existing fields to B-H', async () => {
   const app = await page();
   try {
     app.view('shows');
@@ -497,26 +497,29 @@ test('Export for Excel starts with a single sold item in the requested seven col
     const workbook = XLSX.read(bytes, { type: 'buffer', cellNF: true });
     assert.deepEqual(workbook.SheetNames, ['Sales']);
     const sheet = workbook.Sheets.Sales;
-    assert.equal(sheet['!ref'], 'A1:G1');
-    assert.deepEqual(XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }), [['Example','Coasters','12.00','Cash','Example market','10/10/26','2026']]);
-    assert.equal(sheet.C1.t, 'n'); assert.equal(sheet.C1.v, 12);
-    assert.equal(sheet.F1.t, 'n');
-    const date = XLSX.SSF.parse_date_code(sheet.F1.v);
+    assert.equal(sheet['!ref'], 'A1:H1');
+    assert.deepEqual(XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }), [['MR-0001','Example','Coasters','12.00','Cash','Example market','10/10/26','2026']]);
+    assert.equal(sheet.A1.t, 's'); assert.equal(sheet.A1.v, 'MR-0001');
+    assert.equal(sheet.D1.t, 'n'); assert.equal(sheet.D1.v, 12);
+    assert.equal(sheet.G1.t, 'n');
+    const date = XLSX.SSF.parse_date_code(sheet.G1.v);
     assert.deepEqual([date.y,date.m,date.d], [2026,10,10]);
-    assert.equal(sheet.G1.t, 'n'); assert.equal(sheet.G1.v, 2026);
+    assert.equal(sheet.H1.t, 'n'); assert.equal(sheet.H1.v, 2026);
   } finally { app.dom.window.close(); }
 });
 
 test('Excel rows are consecutive, escaped, chronological, and limited to nonvoid items for the selected show', async () => {
   const data = records();
   data.shows[0].name = 'Example "Fall", market';
+  data.products[0].sku = 'CURRENT-CATALOG-SKU';
   const discounted = sale('discounted');
   discounted.timestamp = '2026-10-11T00:30:00Z';
   discounted.paymentMethod = 'Card';
-  discounted.lines[0] = { ...discounted.lines[0], name: 'Oak "leaf", coaster', quantity: 3, unitPriceCents: 400, unitNetPricesCents: [333,333,334] };
+  discounted.lines[0] = { ...discounted.lines[0], sku: '=SKU', name: 'Oak "leaf", coaster', quantity: 3, unitPriceCents: 400, unitNetPricesCents: [333,333,334] };
   discounted.subtotalCents = 1200; discounted.discountCents = 200; discounted.totalCents = 1000;
   const earlier = sale('earlier');
   earlier.lines[0].name = '=Example title';
+  earlier.lines[0].sku = '00123';
   earlier.lines[0].category = 'Signs';
   const voided = sale('voided'); voided.voidedAt = '2026-10-10T13:00:00Z';
   data.sales = [discounted, sale('different-show','show2'), voided, earlier];
@@ -527,16 +530,35 @@ test('Excel rows are consecutive, escaped, chronological, and limited to nonvoid
     assert.equal(app.exports.length, 1);
     const workbook = XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()), { type: 'buffer' });
     const sheet = workbook.Sheets.Sales;
-    assert.equal(sheet['!ref'], 'A1:G4', 'four consecutive rows and exactly seven columns');
+    assert.equal(sheet['!ref'], 'A1:H4', 'four consecutive rows and exactly eight columns');
     assert.deepEqual(XLSX.utils.sheet_to_json(sheet, { header: 1, raw: false }), [
-      ['=Example title','Signs','12.00','Cash','Example "Fall", market','10/10/26','2026'],
-      ['Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
-      ['Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
-      ['Oak "leaf", coaster','Coasters','3.34','Card','Example "Fall", market','10/10/26','2026'],
+      ['00123','=Example title','Signs','12.00','Cash','Example "Fall", market','10/10/26','2026'],
+      ['=SKU','Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
+      ['=SKU','Oak "leaf", coaster','Coasters','3.33','Card','Example "Fall", market','10/10/26','2026'],
+      ['=SKU','Oak "leaf", coaster','Coasters','3.34','Card','Example "Fall", market','10/10/26','2026'],
     ]);
-    assert.equal(sheet.A1.t, 's'); assert.equal(sheet.A1.f, undefined, 'a formula-like name stays literal text');
-    assert.equal([sheet.C2,sheet.C3,sheet.C4].reduce((cents,cell) => cents + Math.round(cell.v*100), 0), 1000);
+    assert.equal(sheet.A1.t, 's'); assert.equal(sheet.A1.v, '00123', 'leading zeros stay intact');
+    assert.equal(sheet.A2.t, 's'); assert.equal(sheet.A2.f, undefined, 'a formula-like SKU stays literal text');
+    assert.equal(sheet.B1.t, 's'); assert.equal(sheet.B1.f, undefined, 'a formula-like name stays literal text');
+    assert.equal([sheet.D2,sheet.D3,sheet.D4].reduce((cents,cell) => cents + Math.round(cell.v*100), 0), 1000);
     for (const address of Object.keys(sheet).filter(key => !key.startsWith('!'))) assert.equal(sheet[address].f, undefined);
+  } finally { app.dom.window.close(); }
+});
+
+test('older sale items without a recorded SKU keep column A blank and all other Excel fields aligned', async () => {
+  const initial=records();
+  delete initial.sales[0].lines[0].sku;
+  initial.products[0].sku='CURRENT-CATALOG-SKU';
+  const app=await page(initial);
+  try {
+    const before=copy(await app.db.snapshot());
+    app.view('shows');
+    app.byId('export-excel').click(); await app.settle();
+    const workbook=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
+    assert.deepEqual(XLSX.utils.sheet_to_json(workbook.Sheets.Sales,{header:1,raw:false}),[
+      ['', 'Example', 'Coasters', '12.00', 'Cash', 'Example market', '10/10/26', '2026'],
+    ]);
+    assert.deepEqual(copy(await app.db.snapshot()),before);
   } finally { app.dom.window.close(); }
 });
 
@@ -913,7 +935,7 @@ test('mixed promotion baskets price every unit correctly and rapid checkout reco
     app.byId('export-excel').click();await app.settle();
     const book=XLSX.read(Buffer.from(await app.exports[0].arrayBuffer()),{type:'buffer'});
     const rows=XLSX.utils.sheet_to_json(book.Sheets.Sales,{header:1});
-    assert.equal(rows.length,7);assert.equal(rows.reduce((sum,row)=>sum+Math.round(row[2]*100),0),2400);
+    assert.equal(rows.length,7);assert.equal(rows.reduce((sum,row)=>sum+Math.round(row[3]*100),0),2400);
   }finally{app.dom.window.close();}
 });
 

@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.02';
+import * as db from './db.js?v=1.03';
 
-// Market Register 1.02: no backend, analytics, account, or payment API.
+// Market Register 1.03: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -1610,7 +1610,7 @@ async function downloadExcel(rows, filename) {
     );
   // Real worksheet rows avoid text-import line endings and inferred cell types.
   const sheet = xlsx.utils.aoa_to_sheet(rows);
-  sheet['!cols'] = [38, 20, 12, 14, 32, 14, 8].map((wch) => ({ wch }));
+  sheet['!cols'] = [18, 38, 20, 12, 14, 32, 14, 8].map((wch) => ({ wch }));
   const workbook = xlsx.utils.book_new();
   xlsx.utils.book_append_sheet(workbook, sheet, 'Sales');
   const bytes = xlsx.write(workbook, {
@@ -1662,6 +1662,7 @@ async function exportShow(mode) {
     for (const line of sale.lines) {
       for (const unitNet of line.unitNetPricesCents) {
         excel.push([
+          line.sku || '',
           line.name,
           line.category,
           { t: 'n', v: unitNet / 100, z: '0.00' },
@@ -1686,9 +1687,10 @@ async function exportShow(mode) {
       }
     }
     // Tips are transaction amounts, never catalog items or merchandise counts.
-    // A separate row keeps the existing seven-column workbook reconcilable.
+    // Tips have no product SKU; keep their amounts aligned with item prices.
     if (sale.tipCents) {
       excel.push([
+        '',
         'Tip',
         'Tips',
         { t: 'n', v: sale.tipCents / 100, z: '0.00' },

@@ -1,4 +1,4 @@
-# Market Register — version 1.02
+# Market Register — version 1.03
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,11 +6,11 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.02 trial release.** Adds an explicit search-clear button and clears the Register search after a successful sale. The suggested iPad acceptance checks below still apply.
+> **Version 1.03 trial release.** Adds the recorded SKU in Excel column A and shifts the existing fields to B-H. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
-The [Version 1.02 user guide](output/pdf/market-register-user-guide-v1.02.pdf)
+The [Version 1.03 user guide](output/pdf/market-register-user-guide-v1.03.pdf)
 is linked under **Data management → User guide**. Its 12 chapters cover iPad
 setup, products and photos, checkout, tips and discounts, shows and corrections,
 PDF reports, Excel/CSV exports, full backups, category cleanup, and refresh and
@@ -103,7 +103,7 @@ include only the actual items. The card PDF shows the tip and discounts next
 to the transaction, with the full collected amount in its recorded-amount
 column. Voiding a sale excludes its tip and discounts from all totals too.
 
-The item ledger, Detailed CSV, and seven-column Excel export include a **Tip**
+The item ledger, Detailed CSV, and eight-column Excel export include a **Tip**
 row (category **Tips**) directly after that sale's items, when a tip was given.
 Dollar discounts are allocated proportionally across the actual items, with
 exact cent rounding, so item prices plus tip rows add up to the collected
@@ -159,15 +159,15 @@ copy's edits. Refreshing local records also works from the offline cache.
 
 ## Your existing Excel workbook
 
-The **Export for Excel** button makes a real Excel workbook (`.xlsx`) with a single `Sales` worksheet and these seven columns in this order:
+The **Export for Excel** button makes a real Excel workbook (`.xlsx`) with a single `Sales` worksheet and these eight columns in this order:
 
 ```
-Item Title,Category,Price,Payment,Location (Show Name),Date,Year
+SKU,Item Title,Category,Price,Payment,Location (Show Name),Date,Year
 ```
 
 A separate row is written for *each individual item sold*, with **no title/header row or blank rows between items**, even when multiple items were purchased in one transaction. Location is the selected show's name; Date and Year come from that show's date. Voided sales are excluded. `Price` is the **actual amount allocated to that item after promotion and dollar discounts** so the rows add up to the collected amount. For a three-for-$10 purchase of three eligible $4 items, the three exported prices are $3.33, $3.33, and $3.34. The **Detailed CSV** keeps its headers and also includes SKUs, transaction IDs, original prices, and item discount amounts. **Product totals CSV** keeps its headers and summarizes quantity and revenue by product.
 
-The first item starts in cell A1. Prices, dates, and years are typed spreadsheet values; prices display two decimal places and dates display as `m/d/yy`. Names and categories remain literal text, including names beginning with spreadsheet formula characters. The workbook does not pass through CSV/text import, avoiding blank rows inserted by text-sharing workflows. The Excel writer is stored with the app and works offline.
+The first item starts in cell A1. Column A uses the SKU recorded at the time of sale; older items without a recorded SKU and tip rows leave it blank. SKUs remain text, preserving leading zeros. The price is in D, payment in E, show name in F, date in G, and year in H. Prices, dates, and years are typed spreadsheet values; prices display two decimal places and dates display as `m/d/yy`. Names and categories remain literal text, including names beginning with spreadsheet formula characters. The workbook does not pass through CSV/text import, avoiding blank rows inserted by text-sharing workflows. The Excel writer is stored with the app and works offline.
 
 Open the exported workbook and copy the item rows into the existing workbook's `Sales` sheet. The application does not update the existing workbook in place or automatically refresh pivot tables.
 
@@ -175,7 +175,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.02** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.03** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
@@ -262,7 +262,7 @@ order. Adding or renaming a product places it in its alphabetical position.
 2. Add two $4 qualifying products and a third non-qualifying product. Confirm a mixed basket of three eligible units totals $10, and verify the discount disappears if one unit is removed.
 3. Record a test show, three completed transactions using different payment methods, and void one transaction.
 4. Confirm the show revenue and payment totals exclude the voided transaction.
-5. Export the Excel workbook and both CSVs. Open the workbook in Excel and check its seven columns, consecutive item rows starting at A1, absence of headers/SKU, and prices that add up to the register total. Check that the CSV reports retain their headers. Save all three PDF reports, check the card transactions against Card/Square sales, verify that the ledger is chronological and every total excludes voided sales, and print a page to check handwriting space for tax.
+5. Export the Excel workbook and both CSVs. Open the workbook in Excel and check its eight columns, recorded SKU in A, consecutive item rows starting at A1, absence of headers, and prices that add up to the register total. Check that the CSV reports retain their headers. Save all three PDF reports, check the card transactions against Card/Square sales, verify that the ledger is chronological and every total excludes voided sales, and print a page to check handwriting space for tax.
 6. Save a full backup with at least one product photo. Confirm the `.json` file can be found outside the browser.
 7. Restore the backup on a second installation / test device. Check that the photo, sales, prices, and show name return correctly.
 8. Install to the iPad Home Screen and test starting the app **with internet fully disabled** (not just disabling Wi-Fi while cellular remains on).
