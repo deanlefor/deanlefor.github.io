@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the public Version 1.03 guide, using only fictional examples.
+"""Build the public Version 1.04 guide, using only fictional examples.
 
 Requires ReportLab. Run from any directory; the output stays inside the app's
 scope so its service worker can make the guide available offline. Each chapter
@@ -8,6 +8,9 @@ count assertion catches accidental overflow when the wording is changed.
 """
 
 from pathlib import Path
+import html
+import json
+import re
 
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_LEFT
@@ -26,7 +29,8 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.03.pdf"
+OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.04.pdf"
+HTML_OUTPUT = ROOT / "market-register/guide.js"
 TOTAL_PAGES = 12
 FOREST = colors.HexColor("#244c41")
 INK = colors.HexColor("#22362d")
@@ -94,21 +98,39 @@ def page_chrome(canvas, doc):
     canvas.drawString(48, 763, "MARKET REGISTER")
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(MUTED)
-    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.03")
+    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.04")
     canvas.line(48, 43, 564, 43)
     canvas.setFont("Helvetica", 8.5)
-    canvas.drawString(48, 29, "Version 1.03 trial guide  |  October 16, 2026")
+    canvas.drawString(48, 29, "Version 1.04 trial guide  |  October 16, 2026")
     canvas.drawRightString(564, 29, f"{doc.page} / {TOTAL_PAGES}")
     canvas.restoreState()
 
 
 story = []
+html_parts = []
+
+
+def guide_html(text):
+    """Use one editorial source for the PDF and the accessible in-app guide."""
+    text = re.sub(r'<font\b[^>]*>', '<span>', text).replace('</font>', '</span>')
+
+    def anchor(match):
+        url = match.group(1)
+        if url.startswith('#'):
+            return f'<a href="#guide-{html.escape(url[1:], quote=True)}">'
+        if url == APP_URL:
+            return '<a href="./index.html" data-guide-return>'
+        return f'<a href="{html.escape(url, quote=True)}" target="_blank" rel="noopener noreferrer">'
+
+    return re.sub(r'<link\s+href="([^"]+)"[^>]*>', anchor, text).replace('</link>', '</a>')
 
 
 def p(text, style="body"):
     # Built-in PDF fonts stay portable; avoid unsupported decorative glyphs.
     assert text.isascii(), text
     story.append(Paragraph(text, STYLES[style]))
+    tag = 'h4' if style == 'heading' else 'p'
+    html_parts.append(f'<{tag} class="guide-{style}">{guide_html(text)}</{tag}>')
 
 
 def h(text):
@@ -139,6 +161,7 @@ def callout(text):
         ("BOTTOMPADDING", (0, 0), (-1, -1), 10),
     ]))
     story.extend([table, Spacer(1, 9)])
+    html_parts.append(f'<aside class="guide-callout">{guide_html(text)}</aside>')
 
 
 def table(rows, widths, header=True):
@@ -156,15 +179,26 @@ def table(rows, widths, header=True):
         commands.append(("BACKGROUND", (0, 0), (-1, 0), PALE))
     grid.setStyle(TableStyle(commands))
     story.extend([grid, Spacer(1, 9)])
+    html_parts.append('<table><tbody>')
+    for index, row in enumerate(rows):
+        tag = 'th' if header and index == 0 else 'td'
+        scope = ' scope="col"' if tag == 'th' else ''
+        html_parts.append('<tr>' + ''.join(
+            f'<{tag}{scope}>{guide_html(value)}</{tag}>' for value in row
+        ) + '</tr>')
+    html_parts.append('</tbody></table>')
 
 
 def chapter(number, title, key):
     if story:
         story.append(PageBreak())
-    p(f"{number:02d}  /  VERSION 1.03", "kicker")
+        html_parts.append('</section>')
+    html_parts.append(f'<section id="guide-{html.escape(key, quote=True)}">')
+    p(f"{number:02d}  /  VERSION 1.04", "kicker")
     heading = Paragraph(title, STYLES["title"])
     heading.bookmark_key = key
     story.append(heading)
+    html_parts.append(f'<h3>{html.escape(title)}</h3>')
 
 
 chapter(1, "Your booth, one sale at a time", "start")
@@ -366,8 +400,8 @@ p("After deletion, starter categories return. The app, its offline files, and th
 
 chapter(11, "Refresh and troubleshooting", "help")
 h("Refresh an installed iPad app")
-p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.03</b> in the footer.")
-p("The guide opens from Data management. After the updated app has loaded online, it is cached with the app. You can also save a separate PDF copy to Files.")
+p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.04</b> in the footer.")
+p("Open the guide from <b>Data management</b>. Its <b>Back to register</b> button stays visible as you scroll and returns without clearing your sale. The guide works offline after an online load. Use <b>Save PDF copy</b> for Files or printing.")
 h("Another copy changed the records")
 p("Close the other copy. If this copy shows a refresh warning, finish or close its form and use <b>Refresh app</b> to load saved records. Stale writes are blocked. Refreshing a stale copy with unfinished edits can ask permission to discard those edits; read that prompt carefully.")
 h("Products are missing from Register")
@@ -399,7 +433,7 @@ bullet("Correct mistakes with Void and a replacement record if needed, then comp
 bullet("Save the Card transactions PDF for later tax work, the Item ledger PDF for the sale-by-sale record, and the Show summary PDF for an overview.")
 bullet("Save the Excel export if you are updating your existing workbook.")
 bullet("Save a new full backup and verify the actual file. Keep a copy off the iPad.")
-h("During the Version 1.03 trial")
+h("During the Version 1.04 trial")
 p("Use this version for the planned week or two and note anything confusing or missing. Useful notes include the device, app version, what you tapped, what you expected, and what happened. Keep your full backups and exported sales files private.")
 callout("<b>Three things to remember:</b><br/>Check the show. Check the payment method. Save and verify a full backup after every show.")
 
@@ -409,8 +443,8 @@ def main():
     doc = GuideDocument(
         str(OUTPUT), pagesize=letter, leftMargin=48, rightMargin=48,
         topMargin=58, bottomMargin=56, pageCompression=1, invariant=1,
-        title="Market Register - Version 1.03 User Guide",
-        author="Market Register", subject="How to use Market Register Version 1.03",
+        title="Market Register - Version 1.04 User Guide",
+        author="Market Register", subject="How to use Market Register Version 1.04",
         creator="Market Register user guide builder",
     )
     frame = Frame(48, 56, WIDTH, 678, leftPadding=0, rightPadding=0,
@@ -419,6 +453,11 @@ def main():
     doc.build(story)
     if doc.page != TOTAL_PAGES:
         raise RuntimeError(f"Chapter overflow: expected {TOTAL_PAGES} pages, got {doc.page}")
+    HTML_OUTPUT.write_text(
+        '// Generated by scripts/build-market-register-guide.py; edit that source.\n'
+        + 'window.MarketGuide = ' + json.dumps({'html': ''.join(html_parts) + '</section>'}) + ';\n',
+        encoding='utf-8',
+    )
     print(f"Created {OUTPUT} ({doc.page} pages, {OUTPUT.stat().st_size:,} bytes)")
 
 

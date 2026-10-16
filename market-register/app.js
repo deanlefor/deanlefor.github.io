@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.03';
+import * as db from './db.js?v=1.04';
 
-// Market Register 1.03: no backend, analytics, account, or payment API.
+// Market Register 1.04: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -76,6 +76,7 @@ let cartSaveQueue = Promise.resolve();
 let photoRequestId = 0;
 let preparedPdfUrl = null;
 let reportRevision = 0;
+let savingGuidePdf = false;
 const dataChannel =
   typeof BroadcastChannel === 'function'
     ? new BroadcastChannel('market-register-data')
@@ -1789,6 +1790,49 @@ async function exportPdf(kind) {
   }
 }
 
+function openUserGuide() {
+  const content = byId('user-guide-content');
+  if (!content.children.length) {
+    // This HTML is generated from the same trusted, bundled source as the PDF.
+    // Reading the guide never navigates away from the live checkout state.
+    if (window.MarketGuide?.html) content.innerHTML = window.MarketGuide.html;
+    else
+      content.textContent =
+        'The guide could not load. Return to the register and use Refresh app while online.';
+  }
+  byId('guide-pdf-status').hidden = true;
+  document.body.classList.add('guide-open');
+  byId('user-guide-dialog').showModal();
+  byId('close-user-guide').focus();
+}
+async function saveUserGuidePdf(event) {
+  event.preventDefault();
+  if (savingGuidePdf) return;
+  const link = byId('save-user-guide-pdf');
+  const status = byId('guide-pdf-status');
+  savingGuidePdf = true;
+  link.setAttribute('aria-disabled', 'true');
+  status.hidden = false;
+  status.textContent = 'Preparing PDF copy…';
+  try {
+    const response = await fetch(link.href);
+    if (!response.ok)
+      throw new Error(
+        'The PDF copy could not load. Try again while online.',
+      );
+    const launched = await saveFile(await response.blob(), link.download);
+    status.textContent = launched
+      ? 'PDF prepared. Save the copy outside the app.'
+      : 'Sharing canceled. You can keep reading or return to the register.';
+  } catch (error) {
+    status.textContent =
+      error.message ||
+      'The PDF copy could not be saved. You can still return to the register.';
+  } finally {
+    savingGuidePdf = false;
+    link.removeAttribute('aria-disabled');
+  }
+}
 async function createBackup() {
   if (state.stale)
     return toast(
@@ -2198,6 +2242,27 @@ async function refreshApp() {
   }
 }
 function connectEvents() {
+  byId('open-user-guide').addEventListener('click', openUserGuide);
+  byId('close-user-guide').addEventListener('click', () =>
+    byId('user-guide-dialog').close(),
+  );
+  byId('user-guide-dialog').addEventListener('close', () => {
+    document.body.classList.remove('guide-open');
+    setView('register');
+    document.querySelector('[data-view="register"]').focus();
+  });
+  byId('save-user-guide-pdf').addEventListener('click', saveUserGuidePdf);
+  byId('user-guide-content').addEventListener('click', (event) => {
+    const link = event.target.closest('a');
+    if (!link) return;
+    if (link.hasAttribute('data-guide-return')) {
+      event.preventDefault();
+      byId('user-guide-dialog').close();
+    } else if (link.hash.startsWith('#guide-')) {
+      event.preventDefault();
+      byId(link.hash.slice(1))?.scrollIntoView({ block: 'start' });
+    }
+  });
   byId('refresh-app').addEventListener('click', refreshApp);
   document
     .querySelectorAll('[data-view]')

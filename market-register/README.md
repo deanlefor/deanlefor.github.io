@@ -1,4 +1,4 @@
-# Market Register — version 1.03
+# Market Register — version 1.04
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,12 +6,16 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.03 trial release.** Adds the recorded SKU in Excel column A and shifts the existing fields to B-H. The suggested iPad acceptance checks below still apply.
+> **Version 1.04 trial release.** Opens the guide inside the app with a persistent Back to register button. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
-The [Version 1.03 user guide](output/pdf/market-register-user-guide-v1.03.pdf)
-is linked under **Data management → User guide**. Its 12 chapters cover iPad
+The [Version 1.04 user guide](output/pdf/market-register-user-guide-v1.04.pdf)
+is also available as an in-app reader under **Data management → User guide**.
+The **Back to register** button stays visible while scrolling. Opening and
+closing the guide keeps the current sale, payment, and search intact. **Save
+PDF copy** uses the share/download flow without navigating the app into a PDF.
+Its 12 chapters cover iPad
 setup, products and photos, checkout, tips and discounts, shows and corrections,
 PDF reports, Excel/CSV exports, full backups, category cleanup, and refresh and
 troubleshooting. It includes clickable contents, PDF bookmarks, and show-day
@@ -20,7 +24,8 @@ checklists. The offline worker caches it with the app after an online load.
 The guide uses fictional examples and contains no saved catalog or sales data.
 Rebuild it from the editable source with `python3 scripts/build-market-register-guide.py`
 from the repository root (requires ReportLab). The builder verifies the intended
-12-page chapter layout and writes the public PDF inside this app's directory.
+12-page chapter layout and generates both the public PDF and `guide.js` from
+the same source inside this app's directory.
 Guide-only updates do not change the app's version label.
 
 ## First test on a Mac
@@ -175,7 +180,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.03** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.04** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 

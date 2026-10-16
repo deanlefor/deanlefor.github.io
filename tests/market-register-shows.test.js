@@ -11,6 +11,7 @@ const root = path.resolve(__dirname, '..');
 const dbSource = fs.readFileSync(path.join(root, 'market-register/db.js'), 'utf8').replace(/^export /gm, '');
 const appSource = fs.readFileSync(path.join(root, 'market-register/app.js'), 'utf8').replace(/^import \* as db from ['\"]\.\/db.js(?:\?v=[\d.]+)?['\"];\s*/, '');
 const html = fs.readFileSync(path.join(root, 'market-register/index.html'), 'utf8');
+const guideSource = fs.readFileSync(path.join(root, 'market-register/guide.js'), 'utf8');
 const copy = value => JSON.parse(JSON.stringify(value));
 function storage(indexedDB = new IDBFactory()) {
   return vm.runInNewContext(`${dbSource}\n({ openDB, onWrite, getAll, getMeta, put, setMeta, setMetaValues, commitProduct, commitSale, createShow, selectShow, setShowCompleted, voidRecordedSale, changeCategory, clearAllData, snapshot, restore });`, {
@@ -42,10 +43,15 @@ async function page(saved = records(), { db = storage(), channel = null } = {}) 
   window.navigator.canShare = () => true;
   window.navigator.share = async ({ files }) => { exports.push(...files); };
   window.HTMLDialogElement.prototype.showModal = function() { this.setAttribute('open', ''); };
-  window.HTMLDialogElement.prototype.close = function() { this.removeAttribute('open'); };
+  window.HTMLDialogElement.prototype.close = function() {
+    if (!this.open) return;
+    this.removeAttribute('open');
+    this.dispatchEvent(new window.Event('close'));
+  };
   window.confirm = () => true;
   window.console.error = () => {};
   const context = dom.getInternalVMContext(); context.db = db;
+  new vm.Script(guideSource).runInContext(context);
   await new vm.Script(appSource, { filename: 'market-register/app.js' }).runInContext(context);
   const byId = id => window.document.getElementById(id);
   const settle = async () => { for (let i = 0; i < 20; i++) await new Promise(resolve => setImmediate(resolve)); };
@@ -62,6 +68,82 @@ function adjustment(app, id, value) {
 function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
+
+test('the in-app guide returns to Register without losing the current sale or navigating the page', async () => {
+  const app=await page();
+  try {
+    const document=app.dom.window.document;
+    document.querySelector('.product-tile').click();
+    payment(app,'Cash');
+    adjustment(app,'cash-received','20');
+    adjustment(app,'sale-tip','3');
+    adjustment(app,'register-search','Example');
+    await app.settle();
+    const before=copy(await app.db.snapshot());
+    const url=app.dom.window.location.href;
+    app.view('data');
+    app.byId('open-user-guide').click();
+    assert.equal(app.byId('user-guide-dialog').open,true);
+    assert.equal(document.body.classList.contains('guide-open'),true);
+    assert.equal(app.byId('user-guide-content').querySelectorAll('section').length,12);
+    assert.equal(document.activeElement,app.byId('close-user-guide'));
+    assert.equal(app.byId('close-user-guide').textContent,'Back to register');
+    let scrolled=false;
+    app.byId('guide-exports').scrollIntoView=()=>{scrolled=true;};
+    app.byId('user-guide-content').querySelector('a[href="#guide-exports"]').click();
+    assert.equal(scrolled,true);
+    assert.equal(app.dom.window.location.href,url);
+    app.byId('close-user-guide').click();
+    assert.equal(app.byId('user-guide-dialog').open,false);
+    assert.equal(document.body.classList.contains('guide-open'),false);
+    assert.equal(app.byId('view-register').hidden,false);
+    assert.equal(app.byId('cart-total').textContent,'$15.00');
+    assert.equal(app.byId('sale-tip').value,'3');
+    assert.equal(app.byId('cash-received').value,'20');
+    assert.equal(app.byId('cash-change').textContent,'$5.00');
+    assert.equal(app.byId('register-search').value,'Example');
+    assert.equal(document.querySelector('input[name="payment"]:checked').value,'Cash');
+    assert.equal(document.activeElement,document.querySelector('[data-view="register"]'));
+    assert.deepEqual(copy(await app.db.snapshot()),before);
+    app.view('data'); app.byId('open-user-guide').click();
+    app.byId('user-guide-content').querySelector('[data-guide-return]').click();
+    assert.equal(app.byId('user-guide-dialog').open,false,'the guide app link also returns without navigation');
+    assert.equal(app.dom.window.location.href,url);
+  } finally { app.dom.window.close(); }
+});
+
+test('saving a guide PDF uses sharing without replacing the app; cancellation and missing files leave the exit available', async () => {
+  const app=await page();
+  try {
+    const window=app.dom.window;
+    const pdf=fs.readFileSync(path.join(root,'market-register',app.byId('save-user-guide-pdf').getAttribute('href')));
+    window.fetch=async()=>({ok:true,blob:async()=>new Blob([pdf],{type:'application/pdf'})});
+    const url=window.location.href;
+    app.view('data'); app.byId('open-user-guide').click();
+    app.byId('save-user-guide-pdf').click(); await app.settle();
+    assert.equal(app.exports.length,1);
+    assert.equal(Buffer.from(await app.exports[0].arrayBuffer()).subarray(0,5).toString(),'%PDF-');
+    assert.equal(app.exports[0].type,'application/pdf');
+    assert.equal(app.byId('user-guide-dialog').open,true);
+    assert.equal(window.location.href,url);
+    window.navigator.share=async()=>{throw new window.DOMException('Canceled','AbortError');};
+    app.byId('save-user-guide-pdf').click(); await app.settle();
+    assert.match(app.byId('guide-pdf-status').textContent,/Sharing canceled/);
+    window.fetch=async()=>({ok:false});
+    app.byId('save-user-guide-pdf').click(); await app.settle();
+    assert.match(app.byId('guide-pdf-status').textContent,/could not load/);
+    assert.equal(app.byId('user-guide-dialog').open,true);
+    assert.equal(app.byId('close-user-guide').disabled,false);
+    app.byId('close-user-guide').click();
+    window.MarketGuide=undefined;
+    app.byId('user-guide-content').replaceChildren();
+    app.view('data'); app.byId('open-user-guide').click();
+    assert.match(app.byId('user-guide-content').textContent,/could not load/);
+    app.byId('close-user-guide').click();
+    assert.equal(app.byId('view-register').hidden,false);
+    assert.equal(window.location.href,url);
+  } finally { app.dom.window.close(); }
+});
 
 test('the search clear button restores the selected category without changing the current sale', async () => {
   const initial=records();
