@@ -2,7 +2,7 @@ const BL = "#378ADD",
   GR = "#639922",
   AM = "#BA7517";
 const KEY = "phd-tracker-v2";
-const VERSION = "v1.02";
+const VERSION = "v1.03";
 const escapeHtml = SiteData.escapeHtml;
 const dataStore = SiteData.createStore({
   key: KEY,
@@ -17,7 +17,7 @@ function updateSaveStatus() {
     shareError || (state.readOnly ? "" : dataStore.error);
 }
 
-const DISCLAIMER = `This tracker is built from the November 2024 CPAP Policy Guide and the April 2026 Qualifying Examination & Constellations update (approved April 23, 2026). It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nThe constellation-based QE process replaced the prior 3-of-5-fields exam. Students who started before April 2026 should confirm which QE procedures apply to them.\n\nThe tracker saves progress in this browser without an application-server backup. Share links and exported files contain the data you choose to share. Anyone with a link can read and retain it; old links cannot be revoked. Hosting and font providers receive ordinary web requests. Other people using this browser profile and scripts running on this website can access locally saved data. Clearing site data removes saved progress, and private browsing usually removes it when that session ends. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
+const DISCLAIMER = `This tracker is built from the CPAP Policy Guide approved September 10, 2026, with current program guidance that all future qualifying exams use the constellation format. It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nAll future qualifying exams use the constellation format. Select your constellation in the Milestones tab to check coursework readiness. Existing completed courses and milestone checkmarks are preserved.\n\nThe tracker saves progress in this browser without an application-server backup. Share links and exported files contain the data you choose to share. Anyone with a link can read and retain it; old links cannot be revoked. Hosting and font providers receive ordinary web requests. Other people using this browser profile and scripts running on this website can access locally saved data. Clearing site data removes saved progress, and private browsing usually removes it when that session ends. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
 
 const STATIC_BUCKETS = [
   {
@@ -300,12 +300,12 @@ const MILESTONES = [
     id: "ms4",
     name: "Constellation selected",
     target: "Before QE registration",
-    desc: "Choose one of four constellations: I (Public Management: Management & Leadership + Complex Organizations), II (PA Foundations: Theory & Context + Normative Foundations), III (Public Policy: Policy Process + Policy Design + Policy Inquiry), or IV (Custom: any two courses from Constellations I–III). Must complete all constellation courses and at least 5 of 7 total foundation courses before the exam.",
+    desc: "Choose a constellation in QE readiness above: I (Public Management), II (PA Foundations), III (Public Policy), or IV (Custom: two distinct courses from I–III). Before the exam, complete all chosen constellation courses, at least 5 of the 6 foundation courses, PAPA 6294, and PAPA 6514. This milestone checkmark is separate from the saved choice and coursework check.",
   },
   {
     id: "ms5",
     name: "QE request submitted",
-    target: "By May 1 (June 1 in 2026 only)",
+    target: "By May 1",
     desc: 'Submit \"Request to Admit Candidate to Qualifying Examination\" to the CPAP office by May 1. Missing this deadline means waiting a full year — the exam is offered once annually in August only.',
   },
   {
@@ -324,7 +324,7 @@ const MILESTONES = [
     id: "ms8",
     name: "QE oral engagement",
     target: "August, before Fall semester",
-    desc: "15-minute in-person presentation of the Foundations Essay followed by 30-minute Q&A with a 3-faculty committee from your selected constellation. Committee may also ask about broader constellation scholarship.",
+    desc: "12–15 minute in-person presentation of the Foundations Essay followed by 30-minute Q&A with a 3-faculty committee from your selected constellation. Committee may also ask about broader constellation scholarship.",
   },
   {
     id: "ms9",
@@ -354,7 +354,7 @@ const MILESTONES = [
     id: "ms13",
     name: "Prospectus defense (preliminary exam)",
     target: "After all coursework",
-    desc: 'File \"Request to Admit to Preliminary Examination.\" Full committee reviews and approves research design including topic, significance, methodology, and timeline.',
+    desc: 'File \"Request to Admit to Preliminary Examination.\" Full committee reviews and approves research design including topic, significance, methodology, and timeline. The prospectus defense must take place at least 6 months before the dissertation defense.',
   },
   {
     id: "ms14",
@@ -423,6 +423,8 @@ let state = {
   readOnly: false,
   userName: "",
   userEmail: "",
+  constellation: "",
+  customConstellationCourses: [],
 };
 
 // Dynamic term generation
@@ -526,6 +528,165 @@ function totals() {
     .filter((b) => b.id !== "dissertation")
     .reduce((a, b) => a + b.earned, 0);
   return { p, cw, diss, total: cw + diss };
+}
+
+function qeReadiness() {
+  return PhDTrackerData.qeReadiness(JSON.parse(stateData()));
+}
+
+function constellationLabel() {
+  const choice = PhDTrackerData.constellations[state.constellation];
+  if (!choice) return "Not selected";
+  const label = `Constellation ${state.constellation} — ${choice.name}`;
+  if (state.constellation !== "IV") return label;
+  const courses = allCourses();
+  const names = state.customConstellationCourses.map((id) => {
+    const course = courses.find((c) => c.id === id);
+    return `${course.code} — ${course.name}`;
+  });
+  return `${label}${names.length ? ": " + names.join("; ") : " (choose two courses)"}`;
+}
+
+function renderQeReadiness(editable = false) {
+  const qe = qeReadiness();
+  const courses = allCourses();
+  const title = qe.ready
+    ? "Coursework ready for QE"
+    : "QE coursework not ready";
+  const checks = [
+    {
+      done: qe.selectionComplete,
+      label: "Constellation selected (two courses for Custom)",
+    },
+    {
+      done: qe.foundationCount >= 5,
+      label: `Foundation courses: ${qe.foundationCount}/6 completed (5 required)`,
+    },
+    {
+      done: qe.cornerstoneComplete,
+      label: "PAPA 6294 — Cornerstone seminar completed",
+    },
+    {
+      done: qe.inquiryComplete,
+      label: "PAPA 6514 — PA and policy inquiry completed",
+    },
+    {
+      done: qe.selectionComplete && qe.missingCourses.length === 0,
+      label: "All selected constellation courses completed",
+    },
+  ];
+  return /* HTML */ `<section
+    class="csec"
+    aria-labelledby="qe-readiness-title"
+    id="qe-readiness"
+  >
+    <h2 id="qe-readiness-title" style="font-size:14px;margin-bottom:8px">
+      QE readiness
+    </h2>
+    <p
+      id="qe-readiness-status"
+      role="status"
+      style="font-size:13px;font-weight:600;color:${qe.ready ? GR : "var(--tx1)"}"
+    >
+      ${title}
+    </p>
+    ${state.mdone.has("ms9") ? /* HTML */ `<p style="font-size:12px;margin-top:8px">Your qualifying exam is recorded as passed. This coursework check does not change that milestone.</p>` : ""}
+    ${
+      editable
+        ? /* HTML */ `<label
+              for="qe-constellation"
+              style="display:block;font-size:12px;font-weight:500;margin-top:12px"
+              >Your constellation</label
+            >
+            <select
+              id="qe-constellation"
+              data-edit
+              onchange="setConstellation(this.value)"
+              style="width:100%;margin:6px 0;padding:8px;background:var(--bg1);color:var(--tx1);border:1px solid var(--bd2);border-radius:var(--rm)"
+            >
+              <option value="" ${!state.constellation ? "selected" : ""}>
+                Choose a constellation
+              </option>
+              ${Object.entries(PhDTrackerData.constellations)
+                .map(
+                  ([id, c]) =>
+                    /* HTML */ `<option
+                      value="${id}"
+                      ${state.constellation === id ? "selected" : ""}
+                    >
+                      ${id} — ${c.name}
+                    </option>`,
+                )
+                .join("")}
+            </select>
+            ${
+              state.constellation === "IV"
+                ? /* HTML */ `<fieldset style="border:0;margin-top:6px">
+                    <legend style="font-size:12px;font-weight:500">
+                      Custom constellation courses (choose two)
+                    </legend>
+                    ${PhDTrackerData.customCourseIds
+                      .map((id) => {
+                        const c = courses.find((c) => c.id === id);
+                        const checked =
+                          state.customConstellationCourses.includes(id);
+                        return /* HTML */ `<label
+                          style="display:flex;align-items:flex-start;gap:8px;font-size:12px;margin-top:8px"
+                          ><input
+                            type="checkbox"
+                            data-edit
+                            id="qe-custom-${id}"
+                            onchange="toggleCustomConstellationCourse('${id}')"
+                            ${checked ? "checked" : ""}
+                            ${!checked && state.customConstellationCourses.length === 2 ? "disabled" : ""}
+                          /><span>${c.code} — ${c.name}</span></label
+                        >`;
+                      })
+                      .join("")}
+                    <p style="font-size:11px;color:var(--tx2);margin-top:8px">
+                      Uncheck a course to replace it.
+                    </p>
+                  </fieldset>`
+                : ""
+            }`
+        : /* HTML */ `<p style="font-size:12px;margin-top:8px">
+              ${escapeHtml(constellationLabel())}
+            </p>
+            <button
+              class="btn"
+              style="margin-top:8px"
+              onclick="selectTab('milestones')"
+            >
+              View QE details
+            </button>`
+    }
+    ${
+      editable
+        ? /* HTML */ `<ul style="list-style:none;margin:12px 0;padding:0">
+              ${checks.map((check) => /* HTML */ `<li style="font-size:12px;margin-top:6px">${check.done ? "&#10003; Met:" : "Pending:"} ${check.label}</li>`).join("")}
+            </ul>
+            ${
+              qe.missingCourses.length
+                ? /* HTML */ `<p style="font-size:12px;margin-top:8px">
+                    Constellation courses remaining:
+                    ${qe.missingCourses
+                      .map((id) => {
+                        const c = courses.find((c) => c.id === id);
+                        return `${c.code} — ${c.name}`;
+                      })
+                      .join("; ")}.
+                  </p>`
+                : ""
+            }`
+        : ""
+    }
+    <p style="font-size:11px;color:var(--tx2);line-height:1.6;margin-top:8px">
+      Based on completed courses and approved transfers recorded here.
+      Scheduling a course or checking a milestone does not complete it. Submit
+      the QE request by May 1 and written materials by August 1; the program
+      confirms exam admission.
+    </p>
+  </section>`;
 }
 
 // Apply only validated snapshots. UI-only state and the stored key stay unchanged.
@@ -744,10 +905,11 @@ function renderSettings() {
         </h3>
         <p style="font-size:12px;line-height:1.6;margin:8px 0">
           Includes completed courses and milestones, DMP sessions, semester
-          assignments, custom course names, start semester and appearance.
-          Custom names can identify you even when your profile is omitted.
-          Anyone with the link can read, forward and keep this data. The link is
-          not encrypted, never expires and cannot be revoked.
+          assignments, custom course names, constellation choice and custom
+          constellation courses, start semester and appearance. Custom names can
+          identify you even when your profile is omitted. Anyone with the link
+          can read, forward and keep this data. The link is not encrypted, never
+          expires and cannot be revoked.
         </p>
         <label style="font-size:12px;display:block;margin:8px 0">
           <input
@@ -816,9 +978,9 @@ function renderSettings() {
         Reset
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">
-        Clears all courses, milestones, DMP sessions, semester assignments, and
-        custom names. Your name, email, start semester, and appearance settings
-        are kept. This cannot be undone.
+        Clears all courses, milestones, DMP sessions, semester assignments,
+        custom names, and constellation choices. Your name, email, start
+        semester, and appearance settings are kept. This cannot be undone.
       </div>
       <button
         data-edit
@@ -909,6 +1071,7 @@ function renderDashboard() {
         </div>
       </div>
     </div>
+    ${renderQeReadiness()}
     <div
       style="font-size:11px;color:var(--tx2);text-transform:uppercase;letter-spacing:.6px;margin-bottom:8px;margin-top:4px;font-weight:500"
     >
@@ -1000,16 +1163,16 @@ function renderPlanner() {
         isXP
           ? /* HTML */ `<div class="picker">
               ${xferGrouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${xferGrouped
-              .map(
-                (g) =>
-                  /* HTML */ `<div
-                      style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px"
-                    >
-                      ${g.name}
-                    </div>
-                    ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></button>`).join("")}`,
-              )
-              .join("")}
+                .map(
+                  (g) =>
+                    /* HTML */ `<div
+                        style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px"
+                      >
+                        ${g.name}
+                      </div>
+                      ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','_transfer')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${AM}">${c.cr} cr.</span></button>`).join("")}`,
+                )
+                .join("")}
             </div>`
           : ""
       }
@@ -1067,22 +1230,22 @@ function renderPlanner() {
             ${!isP ? /* HTML */ `<button data-edit class="bsm" onclick="openPicker('${tm.id}')">+ add course</button>` : /* HTML */ `<button class="bsm" onclick="closePicker()">cancel</button>`}
           </div>
           ${
-          isP
-            ? /* HTML */ `<div class="picker">
-                ${grouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${grouped
-                .map(
-                  (g) =>
-                    /* HTML */ `<div
-                        style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px"
-                      >
-                        ${g.name}
-                      </div>
-                      ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></button>`).join("")}`,
-                )
-                .join("")}
-              </div>`
-            : ""
-        }
+            isP
+              ? /* HTML */ `<div class="picker">
+                  ${grouped.length === 0 ? /* HTML */ `<div style="font-size:12px;color:var(--tx2);padding:4px 0">No unscheduled courses available.</div>` : ""}${grouped
+                    .map(
+                      (g) =>
+                        /* HTML */ `<div
+                            style="font-size:10px;font-weight:500;color:var(--tx2);text-transform:uppercase;letter-spacing:.5px;margin:6px 0 2px"
+                          >
+                            ${g.name}
+                          </div>
+                          ${g.av.map((c) => /* HTML */ `<button type="button" data-edit class="pcourse" onclick="assignCourse('${c.id}','${tm.id}')"><span class="code">${c.code}</span><span style="font-size:13px;flex:1">${escapeHtml(courseName(c))}</span><span style="font-size:11px;font-weight:500;color:${BL}">${c.cr} cr.</span></button>`).join("")}`,
+                    )
+                    .join("")}
+                </div>`
+              : ""
+          }
         </div>`;
       })
       .join("")}`;
@@ -1133,99 +1296,99 @@ function renderCourses() {
               ></span
             ></button
           >${
-          io
-            ? /* HTML */ `<div
-                style="border-top:0.5px solid var(--bd1);padding-top:4px"
-              >
-                ${b.courses
-                  .map((c) => {
-                    const t = tn(state.assign[c.id]);
-                    const isRen = state.renaming === c.id;
-                    if (isRen)
-                      return /* HTML */ `<div
-                        class="crow"
-                        style="cursor:default"
-                        onclick="event.stopPropagation()"
-                      >
-                        <div class="chk ${isDone(c.id) ? "on" : ""}">
+            io
+              ? /* HTML */ `<div
+                  style="border-top:0.5px solid var(--bd1);padding-top:4px"
+                >
+                  ${b.courses
+                    .map((c) => {
+                      const t = tn(state.assign[c.id]);
+                      const isRen = state.renaming === c.id;
+                      if (isRen)
+                        return /* HTML */ `<div
+                          class="crow"
+                          style="cursor:default"
+                          onclick="event.stopPropagation()"
+                        >
+                          <div class="chk ${isDone(c.id) ? "on" : ""}">
+                            ${isDone(c.id) ? ck() : ""}
+                          </div>
+                          <div style="flex:1;min-width:0">
+                            <div
+                              style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px"
+                            >
+                              <span class="code">${c.code}</span
+                              ><span
+                                class="tag"
+                                style="background:${c.tc}22;color:${c.tc}"
+                                >${c.tag}</span
+                              >
+                            </div>
+                            <input
+                              id="rename-inp"
+                              aria-label="Course name"
+                              maxlength="2000"
+                              value="${escapeHtml(courseName(c))}"
+                              placeholder="${c.name}"
+                              style="font-size:13px;background:var(--bg3);border:1px solid ${BL};border-radius:4px;padding:4px 8px;color:var(--tx1);width:100%"
+                              onkeydown="if(event.key==='Enter')saveRename();if(event.key==='Escape')cancelRename()"
+                              onclick="event.stopPropagation()"
+                            />
+                            <div style="display:flex;gap:6px;margin-top:6px">
+                              <button
+                                class="bsm"
+                                onclick="event.stopPropagation();saveRename()"
+                              >
+                                Save</button
+                              ><button
+                                class="bsm"
+                                onclick="event.stopPropagation();cancelRename()"
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          </div>
+                        </div>`;
+                      return /* HTML */ `<div class="crow">
+                        <button
+                          type="button"
+                          data-edit
+                          class="chk ${isDone(c.id) ? "on" : ""}"
+                          aria-label="Complete ${escapeHtml(courseName(c))}"
+                          aria-pressed="${isDone(c.id)}"
+                          onclick="toggleCourse('${c.id}')"
+                          ${c.locked ? "disabled" : ""}
+                        >
                           ${isDone(c.id) ? ck() : ""}
-                        </div>
+                        </button>
                         <div style="flex:1;min-width:0">
                           <div
-                            style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:6px"
+                            style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px"
                           >
                             <span class="code">${c.code}</span
                             ><span
                               class="tag"
                               style="background:${c.tc}22;color:${c.tc}"
                               >${c.tag}</span
+                            >${t ? /* HTML */ `<span style="font-size:10px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--tx2);font-weight:500">${t}</span>` : ""}<span
+                              style="font-size:11px;font-weight:500;color:${BL};margin-left:auto"
+                              >${c.cr} cr.</span
                             >
                           </div>
-                          <input
-                            id="rename-inp"
-                            aria-label="Course name"
-                            maxlength="2000"
-                            value="${escapeHtml(courseName(c))}"
-                            placeholder="${c.name}"
-                            style="font-size:13px;background:var(--bg3);border:1px solid ${BL};border-radius:4px;padding:4px 8px;color:var(--tx1);width:100%"
-                            onkeydown="if(event.key==='Enter')saveRename();if(event.key==='Escape')cancelRename()"
-                            onclick="event.stopPropagation()"
-                          />
-                          <div style="display:flex;gap:6px;margin-top:6px">
-                            <button
-                              class="bsm"
-                              onclick="event.stopPropagation();saveRename()"
-                            >
-                              Save</button
-                            ><button
-                              class="bsm"
-                              onclick="event.stopPropagation();cancelRename()"
-                            >
-                              Cancel
-                            </button>
+                          <div style="display:flex;align-items:center;gap:4px">
+                            <span
+                              style="font-size:13px;color:var(--tx${isDone(c.id) ? "3" : "1"});${isDone(c.id) ? "text-decoration:line-through" : ""}"
+                              >${escapeHtml(courseName(c))}</span
+                            >${c.renameable ? /* HTML */ `<button data-edit onclick="event.stopPropagation();startRename('${c.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:0 3px;font-size:13px;line-height:1;opacity:.7" aria-label="Rename course">&#9998;</button>` : ""}
                           </div>
+                          ${c.note && !state.names[c.id] ? /* HTML */ `<div style="font-size:11px;color:var(--tx3);margin-top:1px;font-style:italic">${c.note}</div>` : ""}
                         </div>
                       </div>`;
-                    return /* HTML */ `<div class="crow">
-                      <button
-                        type="button"
-                        data-edit
-                        class="chk ${isDone(c.id) ? "on" : ""}"
-                        aria-label="Complete ${escapeHtml(courseName(c))}"
-                        aria-pressed="${isDone(c.id)}"
-                        onclick="toggleCourse('${c.id}')"
-                        ${c.locked ? "disabled" : ""}
-                      >
-                        ${isDone(c.id) ? ck() : ""}
-                      </button>
-                      <div style="flex:1;min-width:0">
-                        <div
-                          style="display:flex;align-items:center;gap:5px;flex-wrap:wrap;margin-bottom:2px"
-                        >
-                          <span class="code">${c.code}</span
-                          ><span
-                            class="tag"
-                            style="background:${c.tc}22;color:${c.tc}"
-                            >${c.tag}</span
-                          >${t ? /* HTML */ `<span style="font-size:10px;background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--tx2);font-weight:500">${t}</span>` : ""}<span
-                            style="font-size:11px;font-weight:500;color:${BL};margin-left:auto"
-                            >${c.cr} cr.</span
-                          >
-                        </div>
-                        <div style="display:flex;align-items:center;gap:4px">
-                          <span
-                            style="font-size:13px;color:var(--tx${isDone(c.id) ? "3" : "1"});${isDone(c.id) ? "text-decoration:line-through" : ""}"
-                            >${escapeHtml(courseName(c))}</span
-                          >${c.renameable ? /* HTML */ `<button data-edit onclick="event.stopPropagation();startRename('${c.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:0 3px;font-size:13px;line-height:1;opacity:.7" aria-label="Rename course">&#9998;</button>` : ""}
-                        </div>
-                        ${c.note && !state.names[c.id] ? /* HTML */ `<div style="font-size:11px;color:var(--tx3);margin-top:1px;font-style:italic">${c.note}</div>` : ""}
-                      </div>
-                    </div>`;
-                  })
-                  .join("")}
-              </div>`
-            : ""
-        }
+                    })
+                    .join("")}
+                </div>`
+              : ""
+          }
         </div>`;
       })
       .join("")}`;
@@ -1233,7 +1396,7 @@ function renderCourses() {
 
 // Tab: Milestones
 function renderMilestones() {
-  return `${MILESTONES.map(
+  return `${renderQeReadiness(true)}${MILESTONES.map(
     (m, i) =>
       /* HTML */ `<div style="display:flex;gap:10px;margin-bottom:4px">
         <div
@@ -1377,6 +1540,34 @@ function toggleMilestone(id) {
   saveProgress();
   render();
 }
+function setConstellation(value) {
+  if (
+    state.readOnly ||
+    !["", ...Object.keys(PhDTrackerData.constellations)].includes(value)
+  )
+    return;
+  state.constellation = value;
+  // Keep the custom pair when exploring other options, and retain every
+  // existing milestone checkmark rather than inferring or rewriting history.
+  saveProgress();
+  render();
+  document.getElementById("qe-constellation")?.focus();
+}
+function toggleCustomConstellationCourse(id) {
+  if (state.readOnly || !PhDTrackerData.customCourseIds.includes(id)) return;
+  const selected = state.customConstellationCourses;
+  if (selected.includes(id)) {
+    state.customConstellationCourses = selected.filter(
+      (course) => course !== id,
+    );
+  } else {
+    if (selected.length >= 2) return;
+    state.customConstellationCourses = [...selected, id];
+  }
+  saveProgress();
+  render();
+  document.getElementById(`qe-custom-${id}`)?.focus();
+}
 function adjustDmp(d) {
   if (state.readOnly) return;
   state.dmp = Math.min(15, Math.max(0, state.dmp + d));
@@ -1438,6 +1629,8 @@ function stateData() {
     darkMode: state.darkMode,
     userName: state.userName,
     userEmail: state.userEmail,
+    constellation: state.constellation,
+    customConstellationCourses: state.customConstellationCourses,
   });
 }
 
@@ -1502,7 +1695,7 @@ function resetAll() {
   if (state.readOnly) return;
   if (
     !confirm(
-      "Reset all progress?\n\nThis will clear all completed courses, milestones, DMP sessions, semester assignments, and custom names.\n\nYour name, email, start semester, and appearance settings will be kept.\n\nThis cannot be undone.",
+      "Reset all progress?\n\nThis will clear all completed courses, milestones, DMP sessions, semester assignments, custom names, and constellation choices.\n\nYour name, email, start semester, and appearance settings will be kept.\n\nThis cannot be undone.",
     )
   )
     return;
@@ -1512,6 +1705,8 @@ function resetAll() {
   state.assign = {};
   state.names = {};
   state.termDone = new Set();
+  state.constellation = "";
+  state.customConstellationCourses = [];
   state.open = new Set(["foundation", "methods", "electives", "dissertation"]);
   saveProgress();
   render();
@@ -1617,6 +1812,7 @@ function openPrintView(summaryOnly = false) {
 
 function generatePrintHTML(summaryOnly = false) {
   const { p, cw, diss, total } = totals();
+  const qe = qeReadiness();
   const terms = generateTerms();
   const xferCourses = allCourses().filter(
     (c) => state.assign[c.id] === "_transfer",
@@ -1825,57 +2021,79 @@ function generatePrintHTML(summaryOnly = false) {
           ${
             summaryOnly
               ? ""
-              : /* HTML */ `<div style="margin-bottom:24px">
+              : /* HTML */ `<div style="margin-bottom:24px;break-inside:avoid">
+                    <div class="sec-title">QE readiness</div>
+                    <p style="font-size:12px;margin-bottom:6px">
+                      ${escapeHtml(constellationLabel())}
+                    </p>
+                    <p style="font-size:12px;font-weight:600;margin-bottom:6px">
+                      ${qe.ready ? "Coursework ready for QE" : "QE coursework not ready"}
+                    </p>
+                    <p style="font-size:11px">
+                      Foundation courses: ${qe.foundationCount}/6 completed (5
+                      required). Cornerstone:
+                      ${qe.cornerstoneComplete ? "complete" : "pending"}. Policy
+                      inquiry: ${qe.inquiryComplete ? "complete" : "pending"}.
+                      Selected constellation coursework:
+                      ${qe.selectionComplete && qe.missingCourses.length === 0 ? "complete" : "pending"}.
+                    </p>
+                    <p style="font-size:10px;color:#666;margin-top:6px">
+                      Coursework check only. Submit the QE request by May 1 and
+                      written materials by August 1; the program confirms exam
+                      admission.
+                    </p>
+                  </div>
+                  <div style="margin-bottom:24px">
                     <div class="sec-title">Semester plan</div>
                     ${
-              xferCourses.length
-                ? /* HTML */ `<div
-                    style="margin-bottom:8px;padding:8px 10px;background:#fff8f0;border-left:3px solid #E5751F;border-radius:3px"
-                  >
-                    <div
-                      style="font-size:10px;font-weight:600;color:#E5751F;margin-bottom:3px"
-                    >
-                      Transfer in
-                    </div>
-                    ${xferCourses.map((c) => /* HTML */ `<div style="font-size:11px">${c.code} — ${escapeHtml(courseName(c))} · ${c.cr} cr.</div>`).join("")}
-                  </div>`
-                : ""
-            }
+                      xferCourses.length
+                        ? /* HTML */ `<div
+                            style="margin-bottom:8px;padding:8px 10px;background:#fff8f0;border-left:3px solid #E5751F;border-radius:3px"
+                          >
+                            <div
+                              style="font-size:10px;font-weight:600;color:#E5751F;margin-bottom:3px"
+                            >
+                              Transfer in
+                            </div>
+                            ${xferCourses.map((c) => /* HTML */ `<div style="font-size:11px">${c.code} — ${escapeHtml(courseName(c))} · ${c.cr} cr.</div>`).join("")}
+                          </div>`
+                        : ""
+                    }
                     ${
-              semRows
-                ? /* HTML */ `<table
-                    style="width:100%;border-collapse:collapse"
-                  >
-                    <thead>
-                      <tr style="background:#f5f1f2">
-                        <th
-                          style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                        >
-                          Term
-                        </th>
-                        <th
-                          style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                        >
-                          Courses
-                        </th>
-                        <th
-                          style="padding:6px 8px;text-align:right;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                        >
-                          Cr.
-                        </th>
-                        <th
-                          style="padding:6px 8px;text-align:center;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
-                        >
-                          Done
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      ${semRows}
-                    </tbody>
-                  </table>`
-                : '<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'
-            }
+                      semRows
+                        ? /* HTML */ `<table
+                            style="width:100%;border-collapse:collapse"
+                          >
+                            <thead>
+                              <tr style="background:#f5f1f2">
+                                <th
+                                  style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                                >
+                                  Term
+                                </th>
+                                <th
+                                  style="padding:6px 8px;text-align:left;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                                >
+                                  Courses
+                                </th>
+                                <th
+                                  style="padding:6px 8px;text-align:right;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                                >
+                                  Cr.
+                                </th>
+                                <th
+                                  style="padding:6px 8px;text-align:center;font-size:10px;color:#666;font-weight:600;text-transform:uppercase"
+                                >
+                                  Done
+                                </th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              ${semRows}
+                            </tbody>
+                          </table>`
+                        : '<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'
+                    }
                   </div>
                   <div class="page-break" style="margin-bottom:24px">
                     <div class="sec-title">Course completion</div>

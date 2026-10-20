@@ -6,6 +6,14 @@
       : global.SiteData;
   const courseId = /^(?:f[1-6]|m[1-3]|c[1-3]|l1|k1|d(?:[1-9]|10)|el[1-6])$/;
   const termId = /^[fsu]20\d{2}$/;
+  const foundationIds = ["f1", "f2", "f3", "f4", "f5", "f6"];
+  const customCourseIds = [...foundationIds, "m2"];
+  const constellations = {
+    I: { name: "Public Management", courses: ["f5", "f2"] },
+    II: { name: "PA Foundations", courses: ["f1", "f6"] },
+    III: { name: "Public Policy", courses: ["f3", "f4", "m2"] },
+    IV: { name: "Custom", courses: [] },
+  };
   const initial = {
     done: [],
     mdone: [],
@@ -18,6 +26,8 @@
     darkMode: false,
     userName: "",
     userEmail: "",
+    constellation: "",
+    customConstellationCourses: [],
   };
 
   function validate(raw) {
@@ -80,10 +90,70 @@
       if (typeof next[field] !== "string" || next[field].length > 2000)
         fail(field);
     }
+    // Additive fields: old saved plans, links and schema-1 backups keep all
+    // existing progress and simply start without a recorded constellation.
+    const constellation =
+      raw.constellation === undefined ? "" : raw.constellation;
+    if (
+      typeof constellation !== "string" ||
+      !["", ...Object.keys(constellations)].includes(constellation)
+    )
+      fail("constellation");
+    const custom =
+      raw.customConstellationCourses === undefined
+        ? []
+        : raw.customConstellationCourses;
+    if (
+      !Array.isArray(custom) ||
+      custom.length > 2 ||
+      new Set(custom).size !== custom.length ||
+      custom.some((id) => !customCourseIds.includes(id))
+    )
+      fail("custom constellation courses");
+    next.constellation = constellation;
+    next.customConstellationCourses = [...custom];
     return next;
   }
 
-  const api = { initial, validate };
+  // Use recorded completions (including approved transfers), never assignments
+  // to future semesters or milestone checkmarks, to assess coursework readiness.
+  function qeReadiness(data) {
+    const complete = (id) =>
+      data.done.includes(id) || data.assign[id] === "_transfer";
+    const choice = constellations[data.constellation];
+    const courses =
+      data.constellation === "IV"
+        ? data.customConstellationCourses
+        : choice?.courses || [];
+    const selectionComplete =
+      !!choice && (data.constellation !== "IV" || courses.length === 2);
+    const foundationCount = foundationIds.filter(complete).length;
+    const missingCourses = courses.filter((id) => !complete(id));
+    const cornerstoneComplete = complete("m1");
+    const inquiryComplete = complete("m2");
+    return {
+      courses,
+      selectionComplete,
+      foundationCount,
+      missingCourses,
+      cornerstoneComplete,
+      inquiryComplete,
+      ready:
+        selectionComplete &&
+        foundationCount >= 5 &&
+        cornerstoneComplete &&
+        inquiryComplete &&
+        missingCourses.length === 0,
+    };
+  }
+
+  const api = {
+    initial,
+    validate,
+    constellations,
+    customCourseIds,
+    qeReadiness,
+  };
   if (global) global.PhDTrackerData = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;
 })(typeof window !== "undefined" ? window : globalThis);
