@@ -28,6 +28,12 @@
     userEmail: "",
     constellation: "",
     customConstellationCourses: [],
+    qePapers: Array.from({ length: 4 }, () => ({
+      title: "",
+      courseId: "",
+      ready: false,
+    })),
+    qePrepDone: [],
   };
 
   function validate(raw) {
@@ -112,6 +118,32 @@
       fail("custom constellation courses");
     next.constellation = constellation;
     next.customConstellationCourses = [...custom];
+    const papers = raw.qePapers === undefined ? initial.qePapers : raw.qePapers;
+    if (!Array.isArray(papers) || papers.length !== 4) fail("QE papers");
+    next.qePapers = papers.map((paper) => {
+      if (
+        !isRecord(paper) ||
+        typeof paper.title !== "string" ||
+        paper.title.length > 200 ||
+        !["", ...customCourseIds].includes(paper.courseId) ||
+        typeof paper.ready !== "boolean"
+      )
+        fail("QE paper details");
+      return {
+        title: paper.title,
+        courseId: paper.courseId,
+        ready: paper.ready,
+      };
+    });
+    const prep = raw.qePrepDone === undefined ? [] : raw.qePrepDone;
+    if (
+      !Array.isArray(prep) ||
+      prep.some(
+        (id) => !["materialsSubmitted", "presentationReady"].includes(id),
+      )
+    )
+      fail("QE preparation");
+    next.qePrepDone = [...new Set(prep)];
     return next;
   }
 
@@ -147,12 +179,37 @@
     };
   }
 
+  function qePaperProgress(data) {
+    const qe = qeReadiness(data);
+    const requiredReady = data.qePapers
+      .slice(0, 2)
+      .filter(
+        (paper) =>
+          paper.ready &&
+          qe.selectionComplete &&
+          qe.courses.includes(paper.courseId),
+      ).length;
+    const optional = data.qePapers
+      .slice(2)
+      .filter((paper) => paper.title || paper.courseId || paper.ready);
+    const optionalPending = optional.filter(
+      (paper) => !paper.ready || !paper.courseId,
+    ).length;
+    return {
+      requiredReady,
+      optionalCount: optional.length,
+      optionalPending,
+      packetReady: requiredReady === 2 && optionalPending === 0,
+    };
+  }
+
   const api = {
     initial,
     validate,
     constellations,
     customCourseIds,
     qeReadiness,
+    qePaperProgress,
   };
   if (global) global.PhDTrackerData = api;
   if (typeof module !== "undefined" && module.exports) module.exports = api;

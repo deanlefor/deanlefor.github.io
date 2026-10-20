@@ -2,7 +2,7 @@ const BL = "#378ADD",
   GR = "#639922",
   AM = "#BA7517";
 const KEY = "phd-tracker-v2";
-const VERSION = "v1.03";
+const VERSION = "v1.04";
 const escapeHtml = SiteData.escapeHtml;
 const dataStore = SiteData.createStore({
   key: KEY,
@@ -17,7 +17,7 @@ function updateSaveStatus() {
     shareError || (state.readOnly ? "" : dataStore.error);
 }
 
-const DISCLAIMER = `This tracker is built from the CPAP Policy Guide approved September 10, 2026, with current program guidance that all future qualifying exams use the constellation format. It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nAll future qualifying exams use the constellation format. Select your constellation in the Milestones tab to check coursework readiness. Existing completed courses and milestone checkmarks are preserved.\n\nThe tracker saves progress in this browser without an application-server backup. Share links and exported files contain the data you choose to share. Anyone with a link can read and retain it; old links cannot be revoked. Hosting and font providers receive ordinary web requests. Other people using this browser profile and scripts running on this website can access locally saved data. Clearing site data removes saved progress, and private browsing usually removes it when that session ends. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
+const DISCLAIMER = `This tracker is built from the CPAP Policy Guide approved September 10, 2026, with current program guidance that all future qualifying exams use the constellation format. It is meant for planning and tracking only — not an official advising tool. There may be errors or omissions, and program requirements do change. Always confirm your plan with your advisor and the VT Graduate School.\n\nThis tool is not affiliated with or endorsed by Virginia Tech. If you spot something wrong, please let me know and I will fix it.\n\nAll future qualifying exams use the constellation format. Select your constellation in the QE plan tab to check coursework readiness. Existing completed courses and milestone checkmarks are preserved.\n\nThe tracker saves progress in this browser without an application-server backup. Share links and exported files contain the data you choose to share. Anyone with a link can read and retain it; old links cannot be revoked. Hosting and font providers receive ordinary web requests. Other people using this browser profile and scripts running on this website can access locally saved data. Clearing site data removes saved progress, and private browsing usually removes it when that session ends. Please ensure you do backup (settings page) and save the .json file somewhere safe. I CANNOT RECOVER PROGRESS ON YOUR BEHALF.\n\nFinally, if you do not graduate because a website told you that you had enough credits: not liable. 🙂`;
 
 const STATIC_BUCKETS = [
   {
@@ -300,7 +300,7 @@ const MILESTONES = [
     id: "ms4",
     name: "Constellation selected",
     target: "Before QE registration",
-    desc: "Choose a constellation in QE readiness above: I (Public Management), II (PA Foundations), III (Public Policy), or IV (Custom: two distinct courses from I–III). Before the exam, complete all chosen constellation courses, at least 5 of the 6 foundation courses, PAPA 6294, and PAPA 6514. This milestone checkmark is separate from the saved choice and coursework check.",
+    desc: "Choose a constellation in the QE plan tab: I (Public Management), II (PA Foundations), III (Public Policy), or IV (Custom: two distinct courses from I–III). Before the exam, complete all chosen constellation courses, at least 5 of the 6 foundation courses, PAPA 6294, and PAPA 6514. This milestone checkmark is separate from the saved choice and coursework check.",
   },
   {
     id: "ms5",
@@ -425,6 +425,8 @@ let state = {
   userEmail: "",
   constellation: "",
   customConstellationCourses: [],
+  qePapers: PhDTrackerData.initial.qePapers.map((paper) => ({ ...paper })),
+  qePrepDone: [],
 };
 
 // Dynamic term generation
@@ -655,9 +657,9 @@ function renderQeReadiness(editable = false) {
             <button
               class="btn"
               style="margin-top:8px"
-              onclick="selectTab('milestones')"
+              onclick="selectTab('qe')"
             >
-              View QE details
+              Open QE plan
             </button>`
     }
     ${
@@ -687,6 +689,105 @@ function renderQeReadiness(editable = false) {
       confirms exam admission.
     </p>
   </section>`;
+}
+
+function renderQeCourseList() {
+  const qe = qeReadiness();
+  const courses = allCourses();
+  return `<section class="card"><h2 class="qe-section-title">Courses to complete</h2>
+    <p class="qe-note">Complete at least five foundation courses, both research prerequisites, and every course tagged Constellation. These checkboxes update your Courses tab and credit totals.</p>
+    ${[
+      ...courses.filter((c) => c.bid === "foundation"),
+      ...courses.filter((c) => ["m1", "m2"].includes(c.id)),
+    ]
+      .map((c) => {
+        const transfer = state.assign[c.id] === "_transfer";
+        return `<label class="qe-check"><input type="checkbox" data-edit id="qe-course-${c.id}" onchange="toggleQeCourse('${c.id}')" ${isDone(c.id) ? "checked" : ""} ${transfer ? "disabled" : ""} /><span><strong>${c.code}</strong> — ${c.name}${qe.courses.includes(c.id) ? ' <span class="tag" style="color:var(--accent)">Constellation</span>' : ""}<br><small>${transfer ? "Approved transfer recorded" : isDone(c.id) ? "Completed" : "Not completed"}${c.bid === "methods" ? " · Required for every constellation" : ""}</small></span></label>`;
+      })
+      .join("")}</section>`;
+}
+
+function renderQePaper(index) {
+  const paper = state.qePapers[index];
+  const qe = qeReadiness();
+  const required = index < 2;
+  const allowed =
+    required && qe.selectionComplete
+      ? qe.courses
+      : PhDTrackerData.customCourseIds;
+  const options = [
+    ...new Set([...allowed, ...(paper.courseId ? [paper.courseId] : [])]),
+  ];
+  const course = allCourses();
+  const mismatch =
+    required &&
+    qe.selectionComplete &&
+    paper.courseId &&
+    !qe.courses.includes(paper.courseId);
+  return `<div class="card">
+    <h3 class="qe-section-title">Paper ${index + 1} <span style="font-weight:400;font-size:12px">${required ? "Required · from your constellation" : "Optional · from a foundation course"}</span></h3>
+    <label for="qe-paper-title-${index}" style="font-size:12px">Paper title or short label</label>
+    <input class="qe-field" data-edit id="qe-paper-title-${index}" maxlength="200" value="${escapeHtml(paper.title)}" oninput="updateQePaper(${index},'title',this.value)" />
+    <label for="qe-paper-course-${index}" style="font-size:12px">Course for paper ${index + 1}</label>
+    <select class="qe-field" data-edit id="qe-paper-course-${index}" onchange="updateQePaper(${index},'courseId',this.value)">
+      <option value="">Choose a course</option>${options
+        .map((id) => {
+          const c = course.find((c) => c.id === id);
+          return `<option value="${id}" ${paper.courseId === id ? "selected" : ""}>${c.code} — ${c.name}${!allowed.includes(id) ? " (outside selected constellation)" : ""}</option>`;
+        })
+        .join("")}</select>
+    <label class="qe-check"><input type="checkbox" data-edit id="qe-paper-ready-${index}" onchange="updateQePaper(${index},'ready',this.checked)" ${paper.ready ? "checked" : ""} /> Paper ${index + 1} ready</label>
+    ${mismatch ? '<p class="qe-note">This paper is from outside your selected constellation. Choose a constellation course for this required paper; its saved details have been kept.</p>' : ""}
+    ${required && !qe.selectionComplete ? '<p class="qe-note">Finish your constellation selection to check this paper’s course.</p>' : ""}
+  </div>`;
+}
+
+function renderQePlan() {
+  const papers = PhDTrackerData.qePaperProgress(JSON.parse(stateData()));
+  return `<h1 style="font-size:19px;margin-bottom:8px">Your qualifying exam plan</h1>
+    <p class="qe-note">Choose your constellation, check the courses you need, and assemble your exam materials. For a custom constellation, choose two course/subject areas; Public Policy includes three courses.</p>
+    ${renderQeReadiness(true)}
+    ${renderQeCourseList()}
+    <section aria-labelledby="qe-papers-title">
+      <h2 class="qe-section-title" id="qe-papers-title">Papers for your QE</h2>
+      <p class="qe-note">At least two papers must come from courses in your chosen constellation. You may add up to two papers or essay exams from the same constellation or other foundation courses. </p>
+      <p class="qe-note" id="qe-papers-status" role="status">${qePaperStatus()}</p>
+      ${renderQePaper(0)}${renderQePaper(1)}
+      <details ${papers.optionalCount ? "open" : ""}><summary style="font-size:13px;cursor:pointer;margin:10px 0">Optional papers (up to two)</summary>${renderQePaper(2)}${renderQePaper(3)}</details>
+    </section>
+    <section class="card" aria-labelledby="qe-prep-title"><h2 class="qe-section-title" id="qe-prep-title">Exam preparation checklist</h2>
+      <p class="qe-note">Coursework readiness, preparation, and the exam result are tracked separately. Existing milestone checkmarks are retained and stay in sync with Milestones. Paper checkboxes do not automatically finalize the packet or record an exam pass.</p>
+      ${["ms5", "ms6", "ms7"].map(renderQeMilestone).join("")}
+      ${renderQePrepCheck("materialsSubmitted", "Written materials submitted", "By August 1 · Submit the papers and Foundations Essay.")}
+      ${renderQePrepCheck("presentationReady", "Oral presentation prepared", "12–15 minutes in person, followed by 30 minutes of Q&A.")}
+      ${["ms8", "ms9"].map(renderQeMilestone).join("")}
+    </section>`;
+}
+
+function renderQeMilestone(id) {
+  const m = MILESTONES.find((m) => m.id === id);
+  return `<label class="qe-check"><input type="checkbox" data-edit id="qe-milestone-${id}" onchange="toggleQeMilestone('${id}')" ${state.mdone.has(id) ? "checked" : ""} /><span><strong>${m.name}</strong><br><small>${m.target} · ${m.desc}</small></span></label>`;
+}
+
+function renderQePrepCheck(id, label, desc) {
+  return `<label class="qe-check"><input type="checkbox" data-edit id="qe-prep-${id}" onchange="toggleQePrep('${id}')" ${state.qePrepDone.includes(id) ? "checked" : ""} /><span><strong>${label}</strong><br><small>${desc}</small></span></label>`;
+}
+
+function renderQePrintPlan() {
+  const courses = allCourses();
+  return `<div style="margin-bottom:24px;break-inside:avoid"><div class="sec-title">QE papers and preparation</div>
+    ${state.qePapers
+      .map((paper, i) => {
+        if (i > 1 && !paper.title && !paper.courseId && !paper.ready) return "";
+        const c = courses.find((c) => c.id === paper.courseId);
+        const eligible =
+          i > 1 ||
+          (qeReadiness().selectionComplete &&
+            qeReadiness().courses.includes(paper.courseId));
+        return `<p style="font-size:11px;margin:5px 0">Paper ${i + 1}${i > 1 ? " (optional)" : ""}: ${escapeHtml(paper.title || "Untitled")} · ${c ? c.code + " — " + c.name : "Course not selected"} · ${paper.ready ? "Marked ready" : "Pending"}${!eligible ? " · Check constellation course" : ""}</p>`;
+      })
+      .join("")}
+    <p style="font-size:11px;margin-top:8px">Written materials submitted: ${state.qePrepDone.includes("materialsSubmitted") ? "yes" : "pending"}. Oral presentation prepared: ${state.qePrepDone.includes("presentationReady") ? "yes" : "pending"}. See Milestones for the recorded request, packet, essay, oral engagement, and exam result.</p></div>`;
 }
 
 // Apply only validated snapshots. UI-only state and the stored key stay unchanged.
@@ -906,7 +1007,8 @@ function renderSettings() {
         <p style="font-size:12px;line-height:1.6;margin:8px 0">
           Includes completed courses and milestones, DMP sessions, semester
           assignments, custom course names, constellation choice and custom
-          constellation courses, start semester and appearance. Custom names can
+          constellation courses, QE paper titles and preparation checkboxes,
+          start semester and appearance. Custom names and paper titles can
           identify you even when your profile is omitted. Anyone with the link
           can read, forward and keep this data. The link is not encrypted, never
           expires and cannot be revoked.
@@ -979,8 +1081,9 @@ function renderSettings() {
       </div>
       <div style="font-size:11px;color:var(--tx3);margin-bottom:8px">
         Clears all courses, milestones, DMP sessions, semester assignments,
-        custom names, and constellation choices. Your name, email, start
-        semester, and appearance settings are kept. This cannot be undone.
+        custom names, constellation choices, and QE paper and preparation
+        details. Your name, email, start semester, and appearance settings are
+        kept. This cannot be undone.
       </div>
       <button
         data-edit
@@ -1396,7 +1499,7 @@ function renderCourses() {
 
 // Tab: Milestones
 function renderMilestones() {
-  return `${renderQeReadiness(true)}${MILESTONES.map(
+  return `${renderQeReadiness()}${MILESTONES.map(
     (m, i) =>
       /* HTML */ `<div style="display:flex;gap:10px;margin-bottom:4px">
         <div
@@ -1487,13 +1590,13 @@ function render() {
         <span style="font-weight:500;color:${BL}">${state.dmp}</span>/15 DMP
       </div>
       <div class="tabs">
-        ${["dashboard", "planner", "courses", "milestones"].map((t) => /* HTML */ `<button class="tab ${state.tab === t ? "on" : ""}" onclick="selectTab('${t}')">${t[0].toUpperCase() + t.slice(1)}</button>`).join("")}
+        ${["dashboard", "planner", "courses", "qe", "milestones"].map((t) => /* HTML */ `<button class="tab ${state.tab === t ? "on" : ""}" onclick="selectTab('${t}')">${t === "qe" ? "QE plan" : t[0].toUpperCase() + t.slice(1)}</button>`).join("")}
       </div>
     </div>
     <div class="body">
       ${state.readOnly ? /* HTML */ `<div style="background:#E5751F;color:white;padding:8px 18px;font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px"><i class="ti ti-eye" aria-hidden="true"></i> Shared view — read only${state.userName ? ` · ${escapeHtml(state.userName)}` : ""}${state.userEmail ? ` · ${escapeHtml(state.userEmail)}` : ""}</div>` : ""}
       ${state.showSettings ? renderSettings() : ""}
-      ${state.tab === "dashboard" ? renderDashboard() : state.tab === "planner" ? renderPlanner() : state.tab === "courses" ? renderCourses() : renderMilestones()}
+      ${state.tab === "dashboard" ? renderDashboard() : state.tab === "planner" ? renderPlanner() : state.tab === "courses" ? renderCourses() : state.tab === "qe" ? renderQePlan() : renderMilestones()}
     </div>`;
   applyTheme();
   updateSaveStatus();
@@ -1539,6 +1642,66 @@ function toggleMilestone(id) {
   state.mdone.has(id) ? state.mdone.delete(id) : state.mdone.add(id);
   saveProgress();
   render();
+}
+function toggleQeCourse(id) {
+  if (
+    state.readOnly ||
+    ![...PhDTrackerData.customCourseIds, "m1"].includes(id) ||
+    state.assign[id] === "_transfer"
+  )
+    return;
+  toggleCourse(id);
+  document.getElementById(`qe-course-${id}`)?.focus();
+}
+function toggleQeMilestone(id) {
+  if (state.readOnly || !["ms5", "ms6", "ms7", "ms8", "ms9"].includes(id))
+    return;
+  toggleMilestone(id);
+  document.getElementById(`qe-milestone-${id}`)?.focus();
+}
+function toggleQePrep(id) {
+  if (
+    state.readOnly ||
+    !["materialsSubmitted", "presentationReady"].includes(id)
+  )
+    return;
+  state.qePrepDone = state.qePrepDone.includes(id)
+    ? state.qePrepDone.filter((item) => item !== id)
+    : [...state.qePrepDone, id];
+  saveProgress();
+  render();
+  document.getElementById(`qe-prep-${id}`)?.focus();
+}
+function updateQePaper(index, field, value) {
+  if (state.readOnly || !Number.isInteger(index) || index < 0 || index > 3)
+    return;
+  if (
+    field === "title"
+      ? typeof value !== "string" || value.length > 200
+      : field === "courseId"
+        ? !["", ...PhDTrackerData.customCourseIds].includes(value)
+        : field === "ready"
+          ? typeof value !== "boolean"
+          : true
+  )
+    return;
+  state.qePapers[index] = { ...state.qePapers[index], [field]: value };
+  saveProgress();
+  if (field === "title") {
+    const status = document.getElementById("qe-papers-status");
+    if (status) status.textContent = qePaperStatus();
+  } else {
+    render();
+    document
+      .getElementById(
+        `qe-paper-${field === "courseId" ? "course" : "ready"}-${index}`,
+      )
+      ?.focus();
+  }
+}
+function qePaperStatus() {
+  const papers = PhDTrackerData.qePaperProgress(JSON.parse(stateData()));
+  return `${papers.requiredReady}/2 required papers ready${papers.optionalCount ? ` · ${papers.optionalCount} optional · ${papers.optionalPending} optional pending` : ""}${papers.packetReady ? " · Paper details ready for packet review" : ""}`;
 }
 function setConstellation(value) {
   if (
@@ -1631,6 +1794,8 @@ function stateData() {
     userEmail: state.userEmail,
     constellation: state.constellation,
     customConstellationCourses: state.customConstellationCourses,
+    qePapers: state.qePapers,
+    qePrepDone: state.qePrepDone,
   });
 }
 
@@ -1695,7 +1860,7 @@ function resetAll() {
   if (state.readOnly) return;
   if (
     !confirm(
-      "Reset all progress?\n\nThis will clear all completed courses, milestones, DMP sessions, semester assignments, custom names, and constellation choices.\n\nYour name, email, start semester, and appearance settings will be kept.\n\nThis cannot be undone.",
+      "Reset all progress?\n\nThis will clear all completed courses, milestones, DMP sessions, semester assignments, custom names, constellation choices, and QE paper and preparation details.\n\nYour name, email, start semester, and appearance settings will be kept.\n\nThis cannot be undone.",
     )
   )
     return;
@@ -1707,6 +1872,10 @@ function resetAll() {
   state.termDone = new Set();
   state.constellation = "";
   state.customConstellationCourses = [];
+  state.qePapers = PhDTrackerData.initial.qePapers.map((paper) => ({
+    ...paper,
+  }));
+  state.qePrepDone = [];
   state.open = new Set(["foundation", "methods", "electives", "dissertation"]);
   saveProgress();
   render();
@@ -2043,6 +2212,7 @@ function generatePrintHTML(summaryOnly = false) {
                       admission.
                     </p>
                   </div>
+                  ${renderQePrintPlan()}
                   <div style="margin-bottom:24px">
                     <div class="sec-title">Semester plan</div>
                     ${

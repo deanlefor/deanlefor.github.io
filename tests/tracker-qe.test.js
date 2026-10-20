@@ -17,7 +17,7 @@ function open(t, options) {
   return p;
 }
 function choose(p, value) {
-  p.window.selectTab("milestones");
+  p.window.selectTab("qe");
   const select = p.document.getElementById("qe-constellation");
   select.value = value;
   select.dispatchEvent(new p.window.Event("change", { bubbles: true }));
@@ -150,11 +150,7 @@ test("an old saved plan keeps every existing field, checkmark and credit through
     original,
     "loading does not rewrite the stored copy",
   );
-  assert.deepEqual(read(p), {
-    ...old,
-    constellation: "",
-    customConstellationCourses: [],
-  });
+  assert.deepEqual(read(p), fixture(old));
   const credits = p.window.totals().total;
   choose(p, "III");
   assert.equal(p.document.activeElement.id, "qe-constellation");
@@ -275,7 +271,7 @@ test("new shared links include constellation, remain read-only, and old links ca
     hash: new URL(url).hash,
     stored: { [key]: original },
   });
-  viewer.window.selectTab("milestones");
+  viewer.window.selectTab("qe");
   assert.equal(
     viewer.document.getElementById("qe-constellation").disabled,
     true,
@@ -367,4 +363,230 @@ test("an explicit reset clears constellation choices along with progress and kee
   assert.deepEqual(read(p).customConstellationCourses, []);
   assert.equal(read(p).userName, "Example student");
   assert.equal(read(p).startYear, 2024);
+});
+
+test("the QE tab reuses saved subject choices and synchronizes courses and exam milestones", (t) => {
+  const p = open(t, {
+    stored: {
+      [key]: JSON.stringify(
+        fixture({
+          constellation: "IV",
+          customConstellationCourses: ["f1", "f6"],
+          mdone: ["ms5", "ms6"],
+        }),
+      ),
+    },
+  });
+  p.window.selectTab("qe");
+  assert.equal(p.document.getElementById("qe-constellation").value, "IV");
+  assert.equal(p.document.getElementById("qe-custom-f6").checked, true);
+  assert.equal(p.document.getElementById("qe-milestone-ms6").checked, true);
+  assert.equal(
+    p.document.getElementById("qe-paper-ready-0").checked,
+    false,
+    "past packet checkmarks never invent individual paper details",
+  );
+  p.document.getElementById("qe-course-f1").click();
+  assert.deepEqual(read(p).done, ["f1"]);
+  assert.equal(p.window.totals().total, 3);
+  assert.equal(p.document.activeElement.id, "qe-course-f1");
+  p.document.getElementById("qe-milestone-ms5").click();
+  assert.deepEqual(read(p).mdone, ["ms6"]);
+  p.window.selectTab("milestones");
+  assert.equal(
+    p.document
+      .querySelector('[aria-label="QE request submitted"]')
+      .getAttribute("aria-pressed"),
+    "false",
+  );
+  assert.equal(
+    p.document
+      .querySelector('[aria-label="Submitted papers ready"]')
+      .getAttribute("aria-pressed"),
+    "true",
+  );
+});
+
+test("two required papers must match the selected courses, and optional papers are tracked separately", () => {
+  const data = fixture({
+    constellation: "IV",
+    customConstellationCourses: ["f1", "f6"],
+  });
+  data.qePapers[0] = {
+    title: "Example theory paper",
+    courseId: "f1",
+    ready: true,
+  };
+  data.qePapers[1] = {
+    title: "Example ethics paper",
+    courseId: "f6",
+    ready: true,
+  };
+  assert.equal(Data.qePaperProgress(data).packetReady, true);
+  data.qePapers[2].title = "Optional paper draft";
+  assert.deepEqual(Data.qePaperProgress(data), {
+    requiredReady: 2,
+    optionalCount: 1,
+    optionalPending: 1,
+    packetReady: false,
+  });
+  data.qePapers[2] = {
+    title: "Optional paper draft",
+    courseId: "f3",
+    ready: true,
+  };
+  assert.equal(Data.qePaperProgress(data).packetReady, true);
+  assert.equal(
+    Data.qePaperProgress({ ...data, constellation: "I" }).requiredReady,
+    0,
+  );
+  assert.equal(
+    data.qePapers[1].ready,
+    true,
+    "changing constellation does not destroy a paper checkmark",
+  );
+});
+
+test("paper fields and preparation save without changing typing focus, survive reload and flag changed subject choices", (t) => {
+  const p = open(t);
+  choose(p, "II");
+  const title = p.document.getElementById("qe-paper-title-0");
+  title.focus();
+  title.value = "Example paper";
+  title.dispatchEvent(new p.window.Event("input", { bubbles: true }));
+  assert.equal(p.document.activeElement, title);
+  const course = p.document.getElementById("qe-paper-course-0");
+  course.value = "f1";
+  course.dispatchEvent(new p.window.Event("change", { bubbles: true }));
+  p.document.getElementById("qe-paper-ready-0").click();
+  p.document.getElementById("qe-prep-materialsSubmitted").click();
+  assert.equal(read(p).mdone.includes("ms9"), false);
+  const saved = p.storage.get(key);
+  const reloaded = open(t, { stored: { [key]: saved } });
+  choose(reloaded, "I");
+  assert.deepEqual(read(reloaded).qePapers[0], {
+    title: "Example paper",
+    courseId: "f1",
+    ready: true,
+  });
+  assert.deepEqual(read(reloaded).qePrepDone, ["materialsSubmitted"]);
+  assert.match(
+    reloaded.document.body.textContent,
+    /outside your selected constellation/,
+  );
+  assert.match(
+    reloaded.document.getElementById("qe-papers-status").textContent,
+    /0\/2/,
+  );
+});
+
+test("paper data is validated before imports can replace any saved progress", (t) => {
+  const original = JSON.stringify(
+    fixture({ done: ["f1"], mdone: ["ms6"], dmp: 5 }),
+  );
+  for (const patch of [
+    { qePapers: [] },
+    { qePapers: [null, ...Data.initial.qePapers.slice(1)] },
+    {
+      qePapers: [
+        { title: "", courseId: "el1", ready: false },
+        ...Data.initial.qePapers.slice(1),
+      ],
+    },
+    {
+      qePapers: [
+        { title: "x".repeat(201), courseId: "f1", ready: false },
+        ...Data.initial.qePapers.slice(1),
+      ],
+    },
+    { qePrepDone: ["automaticallyPassed"] },
+  ]) {
+    assert.throws(() => fixture(patch));
+    const p = open(t, {
+      stored: { [key]: original },
+      fileText: JSON.stringify({ ...fixture(), ...patch }),
+    });
+    p.window.loadFromFile({ files: [{}], value: "" });
+    assert.equal(p.storage.get(key), original);
+    assert.equal(p.confirms.length, 0);
+  }
+});
+
+test("paper titles are literal text in the QE planner and full report, and summaries omit paper details", (t) => {
+  const data = fixture({
+    constellation: "II",
+    qePrepDone: ["presentationReady"],
+  });
+  const title = '<img src=x onerror="window.injected=true">';
+  data.qePapers[0] = { title, courseId: "f1", ready: true };
+  const p = open(t, { hash: share(data) });
+  p.window.selectTab("qe");
+  assert.equal(p.document.getElementById("qe-paper-title-0").value, title);
+  assert.equal(p.document.querySelector("img"), null);
+  assert.equal(p.document.getElementById("qe-paper-ready-0").disabled, true);
+  assert.equal(
+    p.document.getElementById("qe-prep-presentationReady").disabled,
+    true,
+  );
+  p.window.updateQePaper(0, "title", "changed");
+  p.window.toggleQePrep("presentationReady");
+  p.window.toggleQeMilestone("ms9");
+  p.window.toggleQeCourse("f1");
+  assert.deepEqual(read(p), data);
+  const full = p.window.generatePrintHTML();
+  assert.match(full, /&lt;img/);
+  assert.doesNotMatch(full, /<img/);
+  assert.doesNotMatch(
+    p.window.generatePrintHTML(true),
+    /QE papers|Untitled|presentation prepared|&lt;img/,
+  );
+  assert.equal(p.storage.has(key), false);
+});
+
+test("paper and preparation details round-trip through backups and sharing, and old links cannot inherit them", async (t) => {
+  const data = fixture({
+    constellation: "II",
+    qePrepDone: ["materialsSubmitted"],
+  });
+  data.qePapers[0] = {
+    title: "Example packet paper",
+    courseId: "f1",
+    ready: true,
+  };
+  const restored = open(t, {
+    fileText: JSON.stringify({
+      app: "papa-phd-tracker",
+      schemaVersion: 1,
+      ...data,
+    }),
+  });
+  restored.window.loadFromFile({ files: [{}], value: "" });
+  assert.deepEqual(read(restored), data);
+  let copied;
+  Object.defineProperty(restored.window.navigator, "clipboard", {
+    value: {
+      writeText: async (value) => {
+        copied = value;
+      },
+    },
+  });
+  restored.window.toggleSettings();
+  restored.window.previewShareLink();
+  await restored.window.copyShareLink();
+  const viewer = open(t, { hash: new URL(copied).hash });
+  assert.deepEqual(read(viewer).qePapers, data.qePapers);
+  assert.deepEqual(read(viewer).qePrepDone, data.qePrepDone);
+  const old = { ...data };
+  delete old.qePapers;
+  delete old.qePrepDone;
+  const oldViewer = open(t, {
+    hash: share(old),
+    stored: { [key]: JSON.stringify(data) },
+  });
+  assert.deepEqual(read(oldViewer).qePapers, Data.initial.qePapers);
+  assert.deepEqual(read(oldViewer).qePrepDone, []);
+  assert.equal(
+    JSON.parse(oldViewer.storage.get(key)).qePapers[0].title,
+    "Example packet paper",
+  );
 });

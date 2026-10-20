@@ -74,10 +74,13 @@ pushes and pull requests and rejects a calculator build that differs from its
 source. Its deployment remains the normal GitHub Pages branch workflow.
 
 The tracker uses `site-data.js` for guarded persistence and `tracker-data.js` for
-its backup schema. Rendering and interaction live in `tracker.js`. Version 1.03 uses the September
+its backup schema. Rendering and interaction live in `tracker.js`. Version 1.04 uses the September
 2026 CPAP guide and current program guidance that future QEs use constellations.
-The Milestones tab saves constellation I–IV and a custom pair when applicable;
-Dashboard and full reports show coursework readiness. Eligibility requires five
+The QE plan tab saves constellation I–IV and a custom pair when applicable;
+Dashboard and full reports show coursework readiness. The QE plan also shows
+course completion controls, two required and two optional papers, and exam
+preparation checkboxes. Paper details and preparation are additive saved fields;
+existing QE milestones are reused without inferring individual paper completion. Eligibility requires five
 of six foundation courses, PAPA 6294, PAPA 6514, and all chosen constellation
 courses. Keep the `phd-tracker-v2` storage key, existing course/milestone IDs and
 schema-1 backup support: constellation fields are additive and default to empty
