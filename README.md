@@ -74,7 +74,7 @@ pushes and pull requests and rejects a calculator build that differs from its
 source. Its deployment remains the normal GitHub Pages branch workflow.
 
 The tracker uses `site-data.js` for guarded persistence and `tracker-data.js` for
-its backup schema. Rendering and interaction live in `tracker.js`. Version 1.05 uses the September
+its backup schema. Rendering and interaction live in `tracker.js`. Version 1.06 uses the September
 2026 CPAP guide and current program guidance that future QEs use constellations.
 The QE plan tab saves constellation I–IV and a custom pair when applicable;
 Dashboard and full reports show coursework readiness. The QE plan also shows
@@ -88,6 +88,18 @@ for older saved plans, backups and links. Loading does not rewrite stored data,
 and choosing a constellation does not alter existing completion checkmarks. The run
 tracker has a separate schema in `projects/run-tracker-data.js`; the scorecard
 schemas and storage keys are maintained independently.
+
+The full report includes a QE course checklist and a requirement reference drawn
+from `requirement-info.js`, the same content used by the Courses popovers. Summary
+reports omit individual plan details. Tracker scripts and new share links use a
+release query parameter; bump these together with the displayed version.
+
+The guide's example share link and `Progress_Report_Example.pdf` use only the
+fictional plan in `tests/fixtures/tracker-example.json`. Run
+`node scripts/build-tracker-example.js /tmp/papa-tracker-example.html` to update
+the example link and generate the report from the real application. Render that
+HTML to the example PDF, inspect every page, and update the guide's PDF version
+parameter with the release. Never generate public examples from a saved plan.
 
 See [the September 2026 audit fixes](AUDIT-FIXES.md) for the fixes, compatibility
 decisions, and verification details.

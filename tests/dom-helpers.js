@@ -82,7 +82,7 @@ function page(
     container.innerHTML = markup;
     const script = container.firstElementChild;
     if (script.type === "application/ld+json") continue;
-    const src = script.getAttribute("src");
+    const src = script.getAttribute("src")?.split(/[?#]/)[0];
     if (src && /^https?:/.test(src)) continue;
     if (src === "runner.js") continue; // Tests control boot and command submission explicitly.
     const scriptFile = src?.startsWith("/")

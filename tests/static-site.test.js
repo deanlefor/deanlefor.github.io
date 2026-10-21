@@ -69,7 +69,7 @@ test("the guide share link contains valid example data and points to the tracker
     const href = dom.window.document
       .querySelector('a[href*="#view="]')
       .getAttribute("href");
-    assert.ok(href.startsWith("tracker.html#view="));
+    assert.ok(/^tracker\.html\?v=[\d.]+#view=/.test(href));
     const data = validate(
       JSON.parse(
         decodeURIComponent(
@@ -80,6 +80,7 @@ test("the guide share link contains valid example data and points to the tracker
     assert.equal(data.userName, "Example student");
     assert.equal(data.userEmail, "");
     assert.ok(data.done.length > 0);
+    assert.deepEqual(data, require("./fixtures/tracker-example.json"));
   } finally {
     dom.window.close();
   }

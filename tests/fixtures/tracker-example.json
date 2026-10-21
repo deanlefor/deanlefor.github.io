@@ -1,0 +1,51 @@
+{
+  "done": ["f1", "f2", "f3", "f5", "f6", "m1", "m3", "c1", "d1"],
+  "mdone": ["ms1", "ms2", "ms3", "ms4", "ms5"],
+  "dmp": 6,
+  "assign": {
+    "f1": "f2025",
+    "f2": "f2025",
+    "m1": "f2025",
+    "f3": "s2026",
+    "f5": "s2026",
+    "f6": "s2026",
+    "m3": "f2026",
+    "c1": "f2026",
+    "d1": "u2026",
+    "f4": "s2027",
+    "m2": "s2027",
+    "c2": "s2027",
+    "c3": "f2027",
+    "l1": "s2028",
+    "k1": "s2028",
+    "el1": "_transfer",
+    "el2": "_transfer"
+  },
+  "names": {
+    "m3": "Example Advanced Qualitative Methods",
+    "c1": "Example Organizational Theory Study",
+    "c2": "Example Public Management Study",
+    "c3": "Example Policy Implementation Study",
+    "el1": "Example Graduate Elective A",
+    "el2": "Example Graduate Elective B"
+  },
+  "termDone": ["f2025", "s2026"],
+  "startSem": "fall",
+  "startYear": 2025,
+  "darkMode": false,
+  "userName": "Example student",
+  "userEmail": "",
+  "constellation": "IV",
+  "customConstellationCourses": ["f1", "m2"],
+  "qePapers": [
+    {
+      "title": "Example: Administrative Theory",
+      "courseId": "f1",
+      "ready": true
+    },
+    { "title": "Example: Policy Inquiry", "courseId": "m2", "ready": false },
+    { "title": "Example: Policy Processes", "courseId": "f3", "ready": true },
+    { "title": "", "courseId": "", "ready": false }
+  ],
+  "qePrepDone": ["presentationReady"]
+}

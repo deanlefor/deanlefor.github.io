@@ -61,6 +61,21 @@
   };
   let active = null;
 
+  // Use the same copy in the full report; printed notes need no popup controls.
+  function renderPrintNotes() {
+    const escape = global.SiteData.escapeHtml;
+    return `<section class="page-break requirement-reference" aria-labelledby="requirement-reference-title">
+      <h2 class="sec-title" id="requirement-reference-title">Requirement reference</h2>
+      <p class="requirement-approval">Confirm course eligibility and Plan of Study placement with the appropriate faculty advisor.</p>
+      <div class="requirement-reference-columns">${Object.entries(explanations)
+        .map(
+          ([key, info]) =>
+            `<section class="requirement-note" data-requirement-note="${key}"><h3>${escape(info.title)}</h3>${info.paragraphs.map((text) => `<p>${escape(text)}</p>`).join("")}</section>`,
+        )
+        .join("")}</div>
+    </section>`;
+  }
+
   function render(key) {
     const info = Object.hasOwn(explanations, key) ? explanations[key] : null;
     if (!info) return "";
@@ -161,5 +176,5 @@
     true,
   );
 
-  global.RequirementInfo = { render, close };
+  global.RequirementInfo = { render, renderPrintNotes, close };
 })(window);

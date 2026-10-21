@@ -2,7 +2,7 @@ const BL = "#378ADD",
   GR = "#639922",
   AM = "#BA7517";
 const KEY = "phd-tracker-v2";
-const VERSION = "v1.05";
+const VERSION = "v1.06";
 const escapeHtml = SiteData.escapeHtml;
 const dataStore = SiteData.createStore({
   key: KEY,
@@ -779,19 +779,31 @@ function renderQePrepCheck(id, label, desc) {
 
 function renderQePrintPlan() {
   const courses = allCourses();
-  return `<div style="margin-bottom:24px;break-inside:avoid"><div class="sec-title">QE papers and preparation</div>
+  const qe = qeReadiness();
+  return `<section style="margin-bottom:24px"><h2 class="sec-title">QE coursework checklist</h2>
+    <p style="font-size:11px;margin-bottom:8px">Complete at least five of the six foundations, both research prerequisites, and every course in your selected constellation. Only recorded completions and approved transfers count.</p>
+    <ul class="qe-print-courses">${courses
+      .filter((c) => c.bid === "foundation" || ["m1", "m2"].includes(c.id))
+      .map(
+        (c) =>
+          `<li>${isDone(c.id) ? "&#10003; Completed:" : "Pending:"} <strong>${c.code}</strong> — ${escapeHtml(courseName(c))}${qe.courses.includes(c.id) ? " · Constellation" : ""}${state.assign[c.id] === "_transfer" ? " · Approved transfer" : ""}</li>`,
+      )
+      .join("")}</ul>
+    ${!qe.selectionComplete ? '<p style="font-size:11px;margin-top:8px">Finish your constellation selection to confirm the required constellation courses.</p>' : ""}
+    </section>
+    <section style="margin-bottom:24px"><h2 class="sec-title">QE papers and preparation</h2>
+    <p style="font-size:11px;margin-bottom:8px">${qePaperStatus()}</p>
     ${state.qePapers
       .map((paper, i) => {
         if (i > 1 && !paper.title && !paper.courseId && !paper.ready) return "";
         const c = courses.find((c) => c.id === paper.courseId);
         const eligible =
           i > 1 ||
-          (qeReadiness().selectionComplete &&
-            qeReadiness().courses.includes(paper.courseId));
+          (qe.selectionComplete && qe.courses.includes(paper.courseId));
         return `<p style="font-size:11px;margin:5px 0">Paper ${i + 1}${i > 1 ? " (optional)" : ""}: ${escapeHtml(paper.title || "Untitled")} · ${c ? c.code + " — " + c.name : "Course not selected"} · ${paper.ready ? "Marked ready" : "Pending"}${!eligible ? " · Check constellation course" : ""}</p>`;
       })
       .join("")}
-    <p style="font-size:11px;margin-top:8px">Written materials submitted: ${state.qePrepDone.includes("materialsSubmitted") ? "yes" : "pending"}. Oral presentation prepared: ${state.qePrepDone.includes("presentationReady") ? "yes" : "pending"}. See Milestones for the recorded request, packet, essay, oral engagement, and exam result.</p></div>`;
+    <p style="font-size:11px;margin-top:8px">Written materials submitted: ${state.qePrepDone.includes("materialsSubmitted") ? "yes" : "pending"}. Oral presentation prepared: ${state.qePrepDone.includes("presentationReady") ? "yes" : "pending"}. See Milestones for the recorded request, packet, essay, oral engagement, and exam result.</p></section>`;
 }
 
 // Apply only validated snapshots. UI-only state and the stored key stay unchanged.
@@ -1568,7 +1580,8 @@ function render() {
       >
       <div style="display:flex;align-items:center;gap:14px">
         <a href="privacy.html">Privacy</a>
-        <a href="tracker-guide.html" target="_blank">User Guide</a
+        <a href="tracker-guide.html?v=${VERSION.slice(1)}" target="_blank"
+          >User Guide</a
         ><a href="index.html">deanlefor.com</a>
       </div>
     </div>
@@ -1970,7 +1983,7 @@ async function copyShareLink() {
   const url =
     window.location.origin +
     window.location.pathname +
-    "#view=" +
+    `?v=${VERSION.slice(1)}#view=` +
     btoa(encodeURIComponent(JSON.stringify(snapshot)));
   try {
     await navigator.clipboard.writeText(url);
@@ -2079,7 +2092,7 @@ function generatePrintHTML(summaryOnly = false) {
   const mileRows = MILESTONES.map((m) => {
     const done = state.mdone.has(m.id);
     return /* HTML */ `<div
-      style="display:flex;gap:10px;padding:5px 0;border-bottom:.5px solid #eee;align-items:flex-start"
+      style="display:flex;gap:10px;padding:5px 0;border-bottom:.5px solid #eee;align-items:flex-start;break-inside:avoid"
     >
       <div
         style="width:15px;height:15px;border-radius:50%;border:1.5px solid ${done ? "#639922" : "#861F41"};background:${done ? "#639922" : "white"};flex-shrink:0;margin-top:2px;display:flex;align-items:center;justify-content:center;font-size:9px;color:white"
@@ -2100,7 +2113,7 @@ function generatePrintHTML(summaryOnly = false) {
   }).join("");
 
   return /* HTML */ `<!DOCTYPE html>
-    <html>
+    <html lang="en">
       <head>
         <meta charset="UTF-8" />
         <title>PAPA PhD Progress Report — ${startLabel}</title>
@@ -2144,7 +2157,52 @@ function generatePrintHTML(summaryOnly = false) {
             padding-bottom: 4px;
             margin-bottom: 12px;
           }
+          .qe-print-courses {
+            list-style: none;
+            padding: 0;
+            columns: 2;
+            column-gap: 24px;
+            font-size: 11px;
+          }
+          .qe-print-courses li {
+            break-inside: avoid;
+            padding: 4px 0;
+          }
+          .requirement-reference-columns {
+            columns: 2;
+            column-gap: 24px;
+          }
+          .requirement-note {
+            break-inside: avoid;
+            margin-bottom: 14px;
+          }
+          .requirement-note h3 {
+            font-size: 11px;
+            line-height: 1.5;
+            color: #861f41;
+            margin-bottom: 4px;
+          }
+          .requirement-note p,
+          .requirement-approval {
+            font-size: 11px;
+            line-height: 1.6;
+            margin-bottom: 8px;
+          }
+          .requirement-approval {
+            color: #666;
+            margin-bottom: 14px;
+          }
+          @media screen and (max-width: 600px) {
+            .qe-print-courses,
+            .requirement-reference-columns {
+              columns: 1;
+            }
+          }
           @media print {
+            @page {
+              size: letter;
+              margin: 0.45in;
+            }
             .no-print {
               display: none;
             }
@@ -2156,6 +2214,18 @@ function generatePrintHTML(summaryOnly = false) {
             }
             .page-break {
               page-break-before: always;
+            }
+            .requirement-note,
+            .qe-print-courses li {
+              break-inside: avoid;
+            }
+            h2,
+            h3 {
+              break-after: avoid;
+            }
+            p {
+              orphans: 3;
+              widows: 3;
             }
           }
         </style>
@@ -2226,7 +2296,7 @@ function generatePrintHTML(summaryOnly = false) {
                     </p>
                   </div>
                   ${renderQePrintPlan()}
-                  <div style="margin-bottom:24px">
+                  <div class="page-break" style="margin-bottom:24px">
                     <div class="sec-title">Semester plan</div>
                     ${
                       xferCourses.length
@@ -2278,21 +2348,22 @@ function generatePrintHTML(summaryOnly = false) {
                         : '<div style="font-size:12px;color:#999;padding:8px 0">No courses scheduled yet.</div>'
                     }
                   </div>
-                  <div class="page-break" style="margin-bottom:24px">
+                  <div style="margin-bottom:24px">
                     <div class="sec-title">Course completion</div>
                     <div style="columns:2;column-gap:24px">${courseList}</div>
                   </div>
-                  <div style="margin-bottom:24px">
+                  <div class="page-break" style="margin-bottom:24px">
                     <div class="sec-title">Milestones</div>
                     ${mileRows}
-                  </div>`
+                  </div>
+                  ${RequirementInfo.renderPrintNotes()}`
           }
           <div
             style="font-size:10px;color:#aaa;border-top:1px solid #eee;padding-top:10px;margin-top:8px"
           >
-            Generated by PAPA PhD Tracker · deanlefor.com/tracker.html · For
-            planning purposes only — confirm all requirements with your advisor
-            and the VT Graduate School.
+            Generated by PAPA PhD Tracker ${VERSION} ·
+            deanlefor.com/tracker.html · For planning purposes only — confirm
+            all requirements with your advisor and the VT Graduate School.
           </div>
         </div>
       </body>
