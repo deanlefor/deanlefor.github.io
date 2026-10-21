@@ -2,7 +2,7 @@ const BL = "#378ADD",
   GR = "#639922",
   AM = "#BA7517";
 const KEY = "phd-tracker-v2";
-const VERSION = "v1.04";
+const VERSION = "v1.05";
 const escapeHtml = SiteData.escapeHtml;
 const dataStore = SiteData.createStore({
   key: KEY,
@@ -108,6 +108,7 @@ const STATIC_BUCKETS = [
         tag: "Flex",
         tc: AM,
         note: "Quantitative or qualitative techniques",
+        renameable: true,
       },
     ],
   },
@@ -124,6 +125,7 @@ const STATIC_BUCKETS = [
         cr: 3,
         tag: "Flex",
         tc: AM,
+        renameable: true,
       },
       {
         id: "c2",
@@ -132,6 +134,7 @@ const STATIC_BUCKETS = [
         cr: 3,
         tag: "Flex",
         tc: AM,
+        renameable: true,
       },
       {
         id: "c3",
@@ -140,6 +143,7 @@ const STATIC_BUCKETS = [
         cr: 3,
         tag: "Flex",
         tc: AM,
+        renameable: true,
       },
     ],
   },

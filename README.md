@@ -74,7 +74,7 @@ pushes and pull requests and rejects a calculator build that differs from its
 source. Its deployment remains the normal GitHub Pages branch workflow.
 
 The tracker uses `site-data.js` for guarded persistence and `tracker-data.js` for
-its backup schema. Rendering and interaction live in `tracker.js`. Version 1.04 uses the September
+its backup schema. Rendering and interaction live in `tracker.js`. Version 1.05 uses the September
 2026 CPAP guide and current program guidance that future QEs use constellations.
 The QE plan tab saves constellation I–IV and a custom pair when applicable;
 Dashboard and full reports show coursework readiness. The QE plan also shows
