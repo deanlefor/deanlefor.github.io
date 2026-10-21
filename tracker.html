@@ -50,6 +50,24 @@
     .pcourse{display:flex;align-items:center;gap:8px;padding:7px 6px;border-radius:var(--rm);cursor:pointer}
     .pcourse:hover{background:var(--bg2)}
     .ahdr{display:flex;justify-content:space-between;align-items:center;cursor:pointer;user-select:none;padding-bottom:6px}
+    .course-category-header{position:relative;padding-bottom:6px}
+    .course-category-heading,.course-category-title{display:flex;align-items:center;gap:3px;min-width:0}
+    .course-category-heading{justify-content:space-between;gap:8px}
+    .course-category-header button.ahdr{width:auto;display:inline-flex;padding:0;min-width:0;font-size:13px;font-weight:500}
+    .course-category-header button.ahdr::after{content:"";position:absolute;inset:0}
+    .course-category-subtitle{display:block;font-size:11px;color:var(--tx2);margin-top:1px}
+    .course-category-credits{display:flex;align-items:center;gap:8px;flex-shrink:0;font-size:12px;font-weight:500}
+    .requirement-info{position:relative;display:inline-flex;vertical-align:middle;flex-shrink:0;z-index:1}
+    .requirement-info.is-open{z-index:1001}
+    .requirement-info-trigger,.requirement-info-close{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border:0;border-radius:50%;background:transparent;color:var(--tx2);font:inherit;font-size:15px;cursor:pointer;flex-shrink:0}
+    .requirement-info-trigger{margin:-4px 0}
+    .requirement-info-trigger:hover,.requirement-info-trigger[aria-expanded="true"],.requirement-info-close:hover{color:var(--accent);background:var(--bg2)}
+    .requirement-popover{position:fixed;z-index:1000;display:block;width:min(320px,calc(100vw - 24px));max-height:min(24rem,calc(100vh - 24px));overflow-y:auto;overscroll-behavior:contain;padding:12px 14px;background:var(--bg1);color:var(--tx1);border:1px solid var(--bd2);border-radius:var(--rl);box-shadow:0 8px 24px rgba(0,0,0,.18);font-size:12px;font-weight:400;line-height:1.6;cursor:default}
+    .requirement-popover[hidden]{display:none}
+    .requirement-popover-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;font-size:13px;font-weight:600;line-height:1.4}
+    .requirement-popover-heading .requirement-info-close{margin-top:-4px;margin-right:-6px}
+    .requirement-popover-paragraph{display:block;margin-top:8px}
+    .requirement-popover-approval{display:block;margin-top:10px;padding-top:8px;border-top:1px solid var(--bd1);color:var(--tx2);font-size:11px}
     .crow{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-bottom:0.5px solid var(--bd1);cursor:pointer}
     .crow:last-child{border-bottom:none}
     .code{font-size:10px;font-family:var(--mono);background:var(--bg2);padding:1px 5px;border-radius:3px;color:var(--tx2);font-weight:500}
@@ -73,6 +91,7 @@
 <div id="app"></div>
 <script src="site-data.js"></script>
 <script src="tracker-data.js"></script>
+<script src="requirement-info.js"></script>
 <script src="tracker.js"></script>
 </body>
 </html>

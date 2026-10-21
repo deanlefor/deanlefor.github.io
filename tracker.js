@@ -1382,27 +1382,35 @@ function renderCourses() {
           class="card"
           style="${b.earned >= b.req ? "border-color:" + GR + "44" : ""}"
         >
-          <button
-            type="button"
-            class="ahdr"
-            aria-expanded="${io}"
-            onclick="toggleBucket('${b.id}')"
-          >
+          <div class="course-category-header">
+            <div class="course-category-heading">
+              <div class="course-category-title">
+                <button
+                  type="button"
+                  class="ahdr"
+                  aria-expanded="${io}"
+                  aria-describedby="course-category-summary-${b.id}"
+                  onclick="toggleBucket('${b.id}')"
+                >
+                  ${b.name}
+                </button>
+                ${RequirementInfo.render(b.id)}
+              </div>
+              <span class="course-category-credits"
+                ><span style="color:${b.earned >= b.req ? GR : BL}"
+                  >${b.earned}/${b.req} cr.</span
+                ><span style="color:var(--tx2)" aria-hidden="true"
+                  >${io ? "&#9650;" : "&#9660;"}</span
+                ></span
+              >
+            </div>
             <span
-              ><span style="font-size:13px;font-weight:500">${b.name}</span
-              ><span
-                style="display:block;font-size:11px;color:var(--tx2);margin-top:1px"
-                >${b.sub}</span
-              ></span
-            ><span style="display:flex;align-items:center;gap:8px"
-              ><span
-                style="font-size:12px;font-weight:500;color:${b.earned >= b.req ? GR : BL}"
-                >${b.earned}/${b.req} cr.</span
-              ><span style="font-size:12px;color:var(--tx2)"
-                >${io ? "&#9650;" : "&#9660;"}</span
-              ></span
-            ></button
-          >${
+              class="course-category-subtitle"
+              id="course-category-summary-${b.id}"
+              >${b.sub}</span
+            >
+          </div>
+          ${
             io
               ? /* HTML */ `<div
                   style="border-top:0.5px solid var(--bd1);padding-top:4px"
@@ -1486,7 +1494,7 @@ function renderCourses() {
                             <span
                               style="font-size:13px;color:var(--tx${isDone(c.id) ? "3" : "1"});${isDone(c.id) ? "text-decoration:line-through" : ""}"
                               >${escapeHtml(courseName(c))}</span
-                            >${c.renameable ? /* HTML */ `<button data-edit onclick="event.stopPropagation();startRename('${c.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:0 3px;font-size:13px;line-height:1;opacity:.7" aria-label="Rename course">&#9998;</button>` : ""}
+                            >${c.id === "m3" ? RequirementInfo.render("advancedMethods") : ""}${c.renameable ? /* HTML */ `<button data-edit onclick="event.stopPropagation();startRename('${c.id}')" style="background:none;border:none;cursor:pointer;color:var(--tx3);padding:0 3px;font-size:13px;line-height:1;opacity:.7" aria-label="Rename course">&#9998;</button>` : ""}
                           </div>
                           ${c.note && !state.names[c.id] ? /* HTML */ `<div style="font-size:11px;color:var(--tx3);margin-top:1px;font-style:italic">${c.note}</div>` : ""}
                         </div>
@@ -1547,6 +1555,7 @@ function renderMilestones() {
 
 // Main render
 function render() {
+  RequirementInfo.close();
   pendingShare = null;
   const active = document.activeElement;
   const focusAction = active?.closest("[onclick]")?.getAttribute("onclick");
