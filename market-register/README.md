@@ -1,4 +1,4 @@
-# Market Register — version 1.04
+# Market Register — version 1.05
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,11 +6,11 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.04 trial release.** Opens the guide inside the app with a persistent Back to register button. The suggested iPad acceptance checks below still apply.
+> **Version 1.05 trial release.** Category dropdowns stay alphabetical, including newly added categories. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
-The [Version 1.04 user guide](output/pdf/market-register-user-guide-v1.04.pdf)
+The [Version 1.05 user guide](output/pdf/market-register-user-guide-v1.05.pdf)
 is also available as an in-app reader under **Data management → User guide**.
 The **Back to register** button stays visible while scrolling. Opening and
 closing the guide keeps the current sale, payment, and search intact. **Save
@@ -180,7 +180,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.04** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.05** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 

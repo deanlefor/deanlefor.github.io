@@ -78,11 +78,42 @@ test('categories are a dropdown, include legacy custom names, and reject an arbi
   try {
     page.open();
     assert.equal(page.byId('product-category').tagName, 'SELECT');
-    assert.deepEqual(page.options(), ['3D Printing', 'Jewelry', 'Bracelets', 'Coasters', 'Pottery']);
+    assert.deepEqual(page.options(), ['3D Printing', 'Bracelets', 'Coasters', 'Jewelry', 'Pottery']);
     await page.saveProduct('Caosters');
     assert.equal(saved.products.length, 2);
     assert.match(page.byId('toast').textContent, /choose a category/);
     assert.equal(page.byId('product-dialog').open, true);
+  } finally { page.dom.window.close(); }
+});
+
+test('the Products category filter stays alphabetical after additions and restart without losing its selection', async () => {
+  const saved = { products: [
+    { id: 'p1', name: 'Example', category: 'Pottery', priceCents: 1200, active: true },
+  ], shows: [], sales: [], meta: [{ id: 'productCategories', value: ['zebra crafts', 'Woodwork', 'apple crafts'] }] };
+  const page = await app(saved);
+  const initial = ['all', '3D Printing', 'apple crafts', 'Bracelets', 'Coasters', 'Jewelry', 'Pottery', 'Woodwork', 'zebra crafts'];
+  const withNewCategories = ['all', '3D Printing', 'apple crafts', 'Beads', 'Bracelets', 'Coasters', 'Jewelry', 'miniatures', 'Pottery', 'Woodwork', 'zebra crafts'];
+  const filterOptions = current => Array.from(current.byId('manage-category').options, option => option.value);
+  try {
+    page.open();
+    assert.deepEqual(filterOptions(page), initial);
+    page.byId('manage-category').value = 'Pottery';
+    page.byId('manage-search').value = 'Example';
+    await page.addCategory('miniatures');
+    await page.addCategory('Beads');
+    assert.deepEqual(filterOptions(page), withNewCategories);
+    assert.deepEqual(page.options(), withNewCategories.slice(1));
+    assert.equal(page.byId('manage-category').value, 'Pottery');
+    assert.equal(page.byId('manage-search').value, 'Example');
+    assert.equal(page.byId('product-category').value, 'Beads');
+    assert.equal(saved.products.length, 1, 'new categories do not require saving a product');
+    const restarted = await app(saved);
+    try {
+      restarted.open();
+      assert.deepEqual(filterOptions(restarted), withNewCategories);
+      assert.deepEqual(restarted.options(), withNewCategories.slice(1));
+      assert.equal(restarted.byId('product-category').value, 'Beads');
+    } finally { restarted.dom.window.close(); }
   } finally { page.dom.window.close(); }
 });
 
@@ -125,7 +156,7 @@ test('delete all requires a warning, checkbox, exact phrase, and an explicit fin
     assert.deepEqual(saved, { products: [], shows: [], sales: [], meta: [] });
     assert.equal(page.byId('delete-all-dialog').open, false);
     page.open();
-    assert.deepEqual(page.options(), ['3D Printing','Jewelry','Bracelets','Coasters']);
+    assert.deepEqual(page.options(), ['3D Printing','Bracelets','Coasters','Jewelry']);
     assert.equal(page.byId('photo-size').value, '256');
     await page.saveProduct('Coasters');
     assert.equal(saved.products.length, 1);

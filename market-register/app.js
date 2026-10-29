@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.04';
+import * as db from './db.js?v=1.05';
 
-// Market Register 1.04: no backend, analytics, account, or payment API.
+// Market Register 1.05: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -27,7 +27,7 @@ const element = (tag, className = '', text = '') => {
 };
 const safeString = (value) =>
   typeof value === 'string' ? value : String(value ?? '');
-const productNameOrder = new Intl.Collator('en-US', {
+const catalogNameOrder = new Intl.Collator('en-US', {
   sensitivity: 'base',
   numeric: true,
 });
@@ -161,7 +161,7 @@ function categoryList() {
     )
       unique.set(categoryKey(category), category);
   }
-  return [...unique.values()];
+  return [...unique.values()].sort(catalogNameOrder.compare);
 }
 function canonicalCategory(value) {
   return (
@@ -230,10 +230,11 @@ async function addCategory() {
   } finally {
     button.disabled = false;
     state.savingCategory = false;
+    render();
   }
 }
 function sortProducts(products) {
-  return [...products].sort((a, b) => productNameOrder.compare(a.name, b.name));
+  return [...products].sort((a, b) => catalogNameOrder.compare(a.name, b.name));
 }
 function newSKU() {
   const used = new Set(

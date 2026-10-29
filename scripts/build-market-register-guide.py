@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Build the public Version 1.04 guide, using only fictional examples.
+"""Build the public Version 1.05 guide, using only fictional examples.
 
 Requires ReportLab. Run from any directory; the output stays inside the app's
 scope so its service worker can make the guide available offline. Each chapter
@@ -29,7 +29,7 @@ from reportlab.platypus import (
 
 
 ROOT = Path(__file__).resolve().parents[1]
-OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.04.pdf"
+OUTPUT = ROOT / "market-register/output/pdf/market-register-user-guide-v1.05.pdf"
 HTML_OUTPUT = ROOT / "market-register/guide.js"
 TOTAL_PAGES = 12
 FOREST = colors.HexColor("#244c41")
@@ -98,10 +98,10 @@ def page_chrome(canvas, doc):
     canvas.drawString(48, 763, "MARKET REGISTER")
     canvas.setFont("Helvetica", 9)
     canvas.setFillColor(MUTED)
-    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.04")
+    canvas.drawRightString(564, 763, "USER GUIDE  |  VERSION 1.05")
     canvas.line(48, 43, 564, 43)
     canvas.setFont("Helvetica", 8.5)
-    canvas.drawString(48, 29, "Version 1.04 trial guide  |  October 16, 2026")
+    canvas.drawString(48, 29, "Version 1.05 trial guide  |  October 29, 2026")
     canvas.drawRightString(564, 29, f"{doc.page} / {TOTAL_PAGES}")
     canvas.restoreState()
 
@@ -194,7 +194,7 @@ def chapter(number, title, key):
         story.append(PageBreak())
         html_parts.append('</section>')
     html_parts.append(f'<section id="guide-{html.escape(key, quote=True)}">')
-    p(f"{number:02d}  /  VERSION 1.04", "kicker")
+    p(f"{number:02d}  /  VERSION 1.05", "kicker")
     heading = Paragraph(title, STYLES["title"])
     heading.bookmark_key = key
     story.append(heading)
@@ -259,7 +259,7 @@ h("Manage the catalog")
 bullet("<b>Edit</b> changes the product for future sales. Past sales keep the name, category, and price recorded at the time.")
 bullet("<b>Duplicate</b> creates a variation with a new reference; review its name and price before saving.")
 bullet("<b>Hide</b> removes a product from checkout. To bring it back, check <b>Show hidden products</b> and tap <b>Show</b>.")
-bullet("Use search and category filters to find products. Items appear alphabetically in Products and Register; numbers sort naturally, such as Item 2 before Item 10.")
+bullet("Use search and category filters to find products. Category dropdowns stay alphabetical as you add categories. Items appear alphabetically in Products and Register; numbers sort naturally, such as Item 2 before Item 10.")
 callout("There are no stock quantities. Hide a sold-out item yourself. Hidden products still belong to their categories; category merging and deletion are explained on page 10.")
 
 chapter(4, "Recording a sale", "sales")
@@ -400,7 +400,7 @@ p("After deletion, starter categories return. The app, its offline files, and th
 
 chapter(11, "Refresh and troubleshooting", "help")
 h("Refresh an installed iPad app")
-p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.04</b> in the footer.")
+p("Use <b>Refresh app</b> in the footer while online. Finish or close an open form and record or clear an unfinished sale first. Refresh loads the latest app files without clearing your records. Check for <b>Version 1.05</b> in the footer.")
 p("Open the guide from <b>Data management</b>. Its <b>Back to register</b> button stays visible as you scroll and returns without clearing your sale. The guide works offline after an online load. Use <b>Save PDF copy</b> for Files or printing.")
 h("Another copy changed the records")
 p("Close the other copy. If this copy shows a refresh warning, finish or close its form and use <b>Refresh app</b> to load saved records. Stale writes are blocked. Refreshing a stale copy with unfinished edits can ask permission to discard those edits; read that prompt carefully.")
@@ -433,7 +433,7 @@ bullet("Correct mistakes with Void and a replacement record if needed, then comp
 bullet("Save the Card transactions PDF for later tax work, the Item ledger PDF for the sale-by-sale record, and the Show summary PDF for an overview.")
 bullet("Save the Excel export if you are updating your existing workbook.")
 bullet("Save a new full backup and verify the actual file. Keep a copy off the iPad.")
-h("During the Version 1.04 trial")
+h("During the Version 1.05 trial")
 p("Use this version for the planned week or two and note anything confusing or missing. Useful notes include the device, app version, what you tapped, what you expected, and what happened. Keep your full backups and exported sales files private.")
 callout("<b>Three things to remember:</b><br/>Check the show. Check the payment method. Save and verify a full backup after every show.")
 
@@ -443,8 +443,8 @@ def main():
     doc = GuideDocument(
         str(OUTPUT), pagesize=letter, leftMargin=48, rightMargin=48,
         topMargin=58, bottomMargin=56, pageCompression=1, invariant=1,
-        title="Market Register - Version 1.04 User Guide",
-        author="Market Register", subject="How to use Market Register Version 1.04",
+        title="Market Register - Version 1.05 User Guide",
+        author="Market Register", subject="How to use Market Register Version 1.05",
         creator="Market Register user guide builder",
     )
     frame = Frame(48, 56, WIDTH, 678, leftPadding=0, rightPadding=0,
