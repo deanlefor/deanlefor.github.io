@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.08';
+import * as db from './db.js?v=1.09';
 
-// Market Register 1.08: no backend, analytics, account, or payment API.
+// Market Register 1.09: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -79,6 +79,7 @@ let reportRevision = 0;
 let savingGuidePdf = false;
 let categoryCache = null;
 let registerCatalog = null;
+let cartScrollUpdatePending = false;
 const dataChannel =
   typeof BroadcastChannel === 'function'
     ? new BroadcastChannel('market-register-data')
@@ -654,6 +655,36 @@ function decreaseCart(id) {
   persistCart();
   renderRegister();
 }
+function updateCartScrollControls() {
+  const list = byId('cart-items');
+  const overflow = list.clientHeight > 0 && list.scrollHeight > list.clientHeight + 1;
+  const top = Math.max(0, list.scrollTop);
+  byId('cart-scroll-controls').hidden = !overflow;
+  byId('cart-scroll-up').disabled = !overflow || top <= 1;
+  byId('cart-scroll-down').disabled =
+    !overflow || top + list.clientHeight >= list.scrollHeight - 1;
+}
+function scheduleCartScrollUpdate() {
+  if (cartScrollUpdatePending) return;
+  if (typeof requestAnimationFrame !== 'function') {
+    updateCartScrollControls();
+    return;
+  }
+  cartScrollUpdatePending = true;
+  requestAnimationFrame(() => {
+    cartScrollUpdatePending = false;
+    updateCartScrollControls();
+  });
+}
+function scrollCurrentSale(direction) {
+  const list = byId('cart-items');
+  list.scrollBy({
+    top: direction * Math.max(80, list.clientHeight * 0.8),
+    behavior: window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
+      ? 'auto'
+      : 'smooth',
+  });
+}
 function renderCart() {
   document.querySelectorAll('input[name="payment"]').forEach((input) => {
     input.disabled = saving() || state.stale;
@@ -781,6 +812,8 @@ function renderCart() {
       ? `Recorded ${money(sale.totalCents)}.${state.lastCashChangeCents !== null ? ` Change due: ${money(state.lastCashChangeCents)}.` : ''}`
       : 'Sale recorded.';
   }
+  list.tabIndex = breakdown.lines.length ? 0 : -1;
+  scheduleCartScrollUpdate();
 }
 async function clearCurrentSale() {
   if (saving() || state.stale || !hasCurrentSale()) return;
@@ -2314,6 +2347,12 @@ async function refreshApp() {
   }
 }
 function connectEvents() {
+  byId('cart-items').addEventListener('scroll', scheduleCartScrollUpdate, { passive: true });
+  byId('cart-scroll-up').addEventListener('click', () => scrollCurrentSale(-1));
+  byId('cart-scroll-down').addEventListener('click', () => scrollCurrentSale(1));
+  window.addEventListener('resize', scheduleCartScrollUpdate);
+  if (typeof ResizeObserver === 'function')
+    new ResizeObserver(scheduleCartScrollUpdate).observe(byId('cart-items'));
   byId('open-user-guide').addEventListener('click', openUserGuide);
   byId('close-user-guide').addEventListener('click', () =>
     byId('user-guide-dialog').close(),

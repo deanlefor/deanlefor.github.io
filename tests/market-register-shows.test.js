@@ -69,6 +69,65 @@ function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
 
+test('sale scroll arrows track overflow and position, resize, and clear without changing saved records', { timeout: 5000 }, async () => {
+  const data = records();
+  data.products = Array.from({ length: 8 }, (_, i) => ({ ...data.products[0], id: `p${i + 1}`, sku: `ITEM-${i + 1}`, name: `Item ${i + 1}` }));
+  const app = await page(data);
+  try {
+    const list = app.byId('cart-items');
+    let height = 180;
+    let scrollTop = 0;
+    Object.defineProperties(list, {
+      clientHeight: { get: () => height },
+      scrollHeight: { get: () => Math.max(height, list.querySelectorAll('.cart-item').length * 105) },
+      scrollTop: { get: () => scrollTop, set: value => { scrollTop = Math.max(0, Math.min(value, list.scrollHeight - height)); } },
+    });
+    app.dom.window.matchMedia = () => ({ matches: true });
+    list.scrollBy = ({ top, behavior }) => {
+      assert.equal(behavior, 'auto', 'scroll arrows respect reduced motion');
+      list.scrollTop += top;
+      list.dispatchEvent(new app.dom.window.Event('scroll'));
+    };
+    assert.equal(app.byId('cart-scroll-controls').hidden, true);
+    let draftSaved;
+    const saved = new Promise(resolve => { draftSaved = resolve; });
+    const setMeta = app.db.setMeta;
+    app.db.setMeta = async (id, value) => {
+      await setMeta(id, value);
+      if (id === 'draftCart' && Object.keys(value).length === 8) draftSaved();
+    };
+    for (const tile of app.byId('product-grid').children) tile.click();
+    await saved;
+    assert.equal(list.tabIndex, 0);
+    assert.equal(app.byId('cart-scroll-controls').hidden, false);
+    assert.equal(app.byId('cart-scroll-up').disabled, true);
+    assert.equal(app.byId('cart-scroll-down').disabled, false);
+    const beforeScrolling = copy(await app.db.snapshot());
+    app.byId('cart-scroll-down').click();
+    assert.ok(list.scrollTop > 0);
+    assert.equal(app.byId('cart-scroll-up').disabled, false);
+    for (let i = 0; i < 10 && !app.byId('cart-scroll-down').disabled; i++) app.byId('cart-scroll-down').click();
+    assert.equal(list.scrollTop + list.clientHeight, list.scrollHeight);
+    assert.equal(app.byId('cart-scroll-down').disabled, true);
+    app.byId('cart-scroll-up').click();
+    assert.equal(app.byId('cart-scroll-down').disabled, false);
+    assert.deepEqual(copy(await app.db.snapshot()), beforeScrolling, 'scrolling never writes records or basket changes');
+
+    height = 1000;
+    app.dom.window.dispatchEvent(new app.dom.window.Event('resize'));
+    assert.equal(app.byId('cart-scroll-controls').hidden, true, 'arrows disappear when all rows fit');
+    height = 180;
+    list.scrollTop = 0;
+    app.dom.window.dispatchEvent(new app.dom.window.Event('resize'));
+    assert.equal(app.byId('cart-scroll-controls').hidden, false);
+    app.byId('clear-cart').click();
+    await app.settle();
+    assert.equal(app.byId('cart-scroll-controls').hidden, true);
+    assert.equal(list.tabIndex, -1);
+    for (const store of ['products', 'shows', 'sales']) assert.deepEqual(copy(await app.db.getAll(store)), beforeScrolling[store]);
+  } finally { app.dom.window.close(); }
+});
+
 test('hiding a product requires confirmation, cancellation preserves records, and showing needs no prompt', async () => {
   const app = await page();
   try {

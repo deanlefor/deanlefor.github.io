@@ -1,4 +1,4 @@
-# Market Register — version 1.08
+# Market Register — version 1.09
 
 A small, locally stored sales register for an iPad at a farmers market or craft booth.
 
@@ -6,13 +6,13 @@ A small, locally stored sales register for an iPad at a farmers market or craft 
 
 **What it deliberately does NOT do:** accept payments, synchronize to the cloud, require an account or subscription, keep quantities on hand, calculate production costs, or modify your existing Excel workbook directly.
 
-> **Version 1.08 trial release.** Hiding a product now requires confirmation, and the Products search has a clear (X) button matching Register. Clearing search keeps category and hidden-product filters. Rapid product taps add items without double-tap zoom. Scrolling and pinch zoom remain available. Includes the large-catalog performance improvements and alphabetical category dropdowns. Saved records, database structure, pricing, and the backup format are unchanged. The suggested iPad acceptance checks below still apply.
+> **Version 1.09 trial release.** The Products search expands to use available toolbar space. Current sale shows scroll arrows when more items extend beyond the visible list; the arrows update as you scroll. Includes the earlier product-control and performance improvements. Saved records, database structure, pricing, and the backup format are unchanged. The suggested iPad acceptance checks below still apply.
 
 ## User guide
 
 The [Version 1.05 user guide](output/pdf/market-register-user-guide-v1.05.pdf)
 is also available as an in-app reader under **Data management → User guide**.
-The same guide applies to version 1.08; checkout controls and saved records are unchanged.
+The same guide applies to version 1.09; checkout controls and saved records are unchanged.
 The **Back to register** button stays visible while scrolling. Opening and
 closing the guide keeps the current sale, payment, and search intact. **Save
 PDF copy** uses the share/download flow without navigating the app into a PDF.
@@ -181,7 +181,7 @@ Open the exported workbook and copy the item rows into the existing workbook's `
 
 Use **Refresh app** in the footer while online to load the latest app files. Finish or close any open form and record or clear a pending sale first. The button does not clear records or browser storage. Updated page assets have versioned URLs, and the offline worker revalidates app files while online.
 
-If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.08** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
+If an older copy does not yet have the button, reload the Safari page (or fully close and reopen the Home Screen app while online) and check for **Version 1.09** in the footer before exporting again. Close older copies before updating; the storage upgrade retains the same records and prevents older code from writing over them.
 
 ## PDF reports and payment choices
 
