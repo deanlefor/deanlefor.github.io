@@ -69,6 +69,130 @@ function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
 
+test('a 430-product catalog retains its tiles and photos through basket edits, clearing, backup, and checkout', async () => {
+  const data = records();
+  const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=';
+  data.products[0].photo = photo;
+  for (let i = 2; i <= 430; i++) data.products.push({
+    id: `p${i}`, sku: `MR-${String(i).padStart(4, '0')}`, name: `Item ${i}`,
+    category: `Category ${i % 20}`, priceCents: 400, promoEligible: true, active: true, photo,
+  });
+  data.meta.push({ id: 'photoSize', value: 512 }, { id: 'productCategories', value: ['Custom category'] });
+  const app = await page(data);
+  let releaseClear = () => {};
+  try {
+    const before = copy(await app.db.snapshot());
+    const tiles = [...app.byId('product-grid').children];
+    const images = tiles.map(tile => tile.querySelector('img'));
+    const lowerCase = app.dom.window.String.prototype.toLocaleLowerCase;
+    let categoryWork = 0;
+    app.dom.window.String.prototype.toLocaleLowerCase = function(...args) {
+      categoryWork++;
+      return lowerCase.apply(this, args);
+    };
+    const sameCatalog = () => {
+      const currentTiles = [...app.byId('product-grid').children];
+      assert.equal(currentTiles.length, tiles.length);
+      tiles.forEach((tile, i) => {
+        assert.equal(currentTiles[i], tile, 'basket edits retain the product buttons');
+        assert.equal(currentTiles[i].querySelector('img'), images[i], 'basket edits retain the photo elements');
+      });
+    };
+    for (let i = 0; i < 3; i++) tiles[0].click();
+    await app.settle();
+    assert.ok(categoryWork < 2000, 'ordinary taps must not repeatedly normalize the whole catalog');
+    sameCatalog();
+    assert.equal(tiles[0].querySelector('.cart-bubble').textContent, '3');
+    assert.match(tiles[0].getAttribute('aria-label'), /3 in cart/);
+    app.byId('cart-items').querySelector('button[aria-label="Remove one Example"]').click();
+    await app.settle();
+    sameCatalog();
+    assert.equal(tiles[0].querySelector('.cart-bubble').textContent, '2');
+    assert.deepEqual(copy(await app.db.getMeta('draftCart')), { p1: 2 });
+
+    const setMetaValues = app.db.setMetaValues;
+    const clearing = new Promise(resolve => { releaseClear = resolve; });
+    app.db.setMetaValues = async values => { await clearing; return setMetaValues(values); };
+    app.byId('clear-cart').click();
+    await app.settle();
+    sameCatalog();
+    assert.ok(tiles.every(tile => tile.disabled), 'existing buttons stay blocked while clearing is saved');
+    assert.equal(tiles[0].querySelector('.cart-bubble').textContent, '2', 'basket stays intact until storage succeeds');
+    releaseClear();
+    await app.settle();
+    sameCatalog();
+    assert.ok(tiles.every(tile => !tile.disabled));
+    assert.equal(tiles[0].querySelector('.cart-bubble'), null);
+    assert.doesNotMatch(tiles[0].getAttribute('aria-label'), /in cart/);
+    assert.deepEqual(copy(await app.db.getMeta('draftCart')), {});
+    for (const store of ['products', 'shows', 'sales'])
+      assert.deepEqual(copy(await app.db.getAll(store)), before[store], `${store} remain unchanged`);
+    assert.equal(await app.db.getMeta('photoSize'), 512);
+
+    app.view('backup');
+    app.byId('create-backup').click();
+    await app.settle();
+    const backup = JSON.parse(await app.exports[0].text());
+    require('../market-register/data.js').validateBackup(backup);
+    for (const store of ['products', 'shows', 'sales']) assert.deepEqual(backup.data[store], before[store]);
+    const reopened = await page(backup.data);
+    try {
+      assert.equal(reopened.byId('product-grid').children.length, 430);
+      assert.equal(reopened.byId('product-grid').querySelectorAll('img').length, 430);
+      reopened.byId('product-grid').children[0].click();
+      reopened.byId('complete-sale').click();
+      await reopened.settle();
+      const sales = copy(await reopened.db.getAll('sales'));
+      assert.equal(sales.length, before.sales.length + 1);
+      const recorded = sales.find(row => row.id !== before.sales[0].id);
+      assert.equal(recorded.totalCents, 1200);
+      assert.equal(recorded.lines[0].category, 'Coasters');
+      assert.equal(recorded.paymentMethod, 'Card');
+      assert.deepEqual(copy(await reopened.db.getAll('products')), before.products);
+      assert.deepEqual(copy(await reopened.db.getAll('shows')), before.shows);
+      assert.deepEqual(copy((await reopened.db.getAll('sales')).find(row => row.id === before.sales[0].id)), before.sales[0]);
+      assert.equal(reopened.byId('cart-total').textContent, '$0.00');
+    } finally { reopened.dom.window.close(); }
+  } finally { releaseClear(); app.dom.window.close(); }
+});
+
+test('merging categories and restoring a backup refresh cached catalog choices while retaining sale history', { timeout: 5000 }, async () => {
+  const original = records();
+  const app = await page(original);
+  try {
+    app.view('data');
+    app.dom.window.document.querySelector('button[aria-label="Merge Coasters into another category"]').click();
+    await app.select('merge-category-target', 'Jewelry');
+    app.byId('confirm-category-change').click();
+    await app.settle();
+    app.view('register');
+    const categories = () => [...app.byId('category-tabs').children].map(button => button.textContent);
+    assert.ok(categories().includes('Jewelry'));
+    assert.ok(!categories().includes('Coasters'));
+    assert.equal((await app.db.getAll('products'))[0].category, 'Jewelry');
+    assert.deepEqual(copy(await app.db.getAll('sales')), original.sales, 'merging leaves historical sales intact');
+
+    app.view('backup');
+    const backup = new File([JSON.stringify({ kind: 'market-register-full-backup', version: 1, data: original })], 'fictional-backup.json', { type: 'application/json' });
+    Object.defineProperty(app.byId('restore-file'), 'files', { value: [backup] });
+    const restored = new Promise(resolve => {
+      const observer = new app.dom.window.MutationObserver(() => {
+        if (!app.byId('start-restore').disabled) { observer.disconnect(); resolve(); }
+      });
+      observer.observe(app.byId('start-restore'), { attributes: true, attributeFilter: ['disabled'] });
+    });
+    app.byId('restore-file').dispatchEvent(new app.dom.window.Event('change'));
+    await restored;
+    assert.match(app.byId('toast').textContent, /Backup restored/, app.byId('toast').textContent);
+    app.view('register');
+    assert.ok(categories().includes('Coasters'));
+    assert.ok(!categories().includes('Jewelry'));
+    for (const store of ['products', 'shows', 'sales']) assert.deepEqual(copy(await app.db.getAll(store)), original[store]);
+    assert.equal(app.byId('product-grid').children.length, 1);
+    assert.equal(app.byId('product-grid').children[0].disabled, false);
+  } finally { app.dom.window.close(); }
+});
+
 test('the in-app guide returns to Register without losing the current sale or navigating the page', async () => {
   const app=await page();
   try {

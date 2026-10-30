@@ -117,6 +117,42 @@ test('the Products category filter stays alphabetical after additions and restar
   } finally { page.dom.window.close(); }
 });
 
+test('cached category choices and product tiles refresh after adding, editing, hiding, and showing a product', async () => {
+  const saved = { products: [{ id: 'p1', name: 'Original', category: 'Pottery', priceCents: 1200, active: true }], shows: [], sales: [], meta: [] };
+  const page = await app(saved);
+  const view = name => page.dom.window.document.querySelector(`[data-view="${name}"]`).click();
+  const tabNames = () => [...page.byId('category-tabs').children].map(button => button.textContent);
+  const productCard = () => [...page.byId('manage-product-list').children].find(card => card.querySelector('.manage-title')?.textContent === 'Example Product');
+  try {
+    assert.equal(page.byId('product-grid').children.length, 1);
+    page.open();
+    await page.addCategory('Wax melts');
+    await page.saveProduct('Wax melts');
+    view('register');
+    assert.equal(page.byId('product-grid').children.length, 2);
+    assert.ok(tabNames().includes('Wax melts'));
+    view('products');
+    [...productCard().querySelectorAll('button')].find(button => button.textContent === 'Edit').click();
+    await page.saveProduct('Jewelry');
+    view('register');
+    assert.ok(tabNames().includes('Jewelry'));
+    assert.ok(!tabNames().includes('Wax melts'));
+    view('products');
+    [...productCard().querySelectorAll('button')].find(button => button.textContent === 'Hide').click();
+    await page.settle();
+    view('register');
+    assert.equal(page.byId('product-grid').children.length, 1);
+    assert.ok(!tabNames().includes('Jewelry'));
+    view('products');
+    page.byId('show-hidden').click();
+    [...productCard().querySelectorAll('button')].find(button => button.textContent === 'Show').click();
+    await page.settle();
+    view('register');
+    assert.equal(page.byId('product-grid').children.length, 2);
+    assert.ok(tabNames().includes('Jewelry'));
+  } finally { page.dom.window.close(); }
+});
+
 test('delete all requires a warning, checkbox, exact phrase, and an explicit final click', async () => {
   const saved = { products: [{ id: 'p1', sku: 'MR-0001', name: 'Test product', category: 'Coasters', priceCents: 1200, active: true }], shows: [], sales: [], meta: [{ id: 'productCategories', value: ['Test category'] }, { id: 'draftCart', value: { p1: 2 } }, { id: 'photoSize', value: 512 }] };
   const page = await app(saved);

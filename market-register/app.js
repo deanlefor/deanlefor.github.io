@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.05';
+import * as db from './db.js?v=1.06';
 
-// Market Register 1.05: no backend, analytics, account, or payment API.
+// Market Register 1.06: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -77,6 +77,8 @@ let photoRequestId = 0;
 let preparedPdfUrl = null;
 let reportRevision = 0;
 let savingGuidePdf = false;
+let categoryCache = null;
+let registerCatalog = null;
 const dataChannel =
   typeof BroadcastChannel === 'function'
     ? new BroadcastChannel('market-register-data')
@@ -139,6 +141,12 @@ const cleanCategory = (value) =>
   typeof value === 'string' ? value.trim().replace(/\s+/g, ' ') : '';
 const categoryKey = (value) => cleanCategory(value).toLocaleLowerCase('en-US');
 function categoryList() {
+  if (
+    categoryCache?.products === state.products &&
+    categoryCache.categories === state.categories &&
+    categoryCache.removedCategories === state.removedCategories
+  )
+    return categoryCache.names;
   const unique = new Map();
   const removed = new Set(state.removedCategories.map(categoryKey));
   const used = new Set(
@@ -161,14 +169,20 @@ function categoryList() {
     )
       unique.set(categoryKey(category), category);
   }
-  return [...unique.values()].sort(catalogNameOrder.compare);
+  // Catalog edits replace these arrays. Basket edits can reuse the same names
+  // and lookup without repeatedly scanning every product.
+  categoryCache = {
+    products: state.products,
+    categories: state.categories,
+    removedCategories: state.removedCategories,
+    names: [...unique.values()].sort(catalogNameOrder.compare),
+    byKey: unique,
+  };
+  return categoryCache.names;
 }
 function canonicalCategory(value) {
-  return (
-    categoryList().find(
-      (category) => categoryKey(category) === categoryKey(value),
-    ) || cleanCategory(value)
-  );
+  categoryList();
+  return categoryCache.byKey.get(categoryKey(value)) || cleanCategory(value);
 }
 function fillProductCategories(selected) {
   const select = byId('product-category');
@@ -275,10 +289,14 @@ function totalCount() {
 // Checkout uses shared integer-cent pricing so all exports can reconcile with
 // the recorded total. Invalid edits remain visible and cannot become a sale.
 function priceCart() {
-  const products = state.products.map((product) => ({
-    ...product,
-    category: canonicalCategory(product.category),
-  }));
+  // Keep catalog order for promotion allocation, but only prepare the products
+  // in this basket. Product photos and the rest of the catalog need no work.
+  const products = state.products
+    .filter((product) => state.cart[product.id])
+    .map((product) => ({
+      ...product,
+      category: canonicalCategory(product.category),
+    }));
   const tipCents = dataRules.parseDollarCents(state.tipText);
   const manualDiscountCents = dataRules.parseDollarCents(
     state.manualDiscountText,
@@ -484,6 +502,22 @@ function renderRegister() {
     ? `${show.name} · ${shortDate(show.date)}${show.completedAt ? ' · Completed' : ''}`
     : 'Choose or create an open show';
   byId('register-show-prompt').hidden = Boolean(show && !show.completedAt);
+  const search = byId('register-search');
+  byId('clear-register-search').hidden = !search.value;
+  const filter = search.value.trim().toLocaleLowerCase();
+  if (
+    !registerCatalog ||
+    registerCatalog.products !== state.products ||
+    registerCatalog.categories !== state.categories ||
+    registerCatalog.removedCategories !== state.removedCategories ||
+    registerCatalog.activeCategory !== state.activeCategory ||
+    registerCatalog.filter !== filter
+  )
+    renderRegisterCatalog(filter);
+  updateRegisterTiles();
+  renderCart();
+}
+function renderRegisterCatalog(filter) {
   const tabs = byId('category-tabs');
   tabs.replaceChildren();
   const categories = [
@@ -498,9 +532,6 @@ function renderRegister() {
   if (!categories.includes(state.activeCategory)) state.activeCategory = 'All';
   categories.forEach((cat) => tabs.append(showCategoryButton(cat)));
 
-  const search = byId('register-search');
-  byId('clear-register-search').hidden = !search.value;
-  const filter = search.value.trim().toLocaleLowerCase();
   const shown = sortProducts(
     state.products.filter(
       (p) =>
@@ -515,16 +546,11 @@ function renderRegister() {
   );
   const grid = byId('product-grid');
   grid.replaceChildren();
+  const tiles = new Map();
   for (const product of shown) {
     const tile = element('button', 'product-tile');
     tile.type = 'button';
-    tile.disabled =
-      !show || Boolean(show.completedAt) || saving() || state.stale;
     tile.title = `Add ${product.name}: ${money(product.priceCents)}`;
-    tile.setAttribute(
-      'aria-label',
-      `Add ${product.name}, ${money(product.priceCents)}${state.cart[product.id] ? `, ${state.cart[product.id]} in cart` : ''}`,
-    );
     if (product.photo) {
       const img = element('img', 'tile-picture');
       img.src = product.photo;
@@ -548,10 +574,14 @@ function renderRegister() {
       footer.append(element('span', 'tile-promo', '3 for $10'));
     details.append(footer);
     tile.append(details);
-    const inCart = state.cart[product.id] || 0;
-    if (inCart) tile.append(element('div', 'cart-bubble', String(inCart)));
     tile.addEventListener('click', () => addToCart(product.id));
     grid.append(tile);
+    tiles.set(product.id, {
+      tile,
+      label: `Add ${product.name}, ${money(product.priceCents)}`,
+      quantity: null,
+      bubble: null,
+    });
   }
   const empty = byId('register-empty');
   empty.hidden = shown.length > 0;
@@ -569,7 +599,39 @@ function renderRegister() {
       ),
     );
   }
-  renderCart();
+  registerCatalog = {
+    products: state.products,
+    categories: state.categories,
+    removedCategories: state.removedCategories,
+    activeCategory: state.activeCategory,
+    filter,
+    tiles,
+  };
+}
+function updateRegisterTiles() {
+  const show = currentShow();
+  const disabled = !show || Boolean(show.completedAt) || saving() || state.stale;
+  for (const [id, entry] of registerCatalog.tiles) {
+    const { tile } = entry;
+    if (tile.disabled !== disabled) tile.disabled = disabled;
+    const quantity = state.cart[id] || 0;
+    if (entry.quantity === quantity) continue;
+    entry.quantity = quantity;
+    tile.setAttribute(
+      'aria-label',
+      `${entry.label}${quantity ? `, ${quantity} in cart` : ''}`,
+    );
+    if (quantity) {
+      if (!entry.bubble) {
+        entry.bubble = element('div', 'cart-bubble');
+        tile.append(entry.bubble);
+      }
+      entry.bubble.textContent = String(quantity);
+    } else if (entry.bubble) {
+      entry.bubble.remove();
+      entry.bubble = null;
+    }
+  }
 }
 function addToCart(id) {
   if (!state.ready || saving() || state.stale) return;
@@ -1064,7 +1126,7 @@ async function saveProduct(event) {
       state.products = state.products.map((p) =>
         p.id === product.id ? product : p,
       );
-    else state.products.push(product);
+    else state.products = [...state.products, product];
     byId('product-dialog').close();
     render();
     toast(existing ? 'Product updated.' : 'Product added.');
