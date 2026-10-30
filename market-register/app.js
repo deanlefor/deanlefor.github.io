@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.06';
+import * as db from './db.js?v=1.07';
 
-// Market Register 1.06: no backend, analytics, account, or payment API.
+// Market Register 1.07: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
