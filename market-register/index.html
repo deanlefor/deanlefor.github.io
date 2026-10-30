@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=1.07">
+  <link rel="stylesheet" href="./styles.css?v=1.08">
   <title>Market Register</title>
 </head>
 <body>
@@ -53,7 +53,7 @@
           <section class="catalog-panel surface" aria-label="Product selection">
             <div class="catalog-top-controls">
               <div class="category-tabs" id="category-tabs" role="group" aria-label="Product categories"></div>
-              <div class="register-search-controls">
+              <div class="search-controls">
                 <input type="search" id="register-search" class="search-input" placeholder="Search products" aria-label="Search products">
                 <button type="button" id="clear-register-search" class="btn btn-outline search-clear" aria-label="Clear search" title="Clear search" hidden>&times;</button>
               </div>
@@ -106,7 +106,10 @@
       <section class="view" id="view-products" aria-label="Manage products" hidden>
         <div class="section-title-row"><div><h1 class="visually-hidden">Products</h1><p>Create picture buttons once, then tap them during shows. No stock counting.</p></div><button id="add-product" class="btn btn-primary" type="button">+ Add product</button></div>
         <div class="management-tools surface">
-          <input type="search" id="manage-search" class="search-input" placeholder="Find a product" aria-label="Find a product">
+          <div class="search-controls">
+            <input type="search" id="manage-search" class="search-input" placeholder="Find a product" aria-label="Find a product">
+            <button type="button" id="clear-manage-search" class="btn btn-outline search-clear" aria-label="Clear product search" title="Clear search" hidden>&times;</button>
+          </div>
           <select id="manage-category" aria-label="Filter product category"><option value="all">All categories</option></select>
           <label class="check-row"><input type="checkbox" id="show-hidden"> Show hidden products</label>
           <span class="subtle-text" id="product-count"></span>
@@ -176,7 +179,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Version 1.07</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
+    <footer class="site-footer"><span>Market Register · Version 1.08</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -274,9 +277,9 @@
   <script src="./vendor/xlsx.mini.min.js?v=0.20.3"></script>
   <script src="./vendor/pdfmake.min.js?v=0.3.11"></script>
   <script src="./vendor/vfs_fonts.js?v=0.3.11"></script>
-  <script src="./data.js?v=1.07"></script>
-  <script src="./reports.js?v=1.07"></script>
+  <script src="./data.js?v=1.08"></script>
+  <script src="./reports.js?v=1.08"></script>
   <script src="./guide.js?v=1.05"></script>
-  <script type="module" src="./app.js?v=1.07"></script>
+  <script type="module" src="./app.js?v=1.08"></script>
 </body>
 </html>

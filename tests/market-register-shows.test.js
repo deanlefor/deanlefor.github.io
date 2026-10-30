@@ -69,6 +69,55 @@ function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
 
+test('hiding a product requires confirmation, cancellation preserves records, and showing needs no prompt', async () => {
+  const app = await page();
+  try {
+    const before = copy(await app.db.snapshot());
+    const prompts = [];
+    let approve = false;
+    app.dom.window.confirm = message => { prompts.push(message); return approve; };
+    const action = label => [...app.byId('manage-product-list').querySelectorAll('button')].find(button => button.textContent === label);
+    app.view('products');
+    action('Hide').click();
+    await app.settle();
+    assert.equal(prompts.length, 1);
+    assert.match(prompts[0], /Hide "Example"\?/);
+    assert.match(prompts[0], /Show hidden products/);
+    assert.deepEqual(copy(await app.db.snapshot()), before);
+    assert.equal(app.byId('manage-product-list').children.length, 1);
+    app.view('register');
+    assert.equal(app.byId('product-grid').children.length, 1);
+
+    approve = true;
+    app.view('products');
+    action('Hide').click();
+    await app.settle();
+    assert.equal(prompts.length, 2);
+    const hidden = copy(await app.db.snapshot());
+    assert.equal(hidden.products[0].active, false);
+    assert.deepEqual(hidden.sales, before.sales);
+    assert.deepEqual(hidden.shows, before.shows);
+    assert.deepEqual(hidden.meta, before.meta);
+    const { active, updatedAt, ...product } = hidden.products[0];
+    const { active: wasActive, ...original } = before.products[0];
+    assert.deepEqual(product, original);
+    assert.ok(updatedAt);
+    assert.equal(app.byId('manage-product-list').children.length, 0);
+    app.view('register');
+    assert.equal(app.byId('product-grid').children.length, 0);
+
+    app.view('products');
+    app.byId('show-hidden').click();
+    approve = false;
+    action('Show').click();
+    await app.settle();
+    assert.equal(prompts.length, 2, 'restoring a hidden product stays immediate');
+    assert.equal((await app.db.getAll('products'))[0].active, true);
+    app.view('register');
+    assert.equal(app.byId('product-grid').children.length, 1);
+  } finally { app.dom.window.close(); }
+});
+
 test('a 430-product catalog retains its tiles and photos through basket edits, clearing, backup, and checkout', async () => {
   const data = records();
   const photo = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+a5WQAAAAASUVORK5CYII=';

@@ -120,6 +120,7 @@ test('the Products category filter stays alphabetical after additions and restar
 test('cached category choices and product tiles refresh after adding, editing, hiding, and showing a product', async () => {
   const saved = { products: [{ id: 'p1', name: 'Original', category: 'Pottery', priceCents: 1200, active: true }], shows: [], sales: [], meta: [] };
   const page = await app(saved);
+  page.dom.window.confirm = () => true;
   const view = name => page.dom.window.document.querySelector(`[data-view="${name}"]`).click();
   const tabNames = () => [...page.byId('category-tabs').children].map(button => button.textContent);
   const productCard = () => [...page.byId('manage-product-list').children].find(card => card.querySelector('.manage-title')?.textContent === 'Example Product');

@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.07';
+import * as db from './db.js?v=1.08';
 
-// Market Register 1.07: no backend, analytics, account, or payment API.
+// Market Register 1.08: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -1145,6 +1145,13 @@ async function toggleProduct(id) {
   if (saving() || state.stale) return;
   const product = state.products.find((p) => p.id === id);
   if (!product) return;
+  if (
+    product.active &&
+    !window.confirm(
+      `Hide "${product.name}"?\n\nThis removes it from checkout. Existing sales stay in reports. To bring it back, use Show hidden products and then Show.`,
+    )
+  )
+    return;
   const updated = {
     ...product,
     active: !product.active,
@@ -1179,7 +1186,9 @@ function renderProducts() {
   )
     ? current
     : 'all';
-  const search = byId('manage-search').value.trim().toLocaleLowerCase();
+  const searchInput = byId('manage-search');
+  byId('clear-manage-search').hidden = !searchInput.value;
+  const search = searchInput.value.trim().toLocaleLowerCase();
   const includeHidden = byId('show-hidden').checked;
   const filtered = sortProducts(
     state.products.filter(
@@ -2446,6 +2455,11 @@ function connectEvents() {
     byId('photo-status').textContent = 'Product photo removed.';
   });
   byId('manage-search').addEventListener('input', renderProducts);
+  byId('clear-manage-search').addEventListener('click', () => {
+    byId('manage-search').value = '';
+    renderProducts();
+    byId('manage-search').focus();
+  });
   byId('manage-category').addEventListener('change', renderProducts);
   byId('show-hidden').addEventListener('change', renderProducts);
   byId('show-form').addEventListener('submit', saveShow);
