@@ -1,6 +1,6 @@
-import * as db from './db.js?v=1.09';
+import * as db from './db.js?v=1.10';
 
-// Market Register 1.09: no backend, analytics, account, or payment API.
+// Market Register 1.10: no backend, analytics, account, or payment API.
 // This application's "inventory" is a product catalog; quantities on hand aren't tracked.
 
 const money = (cents) =>
@@ -660,9 +660,12 @@ function updateCartScrollControls() {
   const overflow = list.clientHeight > 0 && list.scrollHeight > list.clientHeight + 1;
   const top = Math.max(0, list.scrollTop);
   byId('cart-scroll-controls').hidden = !overflow;
-  byId('cart-scroll-up').disabled = !overflow || top <= 1;
-  byId('cart-scroll-down').disabled =
-    !overflow || top + list.clientHeight >= list.scrollHeight - 1;
+  const canScrollUp = overflow && top > 1;
+  const canScrollDown = overflow && top + list.clientHeight < list.scrollHeight - 1;
+  for (const [id, available] of [['cart-scroll-up', canScrollUp], ['cart-scroll-down', canScrollDown]]) {
+    byId(id).hidden = !available;
+    byId(id).disabled = !available;
+  }
 }
 function scheduleCartScrollUpdate() {
   if (cartScrollUpdatePending) return;

@@ -14,7 +14,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="apple-touch-icon" href="./icons/icon-192.png">
   <link rel="icon" href="./icons/icon-192.png">
-  <link rel="stylesheet" href="./styles.css?v=1.09">
+  <link rel="stylesheet" href="./styles.css?v=1.10">
   <title>Market Register</title>
 </head>
 <body>
@@ -64,10 +64,12 @@
           </section>
           <aside class="cart-panel surface" aria-label="Current sale">
             <div class="cart-heading"><div><h2>Current sale</h2><p id="cart-show-label">Choose a show to begin</p></div><span class="count-chip" id="cart-item-count">0 items</span></div>
-            <div class="cart-items" id="cart-items" role="region" aria-label="Items in current sale" tabindex="0"></div>
-            <div class="cart-scroll-controls" id="cart-scroll-controls" role="group" aria-label="Scroll current sale items" hidden>
-              <button class="btn btn-outline" id="cart-scroll-up" type="button" aria-label="Scroll current sale up" disabled>↑ Scroll up</button>
-              <button class="btn btn-outline" id="cart-scroll-down" type="button" aria-label="Scroll current sale down" disabled>Scroll down ↓</button>
+            <div class="cart-items-wrap">
+              <div class="cart-items" id="cart-items" role="region" aria-label="Items in current sale" tabindex="0"></div>
+              <div class="cart-scroll-controls" id="cart-scroll-controls" role="group" aria-label="Scroll current sale items" hidden>
+                <button class="cart-scroll-arrow" id="cart-scroll-up" type="button" aria-label="Scroll current sale up" title="More items above" hidden disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v16m-7-7 7 7 7-7"/></svg></button>
+                <button class="cart-scroll-arrow" id="cart-scroll-down" type="button" aria-label="Scroll current sale down" title="More items below" hidden disabled><svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 4v16m-7-7 7 7 7-7"/></svg></button>
+              </div>
             </div>
             <details class="sale-adjustments" id="sale-adjustments">
               <summary>Tip &amp; discount <span id="adjustments-summary"></span></summary>
@@ -183,7 +185,7 @@
         </div>
       </section>
     </main>
-    <footer class="site-footer"><span>Market Register · Version 1.09</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
+    <footer class="site-footer"><span>Market Register · Version 1.10</span><span id="footer-save">Stored locally on this device</span><button class="btn btn-outline btn-small" id="refresh-app" type="button">Refresh app</button></footer>
   </div>
 
   <dialog id="product-dialog" class="entry-dialog" aria-labelledby="product-dialog-title">
@@ -281,9 +283,9 @@
   <script src="./vendor/xlsx.mini.min.js?v=0.20.3"></script>
   <script src="./vendor/pdfmake.min.js?v=0.3.11"></script>
   <script src="./vendor/vfs_fonts.js?v=0.3.11"></script>
-  <script src="./data.js?v=1.09"></script>
-  <script src="./reports.js?v=1.09"></script>
+  <script src="./data.js?v=1.10"></script>
+  <script src="./reports.js?v=1.10"></script>
   <script src="./guide.js?v=1.05"></script>
-  <script type="module" src="./app.js?v=1.09"></script>
+  <script type="module" src="./app.js?v=1.10"></script>
 </body>
 </html>

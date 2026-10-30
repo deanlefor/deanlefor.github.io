@@ -69,7 +69,7 @@ function payment(app, value) {
   app.dom.window.document.querySelector(`input[name="payment"][value="${value}"]`).click();
 }
 
-test('sale scroll arrows track overflow and position, resize, and clear without changing saved records', { timeout: 5000 }, async () => {
+test('floating sale arrows show only toward hidden items and track scrolling, resize, and clearing without changing records', { timeout: 5000 }, async () => {
   const data = records();
   data.products = Array.from({ length: 8 }, (_, i) => ({ ...data.products[0], id: `p${i + 1}`, sku: `ITEM-${i + 1}`, name: `Item ${i + 1}` }));
   const app = await page(data);
@@ -102,15 +102,22 @@ test('sale scroll arrows track overflow and position, resize, and clear without 
     assert.equal(app.byId('cart-scroll-controls').hidden, false);
     assert.equal(app.byId('cart-scroll-up').disabled, true);
     assert.equal(app.byId('cart-scroll-down').disabled, false);
+    assert.equal(app.byId('cart-scroll-up').hidden, true);
+    assert.equal(app.byId('cart-scroll-down').hidden, false);
     const beforeScrolling = copy(await app.db.snapshot());
     app.byId('cart-scroll-down').click();
     assert.ok(list.scrollTop > 0);
     assert.equal(app.byId('cart-scroll-up').disabled, false);
+    assert.equal(app.byId('cart-scroll-up').hidden, false);
+    assert.equal(app.byId('cart-scroll-down').hidden, false);
     for (let i = 0; i < 10 && !app.byId('cart-scroll-down').disabled; i++) app.byId('cart-scroll-down').click();
     assert.equal(list.scrollTop + list.clientHeight, list.scrollHeight);
     assert.equal(app.byId('cart-scroll-down').disabled, true);
+    assert.equal(app.byId('cart-scroll-down').hidden, true);
+    assert.equal(app.byId('cart-scroll-up').hidden, false);
     app.byId('cart-scroll-up').click();
     assert.equal(app.byId('cart-scroll-down').disabled, false);
+    assert.equal(app.byId('cart-scroll-down').hidden, false);
     assert.deepEqual(copy(await app.db.snapshot()), beforeScrolling, 'scrolling never writes records or basket changes');
 
     height = 1000;
