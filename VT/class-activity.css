@@ -68,13 +68,14 @@ em { font-weight: inherit; }
 
 /* The roster is a set of four desk cards, in group order. */
 .group-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 34px; gap: 16px; }
-.group-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); background: var(--white); padding: 22px 20px 20px; }
-.group-card h3 { display: flex; justify-content: space-between; align-items: center; font-family: var(--serif); font-weight: 400; font-size: 3.25rem; color: var(--maroon); line-height: 1; padding-bottom: 17px; border-bottom: 1px solid var(--line); }
+.group-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); background: var(--white); padding: 18px; }
+.group-card h3 { display: flex; justify-content: space-between; align-items: center; font-family: var(--serif); font-weight: 400; font-size: 2.6rem; color: var(--maroon); line-height: 1; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .group-card h3 span { font-family: var(--mono); font-size: .7rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
-.name-list { list-style: none; padding: 0; margin: 19px 0 22px; font-size: .88rem; line-height: 1.5; }
-.name-list li + li { margin-top: 9px; }
-.group-route { border-top: 1px solid var(--line); padding-top: 17px; margin-top: auto; font-size: .78rem; font-weight: 600; }
-.group-route p + p { margin-top: 12px; }
+.name-list { display: flex; flex-wrap: wrap; row-gap: 4px; overflow: hidden; list-style: none; padding: 0; margin: 14px -9px; font-size: .9rem; line-height: 1.6; }
+/* Clip the first divider on each wrapped line while keeping names intact. */
+.name-list li { white-space: nowrap; padding-inline: 9px; border-inline-start: 1px solid var(--line); margin-inline-start: -1px; }
+.group-route { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; margin-top: auto; font-size: .78rem; font-weight: 600; }
+.group-route p + p { margin-top: 0; }
 .group-route span { display: block; color: var(--muted); font-family: var(--mono); font-size: .55rem; font-weight: 400; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 3px; }
 .margin-note { font-size: .8rem; color: var(--muted); margin-top: 20px; }
 .margin-note span { color: var(--rust); font-size: 1.2rem; margin-right: 7px; }
@@ -84,16 +85,15 @@ em { font-weight: inherit; }
 .group-link { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; white-space: nowrap; text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .group-link::after { content: "↗"; font-family: var(--sans); font-size: .8em; font-weight: 400; }
 .group-link:hover { text-decoration-style: solid; }
-.group-dialog { width: min(390px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 26px; overflow-y: auto; border: 1px solid var(--line); border-top: 4px solid var(--maroon); background: var(--white); color: var(--ink); box-shadow: 6px 7px 0 rgba(41, 39, 35, .12); }
+.group-dialog { width: min(390px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 22px; overflow-y: auto; border: 1px solid var(--line); border-top: 4px solid var(--maroon); background: var(--white); color: var(--ink); box-shadow: 6px 7px 0 rgba(41, 39, 35, .12); }
 .group-dialog::backdrop { background: rgba(34, 24, 27, .48); }
 .group-dialog-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
 .group-dialog h2 { font-family: var(--serif); font-size: 2.5rem; line-height: 1.2; font-weight: 400; letter-spacing: -.04em; margin-top: 7px; }
 .group-dialog-close { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 9px; background: transparent; border: 1px solid var(--line); border-radius: 2px; color: var(--maroon); font: .75rem var(--sans); cursor: pointer; }
 .group-dialog-close:hover { background: var(--soft-maroon); }
 .group-dialog-close span { font-size: 1.3rem; line-height: 1; }
-#group-dialog-description { color: var(--muted); font-size: .8rem; margin-top: 14px; }
-.group-dialog .name-list { min-height: 0; margin-block: 22px; font-size: 1rem; }
-.group-dialog .name-list li + li { margin-top: 11px; }
+#group-dialog-description { color: var(--muted); font-size: .8rem; margin-top: 10px; }
+.group-dialog .name-list { margin-block: 14px; font-size: .95rem; }
 .group-dialog .group-route { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 0; }
 .group-dialog .group-route p + p { margin-top: 0; }
 
@@ -203,7 +203,6 @@ em { font-weight: inherit; }
   .hero { grid-template-columns: 1fr 230px; gap: 32px; }
   .hero h1 { font-size: clamp(3rem, 6.3vw, 4.5rem); }
   .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .name-list { min-height: 155px; }
   .statement-layout, .report-layout { gap: 40px; }
   .running-order { grid-template-columns: 140px 1fr; }
   .running-order ol { gap: 25px; flex-wrap: wrap; }
@@ -237,8 +236,7 @@ em { font-weight: inherit; }
   .section-heading > p:last-child { font-size: .95rem; }
   .group-grid { gap: 12px; margin-top: 26px; }
   .group-card { padding: 18px 16px; }
-  .group-card h3 { font-size: 2.75rem; }
-  .name-list { font-size: .85rem; min-height: 175px; }
+  .group-card h3 { font-size: 2.4rem; }
   .group-route { font-size: .75rem; }
   .margin-note { font-size: .75rem; }
   .activity-header { display: block; padding-bottom: 20px; }
@@ -296,10 +294,7 @@ em { font-weight: inherit; }
   .group-dialog h2 { font-size: 2rem; white-space: nowrap; }
   .group-dialog-close { padding-inline: 7px; gap: 7px; }
   .group-grid, .assignment-grid, .plan-grid { grid-template-columns: 1fr; }
-  .name-list { min-height: 0; font-size: .95rem; margin-block: 18px; }
-  .group-route { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-  .group-route p + p { margin-top: 0; }
-  .group-card h3 { font-size: 2.4rem; padding-bottom: 14px; }
+  .name-list { font-size: .95rem; margin-block: 12px; }
   .session-note { gap: 4px 10px; padding: 15px; }
   .session-time { font-size: .68rem; }
   .session-date { font-size: 1rem; }
@@ -326,7 +321,7 @@ em { font-weight: inherit; }
   .section-space { padding-block: 25px; }
   .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .group-card { padding: 14px; break-inside: avoid; }
-  .name-list { min-height: 0; font-size: 9pt; }
+  .name-list { font-size: 9pt; }
   .editorial-section { background: white; }
   .journal-illustration { width: 220px; margin-bottom: 12px; }
   .journal-issue { margin-top: 14px; }
