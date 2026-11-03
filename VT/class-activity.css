@@ -149,6 +149,10 @@ em { font-weight: inherit; }
 .afterword > p:last-child { color: var(--muted); font-size: .95rem; margin-top: 12px; }
 
 /* Activity two is a case file: two plans, one unresolved decision. */
+.case-banner { border-top: 3px solid var(--maroon); padding-block: 24px; text-align: center; }
+.case-illustration { display: block; width: min(400px, 100%); height: auto; margin-inline: auto; }
+.case-banner-caption { width: fit-content; max-width: 100%; margin: 16px auto 0; font-family: var(--mono); font-size: .62rem; line-height: 1.6; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.case-banner-theme { margin-top: 5px; font-family: var(--serif); font-size: 1rem; font-style: italic; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--maroon); }
 .case-intro { display: grid; grid-template-columns: 1.25fr .75fr; align-items: end; gap: 60px; border-top: 3px solid var(--maroon); padding-top: 32px; }
 .case-label { color: var(--muted); font-size: .6rem; }
 .case-intro h2 { font-family: var(--serif); font-size: clamp(2.2rem, 3.7vw, 3.2rem); font-weight: 400; line-height: 1.16; letter-spacing: -.04em; margin-top: 14px; }
@@ -327,6 +331,9 @@ em { font-weight: inherit; }
   .journal-illustration { width: 220px; margin-bottom: 12px; }
   .journal-issue { margin-top: 14px; }
   .journal-masthead h2 { font-size: 28pt; }
+  .case-banner { padding-block: 16px; }
+  .case-illustration { width: 260px; }
+  .case-banner-caption { margin-top: 10px; }
   .big-question, .case-question { font-size: 18pt; }
   .statement-layout, .report-layout { gap: 30px; }
   .statement-intro h3 { font-size: 24pt; }
