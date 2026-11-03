@@ -120,10 +120,12 @@ em { font-weight: inherit; }
 .position-label { color: var(--muted); font-size: .6rem; }
 .assignment-card h4 { font-family: var(--serif); font-size: 2.2rem; font-weight: 400; letter-spacing: -.04em; line-height: 1.2; margin-block: 17px 12px; }
 .assignment-card p { font-size: .95rem; }
-.statement-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 70px; margin-top: 64px; }
-.statement-intro h3 { font-family: var(--serif); font-size: 2.65rem; letter-spacing: -.035em; line-height: 1.15; font-weight: 400; margin-block: 16px 20px; }
-.statement-intro h3 em { color: var(--maroon); }
-.statement-intro > p:not(.eyebrow) { color: var(--muted); font-size: .95rem; max-width: 340px; }
+.editorial-stage { margin-top: 48px; }
+.editorial-stage > .subsection-header { margin-top: 0; }
+.statement-layout { display: grid; grid-template-columns: .85fr 1.15fr; gap: 70px; margin-top: 24px; }
+.statement-title { font-family: var(--serif); font-size: 2.65rem; letter-spacing: -.035em; line-height: 1.15; font-weight: 400; margin-block: 16px 20px; }
+.statement-title em { color: var(--maroon); }
+.statement-intro > p:not(.eyebrow):not(.statement-title) { color: var(--muted); font-size: .95rem; max-width: 340px; }
 .statement-intro .prep-note { margin-top: 24px; border-top: 1px solid var(--line); padding-top: 14px; }
 .prep-note strong { display: block; font-family: var(--mono); font-size: .6rem; text-transform: uppercase; letter-spacing: .07em; color: var(--maroon); margin-bottom: 3px; }
 .statement-steps { list-style: none; counter-reset: statement; margin: 0; padding: 0; }
@@ -132,12 +134,15 @@ em { font-weight: inherit; }
 .statement-steps li::before { content: "0" counter(statement); font-family: var(--mono); color: var(--rust); font-size: .75rem; line-height: 1.8; }
 .statement-steps h4 { font-size: 1rem; font-weight: 600; margin-bottom: 4px; }
 .statement-steps p { color: var(--muted); font-size: .92rem; }
-.running-order { display: grid; grid-template-columns: 170px 1fr; gap: 10px 25px; background: var(--paper); border-block: 1px solid var(--line); margin-top: 38px; padding: 24px 26px; }
-.running-order h3 { font-family: var(--mono); font-size: .65rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
+.running-order { display: grid; grid-template-columns: 170px 1fr; gap: 10px 25px; border-bottom: 1px solid var(--line); padding-bottom: 22px; margin-bottom: 24px; }
+.running-order h4 { font-family: var(--mono); font-size: .65rem; font-weight: 500; text-transform: uppercase; letter-spacing: .06em; margin-top: 4px; }
 .running-order ol { list-style: none; display: flex; gap: 35px; margin: 0; padding: 0; }
 .running-order li strong { font-family: var(--serif); font-weight: 400; font-size: 1.2rem; display: block; }
 .running-order li span { font-size: .85rem; }
 .running-order > p { color: var(--muted); font-size: .8rem; grid-column: 2; }
+.voting-header { margin-bottom: 18px; }
+.voting-header h4 { font-size: 1rem; font-weight: 600; }
+.voting-header p { color: var(--muted); font-size: .9rem; margin-top: 5px; }
 .voter-note { display: flex; flex-wrap: wrap; gap: 12px 34px; border-bottom: 1px solid var(--line); padding-bottom: 18px; font-size: .9rem; }
 .vote-list > div { display: grid; grid-template-columns: 300px 1fr; align-items: baseline; padding-block: 22px; border-bottom: 1px solid var(--line); gap: 24px; }
 .vote-list dt { display: flex; align-items: baseline; gap: 20px; font-size: .95rem; font-weight: 600; }
@@ -147,6 +152,11 @@ em { font-weight: inherit; }
 .discussion-prompt > p:last-child { font-family: var(--serif); font-size: 1.65rem; line-height: 1.4; letter-spacing: -.02em; margin-top: 10px; }
 .afterword { padding-top: 42px; }
 .afterword > p:last-child { color: var(--muted); font-size: .95rem; margin-top: 12px; }
+
+/* A quiet colophon closes each activity after its final discussion. */
+.activity-end { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 32px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; }
+.activity-end p { font-family: var(--mono); font-size: .65rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.activity-end a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-family: var(--serif); font-size: 1.05rem; }
 
 /* Activity two is a case file: two plans, one unresolved decision. */
 .case-banner { border-top: 3px solid var(--maroon); padding-block: 24px; text-align: center; }
@@ -254,12 +264,13 @@ em { font-weight: inherit; }
   .assignment-topline { gap: 10px; }
   .assignment-card h4 { font-size: 2rem; }
   .assignment-card p { font-size: .9rem; }
-  .statement-layout, .report-layout { grid-template-columns: 1fr; gap: 26px; margin-top: 40px; }
-  .statement-intro h3 { font-size: 2.4rem; }
-  .statement-intro > p:not(.eyebrow) { max-width: none; }
+  .editorial-stage { margin-top: 36px; }
+  .statement-layout, .report-layout { grid-template-columns: 1fr; gap: 26px; }
+  .statement-title { font-size: 2.4rem; }
+  .statement-intro > p:not(.eyebrow):not(.statement-title) { max-width: none; }
   .statement-intro .prep-note { margin-top: 18px; }
   .statement-steps li { padding-block: 18px; }
-  .running-order { grid-template-columns: 1fr; gap: 15px; margin-top: 28px; padding: 20px; }
+  .running-order { grid-template-columns: 1fr; gap: 15px; }
   .running-order ol { gap: 18px 32px; }
   .running-order > p { grid-column: auto; }
   .voter-note { gap: 8px; }
@@ -269,6 +280,8 @@ em { font-weight: inherit; }
   .discussion-prompt { padding: 22px 20px; }
   .discussion-prompt > p:last-child { font-size: 1.45rem; }
   .afterword { padding-top: 30px; }
+  .activity-end { margin-top: 32px; padding-top: 16px; gap: 8px; }
+  .activity-end a { font-size: 1rem; }
   .case-intro { grid-template-columns: 1fr; gap: 22px; padding-top: 26px; }
   .case-intro h2 { font-size: clamp(2.2rem, 6.5vw, 3rem); }
   .plan-grid { gap: 14px; margin-top: 24px; }
@@ -331,8 +344,8 @@ em { font-weight: inherit; }
   .case-banner-caption { margin-top: 10px; }
   .big-question, .case-question { font-size: 18pt; }
   .statement-layout, .report-layout { gap: 30px; }
-  .statement-intro h3 { font-size: 24pt; }
-  .assignment-card, .plan-card, .discussion-prompt, .running-order, .vote-list > div, .case-boundary, .case-table tr { break-inside: avoid; }
+  .statement-title { font-size: 24pt; }
+  .activity-end, .assignment-card, .plan-card, .discussion-prompt, .running-order, .vote-list > div, .case-boundary, .case-table tr { break-inside: avoid; }
   .plan-card { padding: 18px; }
   .group-route { font-size: 9pt; }
   h2, h3, h4, .eyebrow { break-after: avoid; }
