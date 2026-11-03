@@ -24,6 +24,7 @@ p { text-wrap: pretty; }
 a { color: var(--maroon); text-underline-offset: .22em; }
 a:hover { text-decoration-thickness: 2px; }
 a:focus-visible { outline: 3px solid var(--rust); outline-offset: 5px; border-radius: 2px; }
+button:focus-visible { outline: 3px solid var(--rust); outline-offset: 4px; }
 strong { font-weight: 650; }
 em { font-weight: inherit; }
 ::selection { background: #e6c4cc; color: var(--ink); }
@@ -77,6 +78,24 @@ em { font-weight: inherit; }
 .group-route span { display: block; color: var(--muted); font-family: var(--mono); font-size: .55rem; font-weight: 400; letter-spacing: .05em; text-transform: uppercase; margin-bottom: 3px; }
 .margin-note { font-size: .8rem; color: var(--muted); margin-top: 20px; }
 .margin-note span { color: var(--rust); font-size: 1.2rem; margin-right: 7px; }
+
+/* Group labels reveal the same roster wherever an activity mentions them. */
+.group-card:target { outline: 2px solid var(--maroon); outline-offset: 4px; }
+.group-link { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; white-space: nowrap; text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 1px; text-underline-offset: 4px; }
+.group-link::after { content: "↗"; font-family: var(--sans); font-size: .8em; font-weight: 400; }
+.group-link:hover { text-decoration-style: solid; }
+.group-dialog { width: min(390px, calc(100% - 32px)); max-height: calc(100vh - 32px); max-height: calc(100dvh - 32px); margin: auto; padding: 26px; overflow-y: auto; border: 1px solid var(--line); border-top: 4px solid var(--maroon); background: var(--white); color: var(--ink); box-shadow: 6px 7px 0 rgba(41, 39, 35, .12); }
+.group-dialog::backdrop { background: rgba(34, 24, 27, .48); }
+.group-dialog-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; }
+.group-dialog h2 { font-family: var(--serif); font-size: 2.5rem; line-height: 1.2; font-weight: 400; letter-spacing: -.04em; margin-top: 7px; }
+.group-dialog-close { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 9px; background: transparent; border: 1px solid var(--line); border-radius: 2px; color: var(--maroon); font: .75rem var(--sans); cursor: pointer; }
+.group-dialog-close:hover { background: var(--soft-maroon); }
+.group-dialog-close span { font-size: 1.3rem; line-height: 1; }
+#group-dialog-description { color: var(--muted); font-size: .8rem; margin-top: 14px; }
+.group-dialog .name-list { min-height: 0; margin-block: 22px; font-size: 1rem; }
+.group-dialog .name-list li + li { margin-top: 11px; }
+.group-dialog .group-route { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 0; }
+.group-dialog .group-route p + p { margin-top: 0; }
 
 /* Activity one takes the form of a journal's editorial pages. */
 .editorial-section { background: var(--white); border-block: 1px solid var(--line); }
@@ -162,7 +181,7 @@ em { font-weight: inherit; }
 .report-steps li::marker { font-family: var(--mono); font-size: .85rem; color: var(--rust); }
 .authority-note { margin-top: 28px; font-size: .95rem; border-left: 2px solid var(--rust); padding-left: 18px; }
 .report-order { border-top: 1px solid var(--line); padding-top: 20px; margin-top: 28px; font-size: .95rem; }
-.report-order span { margin-right: 18px; font-size: .6rem; }
+.report-order > .eyebrow { margin-right: 18px; font-size: .6rem; }
 .closing-prompt { margin-top: 34px; }
 .page-footer { display: flex; justify-content: space-between; align-items: center; gap: 20px; border-top: 1px solid var(--ink); padding-block: 24px 32px; font-family: var(--mono); font-size: .65rem; color: var(--muted); }
 .page-footer p span { margin-inline: 10px; color: var(--line); }
@@ -265,6 +284,10 @@ em { font-weight: inherit; }
 }
 
 @media (max-width: 480px) {
+  .group-dialog { padding: 22px 20px; }
+  .group-dialog-heading { gap: 12px; }
+  .group-dialog h2 { font-size: 2rem; white-space: nowrap; }
+  .group-dialog-close { padding-inline: 7px; gap: 7px; }
   .group-grid, .assignment-grid, .plan-grid { grid-template-columns: 1fr; }
   .name-list { min-height: 0; font-size: .95rem; margin-block: 18px; }
   .group-route { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
@@ -284,7 +307,9 @@ em { font-weight: inherit; }
   html { scroll-behavior: auto; }
   body { background: white; color: black; font-size: 10pt; }
   .page-width { width: 100%; }
-  .skip-link, .section-nav, .edition, .session-footnote, .page-footer a { display: none; }
+  .skip-link, .section-nav, .edition, .session-footnote, .page-footer a, .group-dialog { display: none; }
+  .group-link { min-height: 0; text-decoration: none; color: inherit; }
+  .group-link::after { content: none; }
   .masthead { padding-block: 0 12px; }
   .hero { padding-block: 22px; grid-template-columns: 1fr 180px; gap: 30px; }
   .hero h1 { font-size: 32pt; }
