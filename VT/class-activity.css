@@ -102,9 +102,12 @@ em { font-weight: inherit; }
 .activity-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; }
 .activity-tag { font-size: .6rem; color: var(--muted); }
 .journal-masthead { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); text-align: center; padding-block: 25px 30px; }
+.journal-illustration { display: block; width: min(320px, 88%); height: auto; margin: 0 auto 20px; }
 .journal-kicker { font-size: .8rem; color: var(--muted); margin-bottom: 14px; }
 .journal-masthead h2 { font-family: var(--serif); font-size: clamp(2.25rem, 4.4vw, 3.8rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 400; }
 .journal-caption { font-family: var(--serif); font-style: italic; color: var(--muted); margin-top: 18px; font-size: .95rem; }
+.journal-issue { width: fit-content; max-width: 100%; margin: 20px auto 0; padding-top: 12px; border-top: 1px solid var(--line); font-family: var(--mono); font-size: .62rem; line-height: 1.6; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+.journal-issue-theme { margin-top: 5px; font-family: var(--serif); font-size: 1rem; font-style: italic; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--maroon); }
 .editorial-intro { padding-block: 38px 18px; }
 .big-question { font-family: var(--serif); color: var(--maroon); font-size: 1.9rem; line-height: 1.35; letter-spacing: -.025em; margin-block: 25px; padding-left: 24px; border-left: 3px solid var(--rust); }
 .subsection-header { margin-top: 40px; margin-bottom: 22px; }
@@ -321,6 +324,8 @@ em { font-weight: inherit; }
   .group-card { padding: 14px; break-inside: avoid; }
   .name-list { min-height: 0; font-size: 9pt; }
   .editorial-section { background: white; }
+  .journal-illustration { width: 220px; margin-bottom: 12px; }
+  .journal-issue { margin-top: 14px; }
   .journal-masthead h2 { font-size: 28pt; }
   .big-question, .case-question { font-size: 18pt; }
   .statement-layout, .report-layout { gap: 30px; }
