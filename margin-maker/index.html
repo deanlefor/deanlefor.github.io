@@ -29,6 +29,7 @@
   <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
   <link rel="stylesheet" href="styles.css">
   <script src="comparison.js" defer></script>
+  <script src="screenshot.js" defer></script>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to content</a>
@@ -183,18 +184,34 @@
           <p class="step-number">03 / EXPORT</p><h3>Get back to thinking.</h3><p>Save the adjusted PDF and use your preferred annotation app.</p>
         </li>
       </ol>
-      <div class="app-preview">
-        <div class="app-preview-copy">
-          <p class="eyebrow">A look inside</p>
-          <h3>Your reading.<br><em>Your room to think.</em></h3>
-          <p>Choose a layout, find the right position, and export a separate PDF. A few simple controls, all on your Mac.</p>
-          <a class="text-link" href="assets/app-screenshot.png">View full-size screenshot <span aria-hidden="true">↗</span></a>
-        </div>
-        <figure class="app-preview-figure">
-          <img src="assets/app-screenshot.png" alt="Margin Maker for macOS showing a demonstration PDF, orientation controls, nine page positions, and a 75% scale." width="988" height="787" loading="lazy" decoding="async">
-          <figcaption>The macOS app, shown with a demonstration PDF.</figcaption>
-        </figure>
+    </section>
+
+    <section class="app-preview wrap" aria-labelledby="app-title">
+      <div class="app-preview-copy">
+        <p class="eyebrow">A look inside</p>
+        <h2 id="app-title">Your document. Your space. <em>Your way.</em></h2>
+        <p>Choose a layout, find the right position, and export a separate PDF. A few simple controls, all on your Mac.</p>
       </div>
+      <figure class="app-preview-figure">
+        <a class="screenshot-trigger" href="assets/app-screenshot.png" data-screenshot-open aria-haspopup="dialog" aria-label="Expand Margin Maker app screenshot">
+          <picture>
+            <source srcset="assets/app-screenshot.webp" type="image/webp">
+            <img src="assets/app-screenshot.png" alt="Margin Maker for macOS showing the sample PDF at 75% scale in the upper-left position, with portrait orientation and all pages selected." width="988" height="787" loading="lazy" decoding="async">
+          </picture>
+        </a>
+        <figcaption><span>The macOS app, shown with the sample below.</span><a class="text-link" href="assets/app-screenshot.png" data-screenshot-open aria-haspopup="dialog">Expand screenshot <span aria-hidden="true">⤢</span></a></figcaption>
+      </figure>
+      <section class="sample-section" aria-labelledby="sample-title">
+        <div class="sample-copy">
+          <p class="eyebrow">A reading to experiment with</p>
+          <h3 id="sample-title">Try it yourself.</h3>
+          <p>Open the sample in Margin Maker. Choose <strong>Portrait</strong>, <strong>75% scaling</strong>, and <strong>upper-left positioning</strong> to recreate the layout above. Keep <strong>All pages</strong> selected, then export a new PDF.</p>
+        </div>
+        <div class="sample-download">
+          <a class="button button-secondary" href="assets/Margin_Maker_Demonstration_Article.pdf" download="Margin_Maker_Demonstration_Article.pdf"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/></svg>Download sample PDF</a>
+          <p>The Architecture of Attention <span>PDF · 2 pages</span></p>
+        </div>
+      </section>
     </section>
 
     <section class="features-section" aria-labelledby="features-title">
@@ -232,5 +249,22 @@
   <footer class="site-footer wrap">
     <nav aria-label="Footer navigation"><a href="https://github.com/deanlefor/margin-maker">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/deanlefor/margin-maker/blob/main/LICENSE">MIT license</a><a href="/">deanlefor.com <span aria-hidden="true">↗</span></a></nav>
   </footer>
+
+  <dialog class="screenshot-dialog" id="screenshot-dialog" aria-labelledby="screenshot-dialog-title">
+    <div class="screenshot-dialog-header">
+      <h2 id="screenshot-dialog-title">Margin Maker for macOS</h2>
+      <button class="dialog-control" type="button" id="screenshot-close" autofocus>Close <span aria-hidden="true">×</span></button>
+    </div>
+    <div class="screenshot-viewport" tabindex="0" role="region" aria-label="App screenshot; scroll to inspect at actual size">
+      <picture>
+        <source srcset="assets/app-screenshot.webp" type="image/webp">
+        <img src="assets/app-screenshot.png" alt="Full screenshot of Margin Maker with portrait orientation, 75% scaling, upper-left positioning, and the demonstration PDF." width="988" height="787" loading="lazy" decoding="async">
+      </picture>
+    </div>
+    <div class="screenshot-dialog-footer">
+      <button class="dialog-control" type="button" id="screenshot-zoom" aria-pressed="false">Actual size</button>
+      <a href="assets/app-screenshot.png">Open full-resolution image <span aria-hidden="true">↗</span></a>
+    </div>
+  </dialog>
 </body>
 </html>

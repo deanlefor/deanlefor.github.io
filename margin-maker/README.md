@@ -47,9 +47,30 @@ The social icon is metadata only and is not fetched during a normal page load.
 
 `assets/app-screenshot.png` is the unchanged application screenshot supplied by
 the project owner on November 4, 2026. It shows a demonstration PDF and the
-actual macOS interface. It is displayed below the three-step walkthrough,
-lazy-loaded, and linked at full size for smaller screens. The interactive
-comparison remains the primary demonstration.
+actual macOS interface. `assets/app-screenshot.webp` is a lossless optimization
+made with `cwebp -lossless -z 9 -exact -metadata icc`. Its decoded RGBA pixels and
+ICC color profile were verified to match the original exactly. It reduces the
+normal screenshot request from 359,227 to 112,216 bytes (68.8% smaller), with the
+original PNG retained as the fallback and full-resolution link. No resizing,
+recoloring, cropping, or recreation is involved.
+
+The screenshot has its own prominent Paper & Ink section, separate from the
+interactive comparison. It is lazy-loaded inside a linked `picture` element.
+`screenshot.js` enhances that link with a native modal dialog, Close and Escape
+support, focus restoration, and an actual-size view that scrolls independently
+on small screens. Without JavaScript or native dialog support, the link opens
+the original PNG normally.
+
+## Demonstration PDF
+
+`assets/Margin_Maker_Demonstration_Article.pdf` is the unchanged two-page Letter
+PDF supplied by the project owner, titled *The Architecture of Attention*.
+Its SHA-256 is `a23766ecef38d55d06be5b1e4db1aa3ed59e918f62ec27b3e8c14d3c21dca790`.
+The download is a plain local link with a `download` attribute. The walkthrough
+reproduces the actual application screenshot with Portrait orientation, All
+pages, 75% scale, and the upper-left position. The separate SVG comparison
+continues to illustrate middle-left positioning with fictional article text.
+No website PDF processing or upload functionality has been added.
 
 ## Content sources
 

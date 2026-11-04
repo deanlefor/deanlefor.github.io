@@ -7,6 +7,7 @@ const { JSDOM } = require("jsdom");
 const directory = path.join(__dirname, "../margin-maker");
 const html = fs.readFileSync(path.join(directory, "index.html"), "utf8");
 const script = fs.readFileSync(path.join(directory, "comparison.js"), "utf8");
+const screenshotScript = fs.readFileSync(path.join(directory, "screenshot.js"), "utf8");
 
 function page(t, javascript = true) {
   const dom = new JSDOM(html, { runScripts: "outside-only" });
@@ -64,4 +65,48 @@ test("without JavaScript the After illustration remains while inactive controls 
   assert.equal(document.querySelector(".state-buttons").hidden, true);
   assert.equal(document.querySelector(".slider-controls").hidden, true);
   assert.match(document.querySelector("noscript").textContent, /Enable JavaScript/);
+});
+
+test("screenshot inspection restores focus and resets actual-size zoom when reopened", (t) => {
+  const window = page(t, false);
+  const { document } = window;
+  const dialog = document.getElementById("screenshot-dialog");
+  // Model the native dialog methods here; focus containment and Escape are checked in-browser.
+  dialog.showModal = () => dialog.setAttribute("open", "");
+  dialog.close = () => {
+    dialog.removeAttribute("open");
+    dialog.dispatchEvent(new window.Event("close"));
+  };
+  window.eval(screenshotScript);
+  const opener = document.querySelector("[data-screenshot-open]");
+  const zoom = document.getElementById("screenshot-zoom");
+
+  opener.click();
+  assert.equal(dialog.open, true);
+  zoom.click();
+  assert.equal(zoom.getAttribute("aria-pressed"), "true");
+  document.getElementById("screenshot-close").click();
+  assert.equal(dialog.open, false);
+  assert.equal(document.activeElement, opener);
+
+  opener.click();
+  assert.equal(dialog.open, true);
+  assert.equal(zoom.getAttribute("aria-pressed"), "false");
+  assert.equal(dialog.hasAttribute("data-zoomed"), false);
+});
+
+test("without native dialog support screenshot links retain their original-image fallback", (t) => {
+  const window = page(t, false);
+  const { document } = window;
+  document.getElementById("screenshot-dialog").showModal = undefined;
+  window.eval(screenshotScript);
+  const link = document.querySelector("[data-screenshot-open]");
+  let prevented;
+  link.addEventListener("click", (event) => {
+    prevented = event.defaultPrevented;
+    event.preventDefault(); // Avoid navigation in this DOM-only test.
+  });
+  link.click();
+  assert.equal(prevented, false);
+  assert.equal(link.getAttribute("href"), "assets/app-screenshot.png");
 });
