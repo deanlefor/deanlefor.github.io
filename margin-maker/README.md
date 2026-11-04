@@ -32,7 +32,7 @@ processing libraries, uploads, trackers, or storage APIs on this page.
 
 ## Approved artwork
 
-All four PNGs under `assets/` are proportional, transparent downsamples of the
+The four icon PNGs under `assets/` are proportional, transparent downsamples of the
 approved Concept C master, retrieved from the application repository at commit
 `45417d189695dfedb35038d15e225530a441af1e`:
 
@@ -44,6 +44,12 @@ verified before resizing with macOS `sips`. There is no cropping, flattening,
 redrawing, or color adjustment. `app-icon.png` is 256 px, `favicon.png` is
 32 px, `apple-touch-icon.png` is 180 px, and `share-icon.png` is 512 px.
 The social icon is metadata only and is not fetched during a normal page load.
+
+`assets/app-screenshot.png` is the unchanged application screenshot supplied by
+the project owner on November 4, 2026. It shows a demonstration PDF and the
+actual macOS interface. It is displayed below the three-step walkthrough,
+lazy-loaded, and linked at full size for smaller screens. The interactive
+comparison remains the primary demonstration.
 
 ## Content sources
 
