@@ -505,7 +505,7 @@
     /* ── Project cards ── */
     .projects-grid {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(2, minmax(0, 1fr));
       gap: 1.5px;
       background: var(--border);
       border: 1px solid var(--border);
@@ -802,6 +802,15 @@
   <section class="section" id="projects">
     <p class="section-label reveal">Side Projects</p>
     <div class="projects-grid reveal">
+
+      <a href="/margin-maker/" class="project-card">
+        <img class="project-icon" src="/margin-maker/assets/app-icon.png" alt="" width="30" height="30" loading="lazy">
+        <div class="project-info">
+          <p class="project-title">Margin Maker</p>
+          <p class="project-desc">Give your PDFs room for notes. A free, open-source Mac app that creates generous annotation margins.</p>
+        </div>
+        <span class="tracker-arrow">&rarr;</span>
+      </a>
 
       <a href="projects/scorecards.html" target="_blank" class="project-card">
         <span class="project-icon">🎲</span>

@@ -25,6 +25,9 @@ their public URL paths so GitHub Pages can publish everything directly from the
 
 - **Root HTML files** — The personal homepage, doctoral tracker, tracker guide,
   and retro terminal.
+- **margin-maker/** — A self-contained Paper & Ink landing page for the
+  open-source macOS PDF margin utility, with a synthetic interactive comparison.
+  See its README for asset provenance, preview instructions, and content sources.
 - **projects/** — Standalone tools and scorecards, including
   **projects/project-tracker/** for one-tap project timers with local history,
   session statistics, CSV exports, and JSON backups. Version 2 groups projects
