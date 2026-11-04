@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self'; img-src 'self'; connect-src 'none'; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#F5F0E6">
+  <meta name="color-scheme" content="light">
+  <title>Margin Maker — Make room to think.</title>
+  <meta name="description" content="Give your PDFs room for notes. Margin Maker is a free, open-source macOS app that scales and positions PDF pages to create annotation space, all on your Mac.">
+  <meta name="author" content="Dean Lefor">
+  <link rel="canonical" href="https://deanlefor.com/margin-maker/">
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Margin Maker by Dean Lefor">
+  <meta property="og:title" content="Margin Maker — Make room to think.">
+  <meta property="og:description" content="A little breathing room for your PDFs. A free, open-source app for Apple Silicon Macs.">
+  <meta property="og:url" content="https://deanlefor.com/margin-maker/">
+  <meta property="og:image" content="https://deanlefor.com/margin-maker/assets/share-icon.png">
+  <meta property="og:image:width" content="512">
+  <meta property="og:image:height" content="512">
+  <meta property="og:image:alt" content="The Margin Maker icon: a document with space for a handwritten note.">
+  <meta name="twitter:card" content="summary">
+  <meta name="twitter:title" content="Margin Maker — Make room to think.">
+  <meta name="twitter:description" content="Give your PDFs room for notes. Free, open source, and local to your Mac.">
+  <meta name="twitter:image" content="https://deanlefor.com/margin-maker/assets/share-icon.png">
+  <meta name="twitter:image:alt" content="Margin Maker app icon">
+  <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="assets/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+  <script src="comparison.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#main">Skip to content</a>
+  <header class="site-header wrap">
+    <a class="brand" href="/margin-maker/" aria-label="Margin Maker home">
+      <img src="assets/app-icon.png" alt="" width="40" height="40">
+      <span>Margin Maker<span class="brand-period">.</span></span>
+    </a>
+    <nav aria-label="Main navigation">
+      <a class="nav-how" href="#how-it-works">How it works</a>
+      <a href="#good-to-know">Good to know</a>
+      <a class="nav-github" href="https://github.com/deanlefor/margin-maker">GitHub <span aria-hidden="true">↗</span></a>
+    </nav>
+  </header>
+
+  <main id="main">
+    <section class="hero wrap" aria-labelledby="hero-title">
+      <img class="hero-icon" src="assets/app-icon.png" alt="Margin Maker app icon" width="76" height="76" fetchpriority="high">
+      <p class="eyebrow">A small Mac app for big ideas</p>
+      <h1 id="hero-title">Make room <em>to think.</em></h1>
+      <p class="hero-copy">Give your PDFs a little breathing room. Add space for notes, questions, and ideas, then get back to reading.</p>
+      <div class="hero-actions">
+        <a class="button button-primary" href="https://github.com/deanlefor/margin-maker/releases/download/v0.3.0/Margin.Maker.0.3.0.macOS.Apple.Silicon.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/></svg>Download for Mac</a>
+        <a class="text-link" href="https://github.com/deanlefor/margin-maker">View on GitHub <span aria-hidden="true">↗</span></a>
+      </div>
+      <p class="release-line">Free &amp; open source <span>·</span> Apple Silicon <span>·</span> v0.3.0</p>
+      <a class="install-note" href="#good-to-know">First time installing? A few things to know <span aria-hidden="true">↓</span></a>
+    </section>
+
+    <section class="comparison-section wrap" aria-labelledby="comparison-title">
+      <div class="section-intro">
+        <div><p class="eyebrow"><span class="section-number">01</span> A little space, a different perspective</p><h2 id="comparison-title">The reading stays. <em>The room is yours.</em></h2></div>
+        <p class="handwritten comparison-cue" aria-hidden="true">Try the comparison <span>↙</span></p>
+      </div>
+      <figure class="comparison" id="comparison">
+        <div class="comparison-topline">
+          <p><span class="status-dot" aria-hidden="true"></span> A reading, reimagined</p>
+          <div class="state-buttons" role="group" aria-label="Compare PDF layouts" hidden>
+            <button type="button" data-state="before" aria-pressed="false">Before</button>
+            <button type="button" data-state="after" aria-pressed="true">After</button>
+          </div>
+        </div>
+        <div class="comparison-workspace">
+          <div class="page-desk">
+            <svg class="pdf-page" viewBox="0 0 400 518" role="img" aria-labelledby="pdf-title pdf-description">
+              <title id="pdf-title">A fictional academic reading with room for notes</title>
+              <desc id="pdf-description">After: the original article is scaled to 75 percent and positioned middle-left on a new portrait page. Handwritten example notes occupy the new right margin. Notes are added afterward in your own annotation app.</desc>
+              <rect width="400" height="518" fill="#fffefa"/>
+              <!-- One source group is transformed as a whole: no text reflow or rewriting. -->
+              <g id="source-page" transform="translate(0 64.75) scale(0.75)" fill="#373b37" font-family="Georgia, 'Times New Roman', serif">
+                <text x="32" y="28" font-family="Arial, sans-serif" font-size="6.5" letter-spacing="1.5">FIELDNOTES / AN ILLUSTRATIVE READING</text>
+                <path d="M32 36H368" stroke="#777e74" stroke-width="0.6"/>
+                <text x="32" y="64" font-size="20">The quiet work of paying attention</text>
+                <text x="32" y="81" font-size="8" fill="#666b64">A fictional essay on reading, reflection, and the space between ideas</text>
+                <text x="32" y="99" font-size="7.5" font-style="italic">The Fieldnotes Collective · Working paper no. 03</text>
+                <text x="32" y="124" font-size="9.5" font-weight="bold">Abstract</text>
+                <text font-size="8.1">
+                  <tspan x="32" y="139">Reading is more than the gathering of information. It is a conversation between</tspan>
+                  <tspan x="32" dy="11">a text and its reader, shaped by pauses, questions, and unexpected connections.</tspan>
+                  <tspan x="32" dy="11">This essay considers how a little space can invite a more attentive kind of reading.</tspan>
+                </text>
+                <path d="M32 174H368" stroke="#a3a69d" stroke-width="0.5"/>
+                <text x="32" y="194" font-size="10" font-weight="bold">1. Reading as a conversation</text>
+                <text x="210" y="194" font-size="10" font-weight="bold">2. The value of a pause</text>
+                <g font-size="8.2">
+                  <text>
+                    <tspan x="32" y="210">A good reading leaves us with more than</tspan>
+                    <tspan x="32" dy="12">a collection of facts. It gives us something</tspan>
+                    <tspan x="32" dy="12">to turn over in our minds: an observation,</tspan>
+                    <tspan x="32" dy="12">a difficulty, a new way to see a familiar</tspan>
+                    <tspan x="32" dy="12">question. Understanding takes shape in</tspan>
+                    <tspan x="32" dy="12">the exchange between these moments.</tspan>
+                    <tspan x="32" dy="21">The margin offers a place to notice that</tspan>
+                    <tspan x="32" dy="12">exchange. A few words beside a passage</tspan>
+                    <tspan x="32" dy="12">can hold a thought long enough to return</tspan>
+                    <tspan x="32" dy="12">to it. A question mark can make room</tspan>
+                    <tspan x="32" dy="12">for uncertainty without interrupting the</tspan>
+                    <tspan x="32" dy="12">thread of the argument.</tspan>
+                    <tspan x="32" dy="21">Notes need not be complete. Sometimes</tspan>
+                    <tspan x="32" dy="12">an arrow or a single word is enough to</tspan>
+                    <tspan x="32" dy="12">connect what we are reading with what</tspan>
+                    <tspan x="32" dy="12">we already know, or hope to understand.</tspan>
+                    <tspan x="32" dy="21">In this way, a page becomes a record of</tspan>
+                    <tspan x="32" dy="12">attention as well as a container for text.</tspan>
+                  </text>
+                  <text>
+                    <tspan x="210" y="210">A pause is not an absence of progress.</tspan>
+                    <tspan x="210" dy="12">It can be the moment when an idea finds</tspan>
+                    <tspan x="210" dy="12">its place. We look away from the line,</tspan>
+                    <tspan x="210" dy="12">consider an example, and then return</tspan>
+                    <tspan x="210" dy="12">with a slightly different perspective.</tspan>
+                    <tspan x="210" dy="21">Leaving space beside a reading makes</tspan>
+                    <tspan x="210" dy="12">that movement visible. The text stays</tspan>
+                    <tspan x="210" dy="12">where it is, while the reader has room</tspan>
+                    <tspan x="210" dy="12">to respond in a voice of their own.</tspan>
+                    <tspan x="210" dy="21">Consider a simple practice: after each</tspan>
+                    <tspan x="210" dy="12">section, write one question worth keeping.</tspan>
+                    <tspan x="210" dy="12">It may be small. What does this assume?</tspan>
+                    <tspan x="210" dy="12">Where have I seen this before? What</tspan>
+                    <tspan x="210" dy="12">would change my mind?</tspan>
+                    <tspan x="210" dy="21">The point is not to fill every blank space.</tspan>
+                    <tspan x="210" dy="12">It is to have somewhere to begin when</tspan>
+                    <tspan x="210" dy="12">a thought arrives.</tspan>
+                  </text>
+                </g>
+                <path d="M32 478H368" stroke="#a3a69d" stroke-width="0.5"/>
+                <text x="32" y="493" font-family="Arial, sans-serif" font-size="6.5" letter-spacing="0.7">SYNTHETIC DOCUMENT · DEMONSTRATION ONLY</text>
+                <text x="365" y="493" font-size="8">1</text>
+              </g>
+              <g id="margin-notes" fill="#315c51" font-family="'Bradley Hand', 'Segoe Print', cursive" font-size="13" font-style="italic" aria-hidden="true">
+                <text x="309" y="154" transform="rotate(-5 309 154)"><tspan x="309">A question</tspan><tspan x="309" dy="17">worth keeping.</tspan></text>
+                <path d="M320 183q-10 18-31 21m0 0 4-8m-4 8 10 1" fill="none" stroke="#315c51" stroke-width="1.3" stroke-linecap="round"/>
+                <path d="M309 223q-7 0-7 9v59q0 9 7 9" fill="none" stroke="#315c51" stroke-width="1.1"/>
+                <text x="316" y="251" transform="rotate(3 316 251)"><tspan x="316">Connect to</tspan><tspan x="316" dy="17">last week’s</tspan><tspan x="316" dy="17">discussion?</tspan></text>
+                <text x="311" y="361" transform="rotate(-4 311 361)"><tspan x="311">Leave room</tspan><tspan x="311" dy="17">for the idea.</tspan></text>
+                <path d="M311 385q30-5 66-2" fill="none" stroke="#d6a64f" stroke-width="2" stroke-linecap="round"/>
+              </g>
+            </svg>
+            <p class="page-label">US Letter · Portrait</p>
+          </div>
+          <div class="comparison-aside">
+            <p class="eyebrow">Same words. New possibilities.</p>
+            <h3>A place for <br>your side of <br><em>the conversation.</em></h3>
+            <p>Scale the original page. Give it a new position. Leave yourself a generous margin for whatever comes to mind.</p>
+            <p class="layout-readout" id="layout-readout">75% scale <span aria-hidden="true">/</span> Middle-left</p>
+            <div class="slider-controls" hidden>
+              <label for="comparison-slider">Try the comparison</label>
+              <input id="comparison-slider" type="range" min="0" max="100" value="100" step="1" aria-describedby="slider-help" aria-valuetext="After: 75% scale, middle-left, with room for notes">
+              <div class="slider-endpoints" aria-hidden="true"><span>Before</span><span>After</span></div>
+              <p id="slider-help">Drag, tap, or use the arrow keys.</p>
+            </div>
+            <noscript><p class="no-script-note">This is the “After” layout. Enable JavaScript to compare it with the original page.</p></noscript>
+          </div>
+        </div>
+        <figcaption>Illustrative preview with fictional text. Margin Maker scales and positions original page content on a new page; it does not summarize, rewrite, or reflow text. Example notes show what you can add afterward in your annotation app.</figcaption>
+      </figure>
+    </section>
+
+    <section class="how-section wrap" id="how-it-works" aria-labelledby="how-title">
+      <div class="section-intro"><div><p class="eyebrow"><span class="section-number">02</span> A simple ritual</p><h2 id="how-title">Less fiddling. <em>More reading.</em></h2></div><p class="section-side-note">From a crowded page<br>to a little breathing room.</p></div>
+      <ol class="steps">
+        <li>
+          <div class="step-illustration" aria-hidden="true"><svg viewBox="0 0 180 112"><path class="illustration-paper" d="M61 12h42l16 16v69H61z"/><path d="M103 12v17h16M74 43h31M74 52h31M74 61h18M30 69h18m-7-7 7 7-7 7"/><path class="gold-stroke" d="M133 37v25m-6-7 6 7 6-7"/></svg></div>
+          <p class="step-number">01 / IMPORT</p><h3>Drop in your PDF.</h3><p>Open Margin Maker and drag in a document.</p>
+        </li>
+        <li>
+          <div class="step-illustration" aria-hidden="true"><svg viewBox="0 0 180 112"><path class="illustration-paper" d="M39 22h101v72H39z"/><path d="M48 32h47v51H48zM56 43h31M56 51h31M56 59h21"/><path class="gold-stroke" d="M106 47q9-13 8 1t14-4M106 67h24"/></svg></div>
+          <p class="step-number">02 / ADJUST</p><h3>Make some room.</h3><p>Choose your page orientation, scaling, and positioning.</p>
+        </li>
+        <li>
+          <div class="step-illustration" aria-hidden="true"><svg viewBox="0 0 180 112"><path class="illustration-paper" d="M51 17h71v80H51z"/><path d="M61 29h33v52H61zM67 39h21M67 47h21M67 55h15"/><path class="gold-stroke" d="m104 70 29-39 6 5-29 39-10 5zM128 37l6 5M102 84h31"/></svg></div>
+          <p class="step-number">03 / EXPORT</p><h3>Get back to thinking.</h3><p>Save the adjusted PDF and use your preferred annotation app.</p>
+        </li>
+      </ol>
+    </section>
+
+    <section class="features-section" aria-labelledby="features-title">
+      <div class="features-inner wrap">
+        <div class="features-heading"><p class="eyebrow"><span class="section-number">03</span> Thoughtfully uncomplicated</p><h2 id="features-title">Just enough tools.<br><em>All your own space.</em></h2><p>A small, free utility for readers, students, and researchers. One job, with care.</p><span class="handwritten features-note" aria-hidden="true">Keep the original.<br>Make room for what’s next.</span></div>
+        <ul class="features-list">
+          <li><span class="feature-mark" aria-hidden="true">↔</span><div><h3>A page that fits your thinking.</h3><p>Portrait or landscape US Letter layouts, with your reading kept in proportion.</p></div></li>
+          <li><svg class="feature-svg position-mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="5" r="1.5"/><circle cx="12" cy="5" r="1.5"/><circle cx="19" cy="5" r="1.5"/><circle cx="5" cy="12" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="19" cy="12" r="1.5"/><circle cx="5" cy="19" r="1.5"/><circle cx="12" cy="19" r="1.5"/><circle cx="19" cy="19" r="1.5"/></svg><div><h3>A little room. Or a lot.</h3><p>Scale from 50% to 100% and choose from nine positions.</p></div></li>
+          <li><span class="feature-mark" aria-hidden="true">↗</span><div><h3>A fresh copy. Your original kept.</h3><p>Export a separate PDF. The imported source file is protected from replacement.</p></div></li>
+          <li><svg class="feature-svg" viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="10" width="16" height="11" rx="1"/><path d="M8 10V7a4 4 0 0 1 8 0v3M12 14v3"/></svg><div><h3>Your documents stay on your Mac.</h3><p>Processing happens locally, without uploading your readings to a service.</p></div></li>
+          <li><span class="feature-mark" aria-hidden="true">∞</span><div><h3>Free to use. Open to everyone.</h3><p>Open-source software under the <a href="https://github.com/deanlefor/margin-maker/blob/main/LICENSE">MIT license</a>. No accounts or subscriptions.</p></div></li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="good-section wrap" id="good-to-know" aria-labelledby="good-title">
+      <div class="good-heading"><p class="eyebrow"><span class="section-number">04</span> A note before you begin</p><h2 id="good-title">Good to know.</h2><p>A personal, open-source project, with a few edges to be aware of.</p><a class="text-link" href="https://github.com/deanlefor/margin-maker/blob/main/INSTALL.md">Installation instructions <span aria-hidden="true">↗</span></a><a class="quiet-link" href="https://github.com/deanlefor/margin-maker/releases/tag/v0.3.0">Read the v0.3.0 release notes</a></div>
+      <div class="good-notes">
+        <div><h3>For Apple Silicon Macs.</h3><p>The current download contains Apple Silicon code only. Intel compatibility, macOS 13, and installation on another Mac have not been verified.</p></div>
+        <div><h3>An extra step to open.</h3><p>The app is ad-hoc signed and not Apple-notarized. macOS may require an additional step to open it. The installation guide explains the application-specific steps.</p></div>
+        <div><h3>Keep your source PDFs.</h3><p>Some PDFs using <code>/ActualText</code> may lose semantic or accessibility-related text information, affecting copying, searching, or text extraction even when the page looks correct. Not all PDF structures are preserved. See the <a href="https://github.com/deanlefor/margin-maker/blob/main/COMPATIBILITY.md">compatibility documentation</a>.</p></div>
+        <div><h3>Make room before making notes.</h3><p>Existing PDF annotations may not be preserved. Add margins first, then highlight or write on the exported copy in your annotation app.</p></div>
+      </div>
+    </section>
+
+    <section class="closing wrap" aria-labelledby="closing-title">
+      <div class="closing-rule" aria-hidden="true"><span>✳</span></div>
+      <p class="eyebrow">For the thoughts between the lines</p>
+      <h2 id="closing-title">Your next idea needs <em>a little room.</em></h2>
+      <a class="button button-primary" href="https://github.com/deanlefor/margin-maker/releases/download/v0.3.0/Margin.Maker.0.3.0.macOS.Apple.Silicon.zip"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m-5-5 5 5 5-5M4 15v5h16v-5"/></svg>Download for Mac</a>
+      <p class="closing-note">Free &amp; open source. Made for a quieter kind of productivity.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer wrap">
+    <p>Made by <a href="/">Dean Lefor</a></p>
+    <nav aria-label="Footer navigation"><a href="https://github.com/deanlefor/margin-maker">GitHub <span aria-hidden="true">↗</span></a><a href="https://github.com/deanlefor/margin-maker/blob/main/LICENSE">MIT license</a><a href="/">deanlefor.com <span aria-hidden="true">↗</span></a></nav>
+  </footer>
+</body>
+</html>
