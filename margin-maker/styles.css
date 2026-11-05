@@ -132,10 +132,10 @@ html:has(.screenshot-dialog[open]) { overflow: hidden; }
 .dialog-control { min-height: 44px; padding: 10px 16px; background: transparent; border: 1px solid #b5bdab; border-radius: 4px; color: var(--forest); font-size: 12px; }
 .dialog-control:hover { background: #e9eadd; }
 .dialog-control span { margin-left: 8px; font-size: 18px; }
-.screenshot-viewport { max-height: calc(100dvh - 210px); overflow: auto; overscroll-behavior: contain; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper); }
+.screenshot-viewport { --screenshot-viewport-height: calc(100dvh - 210px); max-height: var(--screenshot-viewport-height); overflow: auto; overscroll-behavior: contain; border: 1px solid var(--rule); border-radius: 3px; background: var(--paper); }
 .screenshot-viewport picture { display: block; }
-.screenshot-viewport img { display: block; width: 100%; max-width: 988px; height: auto; margin-inline: auto; }
-.screenshot-dialog[data-zoomed] .screenshot-viewport img { width: 988px; max-width: none; }
+.screenshot-viewport img { display: block; width: auto; max-width: min(100%, 988px); height: auto; max-height: calc(var(--screenshot-viewport-height) - 2px); margin-inline: auto; }
+.screenshot-dialog[data-zoomed] .screenshot-viewport img { max-width: none; max-height: none; }
 .screenshot-dialog-footer { padding-top: 16px; font-size: 12px; }
 .features-section { background: #e9eadd; border-block: 1px solid #d2d7c6; }
 .features-inner { display: grid; grid-template-columns: 1fr 1.03fr; gap: 90px; padding-block: 80px; }
