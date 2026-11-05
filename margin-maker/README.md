@@ -45,14 +45,14 @@ redrawing, or color adjustment. `app-icon.png` is 256 px, `favicon.png` is
 32 px, `apple-touch-icon.png` is 180 px, and `share-icon.png` is 512 px.
 The social icon is metadata only and is not fetched during a normal page load.
 
-`assets/app-screenshot.png` is the unchanged application screenshot supplied by
-the project owner on November 4, 2026. It shows a demonstration PDF and the
-actual macOS interface. `assets/app-screenshot.webp` is a lossless optimization
-made with `cwebp -lossless -z 9 -exact -metadata icc`. Its decoded RGBA pixels and
-ICC color profile were verified to match the original exactly. It reduces the
-normal screenshot request from 359,227 to 112,216 bytes (68.8% smaller), with the
-original PNG retained as the fallback and full-resolution link. No resizing,
-recoloring, cropping, or recreation is involved.
+`assets/app-screenshot.png` is the original 2004 × 1772 screenshot supplied by
+the project owner on November 5, 2026. It shows Margin Maker v0.4.0 (build 5)
+with the demonstration PDF and the edge-offset controls.
+`assets/app-screenshot.webp` is a lossless optimization made with
+`cwebp -lossless -z 9 -exact -metadata icc`. Its decoded RGBA pixels and ICC
+color profile match the original exactly. WebP reduces the normal screenshot
+request from 1,036,735 to 246,760 bytes (76.2% smaller). The original PNG serves
+as the fallback and full-resolution link.
 
 The screenshot has its own prominent Paper & Ink section, separate from the
 interactive comparison. It is lazy-loaded inside a linked `picture` element.
@@ -67,18 +67,16 @@ the original PNG normally.
 PDF supplied by the project owner, titled *The Architecture of Attention*.
 Its SHA-256 is `a23766ecef38d55d06be5b1e4db1aa3ed59e918f62ec27b3e8c14d3c21dca790`.
 The download is a plain local link with a `download` attribute. The walkthrough
-reproduces the actual application screenshot with Portrait orientation, All
-pages, 75% scale, and the upper-left position. The separate SVG comparison
-continues to illustrate middle-left positioning with fictional article text.
-No website PDF processing or upload functionality has been added.
+reproduces the screenshot layout with Portrait orientation, All pages, the
+upper-left position, 70% scale, and horizontal and vertical offsets of 0.50
+inches each. The separate SVG comparison uses a fictional article and shows
+75% scale with middle-left positioning in its After view.
 
 ## Content sources
 
-Product and installation copy was checked against the application repository's
-[README](https://github.com/deanlefor/margin-maker/blob/main/README.md),
-[INSTALL.md](https://github.com/deanlefor/margin-maker/blob/main/INSTALL.md), and
-[v0.3.0 release notes](https://github.com/deanlefor/margin-maker/releases/tag/v0.3.0).
-The download buttons use the release's exact Apple Silicon ZIP URL, not a
-source archive. Keep the version, ZIP URL, compatibility disclosures, and these
-references in sync when updating the page. No application or release artifacts
-are maintained in this website repository.
+Product and compatibility copy follows the published
+[v0.4.0 release notes](https://github.com/deanlefor/margin-maker/releases/tag/v0.4.0).
+The page also links to [Apple’s opening guidance](https://support.apple.com/en-us/102445).
+Both download buttons point to the release’s Apple Silicon ZIP. Keep the
+version, ZIP URL, compatibility disclosures, and documentation links in sync
+when updating the page.
