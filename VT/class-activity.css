@@ -106,8 +106,8 @@ em { font-weight: inherit; }
 
 /* A brief reading prompt introduces Dahl and Long before the activities. */
 .reflection-section { padding-block: 56px; }
-.reflection-content { border-left: 3px solid var(--maroon); padding-left: 28px; }
-.reflection-content h2 { font-family: var(--serif); font-size: 2rem; font-weight: 400; letter-spacing: -.03em; line-height: 1.2; margin-top: 12px; }
+.reflection-body { border-top: 3px solid var(--maroon); padding-top: 25px; }
+.reflection-content h2 { font-family: var(--serif); font-size: 2rem; font-weight: 400; letter-spacing: -.03em; line-height: 1.2; }
 .reflection-scenario { margin-top: 20px; }
 .reflection-question { font-family: var(--serif); font-size: 1.8rem; line-height: 1.35; letter-spacing: -.025em; color: var(--maroon); margin-top: 18px; }
 .reflection-lenses { margin-top: 18px; font-size: .92rem; }
@@ -269,7 +269,6 @@ em { font-weight: inherit; }
   .group-route { font-size: .75rem; }
   .margin-note { font-size: .75rem; }
   .reflection-section { padding-block: 40px; }
-  .reflection-content { padding-left: 18px; }
   .reflection-content h2 { font-size: 1.75rem; }
   .reflection-question { font-size: 1.55rem; }
   .activity-header { display: block; padding-bottom: 20px; }
