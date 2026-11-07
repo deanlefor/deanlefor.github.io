@@ -10,6 +10,8 @@
   --rust: #a74726;
   --line: #d7cfc1;
   --soft-maroon: #eee3e2;
+  --section-accent: var(--maroon);
+  --parchment: #e9e0cf;
   --serif: Georgia, "Times New Roman", serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -32,7 +34,7 @@ em { font-weight: inherit; }
 .reading-width { max-width: 760px; margin-inline: auto; }
 .section-space { padding-block: 80px; }
 .eyebrow, .edition, .note-label, .session-month, .session-date, .activity-tag, .group-label, .position-label, .case-label { font-family: var(--mono); font-size: .7rem; line-height: 1.5; font-weight: 500; letter-spacing: .1em; text-transform: uppercase; }
-.eyebrow { color: var(--maroon); }
+.eyebrow { color: var(--section-accent); }
 .sr-only, .session-date { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0; }
 .skip-link { position: fixed; z-index: 10; top: 10px; left: 10px; padding: 12px 18px; background: var(--white); transform: translateY(-160%); }
 .skip-link:focus { transform: translateY(0); }
@@ -60,16 +62,21 @@ em { font-weight: inherit; }
 .nav-inner { display: flex; align-items: stretch; }
 .nav-inner a { display: flex; gap: 13px; align-items: center; min-height: 62px; padding: 8px 30px; border-left: 1px solid var(--line); font-size: .84rem; font-weight: 600; text-decoration: none; }
 .nav-inner a:first-child { padding-left: 0; border-left: 0; }
-.nav-inner a:hover { color: var(--rust); }
+.nav-inner a { color: var(--section-accent); box-shadow: inset 0 -3px 0 var(--section-accent); }
+.nav-inner a:hover { background: var(--white); text-decoration: underline; }
 .nav-number { font-family: var(--mono); font-size: .65rem; color: var(--muted); font-weight: 400; }
 .section-number { margin-right: 12px; }
 .section-heading h2 { font-family: var(--serif); font-size: 2.75rem; font-weight: 400; letter-spacing: -.04em; line-height: 1.2; margin-top: 12px; }
 .section-heading > p:last-child { color: var(--muted); margin-top: 14px; max-width: 600px; }
 
+/* Warm parchment bookends the maroon-tinted journal pages. */
+.groups-section, .restoration-section { --line: #c8bba4; background: var(--parchment); }
+.restoration-section { --soft-maroon: #e1d4be; border-bottom: 1px solid var(--line); }
+
 /* The roster is a set of four desk cards, in group order. */
 .group-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 34px; gap: 16px; }
-.group-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); background: var(--white); padding: 18px; }
-.group-card h3 { display: flex; justify-content: space-between; align-items: center; font-family: var(--serif); font-weight: 400; font-size: 2.6rem; color: var(--maroon); line-height: 1; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.group-card { display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--line); border-top: 3px solid var(--section-accent); background: var(--white); padding: 18px; }
+.group-card h3 { display: flex; justify-content: space-between; align-items: center; font-family: var(--serif); font-weight: 400; font-size: 2.6rem; color: var(--section-accent); line-height: 1; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
 .group-card h3 span { font-family: var(--mono); font-size: .7rem; color: var(--muted); letter-spacing: .06em; text-transform: uppercase; }
 .name-list { display: flex; flex-wrap: wrap; row-gap: 4px; overflow: hidden; list-style: none; padding: 0; margin: 14px -9px; font-size: .9rem; line-height: 1.6; }
 /* Clip the first divider on each wrapped line while keeping names intact. */
@@ -81,7 +88,7 @@ em { font-weight: inherit; }
 .margin-note span { color: var(--rust); font-size: 1.2rem; margin-right: 7px; }
 
 /* Group labels reveal the same roster wherever an activity mentions them. */
-.group-card:target { outline: 2px solid var(--maroon); outline-offset: 4px; }
+.group-card:target { outline: 2px solid var(--section-accent); outline-offset: 4px; }
 .group-link { display: inline-flex; align-items: center; gap: 5px; min-height: 44px; white-space: nowrap; text-decoration: underline; text-decoration-style: dotted; text-decoration-thickness: 1px; text-underline-offset: 4px; }
 .group-link::after { content: "↗"; font-family: var(--sans); font-size: .8em; font-weight: 400; }
 .group-link:hover { text-decoration-style: solid; }
@@ -98,10 +105,10 @@ em { font-weight: inherit; }
 .group-dialog .group-route p + p { margin-top: 0; }
 
 /* Activity one takes the form of a journal's editorial pages. */
-.editorial-section { background: var(--white); border-block: 1px solid var(--line); }
+.editorial-section { --line: #d7bac4; --soft-maroon: #ead3dc; background: #f4e7eb; border-block: 1px solid var(--line); }
 .activity-header { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding-bottom: 24px; }
 .activity-tag { font-size: .6rem; color: var(--muted); }
-.journal-masthead { border-top: 3px solid var(--ink); border-bottom: 1px solid var(--ink); text-align: center; padding-block: 25px 30px; }
+.journal-masthead { color: var(--maroon); border-top: 3px solid var(--maroon); border-bottom: 1px solid var(--maroon); text-align: center; padding-block: 25px 30px; }
 .journal-illustration { display: block; width: min(320px, 88%); height: auto; margin: 0 auto 20px; }
 .journal-kicker { font-size: .8rem; color: var(--muted); margin-bottom: 14px; }
 .journal-masthead h2 { font-family: var(--serif); font-size: clamp(2.25rem, 4.4vw, 3.8rem); line-height: 1.08; letter-spacing: -.045em; font-weight: 400; }
@@ -114,7 +121,7 @@ em { font-weight: inherit; }
 .subsection-header h3 { font-family: var(--serif); font-size: 1.85rem; font-weight: 400; letter-spacing: -.025em; line-height: 1.3; }
 .subsection-header p { color: var(--muted); font-size: .9rem; margin-top: 5px; }
 .assignment-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); border-top: 1px solid var(--line); border-left: 1px solid var(--line); }
-.assignment-card { border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 28px; }
+.assignment-card { background: var(--white); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); padding: 26px 28px; }
 .assignment-topline { display: flex; justify-content: space-between; align-items: center; gap: 20px; }
 .group-label { color: var(--maroon); font-size: .65rem; }
 .position-label { color: var(--muted); font-size: .6rem; }
@@ -148,7 +155,7 @@ em { font-weight: inherit; }
 .vote-list dt { display: flex; align-items: baseline; gap: 20px; font-size: .95rem; font-weight: 600; }
 .vote-letter { font-family: var(--serif); font-size: 2rem; color: var(--maroon); line-height: 1; font-weight: 400; min-width: 26px; }
 .vote-list dd { color: var(--muted); font-size: .92rem; }
-.discussion-prompt { border-left: 3px solid var(--maroon); background: var(--soft-maroon); padding: 24px 28px; margin-top: 32px; }
+.discussion-prompt { border-left: 3px solid var(--section-accent); background: var(--soft-maroon); padding: 24px 28px; margin-top: 32px; }
 .discussion-prompt > p:last-child { font-family: var(--serif); font-size: 1.65rem; line-height: 1.4; letter-spacing: -.02em; margin-top: 10px; }
 .afterword { padding-top: 42px; }
 .afterword > p:last-child { color: var(--muted); font-size: .95rem; margin-top: 12px; }
@@ -159,14 +166,15 @@ em { font-weight: inherit; }
 .activity-end a { display: inline-flex; align-items: center; gap: 10px; min-height: 44px; font-family: var(--serif); font-size: 1.05rem; }
 
 /* Activity two is a case file: two plans, one unresolved decision. */
-.case-banner { border-top: 3px solid var(--maroon); padding-block: 24px; text-align: center; }
+.case-banner { border-top: 3px solid var(--section-accent); padding-block: 24px; text-align: center; }
 .case-illustration { display: block; width: min(400px, 100%); height: auto; margin-inline: auto; }
 .case-banner-caption { width: fit-content; max-width: 100%; margin: 16px auto 0; font-family: var(--mono); font-size: .62rem; line-height: 1.6; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
-.case-banner-theme { margin-top: 5px; font-family: var(--serif); font-size: 1rem; font-style: italic; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--maroon); }
-.case-intro { display: grid; grid-template-columns: 1.25fr .75fr; align-items: end; gap: 60px; border-top: 3px solid var(--maroon); padding-top: 32px; }
+.case-banner-theme { margin-top: 5px; font-family: var(--serif); font-size: 1rem; font-style: italic; line-height: 1.4; letter-spacing: 0; text-transform: none; color: var(--section-accent); }
+.case-intro { display: grid; grid-template-columns: 1.25fr .75fr; align-items: end; gap: 60px; border-top: 3px solid var(--section-accent); padding-top: 32px; }
 .case-label { color: var(--muted); font-size: .6rem; }
 .case-intro h2 { font-family: var(--serif); font-size: clamp(2.2rem, 3.7vw, 3.2rem); font-weight: 400; line-height: 1.16; letter-spacing: -.04em; margin-top: 14px; }
-.case-intro h2 em { color: var(--maroon); }
+.case-intro h2 em { color: var(--section-accent); }
+.restoration-section a { color: var(--section-accent); }
 .case-intro > p { color: var(--muted); font-size: 1rem; padding-bottom: 4px; }
 .plan-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; margin-top: 34px; }
 .plan-card { display: flex; flex-direction: column; background: var(--white); border: 1px solid var(--line); padding: 28px 30px; }
@@ -174,6 +182,7 @@ em { font-weight: inherit; }
 .plan-b { border-top: 4px solid var(--rust); }
 .plan-heading { display: flex; align-items: center; gap: 18px; }
 .plan-letter { font-family: var(--serif); font-size: 4rem; line-height: 1; color: var(--maroon); }
+.plan-a .eyebrow { color: var(--maroon); }
 .plan-b .plan-letter, .plan-b .eyebrow { color: var(--rust); }
 .plan-card h3 { font-family: var(--serif); font-size: 1.85rem; font-weight: 400; letter-spacing: -.025em; line-height: 1.25; margin-block: 22px 14px; }
 .plan-card > p { font-size: .95rem; }
@@ -185,10 +194,10 @@ em { font-weight: inherit; }
 .case-table thead { border-block: 1px solid var(--line); }
 .case-table thead th { color: var(--muted); font-family: var(--mono); font-size: .6rem; font-weight: 400; text-transform: uppercase; letter-spacing: .05em; padding: 12px 20px; }
 .case-table tbody th, .case-table td { padding: 15px 20px; border-bottom: 1px solid var(--line); font-size: .95rem; }
-.case-table tbody th { color: var(--maroon); font-weight: 600; }
-.case-table tbody tr:nth-child(odd) { background: #eee9df; }
-.plan-chip { border: 1px solid #c8bbaa; border-radius: 2px; padding: 4px 10px; font-family: var(--mono); font-size: .7rem; white-space: nowrap; }
-.case-question { max-width: 830px; margin: 44px auto; font-family: var(--serif); font-size: 2rem; line-height: 1.35; text-align: center; color: var(--maroon); letter-spacing: -.025em; }
+.case-table tbody th { color: var(--section-accent); font-weight: 600; }
+.case-table tbody tr:nth-child(odd) { background: #e1d4be; }
+.plan-chip { border: 1px solid #b6a488; border-radius: 2px; padding: 4px 10px; font-family: var(--mono); font-size: .7rem; white-space: nowrap; }
+.case-question { max-width: 830px; margin: 44px auto; font-family: var(--serif); font-size: 2rem; line-height: 1.35; text-align: center; color: var(--section-accent); letter-spacing: -.025em; }
 .report-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 70px; border-top: 1px solid var(--line); padding-top: 32px; }
 .report-intro h3 { font-family: var(--serif); font-size: 2.1rem; font-weight: 400; letter-spacing: -.03em; line-height: 1.15; margin-block: 12px; }
 .report-intro > p:last-child { color: var(--muted); font-size: .95rem; }
@@ -335,7 +344,7 @@ em { font-weight: inherit; }
   .group-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
   .group-card { padding: 14px; break-inside: avoid; }
   .name-list { font-size: 9pt; }
-  .editorial-section { background: white; }
+  .groups-section, .editorial-section, .restoration-section { background: white; }
   .journal-illustration { width: 220px; margin-bottom: 12px; }
   .journal-issue { margin-top: 14px; }
   .journal-masthead h2 { font-size: 28pt; }
