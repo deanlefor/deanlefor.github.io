@@ -169,6 +169,12 @@ em { font-weight: inherit; }
 .afterword { padding-top: 42px; }
 .afterword > p:last-child { color: var(--muted); font-size: .95rem; margin-top: 12px; }
 
+/* A brief quotation closes the editorial discussion with room to reconsider. */
+.editorial-quote { max-width: 760px; margin: 44px auto 0; border-top: 1px solid var(--line); padding-top: 32px; text-align: center; break-inside: avoid; }
+.editorial-quote blockquote { margin-top: 16px; font-family: var(--serif); font-size: clamp(1.4rem, 2.5vw, 2rem); line-height: 1.45; letter-spacing: -.02em; color: var(--maroon); }
+.editorial-quote figcaption { margin-top: 18px; font-size: .85rem; color: var(--muted); }
+.editorial-quote figcaption span { display: block; margin-top: 3px; font-family: var(--mono); font-size: .6rem; letter-spacing: .04em; }
+
 /* A quiet colophon closes each activity after its final discussion. */
 .activity-end { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 32px; margin-top: 40px; border-top: 1px solid var(--line); padding-top: 20px; }
 .activity-end p { font-family: var(--mono); font-size: .65rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
