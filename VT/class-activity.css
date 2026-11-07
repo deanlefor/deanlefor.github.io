@@ -11,8 +11,7 @@
   --line: #d7cfc1;
   --soft-maroon: #eee3e2;
   --section-accent: var(--maroon);
-  --group-accent: #695334;
-  --island-accent: #245c57;
+  --parchment: #e9e0cf;
   --serif: Georgia, "Times New Roman", serif;
   --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -64,17 +63,15 @@ em { font-weight: inherit; }
 .nav-inner a { display: flex; gap: 13px; align-items: center; min-height: 62px; padding: 8px 30px; border-left: 1px solid var(--line); font-size: .84rem; font-weight: 600; text-decoration: none; }
 .nav-inner a:first-child { padding-left: 0; border-left: 0; }
 .nav-inner a { color: var(--section-accent); box-shadow: inset 0 -3px 0 var(--section-accent); }
-.nav-inner a[href="#groups"] { --section-accent: var(--group-accent); }
-.nav-inner a[href="#restoration-case"] { --section-accent: var(--island-accent); }
 .nav-inner a:hover { background: var(--white); text-decoration: underline; }
 .nav-number { font-family: var(--mono); font-size: .65rem; color: var(--muted); font-weight: 400; }
 .section-number { margin-right: 12px; }
 .section-heading h2 { font-family: var(--serif); font-size: 2.75rem; font-weight: 400; letter-spacing: -.04em; line-height: 1.2; margin-top: 12px; }
 .section-heading > p:last-child { color: var(--muted); margin-top: 14px; max-width: 600px; }
 
-/* Three distinct paper colors carry through the guide and section links. */
-.groups-section { --section-accent: var(--group-accent); --line: #c8bba4; background: #e9e0cf; }
-.restoration-section { --section-accent: var(--island-accent); --line: #b5cdc5; --soft-maroon: #cfe3dc; background: #e0eeea; border-bottom: 1px solid var(--line); }
+/* Warm parchment bookends the maroon-tinted journal pages. */
+.groups-section, .restoration-section { --line: #c8bba4; background: var(--parchment); }
+.restoration-section { --soft-maroon: #e1d4be; border-bottom: 1px solid var(--line); }
 
 /* The roster is a set of four desk cards, in group order. */
 .group-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); margin-top: 34px; gap: 16px; }
@@ -198,8 +195,8 @@ em { font-weight: inherit; }
 .case-table thead th { color: var(--muted); font-family: var(--mono); font-size: .6rem; font-weight: 400; text-transform: uppercase; letter-spacing: .05em; padding: 12px 20px; }
 .case-table tbody th, .case-table td { padding: 15px 20px; border-bottom: 1px solid var(--line); font-size: .95rem; }
 .case-table tbody th { color: var(--section-accent); font-weight: 600; }
-.case-table tbody tr:nth-child(odd) { background: #cfe3dc; }
-.plan-chip { border: 1px solid #8cafa3; border-radius: 2px; padding: 4px 10px; font-family: var(--mono); font-size: .7rem; white-space: nowrap; }
+.case-table tbody tr:nth-child(odd) { background: #e1d4be; }
+.plan-chip { border: 1px solid #b6a488; border-radius: 2px; padding: 4px 10px; font-family: var(--mono); font-size: .7rem; white-space: nowrap; }
 .case-question { max-width: 830px; margin: 44px auto; font-family: var(--serif); font-size: 2rem; line-height: 1.35; text-align: center; color: var(--section-accent); letter-spacing: -.025em; }
 .report-layout { display: grid; grid-template-columns: .9fr 1.1fr; gap: 70px; border-top: 1px solid var(--line); padding-top: 32px; }
 .report-intro h3 { font-family: var(--serif); font-size: 2.1rem; font-weight: 400; letter-spacing: -.03em; line-height: 1.15; margin-block: 12px; }
