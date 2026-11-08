@@ -48,18 +48,21 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.6.1 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.7 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
   Selected or searched view permutes only visible slots, leaving every hidden
   list in its exact saved position. Filters never alter selections, counts,
-  locks or results. All/Selected is saved immediately as a browser preference
-  under `list-mixer:list-view:v1` and restored on refresh/reopen. Missing or
-  invalid preferences default to All; blocked preference storage leaves the
-  control usable. Preference writes do not rewrite workspace data or trigger
-  its cross-tab conflict handling. This preference is separate from backups;
-  search resets on reload. Full order is saved per setup and included in backups. Item contents remain available in Edit. All/Selected
+  locks or results. Each setup stores its own All/Selected choice in workspace
+  data, saved immediately and restored on setup changes, refresh and reopening.
+  New setups start with All; duplicates inherit the original choice, and backup
+  restore/merge preserves each setup's view. Upgrading local version-1 through
+  version-5 saves copies the former `list-mixer:list-view:v1` browser preference
+  into each existing setup once (invalid/unavailable preferences default to All).
+  The legacy key is no longer written and cannot override version-6 views.
+  Search remains tab-local. Full order and view are included in backups. Item
+  contents remain available in Edit. All/Selected
   counts and empty-view controls keep the full library reachable. Unchecking
   and rechecking lists preserves their remembered positions.
   Each list has a per-setup Draw count (default 1). Generate draws that many
@@ -86,11 +89,11 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Labeled output uses one named item per line; otherwise items are comma
   separated. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
-  This update retains backup version 5 and the existing storage key. Backups
-  use the `list-mixer` format. Version-1 through version-4
-  saves migrate with their existing visible list order, default Draw counts of
-  1, and unchanged output. Older favorites start unnamed. Older app versions
-  reject version-5 data rather than silently discard counts or list positions.
+  Backups now use version 6 of the `list-mixer` format, retaining the workspace
+  storage key. Version-1 through version-5 backups import without changing
+  saved output and default to All because they did not contain per-setup views.
+  Existing migrations retain their list order/count defaults and favorite names.
+  Older apps reject version-6 backups rather than silently discard setup views.
   The existing 8 MB workspace cap includes saved results; failed additions
   preserve existing data. Browser storage quotas may be smaller.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
