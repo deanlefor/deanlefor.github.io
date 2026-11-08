@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.14 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.15 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -66,6 +66,26 @@ their public URL paths so GitHub Pages can publish everything directly from the
   counts and empty-view controls keep shown lists reachable; Show / hide lists
   opens the full library visibility checklist. Unchecking
   and rechecking lists preserves their remembered positions.
+  Version 1.15 adds an Output dialog for each list, separate from the shared
+  list editor. Per-profile options hide a drawn category when a linked child
+  exists, and add text before and/or after that list's picks. Unlinked values
+  remain visible. Added text wraps multiple picks from the list once; labeled
+  output uses one line for that phrase. Without added text, the existing
+  per-pick labels and comma separation remain unchanged. Include list names
+  still controls the list label independently of category suppression.
+  Preview uses current picks or up to ten first-item examples without consuming
+  randomness. Apply immediately reformats the current result without rerolling;
+  raw category/child pairs, odds, locks, other profiles, history and favorites
+  stay unchanged. Cancel/Escape discard drafts, Reset clears the draft, and
+  Apply offers Undo. Lock controls retain the full pair for identification.
+  Parent options control automatic child draws; child options apply only to
+  separate draws. New profiles/lists default to original formatting; profile
+  duplicates copy options. Deletion cleans references and Undo restores them.
+  Each setup stores listOutput entries containing listId, hideCategory, before,
+  and after. Text fields are limited to 1,000 characters, rendered as plain text,
+  and preserved with explicit whitespace. Spacing joins words while simple
+  adjacent punctuation remains attached. Refresh and backups retain options;
+  backup merge remaps references independently for each imported setup.
   Version 1.14 adds Show / hide lists for each profile (setup). Its searchable
   checklist manages main lists and parent groups; linked children follow their
   parents. Apply saves immediately; Cancel discards the visibility draft.
@@ -104,8 +124,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   the latest 50 results, remaps imported list IDs, counts and lock slots, and
   appends newly available lists to each setup's remembered order. Matching
   favorites keep an existing name or fill an empty name from the backup.
-  Labeled output uses one named item per line; otherwise items are comma
-  separated. Reusable instruction selections, placements and order belong to
+  Labeled output uses one named item per line, or one phrase for a list with
+  before/after text; otherwise entries are comma separated. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
   Version 1.10 automatically unchecks a parent's directly selected sub-lists
   when that parent is checked. Select all prioritizes parents and independent
@@ -171,8 +191,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 10 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–9 still import without changing saved output;
+  Backups now use version 11 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–10 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
   defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
@@ -180,7 +200,10 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Version-9 backups retain expanded groups. All earlier schemas start with all
   lists shown. Schema 10 validates unique hidden main-list references and
   rejects selected hidden lists. Merge remaps hidden preferences separately
-  for each imported setup. New backups require app 1.14 or later, so older
+  for each imported setup. Version-10 backups retain hidden choices and default to original output.
+  Schema 11 validates unique known list references, boolean hideCategory and
+  bounded before/after text; earlier schemas migrate with no custom output.
+  New backups require app 1.15 or later, so older
   apps reject them instead of silently discarding preferences.
   Lists optionally include `selectionMode: "categories" | "items"` (omission
   means categories) and `links: [{value, listId}]`;
