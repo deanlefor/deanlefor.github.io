@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.15 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.16 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -66,20 +66,33 @@ their public URL paths so GitHub Pages can publish everything directly from the
   counts and empty-view controls keep shown lists reachable; Show / hide lists
   opens the full library visibility checklist. Unchecking
   and rechecking lists preserves their remembered positions.
+  Version 1.16 adds Separate with: Commas, Spaces, or New lines. The selected
+  separator applies between lists, multiple picks, and visible category/child
+  values, with or without list names. Typed punctuation, explicit whitespace,
+  and instruction blocks are preserved. Changes immediately reformat current
+  output without rerolling and save per setup as outputSeparator. Duplicates
+  inherit it; new setups default to commas. Refresh and backups retain it.
+  Child before/after text now applies automatically when a parent draws the
+  child's category. The child phrase is formatted first, then category visibility
+  and parent text apply. Shared children work with each parent's options;
+  Draw separately remains an extra independent draw. Separate multi-item child
+  draws still receive a single surrounding phrase. Child editor previews show
+  the result through one linked parent, preferring a selected parent and its
+  current matching picks. Parent previews retain all child settings.
   Version 1.15 adds an Output dialog for each list, separate from the shared
   list editor. Per-profile options hide a drawn category when a linked child
   exists, and add text before and/or after that list's picks. Unlinked values
   remain visible. Added text wraps multiple picks from the list once; labeled
-  output uses one line for that phrase. Without added text, the existing
-  per-pick labels and comma separation remain unchanged. Include list names
+  output uses one label for that phrase. Without added text, each pick receives
+  its own label. The selected separator joins the output. Include list names
   still controls the list label independently of category suppression.
   Preview uses current picks or up to ten first-item examples without consuming
   randomness. Apply immediately reformats the current result without rerolling;
   raw category/child pairs, odds, locks, other profiles, history and favorites
   stay unchanged. Cancel/Escape discard drafts, Reset clears the draft, and
   Apply offers Undo. Lock controls retain the full pair for identification.
-  Parent options control automatic child draws; child options apply only to
-  separate draws. New profiles/lists default to original formatting; profile
+  Parent options surround automatic child phrases; child text applies both
+  automatically and to separate draws. New profiles/lists default to original formatting; profile
   duplicates copy options. Deletion cleans references and Undo restores them.
   Each setup stores listOutput entries containing listId, hideCategory, before,
   and after. Text fields are limited to 1,000 characters, rendered as plain text,
@@ -124,8 +137,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   the latest 50 results, remaps imported list IDs, counts and lock slots, and
   appends newly available lists to each setup's remembered order. Matching
   favorites keep an existing name or fill an empty name from the backup.
-  Labeled output uses one named item per line, or one phrase for a list with
-  before/after text; otherwise entries are comma separated. Reusable instruction selections, placements and order belong to
+  Labeled output gives each item a name, or one label for a list phrase with
+  before/after text; the chosen separator joins entries. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
   Version 1.10 automatically unchecks a parent's directly selected sub-lists
   when that parent is checked. Select all prioritizes parents and independent
@@ -180,7 +193,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   values, with one child per selected category. Children may repeat across
   categories. Checking a child separately adds an independent draw with its
   own count. Plain output includes both values (Car, BMW M3); labeled output
-  keeps each pair on one row (Vehicles: Car, BMW M3).
+  adds the parent name (Vehicles: Car, BMW M3 with Commas).
   Locks preserve entire pairs and release when either value or link changes.
   Self-links, cycles and chains are rejected; a child list cannot contain links.
   Empty linked lists report an error without changing the current output.
@@ -191,8 +204,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 11 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–10 still import without changing saved output;
+  Backups now use version 12 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–11 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
   defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
@@ -203,7 +216,11 @@ their public URL paths so GitHub Pages can publish everything directly from the
   for each imported setup. Version-10 backups retain hidden choices and default to original output.
   Schema 11 validates unique known list references, boolean hideCategory and
   bounded before/after text; earlier schemas migrate with no custom output.
-  New backups require app 1.15 or later, so older
+  Schema 12 adds a validated outputSeparator enum (commas, spaces, lines).
+  Earlier named profiles default to lines and unnamed profiles to commas;
+  existing result/history/favorite text is never rewritten during migration.
+  Schema-11 list options are retained. Child text applies through parents when
+  results are next formatted. New backups require app 1.16 or later, so older
   apps reject them instead of silently discarding preferences.
   Lists optionally include `selectionMode: "categories" | "items"` (omission
   means categories) and `links: [{value, listId}]`;
