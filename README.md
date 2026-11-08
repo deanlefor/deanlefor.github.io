@@ -48,8 +48,16 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.5 remembers all list positions when lists
-  are unchecked or rechecked. Arrows move both checked and unchecked lists.
+  `list-mixer:workspace:v1`. Version 1.6 adds compact rows, All/Selected views,
+  and drag handles. Dragging shows an insertion line and scrolls the list near
+  its edges. Clicking a handle opens a position picker; Arrow Up/Down and
+  Home/End work on focused handles, and Escape cancels a drag. Reordering a
+  Selected or searched view permutes only visible slots, leaving every hidden
+  list in its exact saved position. Filters never alter selections, counts,
+  locks or results. Views/search are tab-local; full order is saved per setup
+  and included in backups. Item contents remain available in Edit. All/Selected
+  counts and empty-view controls keep the full library reachable. Unchecking
+  and rechecking lists preserves their remembered positions.
   Each list has a per-setup Draw count (default 1). Generate draws that many
   distinct values per list, in slot order; values can still repeat across lists
   and later results. Duplicate entries weight selection, while each selected
@@ -74,7 +82,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Labeled output uses one named item per line; otherwise items are comma
   separated. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
-  Backups use version 5 of the `list-mixer` format. Version-1 through version-4
+  This update retains backup version 5 and the existing storage key. Backups
+  use the `list-mixer` format. Version-1 through version-4
   saves migrate with their existing visible list order, default Draw counts of
   1, and unchanged output. Older favorites start unnamed. Older app versions
   reject version-5 data rather than silently discard counts or list positions.
