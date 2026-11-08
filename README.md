@@ -44,6 +44,13 @@ their public URL paths so GitHub Pages can publish everything directly from the
   **projects/SCORECARD-DEVELOPMENT.md** before adding or restructuring a
   scorekeeper, and **projects/SCORECARD-RULES.md** for the maintained scoring
   contracts and deliberate house rules.
+- **projects/list-mixer/** — An unlisted, self-contained list randomizer with
+  a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
+  carries `noindex` and is intentionally absent from navigation, project
+  listings, and the sitemap. Data stays in browser storage under
+  `list-mixer:workspace:v1`; backups use the version-1 `list-mixer` format.
+  Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
+  whenever editing the script blocks; `tests/list-mixer.test.js` verifies them.
 - **apps/fers-retirement/** — React and TypeScript source and tests for the
   Dual-FERS Retirement Planner, with governing documents under
   `project-docs/`.
