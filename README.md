@@ -48,13 +48,21 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.1 adds labeled output and a shared library
-  of reusable instruction blocks, with per-setup selection, placement, and
-  ordering. Setup notes can appear at the beginning or end. Formatting changes
-  retain current random picks. Backups now use version 2 of the `list-mixer`
-  format; version-1 saves and backups migrate with unchanged instructions and
-  comma-separated output. Older app versions reject version-2 data rather than
-  silently discarding the new fields.
+  `list-mixer:workspace:v1`. Version 1.2 adds per-setup pick locks, the latest
+  50 generated results across setups, and up to 500 favorites. History and
+  favorites are exact output snapshots; editing or deleting lists, instructions,
+  or setups does not rewrite them. Locks survive reloads and are released if the
+  list is unchecked/deleted or its locked item is removed. Clearing history
+  keeps favorites, and removals offer Undo. Backup exports include both
+  collections and locks; merging retains favorites (deduplicated by exact text)
+  and the latest 50 recent results, while remapping imported list IDs.
+  Labeled output and reusable instruction blocks retain their per-setup
+  selection, placement, and ordering. Formatting changes retain current picks.
+  Backups use version 3 of the `list-mixer` format; version-1 and version-2 saves
+  and backups migrate without changing existing output. Older app versions
+  reject version-3 data rather than silently discarding favorites or locks.
+  The existing 8 MB workspace cap includes saved results; failed additions
+  preserve existing data. Browser storage quotas may be smaller.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
   whenever editing the script blocks; `tests/list-mixer.test.js` verifies them.
 - **apps/fers-retirement/** — React and TypeScript source and tests for the
