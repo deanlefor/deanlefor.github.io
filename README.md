@@ -48,12 +48,12 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.13 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.14 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
   Selected or searched view permutes only visible slots, leaving every hidden
-  list in its exact saved position. Filters never alter selections, counts,
+  list in its exact saved position. All/Selected and search filters never alter selections, counts,
   locks or results. Each setup stores its own All/Selected choice in workspace
   data, saved immediately and restored on setup changes, refresh and reopening.
   New setups start with All; duplicates inherit the original choice, and backup
@@ -63,8 +63,26 @@ their public URL paths so GitHub Pages can publish everything directly from the
   The legacy key is no longer written and cannot override version-6 views.
   Search remains tab-local. Full order and view are included in backups. Item
   contents remain available in Edit. All/Selected
-  counts and empty-view controls keep the full library reachable. Unchecking
+  counts and empty-view controls keep shown lists reachable; Show / hide lists
+  opens the full library visibility checklist. Unchecking
   and rechecking lists preserves their remembered positions.
+  Version 1.14 adds Show / hide lists for each profile (setup). Its searchable
+  checklist manages main lists and parent groups; linked children follow their
+  parents. Apply saves immediately; Cancel discards the visibility draft.
+  Hiding a list unchecks it and releases its direct locks in this setup only.
+  A shared child stays available while any parent is shown. Hidden lists stay
+  out of All/Selected, search and Select all. Show all restores visibility
+  without selecting lists. Saved positions, counts, group expansion, current
+  output, favorites, other profiles and shared library contents remain intact.
+  Generate applies the selection change. Undo restores visibility and locks.
+  Choices persist on reload, duplicate with setups, and travel in backups.
+  New profiles show all lists. Each setup's hiddenListIds stores hidden root
+  IDs; deleting lists or making them children removes obsolete preferences.
+  The editor's Delete list now opens an explicit all-profile confirmation,
+  naming the list and current profile and explaining global removal and link
+  cleanup. Cancel is focused initially and preserves the editor draft; Escape
+  cancels too. Delete from all profiles confirms deletion with Undo. The
+  warning points to Show / hide lists for profile-only changes.
   Each list has a per-setup Draw count (default 1). Generate draws that many
   distinct values per list, in slot order; values can still repeat across lists
   and later results. Duplicate entries weight selection, while each selected
@@ -101,7 +119,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   or child checkboxes. Expand a group to edit a child or select Draw separately;
   independently selected children stay inside, with their Draw counts and any
   overlap notice. Group summaries show how many are selected separately.
-  A shared child belongs to the first linked parent in saved order, independent
+  A shared child belongs to the first shown linked parent in saved order, independent
   of selections; other parents still show its connection and group owner.
   In Selected, unchecked parent containers remain visible when their grouped
   children are selected independently or active through another selected parent.
@@ -153,14 +171,17 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 9 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–8 still import without changing saved output;
+  Backups now use version 10 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–9 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
   defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
-  Version-8 backups retain selection methods. All older backups default groups
-  to collapsed. Schema 9 validates unique expanded parent references per setup;
-  older apps reject these backups instead of silently discarding preferences.
+  Version-8 backups retain selection methods and start with groups collapsed.
+  Version-9 backups retain expanded groups. All earlier schemas start with all
+  lists shown. Schema 10 validates unique hidden main-list references and
+  rejects selected hidden lists. Merge remaps hidden preferences separately
+  for each imported setup. New backups require app 1.14 or later, so older
+  apps reject them instead of silently discarding preferences.
   Lists optionally include `selectionMode: "categories" | "items"` (omission
   means categories) and `links: [{value, listId}]`;
   linked result picks and locks include `child: {listId, name, value}`.
