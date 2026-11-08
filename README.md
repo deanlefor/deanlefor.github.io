@@ -48,19 +48,24 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.2 adds per-setup pick locks, the latest
-  50 generated results across setups, and up to 500 favorites. History and
+  `list-mixer:workspace:v1`. Version 1.3 adds optional favorite names to the
+  existing per-setup pick locks, latest 50 generated results across setups,
+  and up to 500 favorites. History and
   favorites are exact output snapshots; editing or deleting lists, instructions,
   or setups does not rewrite them. Locks survive reloads and are released if the
   list is unchecked/deleted or its locked item is removed. Clearing history
   keeps favorites, and removals offer Undo. Backup exports include both
   collections and locks; merging retains favorites (deduplicated by exact text)
-  and the latest 50 recent results, while remapping imported list IDs.
+  and the latest 50 recent results, while remapping imported list IDs. Favorite
+  names are editable from the Favorites list and included in backups; renaming
+  leaves the exact output untouched. Matching imported favorites keep an
+  existing name, or fill an empty name from the backup.
   Labeled output and reusable instruction blocks retain their per-setup
   selection, placement, and ordering. Formatting changes retain current picks.
-  Backups use version 3 of the `list-mixer` format; version-1 and version-2 saves
-  and backups migrate without changing existing output. Older app versions
-  reject version-3 data rather than silently discarding favorites or locks.
+  Backups use version 4 of the `list-mixer` format; version-1, version-2, and
+  version-3 saves and backups migrate without changing existing output. Older
+  favorites start unnamed. Older app versions reject version-4 data rather
+  than silently discarding favorite names.
   The existing 8 MB workspace cap includes saved results; failed additions
   preserve existing data. Browser storage quotas may be smaller.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
