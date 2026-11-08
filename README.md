@@ -48,14 +48,18 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.6 adds compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.6.1 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
   Selected or searched view permutes only visible slots, leaving every hidden
   list in its exact saved position. Filters never alter selections, counts,
-  locks or results. Views/search are tab-local; full order is saved per setup
-  and included in backups. Item contents remain available in Edit. All/Selected
+  locks or results. All/Selected is saved immediately as a browser preference
+  under `list-mixer:list-view:v1` and restored on refresh/reopen. Missing or
+  invalid preferences default to All; blocked preference storage leaves the
+  control usable. Preference writes do not rewrite workspace data or trigger
+  its cross-tab conflict handling. This preference is separate from backups;
+  search resets on reload. Full order is saved per setup and included in backups. Item contents remain available in Edit. All/Selected
   counts and empty-view controls keep the full library reachable. Unchecking
   and rechecking lists preserves their remembered positions.
   Each list has a per-setup Draw count (default 1). Generate draws that many
