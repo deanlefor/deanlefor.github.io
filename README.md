@@ -48,27 +48,36 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.4 adds a Clean up button in the list
-  editor for blank lines, leading bullets, and surrounding whitespace. Cleanup
-  affects the draft until Save list; item order and duplicates are preserved,
-  with Remove duplicates remaining a separate action. Storage and backup
-  formats are unchanged. The app supports optional favorite names, per-setup
-  pick locks, the latest 50 generated results, and up to 500 favorites. History and
-  favorites are exact output snapshots; editing or deleting lists, instructions,
-  or setups does not rewrite them. Locks survive reloads and are released if the
-  list is unchecked/deleted or its locked item is removed. Clearing history
-  keeps favorites, and removals offer Undo. Backup exports include both
-  collections and locks; merging retains favorites (deduplicated by exact text)
-  and the latest 50 recent results, while remapping imported list IDs. Favorite
-  names are editable from the Favorites list and included in backups; renaming
-  leaves the exact output untouched. Matching imported favorites keep an
-  existing name, or fill an empty name from the backup.
-  Labeled output and reusable instruction blocks retain their per-setup
-  selection, placement, and ordering. Formatting changes retain current picks.
-  Backups use version 4 of the `list-mixer` format; version-1, version-2, and
-  version-3 saves and backups migrate without changing existing output. Older
-  favorites start unnamed. Older app versions reject version-4 data rather
-  than silently discarding favorite names.
+  `list-mixer:workspace:v1`. Version 1.5 remembers all list positions when lists
+  are unchecked or rechecked. Arrows move both checked and unchecked lists.
+  Each list has a per-setup Draw count (default 1). Generate draws that many
+  distinct values per list, in slot order; values can still repeat across lists
+  and later results. Duplicate entries weight selection, while each selected
+  value is excluded from that list's remaining picks. Counts cannot exceed the
+  available distinct values; generation reports an error and preserves output
+  if a list later shrinks below its count. A result supports up to 50,000 picks.
+  Each pick can be locked independently in its slot. Locks count toward the
+  requested total, survive reloads, and are released when their list is
+  unchecked/deleted, their value is removed, or their slot exceeds a reduced
+  count. Counts and full list order are independent per setup, copied when
+  duplicating a setup, and included in backups alongside multi-pick locks.
+  The list editor's Clean up button removes blank lines, leading bullets, and
+  surrounding whitespace from the draft. Item order and duplicates remain;
+  Remove duplicates is a separate action and Save list commits the draft.
+  Recent keeps 50 generated results; up to 500 favorites support optional names.
+  Both are exact output snapshots: editing or deleting lists, instructions,
+  or setups does not rewrite them. Clearing history keeps favorites; removals
+  offer Undo. Backup merge retains favorites (deduplicated by exact text) and
+  the latest 50 results, remaps imported list IDs, counts and lock slots, and
+  appends newly available lists to each setup's remembered order. Matching
+  favorites keep an existing name or fill an empty name from the backup.
+  Labeled output uses one named item per line; otherwise items are comma
+  separated. Reusable instruction selections, placements and order belong to
+  each setup. Formatting and instruction changes retain current picks.
+  Backups use version 5 of the `list-mixer` format. Version-1 through version-4
+  saves migrate with their existing visible list order, default Draw counts of
+  1, and unchanged output. Older favorites start unnamed. Older app versions
+  reject version-5 data rather than silently discard counts or list positions.
   The existing 8 MB workspace cap includes saved results; failed additions
   preserve existing data. Browser storage quotas may be smaller.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
