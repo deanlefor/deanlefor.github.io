@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.7 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.8 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -89,11 +89,33 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Labeled output uses one named item per line; otherwise items are comma
   separated. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
-  Backups now use version 6 of the `list-mixer` format, retaining the workspace
-  storage key. Version-1 through version-5 backups import without changing
-  saved output and default to All because they did not contain per-setup views.
-  Existing migrations retain their list order/count defaults and favorite names.
-  Older apps reject version-6 backups rather than silently discard setup views.
+  Version 1.8 adds one level of linked sub-lists from the shared library.
+  In the list editor, an optional link maps exact item text to another list ID.
+  A category is drawn first, then one item only from that category's sub-list,
+  even when the sub-list is unchecked. Unlinked entries stay plain text.
+  Duplicate parent entries retain weighting and share the same link; child
+  list size never changes category odds. Draw counts apply to distinct parent
+  values, with one child per selected category. Children may repeat across
+  categories. Checking a child separately adds an independent draw with its
+  own count. Plain output includes both values (Car, BMW M3); labeled output
+  keeps each pair on one row (Vehicles: Car, BMW M3).
+  Locks preserve entire pairs and release when either value or link changes.
+  Self-links, cycles and chains are rejected; a child list cannot contain links.
+  Empty linked lists report an error without changing the current output.
+  Renaming an item requires reconnecting its link; removed items lose their
+  links on Save. Cleanup carries unambiguous links to cleaned item text and
+  asks for relinking when different links collide. Deleting a child removes
+  incoming links but retains parent items; Undo restores links and locks.
+  Parent duplicates keep links to the same shared children. Snapshots retain
+  exact historical pairs, even after source deletion. Backup merge remaps
+  parent links, child references and pair locks to the imported list copies.
+  Backups now use version 7 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–6 still import without changing saved output;
+  versions 1–5 default to All because they lacked per-setup views. Version 6
+  retains each setup's existing view. Other migrations retain list order/count
+  defaults and favorite names. Older apps reject version-7 backups rather than
+  silently discard links. Lists optionally include `links: [{value, listId}]`;
+  linked result picks and locks include `child: {listId, name, value}`.
   The existing 8 MB workspace cap includes saved results; failed additions
   preserve existing data. Browser storage quotas may be smaller.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
