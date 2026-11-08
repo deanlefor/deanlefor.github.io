@@ -48,9 +48,12 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.3 adds optional favorite names to the
-  existing per-setup pick locks, latest 50 generated results across setups,
-  and up to 500 favorites. History and
+  `list-mixer:workspace:v1`. Version 1.4 adds a Clean up button in the list
+  editor for blank lines, leading bullets, and surrounding whitespace. Cleanup
+  affects the draft until Save list; item order and duplicates are preserved,
+  with Remove duplicates remaining a separate action. Storage and backup
+  formats are unchanged. The app supports optional favorite names, per-setup
+  pick locks, the latest 50 generated results, and up to 500 favorites. History and
   favorites are exact output snapshots; editing or deleting lists, instructions,
   or setups does not rewrite them. Locks survive reloads and are released if the
   list is unchecked/deleted or its locked item is removed. Clearing history

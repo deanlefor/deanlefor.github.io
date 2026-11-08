@@ -182,3 +182,23 @@ test('UI renames favorites, preserves output, handles cancel, and retains names 
 test('favorite names render as literal text and clearing a name restores the unnamed label',()=>{
  const app=ui(make());try{app.get('generate').click();app.get('favorite-result').click();app.get('show-favorites').click();const favorite=app.saved().favorites[0];app.get('rename-favorite-'+favorite.id).click();app.input('favorite-name','<img src=x onerror=alert(1)>');app.get('favorite-name-form').dispatchEvent(new app.w.Event('submit',{cancelable:true,bubbles:true}));assert.equal(app.d.querySelector('#saved-rows img'),null);assert.equal(app.d.querySelector('.saved-name').textContent,'<img src=x onerror=alert(1)>');app.get('rename-favorite-'+favorite.id).click();app.input('favorite-name','');app.get('favorite-name-form').dispatchEvent(new app.w.Event('submit',{cancelable:true,bubbles:true}));assert.equal(app.saved().favorites[0].name,'');assert.equal(app.d.querySelector('.saved-name').textContent,'Unnamed favorite');}finally{app.dom.window.close();}
 });
+
+
+test('list cleanup removes blank lines and leading bullets while retaining order and duplicates',()=>{
+ const text='  - Porsche  \r\n\r\n\t* New York\r•Lisbon\n + Tokyo\n– Oslo\n— Seoul\n◦ Rome\n▪ Berlin\n‣ Paris\n● Madrid\n○ Dublin\n- * Nested\n* New York\n-\n***\n • \n';
+ assert.deepEqual(plain(C.cleanItems(text)),['Porsche','New York','Lisbon','Tokyo','Oslo','Seoul','Rome','Berlin','Paris','Madrid','Dublin','Nested','New York']);
+ const cleaned=C.cleanItems(text).join('\n');assert.equal(C.cleanItems(cleaned).join('\n'),cleaned);assert.deepEqual(plain(C.cleanItems(' \n\t\r\n-\n*\n•')),[]);
+});
+test('list cleanup preserves meaningful signs, emphasis, internal punctuation and spacing',()=>{
+ const values=['-5','+5','-3.5°C','*nix','**bold**','*emphasis*','-flag','Mercedes-Benz','A * B','Portland, OR','First  second','1. Example','東京'];
+ assert.deepEqual(plain(C.cleanItems(values.join('\n'))),values);assert.deepEqual(plain(C.cleanItems('- -5\n* *nix\n• **bold**')),['-5','*nix','**bold**']);
+});
+
+test('UI cleanup edits only the list draft, leaves deduplication optional, and saves on request',()=>{
+ const app=ui(make());try{
+  const original=app.saved();app.d.querySelector('[aria-label="Edit Cars"]').click();app.input('list-items',' - Porsche\n\n* New York\n• Lisbon\n- Porsche\n-5\n-\n');app.get('items-cleanup').click();
+  assert.equal(app.get('list-items').value,'Porsche\nNew York\nLisbon\nPorsche\n-5');assert.match(app.get('editor-count').textContent,/5 items.*1 exact duplicates/);assert.deepEqual(app.saved(),original);
+  app.get('list-cancel').click();app.d.querySelector('[aria-label="Edit Cars"]').click();assert.equal(app.get('list-items').value,'Car A\nCar B');
+  app.input('list-items','- Porsche\n* Porsche\n• Lisbon\n');app.get('items-cleanup').click();app.get('items-dedupe').click();assert.equal(app.get('list-items').value,'Porsche\nLisbon');app.get('list-save').click();assert.deepEqual(app.saved().lists[0].items,['Porsche','Lisbon']);assert.equal(app.saved().version,4);
+ }finally{app.dom.window.close();}
+});
