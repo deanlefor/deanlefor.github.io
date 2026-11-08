@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.12 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.13 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -105,14 +105,22 @@ their public URL paths so GitHub Pages can publish everything directly from the
   of selections; other parents still show its connection and group owner.
   In Selected, unchecked parent containers remain visible when their grouped
   children are selected independently or active through another selected parent.
-  Showing a container never selects it or adds a parent draw. Group expansion
-  is independent per setup within the tab and resets on reload. Search still
-  temporarily exposes matching lists directly; clearing it restores grouping.
+  Showing a container never selects it or adds a parent draw. Version 1.13
+  saves expanded/collapsed parent groups per setup immediately when toggled,
+  restoring them after switching setups, refreshing or reopening. New setups
+  start collapsed; duplicated setups inherit the source choices. Checking lists,
+  Select all, ordinary edits and All/Selected changes preserve expansion.
+  Search temporarily exposes matching lists directly; clearing it restores the
+  saved groups. Deferred events from detached rows cannot overwrite preferences.
   Grouping is display-only: checking, unchecking and filtering never rewrite
   saved positions. Removing a child's last parent link returns it to its exact
   saved slot. Deleting a parent releases its children; Undo restores links and
   grouping. Reordering visible top-level rows leaves hidden child slots intact.
-  Nested children have no reorder handles. Schema 8 and storage keys are unchanged.
+  Nested children have no reorder handles. Each setup stores expanded parent
+  list IDs in expandedGroupIds. Deleted parents and lists losing their final
+  child link are removed from those preferences; deletion Undo restores them.
+  Import merge remaps expanded parent IDs to imported list copies. Collapsed
+  groups are represented by absence from the array. Storage keys are unchanged.
   Version 1.11 adds Selection method to the shared parent list editor:
   Equal categories (the default) preserves existing category and duplicate-entry
   weighting. Equal items gives each distinct category/item pair one chance,
@@ -145,12 +153,14 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 8 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–7 still import without changing saved output;
+  Backups now use version 9 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–8 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
   defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
-  Older apps reject version-8 backups rather than silently discard the method.
+  Version-8 backups retain selection methods. All older backups default groups
+  to collapsed. Schema 9 validates unique expanded parent references per setup;
+  older apps reject these backups instead of silently discarding preferences.
   Lists optionally include `selectionMode: "categories" | "items"` (omission
   means categories) and `links: [{value, listId}]`;
   linked result picks and locks include `child: {listId, name, value}`.
