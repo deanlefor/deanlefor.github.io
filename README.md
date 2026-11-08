@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.9 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.10 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -89,16 +89,26 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Labeled output uses one named item per line; otherwise items are comma
   separated. Reusable instruction selections, placements and order belong to
   each setup. Formatting and instruction changes retain current picks.
-  Version 1.9 labels linked rows as Parent or Sub-list, names the connected
-  lists, and expands to show exact category-to-list paths. A shared child names
-  all its parents. Automatic labels identify children used by selected parents.
-  Checking both highlights the extra direct draw and shows a notice even when
-  search hides an affected list. Uncheck linked sub-lists removes all overlapping
-  direct child selections in the active setup, releasing their direct locks
-  while preserving parent locks, saved positions, counts, current output and
-  snapshots. Undo restores the selections and locks. Intentional extra draws
-  remain allowed. Relationships are derived from existing links; schema 7 and
-  storage keys are unchanged. Ordinary rows remain compact.
+  Version 1.10 automatically unchecks a parent's directly selected sub-lists
+  when that parent is checked. Select all prioritizes parents and independent
+  lists, and newly added parent links clear matching child selections in setups
+  using that parent. Existing saved overlaps remain visible with the fix action;
+  intentional extras may be selected explicitly after the parent. Automatic
+  unchecking releases direct child locks and offers Undo, preserving parent
+  locks, counts, full list order, current output and saved results. Generate
+  applies selection changes. Editing existing link names does not clear extras.
+  Unchecked children used by selected parents appear in collapsed groups under
+  those parents in both All and Selected. Expand a group to edit a child or
+  choose Draw separately too. Selected extras stay as visible top-level rows
+  with the extra-draw notice. A shared child belongs to the first selected parent
+  in the saved order; other parents still show its connection and group owner.
+  Group expansion is independent per setup within the tab and resets on reload.
+  Search bypasses grouping, with All showing matching unchecked children at
+  their original positions. Grouping is display-only: saved positions are never
+  rewritten, unchecking a parent restores child rows, and reordering visible
+  top-level rows leaves all hidden child slots untouched. Nested child controls
+  do not act as reorder targets. Labels and paths remain accessible without
+  changing stored data. Schema 7 and storage keys are unchanged.
   Version 1.8 adds one level of linked sub-lists from the shared library.
   In the list editor, an optional link maps exact item text to another list ID.
   A category is drawn first, then one item only from that category's sub-list,
