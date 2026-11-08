@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.10 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.11 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -108,13 +108,25 @@ their public URL paths so GitHub Pages can publish everything directly from the
   rewritten, unchecking a parent restores child rows, and reordering visible
   top-level rows leaves all hidden child slots untouched. Nested child controls
   do not act as reorder targets. Labels and paths remain accessible without
-  changing stored data. Schema 7 and storage keys are unchanged.
+  changing stored data. Grouping does not change stored positions or selections.
+  Version 1.11 adds Selection method to the shared parent list editor:
+  Equal categories (the default) preserves existing category and duplicate-entry
+  weighting. Equal items gives each distinct category/item pair one chance,
+  automatically weighting categories by their distinct child counts. Ten cars
+  and three SUVs yield 13 equally likely pairs. Unlinked entries count as one
+  choice; duplicate lines count once in this mode, and the same child under two
+  categories counts as two different pairs. It uses integer sampling over
+  weighted ranges without allocating a flattened list. Multiple draws still
+  choose distinct categories; locked or already selected categories are excluded
+  from later draws. Locks, current output, history and favorites are unchanged
+  by a mode edit. Save applies the method to future unlocked draws in every
+  setup using the shared parent. Duplicating the list copies its method.
   Version 1.8 adds one level of linked sub-lists from the shared library.
   In the list editor, an optional link maps exact item text to another list ID.
   A category is drawn first, then one item only from that category's sub-list,
   even when the sub-list is unchecked. Unlinked entries stay plain text.
   Duplicate parent entries retain weighting and share the same link; child
-  list size never changes category odds. Draw counts apply to distinct parent
+  list size does not change category odds in Equal categories mode. Draw counts apply to distinct parent
   values, with one child per selected category. Children may repeat across
   categories. Checking a child separately adds an independent draw with its
   own count. Plain output includes both values (Car, BMW M3); labeled output
@@ -129,12 +141,14 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 7 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–6 still import without changing saved output;
+  Backups now use version 8 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–7 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
-  defaults and favorite names. Older apps reject version-7 backups rather than
-  silently discard links. Lists optionally include `links: [{value, listId}]`;
+  defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
+  Older apps reject version-8 backups rather than silently discard the method.
+  Lists optionally include `selectionMode: "categories" | "items"` (omission
+  means categories) and `links: [{value, listId}]`;
   linked result picks and locks include `child: {listId, name, value}`.
   The existing 8 MB workspace cap includes saved results; failed additions
   preserve existing data. Browser storage quotas may be smaller.
