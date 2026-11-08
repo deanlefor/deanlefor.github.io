@@ -48,7 +48,13 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`; backups use the version-1 `list-mixer` format.
+  `list-mixer:workspace:v1`. Version 1.1 adds labeled output and a shared library
+  of reusable instruction blocks, with per-setup selection, placement, and
+  ordering. Setup notes can appear at the beginning or end. Formatting changes
+  retain current random picks. Backups now use version 2 of the `list-mixer`
+  format; version-1 saves and backups migrate with unchanged instructions and
+  comma-separated output. Older app versions reject version-2 data rather than
+  silently discarding the new fields.
   Inline scripts are authorized by SHA-256 CSP hashes. Update those hashes
   whenever editing the script blocks; `tests/list-mixer.test.js` verifies them.
 - **apps/fers-retirement/** — React and TypeScript source and tests for the
