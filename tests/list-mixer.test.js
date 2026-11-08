@@ -408,3 +408,49 @@ test('UI exports linked data and restores it by both merge and replace',async()=
 });
 
 test('ordinary bulk list editing leaves sub-list selectors unbuilt until expanded',()=>{const app=ui(make());try{app.d.querySelector('[aria-label="Edit Cars"]').click();app.input('list-items',Array.from({length:1000},(_,i)=>`Item ${i}`).join('\n'));assert.equal(app.get('link-item').options.length,0);app.get('list-links').open=true;app.get('list-links').dispatchEvent(new app.w.Event('toggle'));assert.equal(app.get('link-item').options.length,1001);}finally{app.dom.window.close();}});
+
+test('linked rows identify parents and children without selecting or rearranging any lists',()=>{
+ const s=linkedFixture(),before=plain(s),app=ui(s);try{
+  assert.match(app.get('relations-vehicles').querySelector('summary').textContent,/ParentUses: Car models, SUV models/);
+  assert.match(app.get('relations-car_models').querySelector('summary').textContent,/Sub-listFrom: Vehicles/);
+  assert.equal(app.get('relation-status-car_models').textContent,'Automatic through parent');
+  assert.equal(app.get('linked-selection-warning').hidden,true);assert.equal(app.get('check-car_models').checked,false);
+  assert.match(app.get(app.get('check-car_models').getAttribute('aria-describedby')).textContent,/matching item is picked/);
+  const details=app.get('relations-vehicles');details.open=true;details.dispatchEvent(new app.w.Event('toggle'));assert.deepEqual([...details.querySelectorAll('li')].map(n=>n.textContent),['Car → Car models','SUV → SUV models']);
+  assert.deepEqual(app.saved(),before);app.get('list-view-selected').click();assert.deepEqual(displayedLists(app),['vehicles']);assert.match(app.get('relations-vehicles').textContent,/Car models, SUV models/);
+ }finally{app.dom.window.close();}
+});
+test('extra-draw notice updates whichever side is selected first and does not block intentional draws',()=>{
+ const app=ui(linkedFixture());try{
+  app.change('check-vehicles',false);app.change('check-car_models',true);assert.equal(app.get('linked-selection-warning').hidden,true);assert.equal(app.get('relation-status-car_models'),null);
+  app.change('check-vehicles',true);assert.equal(app.get('linked-selection-warning').hidden,false);assert.equal(app.get('relation-status-car_models').textContent,'Extra draw selected');assert.ok(app.d.querySelector('[data-list-id="car_models"]').classList.contains('extra-draw'));
+  app.get('generate').click();assert.equal(app.get('generation-error').hidden,true);assert.deepEqual(app.saved().setups[0].lastResult.picks.map(p=>p.listId),['vehicles','car_models']);
+  app.change('check-car_models',false);assert.equal(app.get('linked-selection-warning').hidden,true);assert.equal(app.get('relation-status-car_models').textContent,'Automatic through parent');
+  app.get('select-all').click();assert.match(app.get('linked-selection-message').textContent,/2 sub-lists/);app.get('select-none').click();assert.equal(app.get('linked-selection-warning').hidden,true);
+ }finally{app.dom.window.close();}
+});
+test('one-click overlap fix respects setup boundaries, hidden positions and results, and Undo restores locks',()=>{
+ const s=linkedFixture(),a=s.setups[0];a.listIds=['vehicles','car_models','suv_models'];C.setDrawCount(a,'car_models',2);C.recordResult(s,a,C.generate(s,a,()=>0));C.toggleLock(s,a,a.lastResult.picks[0]);C.toggleLock(s,a,a.lastResult.picks[1]);C.toggleFavorite(s,a.lastResult,a.name);const app=ui(s);try{
+  app.get('list-view-selected').click();app.input('list-search','No matches');const before=app.saved();assert.equal(displayedLists(app).length,0);assert.equal(app.get('linked-selection-warning').hidden,false);app.get('uncheck-linked-lists').click();const saved=app.saved();
+  assert.deepEqual(saved.setups[0].listIds,['vehicles']);assert.deepEqual(saved.setups[0].listOrder,before.setups[0].listOrder);assert.deepEqual(saved.setups[0].drawCounts,before.setups[0].drawCounts);assert.deepEqual(saved.setups[0].lastResult,before.setups[0].lastResult);assert.deepEqual(saved.setups[0].lockedPicks,[before.setups[0].lockedPicks[0]]);assert.deepEqual(saved.setups[1],before.setups[1]);assert.deepEqual(saved.favorites,before.favorites);assert.deepEqual(saved.recentResults,before.recentResults);assert.equal(app.get('linked-selection-warning').hidden,true);
+  app.get('undo').click();assert.deepEqual(app.saved(),before);assert.equal(app.get('linked-selection-warning').hidden,false);const reload=ui(app.saved());try{assert.equal(reload.get('linked-selection-warning').hidden,false);}finally{reload.dom.window.close();}
+ }finally{app.dom.window.close();}
+});
+test('shared sub-lists show every parent and count overlaps once, with exact paths available on expansion',()=>{
+ const s=linkedFixture();s.lists[0].links.push({value:'Bicycle',listId:'car_models'});s.lists.push({id:'other_parent',name:'Other vehicles',items:['Coupe'],links:[{value:'Coupe',listId:'car_models'}]});C.syncLists(s);s.setups[0].listIds=['vehicles','car_models','other_parent'];const app=ui(s);try{
+  const details=app.get('relations-car_models');assert.match(details.querySelector('summary').textContent,/Vehicles, Other vehicles/);assert.match(app.get('linked-selection-message').textContent,/1 sub-list is/);details.open=true;details.dispatchEvent(new app.w.Event('toggle'));assert.deepEqual([...details.querySelectorAll('li')].map(n=>n.textContent),['Vehicles → Car → Car models','Vehicles → Bicycle → Car models','Other vehicles → Coupe → Car models']);app.change('check-vehicles',false);assert.equal(app.get('linked-selection-warning').hidden,false);app.change('check-other_parent',false);assert.equal(app.get('linked-selection-warning').hidden,true);
+ }finally{app.dom.window.close();}
+});
+test('relationship labels follow list edits, deletion and setup switches and treat names as literal text',()=>{
+ const s=linkedFixture();s.setups[0].listIds.push('car_models');s.setups[1].listIds=['car_models'];const app=ui(s);try{
+  app.d.querySelector('[aria-label="Edit Car models"]').click();app.input('list-name','<b>Models</b>');app.get('list-save').click();assert.match(app.get('relations-vehicles').textContent,/<b>Models<\/b>/);assert.equal(app.get('relations-vehicles').querySelector('b'),null);
+  app.d.querySelectorAll('#setup-nav button')[1].click();assert.equal(app.get('linked-selection-warning').hidden,true);assert.equal(app.get('relation-status-car_models'),null);app.d.querySelectorAll('#setup-nav button')[0].click();assert.equal(app.get('linked-selection-warning').hidden,false);
+  app.d.querySelector('[aria-label="Edit Vehicles"]').click();app.d.querySelector('[aria-label="Remove link for Car"]').click();app.get('list-save').click();assert.equal(app.get('relations-car_models'),null);assert.equal(app.get('linked-selection-warning').hidden,true);
+  app.d.querySelector('[aria-label="Edit SUV models"]').click();app.get('list-delete').click();assert.equal(app.get('relations-vehicles'),null);assert.equal(app.get('linked-list-hint').hidden,true);app.get('undo').click();assert.ok(app.get('relations-vehicles'));
+ }finally{app.dom.window.close();}
+});
+test('linked-row keyboard reordering retains hidden slots and ordinary rows remain compact',()=>{
+ const s=linkedFixture();s.lists.push({id:'ordinary',name:'Colors',items:['Blue']});C.syncLists(s);s.setups[0].listIds=['vehicles','suv_models'];const app=ui(s);try{
+  assert.equal(app.d.querySelector('[data-list-id="ordinary"] .row-links'),null);app.get('list-view-selected').click();const before=app.saved();key(app,'drag-suv_models','Home');assert.deepEqual(app.saved().setups[0].listOrder,['suv_models','car_models','vehicles','ordinary']);assert.deepEqual(app.saved().setups[1],before.setups[1]);assert.equal(app.get('linked-selection-warning').hidden,false);assert.ok(app.get('relations-suv_models'));
+ }finally{app.dom.window.close();}
+});
