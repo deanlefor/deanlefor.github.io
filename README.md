@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.11 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.12 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -97,18 +97,22 @@ their public URL paths so GitHub Pages can publish everything directly from the
   unchecking releases direct child locks and offers Undo, preserving parent
   locks, counts, full list order, current output and saved results. Generate
   applies selection changes. Editing existing link names does not clear extras.
-  Unchecked children used by selected parents appear in collapsed groups under
-  those parents in both All and Selected. Expand a group to edit a child or
-  choose Draw separately too. Selected extras stay as visible top-level rows
-  with the extra-draw notice. A shared child belongs to the first selected parent
-  in the saved order; other parents still show its connection and group owner.
-  Group expansion is independent per setup within the tab and resets on reload.
-  Search bypasses grouping, with All showing matching unchecked children at
-  their original positions. Grouping is display-only: saved positions are never
-  rewritten, unchecking a parent restores child rows, and reordering visible
-  top-level rows leaves all hidden child slots untouched. Nested child controls
-  do not act as reorder targets. Labels and paths remain accessible without
-  changing stored data. Grouping does not change stored positions or selections.
+  Version 1.12 keeps linked children in collapsible groups regardless of parent
+  or child checkboxes. Expand a group to edit a child or select Draw separately;
+  independently selected children stay inside, with their Draw counts and any
+  overlap notice. Group summaries show how many are selected separately.
+  A shared child belongs to the first linked parent in saved order, independent
+  of selections; other parents still show its connection and group owner.
+  In Selected, unchecked parent containers remain visible when their grouped
+  children are selected independently or active through another selected parent.
+  Showing a container never selects it or adds a parent draw. Group expansion
+  is independent per setup within the tab and resets on reload. Search still
+  temporarily exposes matching lists directly; clearing it restores grouping.
+  Grouping is display-only: checking, unchecking and filtering never rewrite
+  saved positions. Removing a child's last parent link returns it to its exact
+  saved slot. Deleting a parent releases its children; Undo restores links and
+  grouping. Reordering visible top-level rows leaves hidden child slots intact.
+  Nested children have no reorder handles. Schema 8 and storage keys are unchanged.
   Version 1.11 adds Selection method to the shared parent list editor:
   Equal categories (the default) preserves existing category and duplicate-entry
   weighting. Equal items gives each distinct category/item pair one chance,
