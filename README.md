@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.16 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.17 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -66,6 +66,10 @@ their public URL paths so GitHub Pages can publish everything directly from the
   counts and empty-view controls keep shown lists reachable; Show / hide lists
   opens the full library visibility checklist. Unchecking
   and rechecking lists preserves their remembered positions.
+  Version 1.17 groups Generate, Copy result and Favorite above the output in
+  equal-size green buttons, with a three-button row on small screens. Favorite
+  keeps its pressed state and star/label feedback; copying and saving behavior
+  are unchanged. Storage and backup schema 12 remain unchanged.
   Version 1.16 adds Separate with: Commas, Spaces, or New lines. The selected
   separator applies between lists, multiple picks, and visible category/child
   values, with or without list names. Typed punctuation, explicit whitespace,
