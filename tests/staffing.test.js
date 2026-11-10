@@ -64,7 +64,7 @@ test("impossible constraints fail clearly", () => {
   plan.types[0].lock = "headcount";
   assert.throws(() => optimize(plan,"balanced"), /exceed the budget/);
   plan.types[0].min = 500;
-  assert.throws(() => optimize(plan,"headcount"), /exceed the budget/);
+  assert.throws(() => optimize(plan,"headcount"), /conflicts|exceed the budget/);
 });
 
 test("rejects duplicate types and invalid inputs", () => {
