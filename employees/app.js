@@ -90,7 +90,7 @@
     }
   }
   function editValue(typeId, prop, raw, number = true, rebuild = true) {
-    const n = number ? Number(raw) : raw;
+    const n = number && raw !== null ? Number(raw) : raw;
     update(plan => {
       const t = plan.types.find(item => item.id === typeId);
       if (!t) return;
@@ -152,10 +152,8 @@
     numberCount.disabled = locked;
     minus.disabled = locked || count <= 0;
     plus.disabled = locked;
-    range.addEventListener("input", () => {
-      numberCount.value = range.value;
-      update(p => { p.types.find(t => t.id === type.id).count = Number(range.value); });
-    });
+    range.addEventListener("input", () => { numberCount.value = range.value; });
+    range.addEventListener("change", () => editValue(type.id,"count",range.value));
     numberCount.addEventListener("change", () => editValue(type.id,"count",numberCount.value));
     minus.addEventListener("click", () => editValue(type.id,"count",Math.max(0,count-1)));
     plus.addEventListener("click", () => editValue(type.id,"count",count+1));
