@@ -115,38 +115,44 @@
     if (capacity > 60000 || capacity * chunks.length > 4500000) return null;
     const primary = new Float64Array(capacity + 1);
     const secondary = new Float64Array(capacity + 1);
+    const trace = new Int32Array(capacity + 1);
     primary.fill(-Infinity);
     secondary.fill(-Infinity);
+    trace.fill(-1);
     primary[0] = 0;
     secondary[0] = 0;
-    const choices = [];
-    chunks.forEach(function (item) {
-      const chosen = new Uint8Array(capacity + 1);
+    // Immutable linked traces avoid invalid backtracking after a DP state is overwritten.
+    const parents = [], selected = [];
+    let tooMany = false;
+    for (let j = 0; j < chunks.length && !tooMany; j++) {
+      const item = chunks[j];
       const pValue = mode === "priority" ? item.priority : mode === "headcount" ? item.qty : item.cost;
       const sValue = mode === "utilization" ? item.priority : item.cost;
-      for (let budget = capacity; budget >= item.cost; budget--) {
-        if (primary[budget - item.cost] === -Infinity) continue;
-        const p = primary[budget - item.cost] + pValue;
-        const s = secondary[budget - item.cost] + sValue;
-        if (p > primary[budget] || (p === primary[budget] && s > secondary[budget])) {
-          primary[budget] = p;
-          secondary[budget] = s;
-          chosen[budget] = 1;
+      for (let b = capacity; b >= item.cost; b--) {
+        if (primary[b - item.cost] === -Infinity) continue;
+        const p = primary[b - item.cost] + pValue;
+        const s = secondary[b - item.cost] + sValue;
+        if (p > primary[b] || (p === primary[b] && s > secondary[b])) {
+          if (parents.length >= 1000000) { tooMany = true; break; }
+          parents.push(trace[b - item.cost]);
+          selected.push(j);
+          trace[b] = parents.length - 1;
+          primary[b] = p;
+          secondary[b] = s;
         }
       }
-      choices.push(chosen);
-    });
+    }
+    if (tooMany) return null;
     let best = 0;
     for (let b = 1; b <= capacity; b++) {
       if (primary[b] > primary[best] || (primary[b] === primary[best] && secondary[b] > secondary[best])) best = b;
     }
     const counts = {};
-    for (let j = chunks.length - 1; j >= 0; j--) {
-      if (choices[j][best]) {
-        const chunk = chunks[j];
-        counts[chunk.index] = (counts[chunk.index] || 0) + chunk.qty;
-        best -= chunk.cost;
-      }
+    let node = trace[best];
+    while (node !== -1) {
+      const chunk = chunks[selected[node]];
+      counts[chunk.index] = (counts[chunk.index] || 0) + chunk.qty;
+      node = parents[node];
     }
     return { counts, exact: true };
   }
