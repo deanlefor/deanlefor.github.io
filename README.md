@@ -25,6 +25,20 @@ their public URL paths so GitHub Pages can publish everything directly from the
 
 - **Root HTML files** — The personal homepage, doctoral tracker, tracker guide,
   and retro terminal.
+- **employees/** — Workforce Allocation Studio, a client-side staffing and budget
+  scenario calculator at `/employees/`. The `/EMPLOYEES/` path redirects to the
+  canonical lowercase URL. Build any number of role types (1–30), enter fully
+  loaded position costs, lock specific headcounts or reserve dollar amounts,
+  set minimums, maximums, and relative priorities, and generate constrained
+  allocations. Four modes: balanced priority-based funding (heuristic),
+  priority-weighted headcount, maximum headcount, or budget utilization.
+  The last three use an exact bounded integer solver when feasible and label
+  approximate results when they fall back to a heuristic. Current and saved
+  scenarios are stored under `workforce-allocation-studio:v1` in localStorage;
+  export/import JSON backups or export scenario comparisons as CSV. Saved
+  scenarios retain their own budget, role types and constraints. No backend,
+  dependencies, or network data transfer. Fictional default figures should
+  not be mistaken for actual staffing data.
 - **margin-maker/** — A self-contained Paper & Ink landing page for the
   open-source macOS PDF margin utility, with a synthetic interactive comparison.
   See its README for asset provenance, preview instructions, and content sources.
