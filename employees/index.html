@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#101722">
+  <meta name="referrer" content="no-referrer">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; base-uri 'none'; object-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; connect-src 'none'; form-action 'none'">
+  <meta name="description" content="Model staffing tradeoffs against a fixed budget. Add employee types, lock positions or funding, optimize by objective, and compare scenarios. Free and private.">
+  <meta property="og:title" content="Workforce Allocation Studio | Dean Lefor">
+  <meta property="og:description" content="Explore staffing mixes, budget constraints, priorities, and scenarios. Your data stays on your device.">
+  <meta property="og:url" content="https://deanlefor.com/employees/">
+  <link rel="canonical" href="https://deanlefor.com/employees/">
+  <link rel="stylesheet" href="./styles.css?v=1">
+  <script src="./logic.js?v=1" defer></script>
+  <script src="./app.js?v=1" defer></script>
+  <title>Workforce Allocation Studio | Dean Lefor</title>
+</head>
+<body>
+  <div class="shell">
+    <header class="site-header">
+      <a class="home-link" href="/#projects" aria-label="Return to deanlefor.com side projects"><span class="home-mark">DL</span><span>Side projects</span></a>
+      <span class="privacy-indicator"><span class="privacy-dot"></span> Local-first calculator</span>
+    </header>
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <div class="eyebrow">INTERACTIVE BUDGET PLANNING</div>
+        <h1 id="page-title">Workforce <span>Allocation Studio</span></h1>
+        <p>How would your staffing mix change if you held some positions steady, protected funding for others, or prioritized different kinds of work? Build the mix, test the tradeoffs, and save alternatives.</p>
+        <p class="intro-note">Starts with a fictional example of accountants and police officers. Change everything to fit your organization.</p>
+      </section>
+
+      <section class="panel summary-panel" aria-labelledby="overview-title">
+        <div class="section-heading">
+          <div><p class="section-kicker">LIVE MODEL</p><h2 id="overview-title">Allocation overview</h2></div>
+          <div class="budget-field">
+            <label for="budget-input">Total annual budget ($ millions)</label>
+            <input id="budget-input" type="number" min="0" max="1000000" step="0.001" value="32.5" inputmode="decimal">
+          </div>
+        </div>
+        <div class="metric-grid">
+          <div class="metric"><span>Positions in plan</span><strong id="stat-staff">128</strong><small id="stat-staff-change">At today's count</small></div>
+          <div class="metric"><span>Modeled employee costs</span><strong id="stat-payroll">$32.1M</strong><small>Fully loaded per-position estimates</small></div>
+          <div class="metric"><span>Reserved but unstaffed</span><strong id="stat-reserved">$0</strong><small>Unused inside locked funding</small></div>
+          <div class="metric"><span>Unallocated balance</span><strong id="stat-balance">$400K</strong><small id="stat-balance-label">Available to allocate</small></div>
+        </div>
+        <div class="progress-head"><span>Use of budget</span><span id="usage-percent">98.8%</span></div>
+        <div id="budget-meter" class="budget-meter" role="img" aria-label="Budget allocation by employee type"></div>
+        <div id="budget-legend" class="budget-legend"></div>
+        <p id="status-text" class="status-text" role="status" aria-live="polite"></p>
+      </section>
+
+      <div class="workspace-grid">
+        <section class="panel staff-panel" aria-labelledby="staff-heading">
+          <div class="section-heading">
+            <div><p class="section-kicker">BUILD YOUR MIX</p><h2 id="staff-heading">Employee types <span id="type-count" class="heading-count">2</span></h2></div>
+            <button type="button" id="add-type" class="button button-primary">+ Add type</button>
+          </div>
+          <p class="section-description">Adjust positions using the slider, number field, or +/- controls. A headcount lock holds positions fixed. A funding lock reserves a dollar amount, including any unused remainder.</p>
+          <div id="types-list" class="types-list"></div>
+        </section>
+
+        <aside class="side-stack">
+          <section class="panel optimize-panel" aria-labelledby="optimize-heading">
+            <p class="section-kicker">EXPLORE ALTERNATIVES</p><h2 id="optimize-heading">Allocation assistant</h2>
+            <label class="field-label" for="objective">What should the recommendation favor?</label>
+            <select id="objective">
+              <option value="balanced">Balanced funding by priorities</option>
+              <option value="priority">Maximum priority-weighted positions</option>
+              <option value="headcount">Maximum total positions</option>
+              <option value="utilization">Minimum unspent budget</option>
+            </select>
+            <p id="objective-explanation" class="objective-note">Divide flexible funding approximately in proportion to each role's priority weight. A balanced recommendation, not a mathematical optimum.</p>
+            <button type="button" id="optimize-btn" class="button button-primary full-button">Generate allocation</button>
+            <button type="button" id="restore-baseline" class="button button-quiet full-button">Restore today's staffing</button>
+            <p id="optimization-result" class="assist-result" role="status" aria-live="polite"></p>
+            <details class="method-note">
+              <summary>What does “optimal” mean here?</summary>
+              <p>Every person must be a whole number. Headcount and funding locks and each role's minimum/maximum are hard constraints. Priority weights range from 1 to 10, with larger numbers meaning greater preference.</p>
+              <p><strong>Weighted positions</strong> maximizes the sum of priority × number of staff, which may concentrate hiring in one cheaper or higher-weighted role. <strong>Total positions</strong> ignores priorities in its main objective. <strong>Minimum unspent</strong> tries to use as much of the available budget as possible, breaking ties by priority. <strong>Balanced</strong> spreads available funding by weights and is a heuristic.</p>
+              <p>For manageable whole-dollar cost combinations the last three objectives use an exact integer optimization. If the search space is too large, the tool clearly labels its result as approximate.</p>
+            </details>
+          </section>
+
+          <section class="panel scenario-panel" aria-labelledby="scenarios-heading">
+            <p class="section-kicker">SAVE YOUR WORK</p><h2 id="scenarios-heading">Scenarios</h2>
+            <p class="section-description">Compare “more of X” against “more of Y,” including the budget and locks in effect when you saved each mix.</p>
+            <label class="field-label" for="scenario-name">Scenario name</label>
+            <div class="scenario-input-row">
+              <input id="scenario-name" type="text" maxlength="60" placeholder="e.g. More investigators">
+              <button type="button" id="save-scenario" class="button button-primary">Save</button>
+            </div>
+            <div id="scenario-list" class="scenario-list"></div>
+            <div class="separator"></div>
+            <div class="two-buttons">
+              <button type="button" id="export-json" class="button button-quiet">Export JSON</button>
+              <button type="button" id="import-json" class="button button-quiet">Import JSON</button>
+            </div>
+            <input id="import-file" type="file" accept=".json,application/json" hidden>
+            <p class="tiny-note">Saved locally in this browser. Export a backup to transfer it to another device. No account or remote database.</p>
+            <p id="storage-warning" class="storage-warning" hidden></p>
+          </section>
+        </aside>
+      </div>
+
+      <section class="panel comparison-panel" aria-labelledby="comparison-heading">
+        <div class="section-heading">
+          <div><p class="section-kicker">SIDE BY SIDE</p><h2 id="comparison-heading">Compare allocations</h2></div>
+          <button type="button" id="export-csv" class="button button-quiet">Export comparison CSV</button>
+        </div>
+        <p id="comparison-note" class="section-description">Save at least one scenario to compare alternative mixes.</p>
+        <div id="comparison-table" class="table-scroll"></div>
+      </section>
+
+      <section class="help-grid" aria-label="Assumptions and methodology">
+        <div class="help-item"><strong>Use full employment cost.</strong><p>Use consistent estimates covering salary and benefits, and any position-specific overhead you intend to include. The model does not estimate these for you.</p></div>
+        <div class="help-item"><strong>Locks do different things.</strong><p>Headcount locks keep an exact number of employees. Funding locks reserve dollars, then fund the largest whole number of positions they can afford.</p></div>
+        <div class="help-item"><strong>Tradeoffs need context.</strong><p>Optimization is arithmetic, not an assessment of mission effectiveness, legal staffing requirements, skills, workload, or service levels.</p></div>
+      </section>
+    </main>
+    <footer class="footer"><span>Workforce Allocation Studio · First draft</span><span><a href="/#projects">All projects</a> · <a href="/privacy.html">Privacy</a></span></footer>
+  </div>
+</body>
+</html>
