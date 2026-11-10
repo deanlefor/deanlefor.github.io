@@ -31,7 +31,7 @@ test("funding locks reserve the entire amount, not just payroll", () => {
 
 test("role minimums, maximums and exact optimizer are respected", () => {
   const plan = {
-    budget: 35,
+    budget: 33,
     types: [
       { id:"a",name:"A",cost:6,baseline:0,count:0,min:1,max:2,priority:5,lock:"none",lockedSpend:0 },
       { id:"b",name:"B",cost:10,baseline:0,count:0,min:0,max:2,priority:8,lock:"none",lockedSpend:0 },
@@ -61,6 +61,7 @@ test("priority optimization can differ from maximum headcount", () => {
 test("impossible constraints fail clearly", () => {
   const plan = defaultPlan();
   plan.budget = 100;
+  plan.types[0].lock = "headcount";
   assert.throws(() => optimize(plan,"balanced"), /exceed the budget/);
   plan.types[0].min = 500;
   assert.throws(() => optimize(plan,"headcount"), /exceed the budget/);
