@@ -48,7 +48,7 @@ their public URL paths so GitHub Pages can publish everything directly from the
   a shared library, named setups, bulk TXT/CSV imports, and JSON backups. It
   carries `noindex` and is intentionally absent from navigation, project
   listings, and the sitemap. Data stays in browser storage under
-  `list-mixer:workspace:v1`. Version 1.17 retains compact rows, All/Selected views,
+  `list-mixer:workspace:v1`. Version 1.18 retains compact rows, All/Selected views,
   and drag handles. Dragging shows an insertion line and scrolls the list near
   its edges. Clicking a handle opens a position picker; Arrow Up/Down and
   Home/End work on focused handles, and Escape cancels a drag. Reordering a
@@ -66,6 +66,13 @@ their public URL paths so GitHub Pages can publish everything directly from the
   counts and empty-view controls keep shown lists reachable; Show / hide lists
   opens the full library visibility checklist. Unchecking
   and rechecking lists preserves their remembered positions.
+  Version 1.18 adds Include output text above the result. It enables/disables
+  all before/after text, including linked sub-list phrases, without clearing
+  saved wording or rerolling. Category visibility, labels, separators and
+  instructions are independent; saved history and favorites stay unchanged.
+  Each setup stores includeOutputText (default true), immediately persisted
+  and included in backup schema 13. Duplicates inherit the choice; new setups
+  and schemas 1–12 default to on. Output dialogs explain when text is off.
   Version 1.17 groups Generate, Copy result and Favorite above the output in
   equal-size green buttons, with a three-button row on small screens. Favorite
   keeps its pressed state and star/label feedback; copying and saving behavior
@@ -208,8 +215,8 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Parent duplicates keep links to the same shared children. Snapshots retain
   exact historical pairs, even after source deletion. Backup merge remaps
   parent links, child references and pair locks to the imported list copies.
-  Backups now use version 12 of the `list-mixer` format, retaining the workspace
-  storage key. Versions 1–11 still import without changing saved output;
+  Backups now use version 13 of the `list-mixer` format, retaining the workspace
+  storage key. Versions 1–12 still import without changing saved output;
   versions 1–5 default to All because they lacked per-setup views. Version 6
   retains each setup's existing view. Other migrations retain list order/count
   defaults and favorite names. Schema-7 linked lists migrate to Equal categories.
@@ -224,8 +231,10 @@ their public URL paths so GitHub Pages can publish everything directly from the
   Earlier named profiles default to lines and unnamed profiles to commas;
   existing result/history/favorite text is never rewritten during migration.
   Schema-11 list options are retained. Child text applies through parents when
-  results are next formatted. New backups require app 1.16 or later, so older
-  apps reject them instead of silently discarding preferences.
+  results are next formatted. Schema 13 validates the per-setup includeOutputText
+  boolean; schemas 1–12 migrate with text on and retain all saved wording.
+  New backups require app 1.18 or later, so older apps reject them instead of
+  silently discarding preferences.
   Lists optionally include `selectionMode: "categories" | "items"` (omission
   means categories) and `links: [{value, listId}]`;
   linked result picks and locks include `child: {listId, name, value}`.
