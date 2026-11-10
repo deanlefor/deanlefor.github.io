@@ -228,5 +228,77 @@
     });
     return { plan: p, summary: summarize(p), exact: allocation.exact, mode };
   }
-  return { MODES, LOCKS, MAX_TYPES, defaultPlan, normalizePlan, countFor, committedFor, summarize, optimize, money, clamp };
+
+  // Move a single slider. Either trade positions within a fixed budget, or let
+  // the budget follow that type's change dollar-for-dollar. Locks are hard.
+  function adjust(plan, id, requested, mode) {
+    if (mode !== "trade" && mode !== "flex") throw new Error("Unknown budget behavior.");
+    const p = normalizePlan(plan);
+    const selected = p.types.find(function (type) { return type.id === id; });
+    if (!selected) throw new Error("Employee type not found.");
+    if (selected.lock !== "none") throw new Error("Unlock this employee type before adjusting positions.");
+    const oldSummary = summarize(p);
+    const originalCount = selected.count;
+    const target = integer(requested, NaN);
+    if (!Number.isSafeInteger(target) || target < 0 || target > MAX_COUNT) throw new Error("Enter a whole number of positions.");
+    selected.count = clamp(target, selected.min, selected.max === null ? MAX_COUNT : selected.max);
+    const desired = selected.count;
+
+    if (mode === "flex") {
+      const nextBudget = p.budget + (selected.count - originalCount) * selected.cost;
+      if (!Number.isSafeInteger(nextBudget) || nextBudget < 0 || nextBudget > MAX_BUDGET) {
+        throw new Error("This move exceeds the budget limits. Adjust the total budget in assumptions first.");
+      }
+      p.budget = nextBudget;
+    } else {
+      let need = summarize(p).committed - p.budget;
+      if (need > 0) {
+        const donors = p.types.filter(function (type) { return type.id !== id && type.lock === "none"; });
+        donors.sort(function (a, b) { return a.priority - b.priority || b.cost - a.cost || a.id.localeCompare(b.id); });
+        for (const donor of donors) {
+          if (need <= 0) break;
+          const available = Math.max(0, donor.count - donor.min);
+          const removed = Math.min(available, Math.ceil(need / donor.cost));
+          donor.count -= removed;
+          need -= removed * donor.cost;
+        }
+        if (need > 0) {
+          // Preserve every lock and minimum. Limit the slider's requested gain
+          // if the other flexible positions cannot finance it.
+          const removable = Math.max(0, selected.count - selected.min);
+          const removed = Math.min(removable, Math.ceil(need / selected.cost));
+          selected.count -= removed;
+          need -= removed * selected.cost;
+        }
+        if (need > 0) throw new Error("Locked funding and minimum staffing already exceed this budget.");
+      } else if (desired < originalCount) {
+        // Moving the slider down creates capacity for other roles. Allocate it
+        // to the highest-priority flexible type first, never touching locks.
+        let remaining = p.budget - summarize(p).committed;
+        const receivers = p.types.filter(function (type) { return type.id !== id && type.lock === "none"; });
+        receivers.sort(function (a, b) { return b.priority - a.priority || a.cost - b.cost || a.id.localeCompare(b.id); });
+        for (const receiver of receivers) {
+          const max = receiver.max === null ? MAX_COUNT : receiver.max;
+          const add = Math.min(max - receiver.count, Math.floor(remaining / receiver.cost));
+          if (add > 0) { receiver.count += add; remaining -= add * receiver.cost; }
+        }
+      }
+    }
+    const result = summarize(p);
+    return {
+      plan: p,
+      summary: result,
+      mode,
+      requested: desired,
+      actual: selected.count,
+      changes: p.types.map(function (type) {
+        const earlier = plan.types.find(function (prev) { return prev.id === type.id; });
+        return { id: type.id, name: type.name, delta: countFor(type) - countFor(earlier) };
+      }).filter(function (item) { return item.delta !== 0; }),
+      budgetDelta: p.budget - plan.budget,
+      originalRemaining: oldSummary.remaining
+    };
+  }
+
+  return { MODES, LOCKS, MAX_TYPES, defaultPlan, normalizePlan, countFor, committedFor, summarize, optimize, adjust, money, clamp };
 });
