@@ -564,6 +564,7 @@
   }
   function updateBoard() {
     $("reset-notice").hidden = true;
+    $("reset-feedback").textContent = "";
     syncRoleCards();
     renderDonut();
     renderBudget();
