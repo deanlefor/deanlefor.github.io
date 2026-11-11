@@ -1,17 +1,42 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
 const { defaultPlan, normalizePlan, summarize, optimize, adjust, countFor } = require("../employees/logic.js");
+// Preserve regression coverage for the original two-type example. The public
+// starter now uses four generic roles, but v1 saved plans remain supported.
+function legacyTwoTypePlan() {
+  return {
+    budget: 32500000,
+    types: [
+      { id: "accountants", name: "Accountants", cost: 200000, baseline: 63, count: 63, min: 0, max: null, priority: 4, lock: "none", lockedSpend: 0 },
+      { id: "officers", name: "Police officers", cost: 300000, baseline: 65, count: 65, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 }
+    ]
+  };
+}
 
-test("starter scenario preserves whole-person staffing arithmetic", () => {
+
+test("starter scenario uses four generic, equally staffed, editable types", () => {
   const plan = normalizePlan(defaultPlan());
   const sum = summarize(plan);
-  assert.equal(sum.totalCount, 128);
-  assert.equal(sum.payroll, 32100000);
-  assert.equal(sum.remaining, 400000);
+  assert.deepEqual(plan.types.map(t => t.name), ["Employee 1", "Employee 2", "Employee 3", "Employee 4"]);
+  assert.deepEqual(plan.types.map(t => t.count), [20, 20, 20, 20]);
+  assert.deepEqual(plan.types.map(t => t.cost), [100000, 150000, 200000, 250000]);
+  assert.equal(plan.budget, 14500000);
+  assert.equal(sum.totalCount, 80);
+  assert.equal(sum.payroll, 14000000);
+  assert.equal(sum.remaining, 500000);
+});
+
+test("new four-role plan trades within its budget", () => {
+  const plan = defaultPlan();
+  const changed = adjust(plan, "employee-1", 28, "trade");
+  assert.equal(changed.plan.budget, plan.budget);
+  assert.equal(changed.actual, 28);
+  assert.equal(changed.plan.types[3].count, 18);
+  assert.ok(changed.summary.remaining >= 0);
 });
 
 test("locked headcounts remain fixed through optimization", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.types[0].lock = "headcount";
   const result = optimize(plan, "headcount");
   assert.equal(result.plan.types[0].count, 63);
@@ -20,7 +45,7 @@ test("locked headcounts remain fixed through optimization", () => {
 });
 
 test("funding locks reserve the entire amount, not just payroll", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.types[0].lock = "spend";
   plan.types[0].lockedSpend = 12900000;
   const result = optimize(plan, "utilization");
@@ -59,7 +84,7 @@ test("priority optimization can differ from maximum headcount", () => {
 });
 
 test("impossible constraints fail clearly", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.budget = 100;
   plan.types[0].lock = "headcount";
   assert.throws(() => optimize(plan,"balanced"), /exceed the budget/);
@@ -68,7 +93,7 @@ test("impossible constraints fail clearly", () => {
 });
 
 test("rejects duplicate types and invalid inputs", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.types[1].id=plan.types[0].id;
   assert.throws(() => normalizePlan(plan), /unique identifiers/);
   plan.types[1].id="officers";
@@ -78,7 +103,7 @@ test("rejects duplicate types and invalid inputs", () => {
 
 
 test("fixed-budget slider trades unlocked positions and uses existing slack first", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   const moved = adjust(plan, "accountants", 68, "trade");
   assert.equal(moved.plan.budget, 32500000);
   assert.deepEqual(moved.plan.types.map(t => t.count), [68, 63]);
@@ -88,13 +113,13 @@ test("fixed-budget slider trades unlocked positions and uses existing slack firs
 });
 
 test("reducing a role can backfill a higher-priority unlocked role", () => {
-  const moved = adjust(defaultPlan(), "accountants", 62, "trade");
+  const moved = adjust(legacyTwoTypePlan(), "accountants", 62, "trade");
   assert.deepEqual(moved.plan.types.map(t => t.count), [62, 67]);
   assert.equal(moved.summary.committed, moved.plan.budget);
 });
 
 test("budget-following slider preserves other roles and unallocated funds", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   const increase = adjust(plan, "accountants", 68, "flex");
   assert.equal(increase.plan.budget, 33500000);
   assert.equal(increase.plan.types[1].count, 65);
@@ -106,7 +131,7 @@ test("budget-following slider preserves other roles and unallocated funds", () =
 });
 
 test("position locks and spending locks are never changed by sliders", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.types[0].lock = "headcount";
   const moved = adjust(plan, "officers", 67, "trade");
   assert.equal(moved.plan.types[0].count, 63);
@@ -114,7 +139,7 @@ test("position locks and spending locks are never changed by sliders", () => {
   assert.equal(moved.summary.remaining, 100000);
   assert.throws(() => adjust(plan, "accountants", 64, "trade"), /Unlock/);
 
-  const funding = defaultPlan();
+  const funding = legacyTwoTypePlan();
   funding.types[0].lock = "spend";
   funding.types[0].lockedSpend = 12500000;
   const changed = adjust(funding, "officers", 68, "trade");
@@ -124,7 +149,7 @@ test("position locks and spending locks are never changed by sliders", () => {
 });
 
 test("slider respects minimums, maximums, and whole-person counts", () => {
-  const plan = defaultPlan();
+  const plan = legacyTwoTypePlan();
   plan.types[0].min = 62;
   plan.types[0].max = 64;
   const capped = adjust(plan, "accountants", 1000, "trade");
@@ -148,5 +173,5 @@ test("public visual interface keeps assumptions collapsed and provides accessibl
   assert.match(html, /id="budget-meter"/);
   assert.match(script, /aria-pressed/);
   assert.match(script, /pointerdown/);
-  assert.match(html, /<script src="\.\/logic\.js\?v=2" defer>/);
+  assert.match(html, /<script src="\.\/logic\.js\?v=3" defer>/);
 });
