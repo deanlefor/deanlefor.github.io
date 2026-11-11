@@ -377,36 +377,66 @@
   }
   function renderBudget() {
     const summary = L.summarize(state.plan);
-    $("budget-total").textContent = shortMoney(state.plan.budget);
+    const budget = state.plan.budget;
+    const percentOfBudget = value => {
+      if (budget === 0) return "—";
+      const percent = value / budget * 100;
+      if (value > 0 && percent < 0.1) return "<0.1%";
+      return percent.toFixed(1) + "%";
+    };
+    $("budget-total").textContent = shortMoney(budget);
     $("budget-balance").textContent = shortMoney(Math.abs(summary.remaining));
     $("budget-balance").style.color = summary.remaining < 0 ? "var(--danger)" : "var(--teal)";
     $("balance-caption").textContent = summary.remaining < 0 ? "Over budget" : "Still available";
     const meter = $("budget-meter"), legend = $("budget-legend");
     meter.replaceChildren();
     legend.replaceChildren();
-    const scale = Math.max(1, state.plan.budget, summary.committed);
+    // Scale the visual ribbon to fit even when the allocation exceeds the cap.
+    // Percentages intentionally always use the entered annual budget instead.
+    const scale = Math.max(1, budget, summary.committed);
+    const parts = [];
     const add = (title, value, color) => {
-      if (value <= 0) return;
-      const bar = el("span");
-      bar.style.width = (value / scale * 100) + "%";
-      bar.style.backgroundColor = color;
-      bar.title = title + ": " + dollars(value);
-      meter.append(bar);
+      const percent = percentOfBudget(value);
+      if (value > 0) {
+        const bar = el("span", "budget-segment");
+        const ribbonShare = value / scale * 100;
+        bar.style.width = ribbonShare + "%";
+        bar.style.backgroundColor = color;
+        bar.title = title + ": " + dollars(value) + " (" + percent + " of total budget)";
+        bar.setAttribute("aria-hidden", "true");
+        // Suppress cramped labels on small sections; the legend always includes
+        // each percentage, including zero and tiny allocations.
+        if (budget > 0 && ribbonShare >= 12) {
+          bar.append(el("span", "budget-segment-percent", percent));
+        }
+        if (title === "Unallocated") bar.classList.add("budget-segment-unallocated");
+        meter.append(bar);
+      }
       const item = el("span", "legend-item");
       const sw = el("i", "legend-swatch");
       sw.style.backgroundColor = color;
-      item.append(sw, document.createTextNode(title + " " + shortMoney(value)));
+      sw.setAttribute("aria-hidden", "true");
+      item.append(
+        sw,
+        el("span", "budget-legend-description", title + " " + shortMoney(value)),
+        el("strong", "budget-legend-percent", percent)
+      );
       legend.append(item);
+      parts.push(title + ": " + dollars(value) + " (" + percent + ")");
     };
     summary.rows.forEach((row, index) => add(row.name, row.payroll, roleColor(index)));
-    add("Reserved, not staffed", summary.reservedRemainder, "#e8bd6f");
+    if (summary.reservedRemainder > 0) {
+      add("Reserved, not staffed", summary.reservedRemainder, "#e8bd6f");
+    }
     add("Unallocated", Math.max(0, summary.remaining), "#657286");
-    const issues = summary.issues;
-    $("budget-warning").textContent = issues.length ? issues.join(" ") : "";
-    const parts = summary.rows.map(row => row.name + ": " + dollars(row.payroll));
-    parts.push("Unallocated: " + dollars(Math.max(0, summary.remaining)));
-    meter.setAttribute("aria-label", "Budget of " + dollars(state.plan.budget) + "; " + parts.join("; "));
+    $("budget-warning").textContent = summary.issues.length ? summary.issues.join(" ") : "";
+    const explanation = budget === 0 ? " (percentages unavailable for a zero budget)" : "";
+    const overage = summary.remaining < 0
+      ? "; over budget by " + dollars(-summary.remaining) + " (" + percentOfBudget(-summary.remaining) + ")"
+      : "";
+    meter.setAttribute("aria-label", "Annual budget of " + dollars(budget) + explanation + "; " + parts.join("; ") + overage);
   }
+
   function renderImpact() {
     const summary = L.summarize(state.plan);
     const story = $("move-story");
@@ -415,7 +445,7 @@
       story.textContent = summary.totalCount === summary.baselineCount
         ? "Move a staffing slider to see exactly what changes."
         : "This mix has " + number(summary.totalCount) + " positions, compared with " + number(summary.baselineCount) + " today.";
-      note.textContent = "Today's staffing is the reference for the bars below.";
+      note.textContent = "Bars compare modeled annual spending at today's per-position costs.";
     } else if (lastMove.source === "optimizer") {
       story.textContent = "Alternative generated. The workforce mix has been recalculated.";
       note.textContent = lastRecommendation;
@@ -428,26 +458,43 @@
         ? (lastMove.budgetDelta === 0 ? "The annual budget is unchanged." : "Annual budget " + (lastMove.budgetDelta > 0 ? "increased " : "decreased ") + shortMoney(Math.abs(lastMove.budgetDelta))) + ". All other roles are unchanged."
         : "Budget held at " + shortMoney(state.plan.budget) + ". " + (lastMove.actual !== lastMove.requested ? "The requested level was limited by protected roles or minimums." : "Other unlocked positions adjust when necessary.");
     }
-    const max = Math.max(1, ...state.plan.types.flatMap(t => [t.baseline, L.countFor(t)]));
+    // Both bars use each role's CURRENT editable unit cost, so differences
+    // represent staffing changes rather than historical salary changes.
+    const maxSpending = Math.max(
+      1,
+      ...state.plan.types.flatMap(type => [
+        type.baseline * type.cost,
+        L.countFor(type) * type.cost
+      ])
+    );
     const root = $("baseline-bars");
     root.replaceChildren();
     state.plan.types.forEach((type, index) => {
-      const count = L.countFor(type);
+      const baselineSpend = type.baseline * type.cost;
+      const currentSpend = L.countFor(type) * type.cost;
       const row = el("div", "baseline-row");
       colored(row, roleColor(index));
       row.append(el("span", "role-name", type.name));
       const track = el("div", "baseline-track");
       const today = el("div", "today-bar");
       const now = el("div", "now-bar");
-      today.style.width = (type.baseline / max * 100) + "%";
-      now.style.width = (count / max * 100) + "%";
+      today.style.width = (baselineSpend / maxSpending * 100) + "%";
+      now.style.width = (currentSpend / maxSpending * 100) + "%";
+      today.title = "Today's staffing: " + dollars(baselineSpend);
+      now.title = "Current staffing: " + dollars(currentSpend);
       track.append(today, now);
       track.setAttribute("role", "img");
-      track.setAttribute("aria-label", type.name + ": " + number(count) + " now and " + number(type.baseline) + " today");
-      row.append(track, el("strong", "role-value", number(count)));
+      track.setAttribute("aria-label",
+        type.name + ": " + dollars(currentSpend) + " current annual cost, " +
+        dollars(baselineSpend) + " for today's staffing at " + dollars(type.cost) + " per position"
+      );
+      const currentValue = el("strong", "role-value", shortMoney(currentSpend));
+      currentValue.title = dollars(currentSpend);
+      row.append(track, currentValue);
       root.append(row);
     });
   }
+
   function visualSegments(parent, plan) {
     const summary = L.summarize(plan);
     const scale = Math.max(1, plan.budget, summary.committed);
