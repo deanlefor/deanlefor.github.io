@@ -445,6 +445,18 @@
       tile.append(chart);
       const delta = summary.totalCount - currentTotal;
       tile.append(el("div", "scenario-note", (delta === 0 ? "Same total headcount" : (delta > 0 ? "+" : "−") + number(Math.abs(delta)) + " people vs current") + (s.plan.budget !== state.plan.budget ? " · Different budget" : " · Same budget")));
+      const currentById = new Map(state.plan.types.map(t => [t.id, t]));
+      const savedById = new Map(s.plan.types.map(t => [t.id, t]));
+      const differences = [...new Set([...currentById.keys(), ...savedById.keys()])].map(id => {
+        const oldRole = currentById.get(id), newRole = savedById.get(id);
+        const countBefore = oldRole ? L.countFor(oldRole) : 0;
+        const countSaved = newRole ? L.countFor(newRole) : 0;
+        return { name: newRole ? newRole.name : oldRole.name, change: countSaved - countBefore };
+      }).filter(item => item.change !== 0);
+      const changesText = differences.length
+        ? differences.slice(0, 3).map(item => (item.change > 0 ? "+" : "−") + number(Math.abs(item.change)) + " " + item.name).join(" · ") + (differences.length > 3 ? " · +" + (differences.length - 3) + " more types" : "")
+        : "Same positions by employee type";
+      tile.append(el("div", "scenario-changes", changesText));
       const actions = el("div", "scenario-actions");
       const load = el("button", "", "Load mix");
       load.type = "button";
