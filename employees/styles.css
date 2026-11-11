@@ -451,3 +451,61 @@ h1 { font-size: clamp(28px, 3.3vw, 38px); margin-bottom: 4px; }
 @media (max-width: 1079px) and (min-width: 550px) {
   .donut { width: min(40%, 135px); }
 }
+
+
+/* Dollar-based tradeoff bars, sharing one scale for current and baseline costs. */
+.baseline-row {
+  grid-template-columns: minmax(76px, 1fr) minmax(60px, 1.4fr) minmax(66px, max-content);
+}
+.baseline-row .role-value {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.baseline-key {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+  font-size: 11px;
+}
+.baseline-key span { flex: 0 0 auto; }
+.budget-percent-hint { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+.budget-meter .budget-segment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+.budget-segment-percent {
+  font-size: 10px;
+  line-height: 1;
+  font-weight: 800;
+  white-space: nowrap;
+  color: #0d1824;
+  font-variant-numeric: tabular-nums;
+}
+.budget-segment-unallocated .budget-segment-percent { color: #fff; }
+.budget-legend .legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+.budget-legend .legend-swatch { margin-right: 2px; flex: none; }
+.budget-legend-description { overflow-wrap: anywhere; }
+.budget-legend-percent {
+  font-weight: 800;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+@media (max-width: 760px) {
+  .baseline-row { grid-template-columns: minmax(56px, 1fr) minmax(45px, 1fr) minmax(62px, max-content); }
+  .baseline-row .role-value { font-size: 11px; }
+  .budget-legend .legend-item { gap: 3px; }
+}
+@media (max-width: 549px) {
+  /* Mobile ribbons are too narrow for inline text; the complete percentages
+     remain visible immediately beneath the ribbon. */
+  .budget-segment-percent { display: none; }
+}
