@@ -11,9 +11,9 @@
   <meta property="og:description" content="A visual staffing allocation calculator. Drag a role to trade positions or change the budget, then compare scenarios.">
   <meta property="og:url" content="https://deanlefor.com/employees/">
   <link rel="canonical" href="https://deanlefor.com/employees/">
-  <link rel="stylesheet" href="./styles.css?v=3">
+  <link rel="stylesheet" href="./styles.css?v=4">
   <script src="./logic.js?v=3" defer></script>
-  <script src="./app.js?v=3" defer></script>
+  <script src="./app.js?v=4" defer></script>
   <title>Workforce Allocation Studio | Dean Lefor</title>
 </head>
 <body>
@@ -74,20 +74,20 @@
           <h2>What changed?</h2>
           <p id="move-story" class="move-story" aria-live="polite">Move a staffing slider below to see exactly what changes.</p>
           <p id="move-note" class="move-note"></p>
-          <div id="baseline-bars" class="baseline-bars" aria-label="Current employees compared with today's staffing"></div>
-          <p class="baseline-key"><span class="baseline-current"></span> Current positions <span class="baseline-original"></span> Today</p>
+          <div id="baseline-bars" class="baseline-bars" aria-label="Estimated annual employee costs compared with costs at today's staffing levels"></div>
+          <p class="baseline-key"><span class="baseline-current"></span> Current annual cost <span class="baseline-original"></span> Today at current cost rates</p>
         </div>
       </section>
 
       <section class="panel budget-panel" aria-labelledby="budget-heading">
         <div class="budget-heading">
-          <div><p class="section-kicker">THE MONEY</p><h2 id="budget-heading">How the budget is used</h2></div>
+          <div><p class="section-kicker">THE MONEY</p><h2 id="budget-heading">How the budget is used</h2><p class="budget-percent-hint">Each percentage is a share of the total annual budget.</p></div>
           <div class="budget-totals">
             <span><small>Annual budget</small><strong id="budget-total">$14.5M</strong></span>
             <span><small id="balance-caption">Still available</small><strong id="budget-balance">$500K</strong></span>
           </div>
         </div>
-        <div id="budget-meter" class="budget-meter" role="img" aria-label="Budget shares by employee type and remaining balance"></div>
+        <div id="budget-meter" class="budget-meter" role="img" aria-label="Budget shares and percentage of the annual budget by employee type, reserved funds, and remaining balance"></div>
         <div id="budget-legend" class="budget-legend"></div>
         <p id="budget-warning" class="budget-warning" role="status" aria-live="polite"></p>
       </section>
