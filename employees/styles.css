@@ -424,3 +424,30 @@ h2 { font-size: 18px; }
   .intro-actions { flex-wrap: wrap; }
   .intro-settings { font-size: 12px; }
 }
+
+/* Dashboard-first density: on a typical laptop the chart and four default
+   categories should share the first viewport, without tiny controls. */
+.site-header { padding: 10px 0; }
+.intro { padding: 12px 0; }
+h1 { font-size: clamp(28px, 3.3vw, 38px); margin-bottom: 4px; }
+.eyebrow, .section-kicker { margin-bottom: 3px; }
+.mode-panel { padding-top: 12px; padding-bottom: 12px; }
+.mode-option span { padding-top: 6px; padding-bottom: 6px; }
+.mode-option input:checked + span { padding-top: 5px; padding-bottom: 5px; }
+.visual-grid .panel { padding-top: 13px; padding-bottom: 13px; }
+.section-heading.compact-heading { margin-bottom: 6px; }
+.budget-panel { padding-top: 12px; padding-bottom: 12px; margin-bottom: 12px; }
+.budget-heading { margin-bottom: 6px; }
+.budget-legend { margin-top: 5px; }
+.allocation-section > .section-heading { margin-bottom: 7px; }
+.allocation-card { padding: 11px 12px; }
+.card-main { margin: 6px 0; }
+.card-main .count-input { font-size: clamp(30px, 2.8vw, 36px); }
+.role-footer { margin-top: 6px; }
+@media (min-width: 1080px) {
+  .donut { width: min(32%, 130px); }
+  .donut-inner strong { font-size: 34px; }
+}
+@media (max-width: 1079px) and (min-width: 550px) {
+  .donut { width: min(40%, 135px); }
+}
