@@ -176,10 +176,64 @@
       const top = el("div", "card-top");
       const heading = el("div", "card-heading");
       heading.append(el("div", "card-swatch"));
-      const text = el("div");
-      text.append(el("h3", "card-title", type.name));
+      const text = el("div", "card-text");
+      const nameButton = el("button", "card-name-button");
+      nameButton.type = "button";
+      nameButton.title = "Click to rename " + type.name;
+      nameButton.setAttribute("aria-label", "Rename " + type.name);
+      const nameLabel = el("span", "card-name-label", type.name);
+      const editMark = el("span", "name-edit-mark");
+      editMark.setAttribute("aria-hidden", "true");
+      editMark.textContent = "✎";
+      nameButton.append(nameLabel, editMark);
+      const nameInput = document.createElement("input");
+      nameInput.className = "card-name-input";
+      nameInput.type = "text";
+      nameInput.maxLength = 64;
+      nameInput.value = type.name;
+      nameInput.hidden = true;
+      nameInput.setAttribute("aria-label", "Edit employee type name");
+      let editingName = false;
+      function cancelRename() {
+        if (!editingName) return;
+        editingName = false;
+        nameInput.hidden = true;
+        nameButton.hidden = false;
+        nameInput.value = type.name;
+      }
+      function commitRename() {
+        if (!editingName) return;
+        const next = nameInput.value.trim();
+        if (!next || next === type.name) {
+          cancelRename();
+          return;
+        }
+        editingName = false;
+        applyEdit(plan => {
+          const role = plan.types.find(t => t.id === type.id);
+          if (role) role.name = next;
+        });
+      }
+      nameButton.addEventListener("click", () => {
+        editingName = true;
+        nameButton.hidden = true;
+        nameInput.hidden = false;
+        nameInput.focus();
+        nameInput.select();
+      });
+      nameInput.addEventListener("keydown", event => {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          cancelRename();
+          nameButton.focus();
+        } else if (event.key === "Enter") {
+          event.preventDefault();
+          commitRename();
+        }
+      });
+      nameInput.addEventListener("blur", commitRename);
       const subtitle = el("p", "card-subtitle");
-      text.append(subtitle);
+      text.append(nameButton, nameInput, subtitle);
       heading.append(text);
       const lock = el("button", "lock-button");
       lock.type = "button";
@@ -201,11 +255,6 @@
       count.setAttribute("aria-label", type.name + " headcount");
       count.addEventListener("change", () => setCount(type.id, Number(count.value)));
       main.append(count, el("span", "count-label", "people"));
-      const visual = el("div", "role-visual");
-      visual.setAttribute("aria-hidden", "true");
-      const fill = el("div", "role-bar");
-      const marker = el("div", "baseline-mark");
-      visual.append(fill, marker);
       const sliderRow = el("div", "role-slider");
       const minus = el("button", "role-step", "−");
       minus.type = "button";
@@ -237,9 +286,9 @@
       const cost = el("span");
       footer.append(delta, cost);
       const warning = el("p", "role-warning");
-      card.append(top, main, visual, sliderRow, footer, warning);
+      card.append(top, main, sliderRow, footer, warning);
       root.append(card);
-      cardRefs.set(type.id, { card, subtitle, lock, count, fill, marker, slider, plus, minus, delta, cost, warning });
+      cardRefs.set(type.id, { card, subtitle, lock, count, slider, plus, minus, delta, cost, warning });
     });
   }
   function currentType(id) { return state.plan.types.find(t => t.id === id); }
@@ -290,9 +339,6 @@
       refs.slider.disabled = locked;
       refs.minus.disabled = locked || count <= type.min;
       refs.plus.disabled = locked || (type.max !== null && count >= type.max) || count >= 1000000;
-      const scale = Math.max(1, count, type.baseline) * 1.12;
-      refs.fill.style.width = (100 * count / scale) + "%";
-      refs.marker.style.left = (100 * type.baseline / scale) + "%";
       const delta = count - type.baseline;
       refs.delta.textContent = delta === 0 ? "Same as today" : (delta > 0 ? "+" : "−") + number(Math.abs(delta)) + " vs today";
       refs.cost.textContent = shortMoney(count * type.cost);
@@ -619,6 +665,28 @@
     persist();
     renderScenarios();
     renderComparison();
+  });
+  $("reset-all").addEventListener("click", () => {
+    const warning = "Reset everything?\\n\\nThis permanently replaces the current staffing plan with Employee 1–4, resets all budgets, costs, constraints and locks, and DELETEs every locally saved scenario.\\n\\nThis cannot be undone. Export a JSON backup first if you want to keep your data.";
+    if (!confirm(warning)) return;
+    try {
+      // Delete persisted v1 data rather than merely overwriting it: a fresh
+      // visit should behave identically to a first-time visitor.
+      localStorage.removeItem(KEY);
+    } catch (_) {
+      // Private browsing/storage restrictions are handled by persist().
+    }
+    state = { plan: L.defaultPlan(), scenarios: [], mode: "trade" };
+    lastMove = null;
+    lastRecommendation = "";
+    $("scenario-name").value = "";
+    $("objective").value = "balanced";
+    $("detailed-comparison").open = false;
+    $("assistant-panel").open = false;
+    renderAll();
+    persist();
+    const feedback = $("reset-feedback");
+    feedback.textContent = "Reset complete. Four default employee types restored; saved scenarios cleared.";
   });
   $("export-json").addEventListener("click", () => {
     download("workforce-allocation-backup.json", JSON.stringify({ version: 1, plan: state.plan, scenarios: state.scenarios, mode: state.mode }, null, 2), "application/json");
