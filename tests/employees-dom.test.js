@@ -134,5 +134,100 @@ test("compact cards have four-column and two-column breakpoints", () => {
   assert.match(css, /\.card-main \.count-input::-webkit-inner-spin-button/);
   const html = fs.readFileSync(path.join(__dirname, "../employees/index.html"), "utf8");
   assert.match(html, /id="reset-all"/);
-  assert.match(html, /v=3/);
+  assert.match(html, /styles\.css\?v=4/);
+  assert.match(html, /app\.js\?v=4/);
+});
+
+
+test("tradeoff chart uses modeled annual dollars, not headcount, and updates on staffing changes", t => {
+  const p = page("employees/index.html");
+  t.after(() => p.dom.window.close());
+
+  const rows = [...p.document.querySelectorAll("#baseline-bars .baseline-row")];
+  assert.deepEqual(rows.map(row => row.querySelector(".role-value").textContent), ["$2M", "$3M", "$4M", "$5M"]);
+  assert.match(rows[0].querySelector(".baseline-track").getAttribute("aria-label"),
+    /Employee 1: \$2,000,000 current annual cost, \$2,000,000 for today's staffing at \$100,000 per position/);
+  assert.match(p.document.querySelector(".baseline-key").textContent, /Current annual cost/);
+  assert.match(p.document.querySelector(".baseline-key").textContent, /Today at current cost rates/);
+
+  p.document.querySelector('[aria-label="Increase Employee 1"]').click();
+  const newRow = p.document.querySelector("#baseline-bars .baseline-row");
+  assert.equal(newRow.querySelector(".role-value").textContent, "$2.10M");
+  assert.match(newRow.querySelector(".baseline-track").getAttribute("aria-label"),
+    /\$2,100,000 current annual cost, \$2,000,000 for today's staffing/);
+  assert.notEqual(newRow.querySelector(".now-bar").style.width, newRow.querySelector(".today-bar").style.width);
+  assert.equal(p.document.querySelector("#budget-total").textContent, "$14.50M");
+});
+
+test("changing a unit cost updates today's baseline and current spending consistently", t => {
+  const p = page("employees/index.html");
+  t.after(() => p.dom.window.close());
+  const costInput = p.document.querySelector(".settings-role-card input[type='number']");
+  assert.equal(costInput.value, "100000");
+  costInput.value = "125000";
+  costInput.dispatchEvent(new p.window.Event("change", { bubbles: true }));
+  const row = p.document.querySelector("#baseline-bars .baseline-row");
+  assert.equal(row.querySelector(".role-value").textContent, "$2.50M");
+  assert.match(row.querySelector(".baseline-track").getAttribute("aria-label"),
+    /\$2,500,000 current annual cost, \$2,500,000 for today's staffing at \$125,000 per position/);
+});
+
+test("The Money labels each category as a percentage of the total budget", t => {
+  const p = page("employees/index.html");
+  t.after(() => p.dom.window.close());
+  const legend = [...p.document.querySelectorAll("#budget-legend .legend-item")];
+  assert.equal(legend.length, 5, "four roles plus the remaining budget");
+  assert.deepEqual(legend.map(item => item.querySelector(".budget-legend-percent").textContent),
+    ["13.8%", "20.7%", "27.6%", "34.5%", "3.4%"]);
+  assert.match(legend[0].textContent, /Employee 1 \$2M13\.8%/);
+  assert.match(legend[4].textContent, /Unallocated \$500K3\.4%/);
+  assert.equal(p.document.querySelector(".budget-segment-percent").textContent, "13.8%");
+  assert.match(p.document.getElementById("budget-meter").getAttribute("aria-label"),
+    /Employee 1: \$2,000,000 \(13\.8%\)/);
+  assert.match(p.document.querySelector(".budget-percent-hint").textContent, /share of the total annual budget/);
+});
+
+test("reserved-but-unspent funds receive a separate percentage", t => {
+  const plan = require("../employees/logic.js").defaultPlan();
+  plan.types[0].lock = "spend";
+  plan.types[0].lockedSpend = 2050000;
+  const p = page("employees/index.html", {
+    stored: { [KEY]: JSON.stringify({ version: 1, plan, scenarios: [], mode: "trade" }) }
+  });
+  t.after(() => p.dom.window.close());
+  const legend = [...p.document.querySelectorAll("#budget-legend .legend-item")];
+  const reserved = legend.find(item => item.textContent.includes("Reserved, not staffed"));
+  assert.ok(reserved);
+  assert.match(reserved.textContent, /\$50K0\.3%/);
+  const unallocated = legend.find(item => item.textContent.includes("Unallocated"));
+  assert.match(unallocated.textContent, /\$450K3\.1%/);
+  assert.equal(p.document.querySelector(".baseline-row .role-value").textContent, "$2M");
+});
+
+test("zero budget reports undefined shares without NaN or division by zero", t => {
+  const plan = require("../employees/logic.js").defaultPlan();
+  plan.budget = 0;
+  plan.types.forEach(type => { type.count = 0; });
+  const p = page("employees/index.html", {
+    stored: { [KEY]: JSON.stringify({ version: 1, plan, scenarios: [], mode: "trade" }) }
+  });
+  t.after(() => p.dom.window.close());
+  const shares = [...p.document.querySelectorAll("#budget-legend .budget-legend-percent")];
+  assert.equal(shares.length, 5);
+  assert.ok(shares.every(share => share.textContent === "—"));
+  assert.doesNotMatch(p.document.getElementById("budget-meter").getAttribute("aria-label"), /NaN|Infinity/);
+  assert.match(p.document.getElementById("budget-meter").getAttribute("aria-label"), /percentages unavailable/);
+  assert.equal(p.document.querySelector(".baseline-row .role-value").textContent, "$0");
+});
+
+test("over-budget entries still report shares of the entered budget, not the clipped ribbon scale", t => {
+  const plan = require("../employees/logic.js").defaultPlan();
+  plan.budget = 1000000;
+  const p = page("employees/index.html", {
+    stored: { [KEY]: JSON.stringify({ version: 1, plan, scenarios: [], mode: "trade" }) }
+  });
+  t.after(() => p.dom.window.close());
+  assert.equal(p.document.querySelector(".budget-legend-percent").textContent, "200.0%");
+  assert.match(p.document.getElementById("budget-meter").getAttribute("aria-label"), /over budget by \$13,000,000 \(1300\.0%\)/);
+  assert.match(p.document.getElementById("budget-warning").textContent, /exceeds the budget/);
 });
