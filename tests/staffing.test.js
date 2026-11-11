@@ -1,6 +1,6 @@
 const test = require("node:test");
 const assert = require("node:assert/strict");
-const { defaultPlan, normalizePlan, summarize, optimize, countFor } = require("../employees/logic.js");
+const { defaultPlan, normalizePlan, summarize, optimize, adjust, countFor } = require("../employees/logic.js");
 
 test("starter scenario preserves whole-person staffing arithmetic", () => {
   const plan = normalizePlan(defaultPlan());
@@ -74,4 +74,79 @@ test("rejects duplicate types and invalid inputs", () => {
   plan.types[1].id="officers";
   plan.types[0].cost = 0;
   assert.throws(() => normalizePlan(plan), /cost per employee/);
+});
+
+
+test("fixed-budget slider trades unlocked positions and uses existing slack first", () => {
+  const plan = defaultPlan();
+  const moved = adjust(plan, "accountants", 68, "trade");
+  assert.equal(moved.plan.budget, 32500000);
+  assert.deepEqual(moved.plan.types.map(t => t.count), [68, 63]);
+  assert.equal(moved.summary.remaining, 0);
+  assert.deepEqual(moved.changes.map(c => c.delta), [5, -2]);
+  assert.equal(plan.types[0].count, 63, "input plan must remain unchanged");
+});
+
+test("reducing a role can backfill a higher-priority unlocked role", () => {
+  const moved = adjust(defaultPlan(), "accountants", 62, "trade");
+  assert.deepEqual(moved.plan.types.map(t => t.count), [62, 67]);
+  assert.equal(moved.summary.committed, moved.plan.budget);
+});
+
+test("budget-following slider preserves other roles and unallocated funds", () => {
+  const plan = defaultPlan();
+  const increase = adjust(plan, "accountants", 68, "flex");
+  assert.equal(increase.plan.budget, 33500000);
+  assert.equal(increase.plan.types[1].count, 65);
+  assert.equal(increase.summary.remaining, 400000);
+  const decrease = adjust(plan, "accountants", 60, "flex");
+  assert.equal(decrease.plan.budget, 31900000);
+  assert.equal(decrease.plan.types[1].count, 65);
+  assert.equal(decrease.summary.remaining, 400000);
+});
+
+test("position locks and spending locks are never changed by sliders", () => {
+  const plan = defaultPlan();
+  plan.types[0].lock = "headcount";
+  const moved = adjust(plan, "officers", 67, "trade");
+  assert.equal(moved.plan.types[0].count, 63);
+  assert.equal(moved.actual, 66, "requested level must be limited");
+  assert.equal(moved.summary.remaining, 100000);
+  assert.throws(() => adjust(plan, "accountants", 64, "trade"), /Unlock/);
+
+  const funding = defaultPlan();
+  funding.types[0].lock = "spend";
+  funding.types[0].lockedSpend = 12500000;
+  const changed = adjust(funding, "officers", 68, "trade");
+  assert.equal(changed.plan.types[0].lockedSpend, 12500000);
+  assert.equal(changed.plan.types[0].lock, "spend");
+  assert.ok(changed.summary.committed <= funding.budget);
+});
+
+test("slider respects minimums, maximums, and whole-person counts", () => {
+  const plan = defaultPlan();
+  plan.types[0].min = 62;
+  plan.types[0].max = 64;
+  const capped = adjust(plan, "accountants", 1000, "trade");
+  assert.equal(capped.plan.types[0].count, 64);
+  assert.ok(capped.summary.committed <= plan.budget);
+  const floor = adjust(plan, "accountants", 0, "trade");
+  assert.equal(floor.plan.types[0].count, 62);
+  assert.throws(() => adjust(plan,"accountants", 63.5, "trade"), /whole number/);
+});
+
+test("public visual interface keeps assumptions collapsed and provides accessible locks", () => {
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const html = fs.readFileSync(path.join(__dirname, "../employees/index.html"), "utf8");
+  const script = fs.readFileSync(path.join(__dirname, "../employees/app.js"), "utf8");
+  assert.match(html, /<details class="panel settings-panel" id="settings-panel">/);
+  assert.match(html, /id="mode-trade"/);
+  assert.match(html, /id="mode-flex"/);
+  assert.match(html, /id="headcount-donut"/);
+  assert.match(html, /id="baseline-bars"/);
+  assert.match(html, /id="budget-meter"/);
+  assert.match(script, /aria-pressed/);
+  assert.match(script, /pointerdown/);
+  assert.match(html, /<script src="\.\/logic\.js\?v=2" defer>/);
 });
