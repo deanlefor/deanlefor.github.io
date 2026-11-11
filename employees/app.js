@@ -667,7 +667,7 @@
     renderComparison();
   });
   $("reset-all").addEventListener("click", () => {
-    const warning = "Reset everything?\\n\\nThis permanently replaces the current staffing plan with Employee 1–4, resets all budgets, costs, constraints and locks, and DELETEs every locally saved scenario.\\n\\nThis cannot be undone. Export a JSON backup first if you want to keep your data.";
+    const warning = "Reset everything?\n\nThis permanently replaces your current plan with four sample employees, resets all budgets, costs, locks and assumptions, and deletes every saved scenario on this device.\n\nThis cannot be undone. Export a JSON backup first if you need to preserve anything.";
     if (!confirm(warning)) return;
     try {
       // Delete persisted v1 data rather than merely overwriting it: a fresh
