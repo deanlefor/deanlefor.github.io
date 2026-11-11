@@ -11,9 +11,9 @@
   <meta property="og:description" content="A visual staffing allocation calculator. Drag a role to trade positions or change the budget, then compare scenarios.">
   <meta property="og:url" content="https://deanlefor.com/employees/">
   <link rel="canonical" href="https://deanlefor.com/employees/">
-  <link rel="stylesheet" href="./styles.css?v=2">
-  <script src="./logic.js?v=2" defer></script>
-  <script src="./app.js?v=2" defer></script>
+  <link rel="stylesheet" href="./styles.css?v=3">
+  <script src="./logic.js?v=3" defer></script>
+  <script src="./app.js?v=3" defer></script>
   <title>Workforce Allocation Studio | Dean Lefor</title>
 </head>
 <body>
@@ -57,7 +57,7 @@
             <div id="headcount-donut" class="donut" role="img" aria-label="Staffing share by employee type">
               <div class="donut-inner">
                 <span>Total people</span>
-                <strong id="total-staff">128</strong>
+                <strong id="total-staff">80</strong>
                 <small id="staff-delta">Same as today</small>
               </div>
             </div>
@@ -79,8 +79,8 @@
         <div class="budget-heading">
           <div><p class="section-kicker">THE MONEY</p><h2 id="budget-heading">How the budget is used</h2></div>
           <div class="budget-totals">
-            <span><small>Annual budget</small><strong id="budget-total">$32.5M</strong></span>
-            <span><small id="balance-caption">Still available</small><strong id="budget-balance">$400K</strong></span>
+            <span><small>Annual budget</small><strong id="budget-total">$14.5M</strong></span>
+            <span><small id="balance-caption">Still available</small><strong id="budget-balance">$500K</strong></span>
           </div>
         </div>
         <div id="budget-meter" class="budget-meter" role="img" aria-label="Budget shares by employee type and remaining balance"></div>
@@ -90,7 +90,7 @@
 
       <section class="allocation-section" aria-labelledby="allocation-title">
         <div class="section-heading">
-          <div><p class="section-kicker">MAKE A CHANGE</p><h2 id="allocation-title">Drag to reshape the workforce</h2></div>
+          <div><p class="section-kicker">MAKE A CHANGE</p><h2 id="allocation-title">Drag to reshape the workforce</h2><p class="allocation-hint">Click any employee name to rename it.</p></div>
           <span class="hint-lock"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="10" width="14" height="11" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></svg> Select a lock to protect a role</span>
         </div>
         <div id="role-cards" class="role-cards"></div>
@@ -123,7 +123,7 @@
         </div>
         <div class="scenario-save">
           <label class="sr-only" for="scenario-name">Scenario name</label>
-          <input id="scenario-name" type="text" maxlength="60" placeholder="Name this mix, e.g. More officers">
+          <input id="scenario-name" type="text" maxlength="60" placeholder="Name this mix, e.g. More of Employee 2">
           <button type="button" id="save-scenario" class="button button-primary">Save this mix</button>
         </div>
         <p id="scenario-empty" class="empty-message">Save a scenario to build a visual side-by-side comparison of different staffing choices.</p>
@@ -142,9 +142,9 @@
           <p class="helper-text">All figures are editable. Use fully loaded per-position costs if you want to include salary, benefits and other staff-related costs. The initial numbers are illustrative.</p>
           <div class="budget-input-group">
             <label for="budget-input">Annual budget ($ millions)</label>
-            <input id="budget-input" type="number" min="0" max="1000000" step="0.001" value="32.5" inputmode="decimal">
+            <input id="budget-input" type="number" min="0" max="1000000" step="0.001" value="14.5" inputmode="decimal">
           </div>
-          <div class="settings-role-header"><h3>Employee types <span id="type-count" class="heading-count">2</span></h3><button type="button" id="add-type" class="button button-primary">+ Add employee type</button></div>
+          <div class="settings-role-header"><h3>Employee types <span id="type-count" class="heading-count">4</span></h3><button type="button" id="add-type" class="button button-primary">+ Add employee type</button></div>
           <div id="settings-role-list" class="settings-role-list"></div>
           <div class="data-actions">
             <button type="button" id="export-json" class="button button-outline">Export backup (JSON)</button>
@@ -153,6 +153,14 @@
             <span id="storage-warning" class="storage-warning" role="status" hidden></span>
           </div>
           <p class="helper-text">Saved in this browser only. Export a backup to move your plans to another device. No external accounts or subscriptions.</p>
+          <div class="reset-area">
+            <div class="reset-description">
+              <strong>Start with a clean slate</strong>
+              <p>Restore Employee 1–4 and erase the current plan, assumptions, and all saved scenarios from this browser. Export a backup first if you want to keep them.</p>
+            </div>
+            <button type="button" id="reset-all" class="button button-danger">Reset everything</button>
+          </div>
+          <p id="reset-feedback" class="reset-feedback" role="status" aria-live="polite"></p>
         </div>
       </details>
 
