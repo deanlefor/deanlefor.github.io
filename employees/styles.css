@@ -410,3 +410,17 @@ h2 { font-size: 18px; }
   .settings-fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .donut { width: min(37%, 160px); }
 }
+
+.intro-actions { display: flex; gap: 8px; align-items: center; flex: none; }
+.button-reset-link { border: 1px solid #566173; background: transparent; color: var(--muted); padding: 10px 13px; }
+.button-reset-link:hover:not(:disabled) { border-color: #bb7784; color: #ffd5dd; }
+.reset-notice { margin: -5px 0 12px; color: var(--teal); font-size: 13px; }
+.reset-notice[hidden] { display: none; }
+@media (min-width: 550px) {
+  .mode-switch { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .budget-heading { flex-direction: row; align-items: end; }
+}
+@media (max-width: 760px) {
+  .intro-actions { flex-wrap: wrap; }
+  .intro-settings { font-size: 12px; }
+}
