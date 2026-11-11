@@ -134,8 +134,8 @@ test("compact cards have four-column and two-column breakpoints", () => {
   assert.match(css, /\.card-main \.count-input::-webkit-inner-spin-button/);
   const html = fs.readFileSync(path.join(__dirname, "../employees/index.html"), "utf8");
   assert.match(html, /id="reset-all"/);
-  assert.match(html, /styles\\.css\\?v=4/);
-  assert.match(html, /app\\.js\\?v=4/);
+  assert.match(html, /styles\.css\?v=4/);
+  assert.match(html, /app\.js\?v=4/);
 });
 
 
