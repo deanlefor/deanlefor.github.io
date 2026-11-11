@@ -78,7 +78,7 @@ test("canceling reset preserves changes; confirming deletes all local scenarios 
   assert.equal(stored(p).scenarios.length, 1);
   let prompt = "";
   p.window.confirm = msg => { prompt = msg; return false; };
-  p.document.getElementById("reset-all").click();
+  p.document.getElementById("reset-top").click();
   assert.match(prompt, /delete.+saved scenario/i);
   assert.equal(p.storage.get(KEY), current, "cancel must preserve the saved plan");
 
@@ -95,6 +95,7 @@ test("canceling reset preserves changes; confirming deletes all local scenarios 
   assert.equal(p.document.querySelectorAll(".allocation-card").length, 4);
   assert.equal(p.document.querySelectorAll(".scenario-tile").length, 0);
   assert.match(p.document.getElementById("reset-feedback").textContent, /Reset complete/);
+  assert.equal(p.document.getElementById("reset-notice").hidden, false);
 });
 
 test("previously saved two-role plans remain intact until explicitly reset", t => {
