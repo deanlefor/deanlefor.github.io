@@ -239,7 +239,7 @@
     if (selected.lock !== "none") throw new Error("Unlock this employee type before adjusting positions.");
     const oldSummary = summarize(p);
     const originalCount = selected.count;
-    const target = integer(requested, NaN);
+    const target = Number(requested);
     if (!Number.isSafeInteger(target) || target < 0 || target > MAX_COUNT) throw new Error("Enter a whole number of positions.");
     selected.count = clamp(target, selected.min, selected.max === null ? MAX_COUNT : selected.max);
     const desired = selected.count;
