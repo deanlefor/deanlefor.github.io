@@ -31,7 +31,10 @@ their public URL paths so GitHub Pages can publish everything directly from the
   loaded position costs, lock specific headcounts or reserve dollar amounts,
   set minimums, maximums, and relative priorities, and generate constrained
   allocations. The primary dashboard is visual: a workforce-share donut,
-  before/after staffing bars, a stacked budget ribbon, and per-role slider
+  before/after annual spending bars (today's headcount valued at the current
+  editable per-position costs), a stacked budget ribbon with dollar amounts
+  and shares of the total annual budget for every role and for unallocated or
+  reserved funds, and per-role slider
   cards, now compact enough for a four-column row on desktop and a
   two-column grid on tablets. New visitors start with four illustrative roles
   named Employee 1 through Employee 4 (20 positions each, different example
