@@ -231,6 +231,7 @@ details[open] > summary .details-action span:last-child { display: inline-block;
 .scenario-visual { display: flex; width: 100%; height: 12px; background: #3b495b; overflow: hidden; border-radius: 6px; margin: 12px 0; }
 .scenario-visual span { height: 100%; }
 .scenario-note { font-size: 12px; color: var(--muted); min-height: 18px; }
+.scenario-changes { font-size: 12px; color: var(--text); background: #142233; border-radius: 8px; padding: 9px 10px; margin-top: 9px; line-height: 1.45; }
 .scenario-actions { display: flex; gap: 8px; margin-top: 9px; }
 .scenario-actions button { padding: 5px 11px; border: 1px solid #586b80; border-radius: 7px; color: var(--text); background: transparent; font-size: 12px; }
 .scenario-actions button:hover { border-color: var(--teal); }
