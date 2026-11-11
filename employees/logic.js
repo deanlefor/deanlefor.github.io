@@ -33,11 +33,15 @@
     return type.lock === "spend" ? type.lockedSpend : countFor(type) * type.cost;
   }
   function defaultPlan() {
+    // Illustrative, generic figures. Existing saved plans are never replaced
+    // by a change to the defaults; only an explicit Reset everything does that.
     return {
-      budget: 32500000,
+      budget: 14500000,
       types: [
-        { id: "accountants", name: "Accountants", cost: 200000, baseline: 63, count: 63, min: 0, max: null, priority: 4, lock: "none", lockedSpend: 0 },
-        { id: "officers", name: "Police officers", cost: 300000, baseline: 65, count: 65, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 }
+        { id: "employee-1", name: "Employee 1", cost: 100000, baseline: 20, count: 20, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 },
+        { id: "employee-2", name: "Employee 2", cost: 150000, baseline: 20, count: 20, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 },
+        { id: "employee-3", name: "Employee 3", cost: 200000, baseline: 20, count: 20, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 },
+        { id: "employee-4", name: "Employee 4", cost: 250000, baseline: 20, count: 20, min: 0, max: null, priority: 5, lock: "none", lockedSpend: 0 }
       ]
     };
   }
