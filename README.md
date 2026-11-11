@@ -30,7 +30,18 @@ their public URL paths so GitHub Pages can publish everything directly from the
   canonical lowercase URL. Build any number of role types (1–30), enter fully
   loaded position costs, lock specific headcounts or reserve dollar amounts,
   set minimums, maximums, and relative priorities, and generate constrained
-  allocations. Four modes: balanced priority-based funding (heuristic),
+  allocations. The primary dashboard is visual: a workforce-share donut,
+  before/after staffing bars, a stacked budget ribbon, and per-role slider
+  cards. Simple lock buttons protect a role's position count, while
+  headcount-versus-funding lock choices and cost/baseline/priority/limit
+  assumptions live inside a collapsed settings panel. Dragging a slider offers
+  two behaviors: Trade positions holds the budget and frees lower-priority
+  unlocked positions when needed (or backfills higher-priority positions when
+  headcount decreases); Budget follows positions adjusts the annual budget
+  dollar-for-dollar and leaves other types alone. The UI tells the user when
+  hard locks or minimum staffing prevent a requested change. Scenario cards
+  show graphical budget compositions, with numeric comparisons collapsed.
+  Four optimizer modes: balanced priority-based funding (heuristic),
   priority-weighted headcount, maximum headcount, or budget utilization.
   The last three use an exact bounded integer solver when feasible and label
   approximate results when they fall back to a heuristic. Current and saved
