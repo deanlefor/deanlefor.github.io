@@ -563,6 +563,7 @@
     root.append(table);
   }
   function updateBoard() {
+    $("reset-notice").hidden = true;
     syncRoleCards();
     renderDonut();
     renderBudget();
@@ -666,6 +667,7 @@
     renderScenarios();
     renderComparison();
   });
+  $("reset-top").addEventListener("click", () => $("reset-all").click());
   $("reset-all").addEventListener("click", () => {
     const warning = "Reset everything?\n\nThis permanently replaces your current plan with four sample employees, resets all budgets, costs, locks and assumptions, and deletes every saved scenario on this device.\n\nThis cannot be undone. Export a JSON backup first if you need to preserve anything.";
     if (!confirm(warning)) return;
@@ -687,6 +689,9 @@
     persist();
     const feedback = $("reset-feedback");
     feedback.textContent = "Reset complete. Four default employee types restored; saved scenarios cleared.";
+    const notice = $("reset-notice");
+    notice.textContent = "Reset complete. You are starting with Employee 1–4 and no saved scenarios.";
+    notice.hidden = false;
   });
   $("export-json").addEventListener("click", () => {
     download("workforce-allocation-backup.json", JSON.stringify({ version: 1, plan: state.plan, scenarios: state.scenarios, mode: state.mode }, null, 2), "application/json");
