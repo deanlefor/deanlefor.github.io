@@ -32,9 +32,18 @@ their public URL paths so GitHub Pages can publish everything directly from the
   set minimums, maximums, and relative priorities, and generate constrained
   allocations. The primary dashboard is visual: a workforce-share donut,
   before/after staffing bars, a stacked budget ribbon, and per-role slider
-  cards. Simple lock buttons protect a role's position count, while
-  headcount-versus-funding lock choices and cost/baseline/priority/limit
-  assumptions live inside a collapsed settings panel. Dragging a slider offers
+  cards, now compact enough for a four-column row on desktop and a
+  two-column grid on tablets. New visitors start with four illustrative roles
+  named Employee 1 through Employee 4 (20 positions each, different example
+  costs, $14.5M budget). Click a role name directly on the card to edit it,
+  with Enter to save or Escape to cancel. Simple lock buttons protect a role's
+  position count, while headcount-versus-funding lock choices and detailed
+  cost/baseline/priority/limit assumptions live inside a collapsed settings
+  panel. The visible Reset action and the settings-panel Reset everything button
+  both require confirmation before replacing the entire current plan and
+  deleting all scenarios stored in this browser; exporting JSON first preserves
+  a restorable backup. Changing the built-in defaults does not rewrite
+  existing v1 user data. Dragging a slider offers
   two behaviors: Trade positions holds the budget and frees lower-priority
   unlocked positions when needed (or backfills higher-priority positions when
   headcount decreases); Budget follows positions adjusts the annual budget
